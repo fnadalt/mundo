@@ -19,19 +19,19 @@ class Terreno(NodePath):
         self.base=mundo.base
         self.foco=foco
         #
+        self._ajuste_altura=-0.5
         self._nivel_agua=0.3
         self._height_map_id=589
         self._height_map=HeightMap(self._height_map_id, self._nivel_agua)
         #
         self._parcelas={} # {idx_pos:cuerpo_parcela_node_path,...}
-        self._p=[]
         #
         self.actualizar_parcelas()
     
     def obtener_altitud(self, pos):
         x_ajustada=pos[0]+Parcela.pos_offset
         y_ajustada=pos[1]+Parcela.pos_offset
-        altitud=self._height_map.getHeight(x_ajustada, y_ajustada)*Terreno.altura_maxima
+        altitud=(self._height_map.getHeight(x_ajustada, y_ajustada)+self._ajuste_altura)*Terreno.altura_maxima
         return altitud
     
     def obtener_indice_parcela_foco(self):
@@ -40,6 +40,7 @@ class Terreno(NodePath):
     
     def _cargar_parcela(self, idx_pos):
         log.info("cargando parcela "+str(idx_pos))
+        #
         if idx_pos in self._parcelas:
             log.error("se solicito la carga de la parcela %s, que ya se encuentra en self._parcelas"%str(idx_pos))
             return
@@ -49,26 +50,29 @@ class Terreno(NodePath):
         m.setShininess(5.0)
         #
         p=Parcela(self._height_map, idx_pos[0], idx_pos[1], self.foco)
+        p.setBruteforce(True)
+        p.generate()
         pN=p.getRoot()
         pN.setMaterial(m)
         pN.setRenderModeWireframe()
-        #pN.setPos(Parcela.tamano*idx_pos[0], Parcela.tamano*idx_pos[1], -0.5)
+        #
+        _rbody=BulletRigidBodyNode("%s_rigid_body"%p.nombre)
+        for geom_node in pN.findAllMatches("**/+GeomNode"):
+            #logging.debug("geom? %s transform=%s"%(str(geom_node), str(geom_node.getTransform(pN))))
+            _tri_mesh=BulletTriangleMesh()
+            _tri_mesh.addGeom(geom_node.node().getGeom(0))
+            _shape=BulletTriangleMeshShape(_tri_mesh, dynamic=False)
+            _rbody.addShape(_shape, geom_node.getTransform())
+        self.mundo.mundo_fisico.attachRigidBody(_rbody)
+        _rbodyN=self.attachNewNode(_rbody)
+        _rbodyN.setPos(Parcela.tamano*idx_pos[0]-Parcela.pos_offset, Parcela.tamano*idx_pos[1]-Parcela.pos_offset, self._ajuste_altura)
+        pN.reparentTo(_rbodyN)
+        p.setBruteforce(False)
+        p.generate()
         p.update()
         logging.debug("parcela at "+str(pN.getPos()))
         #
-        shape=BulletHeightfieldShape(p.imagen, Terreno.altura_maxima, ZUp)
-        shape.setUseDiamondSubdivision(True)
-        cuerpo=BulletRigidBodyNode("%s_rigid_body"%p.nombre)
-        cuerpo.addShape(shape)
-        cuerpoN=NodePath(cuerpo)
-        cuerpoN.reparentTo(self)
-        cuerpoN.setPos(Parcela.tamano*idx_pos[0], Parcela.tamano*idx_pos[1], 0.0)
-        logging.debug("heightfield rigid body at "+str(cuerpoN.getPos()))
-        pN.reparentTo(cuerpoN)
-        self.mundo.mundo_fisico.attachRigidBody(cuerpo)
-        #
-        self._parcelas[idx_pos]=cuerpoN
-        self._p.append((pN, cuerpoN))
+        self._parcelas[idx_pos]=pN
 
     def _descargar_parcela(self, idx_pos):
         log.info("descargando parcela "+str(idx_pos))
@@ -89,7 +93,7 @@ class Terreno(NodePath):
         #return
         log.debug("hombre sobre parcela "+str(idx_pos))
         #
-        for idx_pos_x in range(1):#range(idx_pos[0]-1, 2):
+        for idx_pos_x in range(idx_pos[0]-1, 2):
             for idx_pos_y in range(idx_pos[1]-1, 2):
                 idxs_pos_parcelas_obj.append((idx_pos_x, idx_pos_y))
         log.debug("indices de parcelas a cargar: "+str(idxs_pos_parcelas_obj))

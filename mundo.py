@@ -57,6 +57,7 @@ class Mundo(NodePath):
         self.terreno=Terreno(self, self.hombre)
         self.terreno.setPos(0.0, 0.0, 0.0)
         altitud=self.terreno.obtener_altitud(self.hombre.getPos())
+        self.hombre.setZ(altitud)
         logging.debug("hombre at "+str(self.hombre.getPos()))
         test=self.mundo_fisico.rayTestAll(LPoint3(0.0, 0.0, 1000.0), LPoint3(0.0, 0.0, -1000.0))
         for hit in test.getHits():

@@ -6,15 +6,16 @@ log=logging.getLogger(__name__)
 
 class Parcela(GeoMipTerrain):
     
-    tamano=32#128
+    tamano=128
     pos_offset=tamano/2.0#-0.5
 
-    def __init__(self, height_map, x, y, focal_point):
+    def __init__(self, height_map, indice_x, indice_y, focal_point):
         #
         self._height_map=height_map
-        self.nombre="parcela_%i_%i"%(x, y)
-        self.posicion=Vec2(x, y)
-        self.nombre_archivo_height_map="%s.png"%self.nombre
+        self.nombre="parcela_%i_%i_%i"%(height_map.id, indice_x, indice_y)
+        self.indice_x=indice_x
+        self.indice_y=indice_y
+        self.nombre_archivo_height_map=os.path.join(os.getcwd(), "parcelas", "%s_heightmap.png"%self.nombre)
         self.imagen=PNMImage()
         #
         GeoMipTerrain.__init__(self, self.nombre)
@@ -24,7 +25,6 @@ class Parcela(GeoMipTerrain):
         self.setFocalPoint(focal_point)
         #
         self._procesar_imagen()
-        self.generate()
     
     def _procesar_imagen(self):
         #
@@ -35,8 +35,8 @@ class Parcela(GeoMipTerrain):
             log.debug("generando archivo de imagen "+self.nombre_archivo_height_map)
             self.imagen=PNMImage(self.tamano+1, self.tamano+1, 1, 65535)
             #
-            offset_x=self.tamano * self.posicion.getX()
-            offset_y=self.tamano * self.posicion.getY()
+            offset_x=self.tamano * self.indice_x
+            offset_y=self.tamano * self.indice_y
             for x in range(self.imagen.getXSize()):
                 for y in range(self.imagen.getYSize()):
                     altitud=self._height_map.getHeight(x+offset_x, y-offset_y)
