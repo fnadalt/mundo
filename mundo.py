@@ -97,4 +97,4 @@ class Mundo(NodePath):
 
     def configurar_eventos(self, activar):
         if activar==True:
-            self.accept("hombre_", self.hombre.vel_lineal.setY())
+            pass#self.base.accept("w", )
