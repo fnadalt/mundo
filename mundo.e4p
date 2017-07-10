@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Project SYSTEM "Project-5.1.dtd">
+<!-- eric project file for project mundo -->
+<!-- Saved: 2017-07-01, 23:18:11 -->
+<!-- Copyright (C) 2017 Fernando Nadal Testa, fnt2006@gmail.com -->
+<Project version="5.1">
+  <Language>en_US</Language>
+  <Hash>2598831e4f81347c863199e3d92937e40ca0fa90</Hash>
+  <ProgLanguage mixed="1">Python2</ProgLanguage>
+  <ProjectType>Other</ProjectType>
+  <Version>0.1</Version>
+  <Author>Fernando Nadal Testa</Author>
+  <Email>fnt2006@gmail.com</Email>
+  <Eol index="0"/>
+  <Sources>
+    <Source>__init__.py</Source>
+    <Source>aplicacion.py</Source>
+    <Source>heightmap.py</Source>
+    <Source>hombre.py</Source>
+    <Source>main.py</Source>
+    <Source>mundo.py</Source>
+    <Source>parcela.py</Source>
+    <Source>terrain/__init__.py</Source>
+    <Source>terrain/bakedterrainshadergenerator.py</Source>
+    <Source>terrain/basicfunctions.py</Source>
+    <Source>terrain/camera.py</Source>
+    <Source>terrain/config.py</Source>
+    <Source>terrain/creature.py</Source>
+    <Source>terrain/fullterrainshadergenerator.py</Source>
+    <Source>terrain/gui.py</Source>
+    <Source>terrain/main.py</Source>
+    <Source>terrain/mapeditor.py</Source>
+    <Source>terrain/physics.py</Source>
+    <Source>terrain/populator.py</Source>
+    <Source>terrain/pstat_debug.py</Source>
+    <Source>terrain/sky.py</Source>
+    <Source>terrain/splashCard.py</Source>
+    <Source>terrain/sun.py</Source>
+    <Source>terrain/terrain.py</Source>
+    <Source>terrain/terrainshadergenerator.py</Source>
+    <Source>terrain/terraintexturemap.py</Source>
+    <Source>terrain/terraintexturer.py</Source>
+    <Source>terrain/terraintile.py</Source>
+    <Source>terrain/waterNode.py</Source>
+    <Source>terreno.py</Source>
+  </Sources>
+  <Forms/>
+  <Translations/>
+  <Resources/>
+  <Interfaces/>
+  <Others/>
+  <MainScript>main.py</MainScript>
+  <Vcs>
+    <VcsType>None</VcsType>
+  </Vcs>
+  <FiletypeAssociations>
+    <FiletypeAssociation pattern="*.e4p" type="OTHERS"/>
+    <FiletypeAssociation pattern="*.idl" type="INTERFACES"/>
+    <FiletypeAssociation pattern="*.js" type="SOURCES"/>
+    <FiletypeAssociation pattern="*.md" type="OTHERS"/>
+    <FiletypeAssociation pattern="*.ptl" type="SOURCES"/>
+    <FiletypeAssociation pattern="*.py" type="SOURCES"/>
+    <FiletypeAssociation pattern="*.py2" type="SOURCES"/>
+    <FiletypeAssociation pattern="*.py3" type="SOURCES"/>
+    <FiletypeAssociation pattern="*.pyw" type="SOURCES"/>
+    <FiletypeAssociation pattern="*.pyw2" type="SOURCES"/>
+    <FiletypeAssociation pattern="*.pyw3" type="SOURCES"/>
+    <FiletypeAssociation pattern="*.rb" type="SOURCES"/>
+    <FiletypeAssociation pattern="*.rst" type="OTHERS"/>
+    <FiletypeAssociation pattern="*.txt" type="OTHERS"/>
+    <FiletypeAssociation pattern="README" type="OTHERS"/>
+    <FiletypeAssociation pattern="README.*" type="OTHERS"/>
+  </FiletypeAssociations>
+</Project>
