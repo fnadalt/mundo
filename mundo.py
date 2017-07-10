@@ -54,14 +54,14 @@ class Mundo(NodePath):
         self.hombre=Hombre(self)
     
     def _cargar_terreno(self):
-        self.terreno=Terreno(self, self.hombre)
+        self.terreno=Terreno(self, self.hombre.cuerpo)
         self.terreno.setPos(0.0, 0.0, 0.0)
-        altitud=self.terreno.obtener_altitud(self.hombre.getPos())
-        self.hombre.setZ(altitud)
-        logging.debug("hombre at "+str(self.hombre.getPos()))
+        altitud=self.terreno.obtener_altitud(self.hombre.cuerpo.getPos())
+        self.hombre.cuerpo.setZ(altitud+0.5)
+        log.debug("hombre at "+str(self.hombre.cuerpo.getPos()))
         test=self.mundo_fisico.rayTestAll(LPoint3(0.0, 0.0, 1000.0), LPoint3(0.0, 0.0, -1000.0))
         for hit in test.getHits():
-            logging.debug("ray test hit %s at %s"%(str(hit.getNode()), str(hit.getHitPos())))
+            log.debug("ray test hit %s at %s"%(str(hit.getNode()), str(hit.getHitPos())))
 
     def _cargar_luces(self):
         luz_d=DirectionalLight("sol0")
@@ -94,3 +94,7 @@ class Mundo(NodePath):
             self.debug_fisicaN.show()
         else:
             self.debug_fisicaN.hide()
+
+    def configurar_eventos(self, activar):
+        if activar==True:
+            self.accept("hombre_", self.hombre.vel_lineal.setY())

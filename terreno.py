@@ -52,27 +52,27 @@ class Terreno(NodePath):
         p=Parcela(self._height_map, idx_pos[0], idx_pos[1], self.foco)
         p.setBruteforce(True)
         p.generate()
-        pN=p.getRoot()
-        pN.setMaterial(m)
-        pN.setRenderModeWireframe()
+        _pN=p.getRoot()
+        _pN.setMaterial(m)
+        _pN.setRenderModeWireframe()
         #
         _rbody=BulletRigidBodyNode("%s_rigid_body"%p.nombre)
-        for geom_node in pN.findAllMatches("**/+GeomNode"):
-            #logging.debug("geom? %s transform=%s"%(str(geom_node), str(geom_node.getTransform(pN))))
+        for geom_node in _pN.findAllMatches("**/+GeomNode"):
+            #logging.debug("geom? %s transform=%s"%(str(geom_node), str(geom_node.getTransform(_pN))))
             _tri_mesh=BulletTriangleMesh()
             _tri_mesh.addGeom(geom_node.node().getGeom(0))
             _shape=BulletTriangleMeshShape(_tri_mesh, dynamic=False)
             _rbody.addShape(_shape, geom_node.getTransform())
-        self.mundo.mundo_fisico.attachRigidBody(_rbody)
         _rbodyN=self.attachNewNode(_rbody)
         _rbodyN.setPos(Parcela.tamano*idx_pos[0]-Parcela.pos_offset, Parcela.tamano*idx_pos[1]-Parcela.pos_offset, self._ajuste_altura)
-        pN.reparentTo(_rbodyN)
+        _pN.reparentTo(_rbodyN)
         p.setBruteforce(False)
         p.generate()
         p.update()
-        logging.debug("parcela at "+str(pN.getPos()))
+        self.mundo.mundo_fisico.attachRigidBody(_rbody)
+        logging.debug("parcela at "+str(_rbodyN.getPos()))
         #
-        self._parcelas[idx_pos]=pN
+        self._parcelas[idx_pos]=_rbodyN
 
     def _descargar_parcela(self, idx_pos):
         log.info("descargando parcela "+str(idx_pos))
@@ -89,9 +89,9 @@ class Terreno(NodePath):
         idxs_pos_parcelas_descargar=[]
         #
         idx_pos=self.obtener_indice_parcela_foco()
-        #self._cargar_parcela(idx_pos)
-        #return
-        log.debug("hombre sobre parcela "+str(idx_pos))
+        self._cargar_parcela(idx_pos)
+        return
+        log.debug("foco sobre parcela "+str(idx_pos))
         #
         for idx_pos_x in range(idx_pos[0]-1, 2):
             for idx_pos_y in range(idx_pos[1]-1, 2):

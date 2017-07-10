@@ -6,7 +6,7 @@ log=logging.getLogger(__name__)
 
 class Parcela(GeoMipTerrain):
     
-    tamano=128
+    tamano=32
     pos_offset=tamano/2.0#-0.5
 
     def __init__(self, height_map, indice_x, indice_y, focal_point):
