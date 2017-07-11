@@ -97,4 +97,19 @@ class Mundo(NodePath):
 
     def configurar_eventos(self, activar):
         if activar==True:
-            pass#self.base.accept("w", )
+            self.base.accept("w", self.hombre.avanzar, [True])
+            self.base.accept("w-up", self.hombre.avanzar, [False])
+            self.base.accept("s", self.hombre.retroceder, [True])
+            self.base.accept("s-up", self.hombre.retroceder, [False])
+            self.base.accept("a", self.hombre.desplazar_izquierda, [True])
+            self.base.accept("a-up", self.hombre.desplazar_izquierda, [False])
+            self.base.accept("d", self.hombre.desplazar_derecha, [True])
+            self.base.accept("d-up", self.hombre.desplazar_derecha, [False])
+            self.base.accept("q", self.hombre.girar_izquierda, [True])
+            self.base.accept("q-up", self.hombre.girar_izquierda, [False])
+            self.base.accept("e", self.hombre.girar_derecha, [True])
+            self.base.accept("e-up", self.hombre.girar_derecha, [False])
+            self.base.accept("space", self.hombre.saltar)
+        else:
+            self.base.ignoreAll()
+
