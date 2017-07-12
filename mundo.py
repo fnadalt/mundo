@@ -67,7 +67,7 @@ class Mundo(NodePath):
     def _cargar_terreno(self):
         self.terreno=Terreno(self, self.hombre.cuerpo)
         altitud=self.terreno.obtener_altitud(self.hombre.cuerpo.getPos())
-        self.hombre.establecer_altitud(altitud)
+        self.hombre.altitud_suelo=altitud
         log.debug("hombre at "+str(self.hombre.cuerpo.getPos()))
         test=self.mundo_fisico.rayTestAll(LPoint3(0.0, 0.0, 1000.0), LPoint3(0.0, 0.0, -1000.0))
         for hit in test.getHits():
@@ -87,21 +87,10 @@ class Mundo(NodePath):
         self.mundo_fisico.doPhysics(dt)
         # personajes
         for _personaje in self._personajes:
+            self.texto1.setText("_personaje %s:\npos=%s\nvel=%s\naltura=%f"%(_personaje.nombre, str(_personaje.cuerpo.getPos()), str(_personaje.velocidad_lineal), _personaje.altitud_suelo))
             if _personaje.quieto:
                 continue
-            pos=_personaje.cuerpo.getPos()
-            altitud=self.terreno.obtener_altitud(pos)
-            altura=pos.getZ()-altitud
-            if _personaje.esta_cayendo():
-                if altura<=_personaje.velocidad_lineal.getZ():
-                    _personaje.detener_caida()
-                    _personaje.establecer_altitud(altitud)
-            elif not _personaje.esta_elevandose():
-                if altura>0.1:
-                    _personaje.iniciar_caida()
-                else:
-                    _personaje.establecer_altitud(altitud)
-            self.texto1.setText("_personaje %s:\npos=%s\nvel=%s\naltura=%f"%(_personaje.nombre, str(pos), str(_personaje.velocidad_lineal), altura))
+            _personaje.altitud_suelo=self.terreno.obtener_altitud(_personaje.cuerpo.getPos())
         #
         return task.cont
     

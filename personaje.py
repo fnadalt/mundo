@@ -38,8 +38,9 @@ class Personaje:
         self.max_vel_lineal=(1.0, 0.4, 0.7) # (max_adelante, max_atras, max_lateral)
         self.max_vel_angular=90.0
         self.factor_movimiento=1.0
+        self.altitud_suelo=0.0
         # variables externas
-        self.quieto=True
+        self.quieto=False
         self.modo_camara=Personaje.CAM_TERCERA_PERSONA
         self.velocidad_lineal=LVector3()
         self.velocidad_angular=0.0
@@ -71,15 +72,26 @@ class Personaje:
                     self.foco_camara.setP(foco_cam_P)
         # movimiento
         if not self.quieto:
+            altura=self.cuerpo.getZ()-self.altitud_suelo
             if self.velocidad_lineal.getZ()==0.0:
                 self.cuerpo.setPos(self.cuerpo, self.velocidad_lineal*self.factor_movimiento*dt)
                 self.cuerpo.setH(self.cuerpo, self.velocidad_angular*self.factor_movimiento*dt)
+                if altura<0.1:
+                    self.velocidad_lineal+=self.mundo.mundo_fisico.getGravity()*dt
+                else:
+                    self.cuerpo.setZ(self.altitud_suelo+0.5)
             else:
                 self.cuerpo.setPos(self.cuerpo, self.velocidad_lineal*self.factor_movimiento*dt)
-                self.velocidad_lineal+=self.mundo.mundo_fisico.getGravity()*dt
+                delta_velocidad_lineal=self.mundo.mundo_fisico.getGravity()*dt
+                self.velocidad_lineal+=delta_velocidad_lineal
+                #
+                if delta_velocidad_lineal.getZ()<0.0 and altura<=abs(delta_velocidad_lineal.getZ()): # si cayendo y cerca del suelo
+                    self.cuerpo.setZ(self.altitud_suelo+0.5)
+                    self.velocidad_lineal.setZ(0.0)
             #
             if self.velocidad_lineal==LVector3.zero() and self.velocidad_angular==0.0:
                 self.quieto=True
+            #
         #
         return task.cont
 
@@ -108,9 +120,6 @@ class Personaje:
             self.mundo.base.ignore(e)
             if f not in Personaje.controles_trigger:
                 self.mundo.base.ignore("%s-up")
-
-    def establecer_altitud(self, altitud):
-        self.cuerpo.setZ(altitud+0.5)
 
     def acercar_camara(self):
         cam_Y=self.base.cam.getY()
@@ -170,22 +179,9 @@ class Personaje:
             self.quieto=False
     
     def saltar(self):
-        self.velocidad_lineal.setZ(200.0)
+        self.velocidad_lineal.setZ(4.0)
         self.velocidad_angular=0.0
         self.quieto=False
     
     def agachar(self, flag):
         pass
-
-    def esta_cayendo(self):
-        return self.velocidad_lineal.getZ()<0.0
-
-    def esta_elevandose(self):
-        return self.velocidad_lineal.getZ()>0.0
-
-    def iniciar_caida(self):
-        self.velocidad_lineal.setZ(self.mundo.mundo_fisico.getGravity().getZ())
-        self.quieto=False
-    
-    def detener_caida(self):
-        self.velocidad_lineal=Vec3.zero()
