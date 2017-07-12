@@ -16,7 +16,6 @@ class Aplicacion(ShowBase):
         self.render.setShaderAuto()
         #
         self.mundo=Mundo(self)
-        self.mundo.configurar_eventos(True)
         
     def iniciar(self):
         self.run()

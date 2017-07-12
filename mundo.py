@@ -14,6 +14,8 @@ class Mundo(NodePath):
         self.reparentTo(base.render)
         #
         self.base=base
+        # variables internas
+        self._personajes=[]
         #
         self._configurar_fisica()
         #
@@ -21,7 +23,8 @@ class Mundo(NodePath):
         self._cargar_hombre()
         self._cargar_terreno()
         self._cargar_luces()
-        self._cargar_camara()
+        #
+        self.base.taskMgr.add(self._update, "world_update")
     
     def _configurar_fisica(self):
         self.mundo_fisico=BulletWorld()
@@ -34,14 +37,14 @@ class Mundo(NodePath):
         #
         self.mundo_fisico.setGravity(Vec3(0.0, 0.0, -9.81))
         self.mundo_fisico.setDebugNode(debug_fisica)
-        self.base.taskMgr.add(self._update_phys, "_update_phys")
         #
         _shape=BulletBoxShape(Vec3(0.5, 0.5, 0.5))
         _cuerpo=BulletRigidBodyNode("caja_rigid_body")
         _cuerpo.setMass(1.0)
         _cuerpo.addShape(_shape)
         _cuerpoN=self.attachNewNode(_cuerpo)
-        _cuerpoN.setPos(0.0, 0.0, 200.0)
+        _cuerpoN.setPos(0.0, 0.0, 100.0)
+        _cuerpoN.setCollideMask(BitMask32.bit(3))
         self.mundo_fisico.attachRigidBody(_cuerpo)
         _cuerpoN.reparentTo(self)
         caja=self.base.loader.loadModel("box.egg")
@@ -52,12 +55,19 @@ class Mundo(NodePath):
     
     def _cargar_hombre(self):
         self.hombre=Hombre(self)
+        self._personajes.append(self.hombre)
+        #
+        controles={
+                        "w":"avanzar", "s":"retroceder", "a":"desplazar_izquierda", "d":"desplazar_derecha", 
+                        "q":"girar_izquierda", "e":"girar_derecha", "wheel_up":"acercar_camara", "wheel_down":"alejar_camara", 
+                        "mouse1-up":"mirar_adelante", "space":"saltar"
+                        }
+        self.hombre.controlar(self.base.cam, controles)
     
     def _cargar_terreno(self):
         self.terreno=Terreno(self, self.hombre.cuerpo)
-        self.terreno.setPos(0.0, 0.0, 0.0)
         altitud=self.terreno.obtener_altitud(self.hombre.cuerpo.getPos())
-        self.hombre.cuerpo.setZ(altitud+0.5)
+        self.hombre.establecer_altitud(altitud)
         log.debug("hombre at "+str(self.hombre.cuerpo.getPos()))
         test=self.mundo_fisico.rayTestAll(LPoint3(0.0, 0.0, 1000.0), LPoint3(0.0, 0.0, -1000.0))
         for hit in test.getHits():
@@ -70,23 +80,29 @@ class Mundo(NodePath):
         self.sol0.setHpr(45.0, -75.0, 0.0)
         self.setLight(self.sol0)
     
-    def _cargar_camara(self):
-        self.base.cam.reparentTo(self.hombre.foco_camara)
-        self.base.cam.setY(3.0)
-        self.base.cam.lookAt(self.hombre.foco_camara)
-        self.base.accept("wheel_up",self._zoom_cam,[-1])
-        self.base.accept("wheel_down",self._zoom_cam,[1])
-    
-    def _zoom_cam(self, amount):
-		cam_Y=self.base.cam.getY()
-		cam_Y+=amount*5.0
-		if cam_Y<1.2 or cam_Y>1600.0:
-			return
-		self.base.cam.setY(cam_Y)
-    
-    def _update_phys(self, task):
+    def _update(self, task):
+        #
         dt=self.base.taskMgr.globalClock.getDt()
+        # fisica
         self.mundo_fisico.doPhysics(dt)
+        # personajes
+        for _personaje in self._personajes:
+            if _personaje.quieto:
+                continue
+            pos=_personaje.cuerpo.getPos()
+            altitud=self.terreno.obtener_altitud(pos)
+            altura=pos.getZ()-altitud
+            if _personaje.esta_cayendo():
+                if altura<=_personaje.velocidad_lineal.getZ():
+                    _personaje.detener_caida()
+                    _personaje.establecer_altitud(altitud)
+            elif not _personaje.esta_elevandose():
+                if altura>0.1:
+                    _personaje.iniciar_caida()
+                else:
+                    _personaje.establecer_altitud(altitud)
+            self.texto1.setText("_personaje %s:\npos=%s\nvel=%s\naltura=%f"%(_personaje.nombre, str(pos), str(_personaje.velocidad_lineal), altura))
+        #
         return task.cont
     
     def _toggle_debug_fisica(self):
@@ -94,22 +110,3 @@ class Mundo(NodePath):
             self.debug_fisicaN.show()
         else:
             self.debug_fisicaN.hide()
-
-    def configurar_eventos(self, activar):
-        if activar==True:
-            self.base.accept("w", self.hombre.avanzar, [True])
-            self.base.accept("w-up", self.hombre.avanzar, [False])
-            self.base.accept("s", self.hombre.retroceder, [True])
-            self.base.accept("s-up", self.hombre.retroceder, [False])
-            self.base.accept("a", self.hombre.desplazar_izquierda, [True])
-            self.base.accept("a-up", self.hombre.desplazar_izquierda, [False])
-            self.base.accept("d", self.hombre.desplazar_derecha, [True])
-            self.base.accept("d-up", self.hombre.desplazar_derecha, [False])
-            self.base.accept("q", self.hombre.girar_izquierda, [True])
-            self.base.accept("q-up", self.hombre.girar_izquierda, [False])
-            self.base.accept("e", self.hombre.girar_derecha, [True])
-            self.base.accept("e-up", self.hombre.girar_derecha, [False])
-            self.base.accept("space", self.hombre.saltar)
-        else:
-            self.base.ignoreAll()
-

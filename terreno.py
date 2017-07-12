@@ -28,10 +28,21 @@ class Terreno(NodePath):
         #
         self.actualizar_parcelas()
     
+    def rayo(self, pos):
+        z=None
+        test=self.mundo.mundo_fisico.rayTestAll(LPoint3(pos[0], pos[1], 1000.0), LPoint3(pos[0], pos[1], -1000.0), BitMask32.bit(1))
+        for hit in test.getHits():
+            #log.debug("rayo %s at %s"%(str(hit.getNode()), str(hit.getHitPos())))    
+            if hit.getNode().getName().startswith("parcela_") and z==None:
+                z=hit.getHitPos().getZ()
+                break
+        return z
+
     def obtener_altitud(self, pos):
-        x_ajustada=pos[0]+Parcela.pos_offset
-        y_ajustada=pos[1]+Parcela.pos_offset
-        altitud=(self._height_map.getHeight(x_ajustada, y_ajustada)+self._ajuste_altura)*Terreno.altura_maxima
+        #x_ajustada=pos[0]+Parcela.pos_offset-0.5
+        #y_ajustada=pos[1]+Parcela.pos_offset-0.5
+        #altitud=(self._height_map.getHeight(x_ajustada, y_ajustada)+self._ajuste_altura)*Terreno.altura_maxima
+        altitud=self.rayo(pos)
         return altitud
     
     def obtener_indice_parcela_foco(self):
@@ -65,6 +76,7 @@ class Terreno(NodePath):
             _rbody.addShape(_shape, geom_node.getTransform())
         _rbodyN=self.attachNewNode(_rbody)
         _rbodyN.setPos(Parcela.tamano*idx_pos[0]-Parcela.pos_offset, Parcela.tamano*idx_pos[1]-Parcela.pos_offset, self._ajuste_altura)
+        _rbodyN.setCollideMask(BitMask32.bit(1))
         _pN.reparentTo(_rbodyN)
         p.setBruteforce(False)
         p.generate()
