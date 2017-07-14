@@ -1,9 +1,16 @@
+from direct.actor.Actor import Actor
 from panda3d.bullet import *
 from panda3d.core import *
+import os, os.path
 
 import logging
 log=logging.getLogger(__name__)
 
+#
+#
+# PERSONAJE
+#
+#
 class Personaje:
     
     CAM_TERCERA_PERSONA=0
@@ -11,11 +18,11 @@ class Personaje:
     #
     controles_trigger=["saltar", "acercar_camara", "alejar_camara", "mirar_adelante"]
     
-    def __init__(self, mundo, actor):
+    def __init__(self, mundo, nombre_actor):
         #
         self.mundo=mundo
         self.base=mundo.base
-        self.nombre=actor.getName()
+        self.nombre=nombre_actor
         # fisica
         _shape=BulletCapsuleShape(0.25, 0.5, ZUp)
         _rbody=BulletRigidBodyNode("%s_rigid_body"%self.nombre)
@@ -26,7 +33,14 @@ class Personaje:
         self.cuerpo.setCollideMask(BitMask32.bit(2))
         self.mundo.mundo_fisico.attachRigidBody(_rbody)
         # actor
-        self.actor=actor
+        _ruta_directorio=os.path.join(os.getcwd(), "personajes", nombre_actor)
+        _archivos_egg=[x for x in os.listdir(_ruta_directorio) if x[-4:].lower()==".egg"]
+        print str(os.listdir(_ruta_directorio))
+        _anims={}
+        for _archivo_egg in _archivos_egg:
+            _anims[_archivo_egg[:-4]]=os.path.join(_ruta_directorio, _archivo_egg)
+        log.debug("%s: animaciones %s"%(self.nombre, str(_anims)))
+        self.actor=Actor(os.path.join(_ruta_directorio, "actor"), _anims)
         self.actor.reparentTo(self.cuerpo)
         self.actor.setZ(-0.5)
         # control
@@ -70,30 +84,44 @@ class Personaje:
                     if foco_cam_P<-25.0: foco_cam_P=-25.0
                     if foco_cam_P>25.0: foco_cam_P=25.0
                     self.foco_camara.setP(foco_cam_P)
+        # animaciones
+        self.animar()
         # movimiento
         if not self.quieto:
-            altura=self.cuerpo.getZ()-self.altitud_suelo
+            self.cuerpo.setPos(self.cuerpo, self.velocidad_lineal*self.factor_movimiento*dt)
+            altura=self.cuerpo.getZ()-self.altitud_suelo-0.5
             if self.velocidad_lineal.getZ()==0.0:
-                self.cuerpo.setPos(self.cuerpo, self.velocidad_lineal*self.factor_movimiento*dt)
                 self.cuerpo.setH(self.cuerpo, self.velocidad_angular*self.factor_movimiento*dt)
-                if altura<0.1:
-                    self.velocidad_lineal+=self.mundo.mundo_fisico.getGravity()*dt
-                else:
-                    self.cuerpo.setZ(self.altitud_suelo+0.5)
+                self.cuerpo.setZ(self.altitud_suelo+0.5)
             else:
-                self.cuerpo.setPos(self.cuerpo, self.velocidad_lineal*self.factor_movimiento*dt)
                 delta_velocidad_lineal=self.mundo.mundo_fisico.getGravity()*dt
                 self.velocidad_lineal+=delta_velocidad_lineal
                 #
-                if delta_velocidad_lineal.getZ()<0.0 and altura<=abs(delta_velocidad_lineal.getZ()): # si cayendo y cerca del suelo
+                prox_delta_h=abs(delta_velocidad_lineal.getZ()*dt)
+                #log.debug("%s: dvZ=%s prox_dh=%f h=%f"%(self.nombre, str(delta_velocidad_lineal.getZ()), prox_delta_h, altura))
+                if delta_velocidad_lineal.getZ()<0.0 and altura<=prox_delta_h: # si cayendo y cerca del suelo
+                    #log.debug("prevenir penetracion del suelo")
                     self.cuerpo.setZ(self.altitud_suelo+0.5)
                     self.velocidad_lineal.setZ(0.0)
             #
             if self.velocidad_lineal==LVector3.zero() and self.velocidad_angular==0.0:
                 self.quieto=True
             #
+            #log.debug("%s: pos=%s vel=%s h=%f altitud=%f"%(self.nombre, str(self.cuerpo.getPos()), str(self.velocidad_lineal), altura, self.altitud_suelo))
         #
         return task.cont
+
+    def animar(self):
+        if self.quieto:
+            log.debug("quieto")
+            self.actor.loop("quieto")
+        else:
+            if self.velocidad_lineal.getZ()==0.0:
+                if self.velocidad_lineal.getY()!=0.0:
+                    log.debug("avanzar")
+                    self.actor.loop("avanzar")
+            else:
+                pass
 
     def controlar(self, nodo_camara, controles):
         if self.nodo_camara!=None:
@@ -185,3 +213,19 @@ class Personaje:
     
     def agachar(self, flag):
         pass
+
+    def colgarse(self, flag):
+        pass
+
+#
+#
+# CONTROLADOR DE ANIMACION
+#
+#
+class ControladorAnimacion:
+    
+    def __init__(self, actor, animaciones):
+        self.actor=actor
+        self.animaciones=animaciones
+        #
+        
