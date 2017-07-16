@@ -130,7 +130,6 @@ class TerrainTile(GeoMipTerrain):
                 # why is it necessary to invert the y axis I wonder?
                 setGray(x, ySize - y, height)
         #self.postProcessImage()
-        logging.warning("SAVED_HEIGHT_MAPS=%s"%str(SAVED_HEIGHT_MAPS))
         if SAVED_HEIGHT_MAPS:
             fileName = "maps/height/" + self.name + ".png"
             logging.info( "saving heightmap to " + fileName)

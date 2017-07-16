@@ -202,7 +202,7 @@ class Terrain(NodePath):
         self.setSx(self.horizontalScale)
         self.setSy(self.horizontalScale)
         # waterHeight is expressed as a multiplier to the max height
-        self.waterHeight = 0.3
+        self.waterHeight = 0.25#0.3
 
         #this is the furthest the camera can view
         self.maxViewRange = maxRange

@@ -21,7 +21,7 @@ class Parcela(GeoMipTerrain):
         GeoMipTerrain.__init__(self, self.nombre)
         self.setBlockSize(32)
         self.setNear(40.0)
-        self.setFar(100.0)
+        self.setFar(200.0)
         self.setFocalPoint(focal_point)
         #
         self._procesar_imagen()

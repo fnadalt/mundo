@@ -10,29 +10,29 @@ log=logging.getLogger(__name__)
 class Terreno(NodePath):
 
     altura_maxima=300.0
+    cantidad_parcelas_expandir=1
     
     def __init__(self,  mundo, foco):
         NodePath.__init__(self, "terreno")
         self.reparentTo(mundo)
         self.setSz(Terreno.altura_maxima)
-        #
+        # componentes
         self.mundo=mundo
         self.base=mundo.base
         self.foco=foco
-        self.idx_pos_parcela_actual=(0, 0)
-        #
+        # variables externas
+        self.idx_pos_parcela_actual=None
+        # variables internas
         self._ajuste_altura=-0.5
-        self._nivel_agua=0.3
+        self._nivel_agua=-0.08
         self._height_map_id=589
-        self._height_map=HeightMap(self._height_map_id, self._nivel_agua)
-        #
+        self._height_map=HeightMap(self._height_map_id)
         self._parcelas={} # {idx_pos:cuerpo_parcela_node_path,...}
         #
-        self.agua=Agua(mundo)
+        self.agua=Agua(mundo, self._nivel_agua, Parcela.tamano*4.0)
         self.agua.nodo.reparentTo(self)
-        self.agua.nodo.setZ(-0.08)
         #
-        self.actualizar_parcelas()
+        self.update()
     
     def rayo(self, pos):
         z=None
@@ -104,37 +104,41 @@ class Terreno(NodePath):
         _rbodyN.removeNode()
         del self._parcelas[idx_pos]
         
-    def actualizar_parcelas(self):
-        #
-        idxs_pos_parcelas_obj=[]
-        idxs_pos_parcelas_cargar=[]
-        idxs_pos_parcelas_descargar=[]
+    def update(self):
         #
         idx_pos=self.obtener_indice_parcela_foco()
         if idx_pos!=self.idx_pos_parcela_actual:
             self.idx_pos_parcela_actual=idx_pos
-        self._cargar_parcela(idx_pos)
-        #return
-        log.debug("foco sobre parcela "+str(idx_pos))
-        #
-        for idx_pos_x in range(idx_pos[0]-1, idx_pos[0]+2):
-            for idx_pos_y in range(idx_pos[1]-1, idx_pos[1]+2):
-                idxs_pos_parcelas_obj.append((idx_pos_x, idx_pos_y))
-        log.debug("indices de parcelas a cargar: "+str(idxs_pos_parcelas_obj))
-        #
-        for idx_pos in self._parcelas.keys():
-            if idx_pos not in idxs_pos_parcelas_obj:
-                idxs_pos_parcelas_descargar.append(idx_pos)
-                log.debug("se descargara parcela "+str(idx_pos))
-        for idx_pos in idxs_pos_parcelas_obj:
-            if idx_pos not in self._parcelas:
-                idxs_pos_parcelas_cargar.append(idx_pos)
-                log.debug("se cargara parcela "+str(idx_pos))
-        #
-        for idx_pos in idxs_pos_parcelas_descargar:
-            self._descargar_parcela(idx_pos)
-        for idx_pos in idxs_pos_parcelas_cargar:
-            self._cargar_parcela(idx_pos)
+            #self._cargar_parcela(idx_pos)
+            #return
+            log.debug("foco sobre parcela "+str(idx_pos))
+            #
+            idxs_pos_parcelas_obj=[]
+            idxs_pos_parcelas_cargar=[]
+            idxs_pos_parcelas_descargar=[]
+            #
+            for idx_pos_x in range(idx_pos[0]-Terreno.cantidad_parcelas_expandir, idx_pos[0]+Terreno.cantidad_parcelas_expandir+1):
+                for idx_pos_y in range(idx_pos[1]-Terreno.cantidad_parcelas_expandir, idx_pos[1]+Terreno.cantidad_parcelas_expandir+1):
+                    idxs_pos_parcelas_obj.append((idx_pos_x, idx_pos_y))
+            log.debug("indices de parcelas a cargar: "+str(idxs_pos_parcelas_obj))
+            #
+            for idx_pos in self._parcelas.keys():
+                if idx_pos not in idxs_pos_parcelas_obj:
+                    idxs_pos_parcelas_descargar.append(idx_pos)
+                    log.debug("se descargara parcela "+str(idx_pos))
+            for idx_pos in idxs_pos_parcelas_obj:
+                if idx_pos not in self._parcelas:
+                    idxs_pos_parcelas_cargar.append(idx_pos)
+                    log.debug("se cargara parcela "+str(idx_pos))
+            #
+            for idx_pos in idxs_pos_parcelas_descargar:
+                self._descargar_parcela(idx_pos)
+            for idx_pos in idxs_pos_parcelas_cargar:
+                self._cargar_parcela(idx_pos)
         #
         for _p in self._parcelas.values():
             _p[1].update()
+        #
+        self.agua.nodo.setX(self.foco.getX())
+        self.agua.nodo.setY(self.foco.getY())
+        self.agua.update()

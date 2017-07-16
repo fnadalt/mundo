@@ -74,7 +74,7 @@ void fshader( 	in float4 l_texcoord0 : TEXCOORD0,
 	o_color = lerp( reflection, refraction, factor );
 
    	// optionally set alpha component to transparency,
-   	// a constant value in this simple example
+   	// a constant value in this simple example (0.6)
    	o_color.a = 0.6;
 }
 

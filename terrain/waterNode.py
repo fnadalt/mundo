@@ -34,15 +34,12 @@ class WaterNode():
         self.waterNP = render.attachNewNode(maker.generate())
         self.waterNP.setHpr(0, -90, 0)
         self.waterNP.setPos(0, 0, z)
-        #self.waterNP.setTransparency(TransparencyAttrib.MAlpha)
-        #shader=loader.loadShader('shaders/water.sha')
-        shader=Shader.load(Shader.SL_GLSL, vertex="shaders/agua.vert", fragment="shaders/agua.frag")
-        self.waterNP.setShader(shader)
-        logging.info("shader agua %s"%str(self.waterNP.getShader().getLanguage()))
-        #self.waterNP.setShaderInput('wateranim', Vec4(0.03, -0.015, 64.0, 0)) # vx, vy, scale, skip
+        self.waterNP.setTransparency(TransparencyAttrib.MAlpha)
+        self.waterNP.setShader(loader.loadShader('shaders/water.sha'))
+        self.waterNP.setShaderInput('wateranim', Vec4(0.03, -0.015, 64.0, 0)) # vx, vy, scale, skip
         # offset, strength, refraction factor (0=perfect mirror, 1=total refraction), refractivity
-        #self.waterNP.setShaderInput('waterdistort', Vec4(0.4, 4.0, 0.25, 0.45))
-        #self.waterNP.setShaderInput('time', 0)
+        self.waterNP.setShaderInput('waterdistort', Vec4(0.4, 4.0, 0.25, 0.45))
+        self.waterNP.setShaderInput('time', 0)
 
         # Reflection plane
         self.waterPlane = Plane(Vec3(0, 0, z + 1), Point3(0, 0, z))
@@ -93,7 +90,7 @@ class WaterNode():
         colour = (0.2, 0.5, 0.8)
         self.waterFog.setColor(*colour)
         self.waterFog.setExpDensity(0.05)
-        #render.attachNewNode(self.waterFog)
+        render.attachNewNode(self.waterFog)
         #render.setFog(world.waterFog)
         taskMgr.add(self.update, "waterTask")
 
@@ -102,7 +99,7 @@ class WaterNode():
         mc = base.camera.getMat()
         mf = self.waterPlane.getReflectionMat()
         self.watercamNP.setMat(mc * mf)
-        #self.waterNP.setShaderInput('k_time', task.time)
+        self.waterNP.setShaderInput('time', task.time)
         self.waterNP.setX(self.world.ralph.getX())
         self.waterNP.setY(self.world.ralph.getY())
         return task.cont

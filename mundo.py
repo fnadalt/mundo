@@ -16,7 +16,6 @@ class Mundo(NodePath):
         self.base=base
         # variables internas
         self._personajes=[]
-        self._idx_pos_parcela_actual=(0, 0)
         #
         self._configurar_fisica()
         #
@@ -24,6 +23,10 @@ class Mundo(NodePath):
         self._cargar_hombre()
         self._cargar_terreno()
         self._cargar_luces()
+        #
+        self.horrendo=base.loader.loadModel("objetos/horrendo")
+        self.horrendo.reparentTo(self)
+        self.horrendo.setPos(54, -54, -19)
         #
         self.base.taskMgr.add(self._update, "world_update")
     
@@ -63,7 +66,7 @@ class Mundo(NodePath):
                         "q":"girar_izquierda", "e":"girar_derecha", "wheel_up":"acercar_camara", "wheel_down":"alejar_camara", 
                         "mouse1-up":"mirar_adelante", "space":"saltar"
                         }
-        self.hombre.controlar(self.base.cam, controles)
+        self.hombre.controlar(self.base.camera, controles)
     
     def _cargar_terreno(self):
         self.terreno=Terreno(self, self.hombre.cuerpo)
@@ -87,14 +90,12 @@ class Mundo(NodePath):
         # fisica
         self.mundo_fisico.doPhysics(dt)
         # terreno
-        idx_pos=self.terreno.obtener_indice_parcela_foco()
-        if idx_pos!=self._idx_pos_parcela_actual:
-            log.debug("cambio de parcela de %s a %s"%(str(self._idx_pos_parcela_actual), str(idx_pos)))
-            self._idx_pos_parcela_actual=idx_pos
-            self.terreno.actualizar_parcelas()
+        self.terreno.update()
+        mt=self.base.camera.getMat(self)*self.terreno.agua.waterPlane.getReflectionMat()
+        self.texto1.setText(str(mt))
         # personajes
+        #self.texto1.setText("_personaje %s:\npos=%s\nvel=%s\naltura=%f\nparcela=%s"%(self.hombre.nombre, str(self.hombre.cuerpo.getPos()), str(self.hombre.velocidad_lineal), self.hombre.altitud_suelo, str(self.terreno.obtener_indice_parcela_foco())))
         for _personaje in self._personajes:
-            self.texto1.setText("_personaje %s:\npos=%s\nvel=%s\naltura=%f\nparcela=%s"%(_personaje.nombre, str(_personaje.cuerpo.getPos()), str(_personaje.velocidad_lineal), _personaje.altitud_suelo, str(self.terreno.obtener_indice_parcela_foco())))
             if _personaje.quieto:
                 continue
             _personaje.altitud_suelo=self.terreno.obtener_altitud(_personaje.cuerpo.getPos())

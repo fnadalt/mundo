@@ -62,10 +62,10 @@ max-view-range 100
 max-terrain-height 300.0
 terrain-horizontal-stretch 1.0
 
-save-height-maps #t
-save-slope-maps #t
-save-texture-maps #t
-save-vegetation-maps #t
+save-height-maps #f
+save-slope-maps #f
+save-texture-maps #f
+save-vegetation-maps #f
 
 thread-load-terrain #f
 brute-force-tiles #t
