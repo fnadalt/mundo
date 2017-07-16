@@ -112,16 +112,24 @@ class Personaje:
         return task.cont
 
     def animar(self):
-        if self.quieto:
-            log.debug("quieto")
+        _anim_actual=self.actor.getCurrentAnim()
+        if self.quieto and _anim_actual!="quieto":
+            #log.debug("quieto")
             self.actor.loop("quieto")
         else:
             if self.velocidad_lineal.getZ()==0.0:
-                if self.velocidad_lineal.getY()!=0.0:
+                if self.velocidad_lineal.getY()<0.0 and _anim_actual!="avanzar":
                     log.debug("avanzar")
+                    self.actor.setPlayRate(3.5, "avanzar")
+                    self.actor.loop("avanzar")
+                elif self.velocidad_lineal.getY()>0.0 and _anim_actual!="retroceder":
+                    log.debug("retroceder")
+                    self.actor.setPlayRate(2.5, "retroceder")
                     self.actor.loop("avanzar")
             else:
-                pass
+                if self.velocidad_lineal.getZ()>0.0 and _anim_actual!="saltar":
+                    self.actor.setPlayRate(1.2, "saltar")
+                    self.actor.play("saltar", fromFrame=20, toFrame=59)
 
     def controlar(self, nodo_camara, controles):
         if self.nodo_camara!=None:
@@ -160,8 +168,7 @@ class Personaje:
     def alejar_camara(self):
         cam_Y=self.base.cam.getY()
         cam_Y+=5.0
-        if cam_Y<1.2:
-            cam_Y=1.2
+        if cam_Y>1.2:
             self.modo_camara=Personaje.CAM_TERCERA_PERSONA
         elif cam_Y>1600.0:
             return

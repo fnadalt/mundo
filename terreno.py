@@ -2,6 +2,7 @@ from panda3d.bullet import *
 from panda3d.core import *
 from heightmap import HeightMap
 from parcela import Parcela
+from agua import Agua
 
 import logging
 log=logging.getLogger(__name__)
@@ -18,6 +19,7 @@ class Terreno(NodePath):
         self.mundo=mundo
         self.base=mundo.base
         self.foco=foco
+        self.idx_pos_parcela_actual=(0, 0)
         #
         self._ajuste_altura=-0.5
         self._nivel_agua=0.3
@@ -25,6 +27,10 @@ class Terreno(NodePath):
         self._height_map=HeightMap(self._height_map_id, self._nivel_agua)
         #
         self._parcelas={} # {idx_pos:cuerpo_parcela_node_path,...}
+        #
+        self.agua=Agua(mundo)
+        self.agua.nodo.reparentTo(self)
+        self.agua.nodo.setZ(-0.08)
         #
         self.actualizar_parcelas()
     
@@ -47,7 +53,9 @@ class Terreno(NodePath):
     
     def obtener_indice_parcela_foco(self):
         pos_foco=self.foco.getPos().getXy()
-        return (int(pos_foco.getX()/Parcela.tamano), int(pos_foco.getY())/Parcela.tamano)
+        pos_foco[0]+=-Parcela.pos_offset if pos_foco[0]<0.0 else Parcela.pos_offset
+        pos_foco[1]+=-Parcela.pos_offset if pos_foco[1]<0.0 else Parcela.pos_offset
+        return (int(pos_foco[0]/Parcela.tamano), int(pos_foco[1]/Parcela.tamano))
     
     def _cargar_parcela(self, idx_pos):
         log.info("cargando parcela "+str(idx_pos))
@@ -65,7 +73,7 @@ class Terreno(NodePath):
         p.generate()
         _pN=p.getRoot()
         _pN.setMaterial(m)
-        _pN.setRenderModeWireframe()
+        #_pN.setRenderModeWireframe()
         #
         _rbody=BulletRigidBodyNode("%s_rigid_body"%p.nombre)
         for geom_node in _pN.findAllMatches("**/+GeomNode"):
@@ -82,16 +90,18 @@ class Terreno(NodePath):
         p.generate()
         p.update()
         self.mundo.mundo_fisico.attachRigidBody(_rbody)
-        logging.debug("parcela at "+str(_rbodyN.getPos()))
+        log.debug("parcela cargada "+str(_rbodyN.getPos()))
         #
-        self._parcelas[idx_pos]=_rbodyN
+        self._parcelas[idx_pos]=(_rbodyN, p)
 
     def _descargar_parcela(self, idx_pos):
         log.info("descargando parcela "+str(idx_pos))
         if idx_pos not in self._parcelas:
             log.error("se solicito la descarga de la parcela %s, que no se encuentra en self._parcelas"%str(idx_pos))
             return
-        #
+        # no es suficiente... quedan las parcelas anteriores y se siuperponen.
+        _rbodyN, p=self._parcelas[idx_pos]
+        _rbodyN.removeNode()
         del self._parcelas[idx_pos]
         
     def actualizar_parcelas(self):
@@ -101,12 +111,14 @@ class Terreno(NodePath):
         idxs_pos_parcelas_descargar=[]
         #
         idx_pos=self.obtener_indice_parcela_foco()
+        if idx_pos!=self.idx_pos_parcela_actual:
+            self.idx_pos_parcela_actual=idx_pos
         self._cargar_parcela(idx_pos)
-        return
+        #return
         log.debug("foco sobre parcela "+str(idx_pos))
         #
-        for idx_pos_x in range(idx_pos[0]-1, 2):
-            for idx_pos_y in range(idx_pos[1]-1, 2):
+        for idx_pos_x in range(idx_pos[0]-1, idx_pos[0]+2):
+            for idx_pos_y in range(idx_pos[1]-1, idx_pos[1]+2):
                 idxs_pos_parcelas_obj.append((idx_pos_x, idx_pos_y))
         log.debug("indices de parcelas a cargar: "+str(idxs_pos_parcelas_obj))
         #
@@ -123,3 +135,6 @@ class Terreno(NodePath):
             self._descargar_parcela(idx_pos)
         for idx_pos in idxs_pos_parcelas_cargar:
             self._cargar_parcela(idx_pos)
+        #
+        for _p in self._parcelas.values():
+            _p[1].update()

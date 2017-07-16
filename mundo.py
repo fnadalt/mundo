@@ -16,6 +16,7 @@ class Mundo(NodePath):
         self.base=base
         # variables internas
         self._personajes=[]
+        self._idx_pos_parcela_actual=(0, 0)
         #
         self._configurar_fisica()
         #
@@ -69,9 +70,9 @@ class Mundo(NodePath):
         altitud=self.terreno.obtener_altitud(self.hombre.cuerpo.getPos())
         self.hombre.altitud_suelo=altitud
         log.debug("hombre at "+str(self.hombre.cuerpo.getPos()))
-        test=self.mundo_fisico.rayTestAll(LPoint3(0.0, 0.0, 1000.0), LPoint3(0.0, 0.0, -1000.0))
-        for hit in test.getHits():
-            log.debug("ray test hit %s at %s"%(str(hit.getNode()), str(hit.getHitPos())))
+#        test=self.mundo_fisico.rayTestAll(LPoint3(0.0, 0.0, 1000.0), LPoint3(0.0, 0.0, -1000.0))
+#        for hit in test.getHits():
+#            log.debug("ray test hit %s at %s"%(str(hit.getNode()), str(hit.getHitPos())))
 
     def _cargar_luces(self):
         luz_d=DirectionalLight("sol0")
@@ -85,9 +86,15 @@ class Mundo(NodePath):
         dt=self.base.taskMgr.globalClock.getDt()
         # fisica
         self.mundo_fisico.doPhysics(dt)
+        # terreno
+        idx_pos=self.terreno.obtener_indice_parcela_foco()
+        if idx_pos!=self._idx_pos_parcela_actual:
+            log.debug("cambio de parcela de %s a %s"%(str(self._idx_pos_parcela_actual), str(idx_pos)))
+            self._idx_pos_parcela_actual=idx_pos
+            self.terreno.actualizar_parcelas()
         # personajes
         for _personaje in self._personajes:
-            self.texto1.setText("_personaje %s:\npos=%s\nvel=%s\naltura=%f"%(_personaje.nombre, str(_personaje.cuerpo.getPos()), str(_personaje.velocidad_lineal), _personaje.altitud_suelo))
+            self.texto1.setText("_personaje %s:\npos=%s\nvel=%s\naltura=%f\nparcela=%s"%(_personaje.nombre, str(_personaje.cuerpo.getPos()), str(_personaje.velocidad_lineal), _personaje.altitud_suelo, str(self.terreno.obtener_indice_parcela_foco())))
             if _personaje.quieto:
                 continue
             _personaje.altitud_suelo=self.terreno.obtener_altitud(_personaje.cuerpo.getPos())

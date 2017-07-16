@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-5.1.dtd">
 <!-- eric project file for project mundo -->
-<!-- Saved: 2017-07-12, 15:03:23 -->
+<!-- Saved: 2017-07-15, 21:06:36 -->
 <!-- Copyright (C) 2017 Fernando Nadal Testa, fnt2006@gmail.com -->
 <Project version="5.1">
   <Language>en_US</Language>
@@ -14,6 +14,7 @@
   <Eol index="0"/>
   <Sources>
     <Source>__init__.py</Source>
+    <Source>agua.py</Source>
     <Source>aplicacion.py</Source>
     <Source>heightmap.py</Source>
     <Source>hombre.py</Source>
