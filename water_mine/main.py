@@ -34,7 +34,7 @@ class Water(ShowBase):
         #
         self.agua=self.loader.loadModel("plano")
         self.agua.reparentTo(self.render)
-        self.agua.setScale(0.5)
+        self.agua.setScale(0.75)
         self.agua.setTransparency(TransparencyAttrib.MAlpha)
         self.agua.setZ(-0.05)
         #
@@ -44,6 +44,9 @@ class Water(ShowBase):
         #
         self.configurar_reflejo()
         self.configurar_refraccion()
+        self.configurar_dudv()
+        #
+        self.vel_cam=Vec2(0.0, 0.0)
         #
         self.camera.reparentTo(self.rotador)
         self.camera.setPos(self.agua, 10.0, -24.0, 10.0)
@@ -62,7 +65,29 @@ class Water(ShowBase):
         shader=Shader.load(Shader.SL_GLSL, vertex="water.v.glsl", fragment="water.f.glsl")
         self.agua.setShader(shader)
         #
+        self.accept("arrow_left", self.input, ["arrow_left"])
+        self.accept("arrow_right", self.input, ["arrow_right"])
+        self.accept("arrow_up", self.input, ["arrow_up"])
+        self.accept("arrow_down", self.input, ["arrow_down"])
+        self.accept("arrow_left-up", self.input, ["deactivate"])
+        self.accept("arrow_right-up", self.input, ["deactivate"])
+        self.accept("arrow_up-up", self.input, ["deactivate"])
+        self.accept("arrow_down-up", self.input, ["deactivate"])
+        #
         self.taskMgr.add(self.update,"update")
+
+    def input(self, tecla):
+        dmove=0.01
+        if tecla=="arrow_left":
+            self.vel_cam.setX(-dmove)
+        elif tecla=="arrow_right":
+            self.vel_cam.setX(dmove)
+        elif tecla=="arrow_up":
+            self.vel_cam.setY(dmove)
+        elif tecla=="arrow_down":
+            self.vel_cam.setY(-dmove)
+        elif tecla=="deactivate":
+            self.vel_cam=Vec2(0.0, 0.0)
 
     def configurar_reflejo(self):
         # reflejo
@@ -108,17 +133,25 @@ class Water(ShowBase):
         tex1.setWrapV(Texture.WMClamp)
         self.agua.setTexture(ts1, tex1)
     
+    def configurar_dudv(self):
+        ts2=TextureStage("tsBuffer_dudv")
+        tex2=self.loader.loadTexture("agua_dudv.jpg")
+        tex2.setWrapU(Texture.WMRepeat)
+        tex2.setWrapV(Texture.WMRepeat)
+        self.agua.setTexture(ts2, tex2)
+    
     def update(self, task):
         if self.camera2!=None:
             self.camera2.setPos(self.camera.getPos())
             self.camera2.setZ(-self.camera.getZ())
             self.camera2.setP(-self.camera.getP())
-            self.camera2.lookAt(self.agua)
         if self.camera2!=None and self.camera3!=None:
             self.texto1.setText("cam %s\ncam2 %s\ncam3 %s"%(str(self.camera.getPos()), str(self.camera2.getPos()), str(self.camera3.getPos())))
         #
         dt=task.time
-        #self.rotador.setH(self.rotador.getH()+0.1*dt)
+        self.rotador.setH(5.0*dt)
+        if self.vel_cam!=Vec2.zero():
+            self.rotador.setPos(self.rotador, Vec3(self.vel_cam, 0.0)*dt)
         #
         return task.cont
 
