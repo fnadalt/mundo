@@ -45,6 +45,8 @@ class Water(ShowBase):
         self.configurar_reflejo()
         self.configurar_refraccion()
         self.configurar_dudv()
+        self.configurar_normal()
+        self.move_factor=0.0
         #
         self.vel_cam=Vec2(0.0, 0.0)
         #
@@ -64,6 +66,8 @@ class Water(ShowBase):
         #
         shader=Shader.load(Shader.SL_GLSL, vertex="water.v.glsl", fragment="water.f.glsl")
         self.agua.setShader(shader)
+        self.agua.setShaderInput("light_pos", sunN.getPos())
+        self.agua.setShaderInput("light_color", sun.getColor())
         #
         self.accept("arrow_left", self.input, ["arrow_left"])
         self.accept("arrow_right", self.input, ["arrow_right"])
@@ -77,7 +81,7 @@ class Water(ShowBase):
         self.taskMgr.add(self.update,"update")
 
     def input(self, tecla):
-        dmove=0.01
+        dmove=1.0
         if tecla=="arrow_left":
             self.vel_cam.setX(-dmove)
         elif tecla=="arrow_right":
@@ -113,7 +117,7 @@ class Water(ShowBase):
         
     def configurar_refraccion(self):
         # refraccion
-        refraction_plane=Plane(Vec3(0.0, 0.0, -1.0), Vec3(0.0, 0.0, -0.05))
+        refraction_plane=Plane(Vec3(0.0, 0.0, -1.0), Vec3(0.0, 0.0, 0.109))
         refraction_plane_node=PlaneNode("refraction_plane_node")
         refraction_plane_node.setPlane(refraction_plane)
         refraction_plane_nodeN=self.render.attachNewNode(refraction_plane_node)
@@ -135,10 +139,17 @@ class Water(ShowBase):
     
     def configurar_dudv(self):
         ts2=TextureStage("tsBuffer_dudv")
-        tex2=self.loader.loadTexture("agua_dudv.jpg")
+        tex2=self.loader.loadTexture("agua_dudv.png")
         tex2.setWrapU(Texture.WMRepeat)
         tex2.setWrapV(Texture.WMRepeat)
         self.agua.setTexture(ts2, tex2)
+    
+    def configurar_normal(self):
+        ts3=TextureStage("tsBuffer_normal")
+        tex3=self.loader.loadTexture("agua_normal.png")
+        tex3.setWrapU(Texture.WMRepeat)
+        tex3.setWrapV(Texture.WMRepeat)
+        self.agua.setTexture(ts3, tex3)
     
     def update(self, task):
         if self.camera2!=None:
@@ -146,10 +157,14 @@ class Water(ShowBase):
             self.camera2.setZ(-self.camera.getZ())
             self.camera2.setP(-self.camera.getP())
         if self.camera2!=None and self.camera3!=None:
-            self.texto1.setText("cam %s\ncam2 %s\ncam3 %s"%(str(self.camera.getPos()), str(self.camera2.getPos()), str(self.camera3.getPos())))
+            self.texto1.setText("cam %s\ncam2 %s\ncam3 %s"%(str(self.camera.getPos(self.render)), str(self.camera2.getPos()), str(self.camera3.getPos())))
         #
-        dt=task.time
-        self.rotador.setH(5.0*dt)
+        dt=self.taskMgr.globalClock.getDt()
+        self.move_factor+=0.03*dt
+        self.move_factor%=1
+        self.agua.setShaderInput("move_factor", self.move_factor)
+        self.agua.setShaderInput("cam_pos", self.camera.getPos(self.render))
+        self.rotador.setH(3.0*dt)
         if self.vel_cam!=Vec2.zero():
             self.rotador.setPos(self.rotador, Vec3(self.vel_cam, 0.0)*dt)
         #
