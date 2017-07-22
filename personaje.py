@@ -150,7 +150,7 @@ class Personaje:
     def liberar_control(self):
         if self.nodo_camara==None:
             return
-        self.nodo_camara.reparentTo(self.base)
+        self.nodo_camara.reparentTo(self.cuerpo)
         self.nodo_camara=None
         for e, f in self.controles.items():
             self.mundo.base.ignore(e)
@@ -158,21 +158,27 @@ class Personaje:
                 self.mundo.base.ignore("%s-up")
 
     def acercar_camara(self):
-        cam_Y=self.base.cam.getY()
+        cam_Y=self.nodo_camara.getY()
         cam_Y-=5.0
-        if cam_Y<1.2:
+        if cam_Y<1.2 and self.modo_camara==Personaje.CAM_TERCERA_PERSONA:
             cam_Y=0.0
             self.modo_camara=Personaje.CAM_PRIMERA_PERSONA
-        self.base.cam.setY(cam_Y)    
+            log.info("camara en primera persona")
+        elif cam_Y<0.0:
+            return
+        self.nodo_camara.setY(cam_Y)
+        log.debug("self.nodo_camara %s"%str(self.nodo_camara.getPos()))
 
     def alejar_camara(self):
-        cam_Y=self.base.cam.getY()
+        cam_Y=self.nodo_camara.getY()
         cam_Y+=5.0
-        if cam_Y>1.2:
-            self.modo_camara=Personaje.CAM_TERCERA_PERSONA
-        elif cam_Y>1600.0:
+        if cam_Y>=1600.0:
             return
-        self.base.cam.setY(cam_Y)
+        elif self.modo_camara==Personaje.CAM_PRIMERA_PERSONA and cam_Y>1.2:
+            self.modo_camara=Personaje.CAM_TERCERA_PERSONA
+            log.info("camara en tercera persona")
+        self.nodo_camara.setY(cam_Y)
+        log.debug("self.nodo_camara %s"%str(self.nodo_camara.getPos()))
     
     def mirar_adelante(self):
         if self.modo_camara==Personaje.CAM_TERCERA_PERSONA:

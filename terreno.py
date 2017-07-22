@@ -2,7 +2,6 @@ from panda3d.bullet import *
 from panda3d.core import *
 from heightmap import HeightMap
 from parcela import Parcela
-from agua import Agua
 
 import logging
 log=logging.getLogger(__name__)
@@ -22,15 +21,12 @@ class Terreno(NodePath):
         self.foco=foco
         # variables externas
         self.idx_pos_parcela_actual=None
+        self.nivel_agua=-0.08
         # variables internas
         self._ajuste_altura=-0.5
-        self._nivel_agua=-0.08
         self._height_map_id=589
         self._height_map=HeightMap(self._height_map_id)
         self._parcelas={} # {idx_pos:cuerpo_parcela_node_path,...}
-        #
-        self.agua=Agua(mundo, self._nivel_agua, Parcela.tamano*4.0)
-        self.agua.nodo.reparentTo(self)
         #
         self.update()
     
@@ -135,10 +131,6 @@ class Terreno(NodePath):
                 self._descargar_parcela(idx_pos)
             for idx_pos in idxs_pos_parcelas_cargar:
                 self._cargar_parcela(idx_pos)
-        #
+        # poco eficiente?
         for _p in self._parcelas.values():
             _p[1].update()
-        #
-        self.agua.nodo.setX(self.foco.getX())
-        self.agua.nodo.setY(self.foco.getY())
-        self.agua.update()

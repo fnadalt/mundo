@@ -2,6 +2,8 @@ from direct.gui.OnscreenText import OnscreenText
 from panda3d.bullet import *
 from panda3d.core import *
 from terreno import Terreno
+from parcela import Parcela
+from agua import Agua
 from hombre import Hombre
 
 import logging
@@ -20,9 +22,9 @@ class Mundo(NodePath):
         self._configurar_fisica()
         #
         self._cargar_debug_info()
+        self._cargar_luces()
         self._cargar_hombre()
         self._cargar_terreno()
-        self._cargar_luces()
         #
         self.horrendo=base.loader.loadModel("objetos/horrendo")
         self.horrendo.reparentTo(self)
@@ -69,13 +71,14 @@ class Mundo(NodePath):
         self.hombre.controlar(self.base.camera, controles)
     
     def _cargar_terreno(self):
+        #
         self.terreno=Terreno(self, self.hombre.cuerpo)
         altitud=self.terreno.obtener_altitud(self.hombre.cuerpo.getPos())
         self.hombre.altitud_suelo=altitud
-        log.debug("hombre at "+str(self.hombre.cuerpo.getPos()))
-#        test=self.mundo_fisico.rayTestAll(LPoint3(0.0, 0.0, 1000.0), LPoint3(0.0, 0.0, -1000.0))
-#        for hit in test.getHits():
-#            log.debug("ray test hit %s at %s"%(str(hit.getNode()), str(hit.getHitPos())))
+        #
+        self.agua=Agua(self, self.sol0, Parcela.tamano*4.0)
+        self.agua.plano.reparentTo(self)
+        self.agua.plano.setZ(self.terreno.nivel_agua)
 
     def _cargar_luces(self):
         luz_d=DirectionalLight("sol0")
@@ -91,14 +94,16 @@ class Mundo(NodePath):
         self.mundo_fisico.doPhysics(dt)
         # terreno
         self.terreno.update()
-        mt=self.base.camera.getMat(self)*self.terreno.agua.waterPlane.getReflectionMat()
-        self.texto1.setText(str(mt))
         # personajes
         #self.texto1.setText("_personaje %s:\npos=%s\nvel=%s\naltura=%f\nparcela=%s"%(self.hombre.nombre, str(self.hombre.cuerpo.getPos()), str(self.hombre.velocidad_lineal), self.hombre.altitud_suelo, str(self.terreno.obtener_indice_parcela_foco())))
         for _personaje in self._personajes:
             if _personaje.quieto:
                 continue
             _personaje.altitud_suelo=self.terreno.obtener_altitud(_personaje.cuerpo.getPos())
+        #
+        self.agua.plano.setX(self.hombre.cuerpo.getX())
+        self.agua.plano.setY(self.hombre.cuerpo.getY())
+        self.agua.update(dt)
         #
         return task.cont
     
