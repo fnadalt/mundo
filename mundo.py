@@ -28,7 +28,7 @@ class Mundo(NodePath):
         #
         self.horrendo=base.loader.loadModel("objetos/horrendo")
         self.horrendo.reparentTo(self)
-        self.horrendo.setPos(54, -54, -19)
+        self.horrendo.setPos(0.0, -5.0, 0.0)
         #
         self.base.taskMgr.add(self._update, "world_update")
     
@@ -99,7 +99,7 @@ class Mundo(NodePath):
         for _personaje in self._personajes:
             if _personaje.quieto:
                 continue
-            _personaje.altitud_suelo=self.terreno.obtener_altitud(_personaje.cuerpo.getPos())
+            _personaje.altitud_suelo=self.terreno.nivel_agua #self.terreno.obtener_altitud(_personaje.cuerpo.getPos())
         #
         self.agua.plano.setX(self.hombre.cuerpo.getX())
         self.agua.plano.setY(self.hombre.cuerpo.getY())

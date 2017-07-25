@@ -21,7 +21,7 @@ class Terreno(NodePath):
         self.foco=foco
         # variables externas
         self.idx_pos_parcela_actual=None
-        self.nivel_agua=-0.08
+        self.nivel_agua=0.0#-11.0
         # variables internas
         self._ajuste_altura=-0.5
         self._height_map_id=589
