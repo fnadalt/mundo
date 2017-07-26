@@ -30,7 +30,7 @@ void main()
     vec2 total_distortion=(texture2D(p3d_Texture2,distorted_texcoords).rg*2.0-1.0)*0.01;
     
     //
-    //texcoord_reflejo+=total_distortion;
+    texcoord_reflejo+=total_distortion;
     texcoord_reflejo=clamp(texcoord_reflejo,0.001,0.999);
     texcoord_refraccion+=total_distortion;
     texcoord_refraccion=clamp(texcoord_refraccion,0.001,0.999);
@@ -61,5 +61,5 @@ void main()
     
     //
     gl_FragColor=color;
-    gl_FragColor=color_reflection;
+    //gl_FragColor=color_reflection;
 }

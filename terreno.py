@@ -9,7 +9,7 @@ log=logging.getLogger(__name__)
 class Terreno(NodePath):
 
     altura_maxima=300.0
-    cantidad_parcelas_expandir=1
+    cantidad_parcelas_expandir=0
     
     def __init__(self,  mundo, foco):
         NodePath.__init__(self, "terreno")
@@ -21,7 +21,7 @@ class Terreno(NodePath):
         self.foco=foco
         # variables externas
         self.idx_pos_parcela_actual=None
-        self.nivel_agua=0.0#-11.0
+        self.nivel_agua=-11.0
         # variables internas
         self._ajuste_altura=-0.5
         self._height_map_id=589

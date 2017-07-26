@@ -2,7 +2,6 @@ from direct.gui.OnscreenText import OnscreenText
 from panda3d.bullet import *
 from panda3d.core import *
 from terreno import Terreno
-from parcela import Parcela
 from agua import Agua
 from hombre import Hombre
 
@@ -57,7 +56,7 @@ class Mundo(NodePath):
         caja.reparentTo(_cuerpoN)
     
     def _cargar_debug_info(self):
-        self.texto1=OnscreenText(text="info?", pos=(0.9, 0.9), scale=0.05, mayChange=True)
+        self.texto1=OnscreenText(text="info?", pos=(0.5, 0.5), scale=0.05, mayChange=True)
     
     def _cargar_hombre(self):
         self.hombre=Hombre(self)
@@ -76,17 +75,22 @@ class Mundo(NodePath):
         altitud=self.terreno.obtener_altitud(self.hombre.cuerpo.getPos())
         self.hombre.altitud_suelo=altitud
         #
-        self.agua=Agua(self, self.sol0, Parcela.tamano*4.0)
-        self.agua.plano.reparentTo(self)
-        self.agua.plano.setZ(self.terreno.nivel_agua)
+        self.agua=Agua(self, self.sol0, self.terreno.nivel_agua)
+        self.agua.generar()
 
     def _cargar_luces(self):
         luz_d=DirectionalLight("sol0")
-        luz_d.setColor(Vec4(0.55, 0.55, 0.55, 1.0))
-        self.sol0=self.base.render.attachNewNode(luz_d)
-        self.sol0.setHpr(45.0, -75.0, 0.0)
+        luz_d.setColor(Vec4(0.5, 0.5, 0.5, 1.0))
+        self.sol0=self.attachNewNode(luz_d)
+        self.sol0.setHpr(-45.0, -45.0, 0.0)
         self.setLight(self.sol0)
-    
+        #
+        point=PointLight("foco")
+        point.setColor((0.7, 0.7, 0.7, 1.0))
+        pointN=self.attachNewNode(point)
+        pointN.setPos(0.0, 0.0, 0.2)
+        self.setLight(pointN)
+
     def _update(self, task):
         #
         dt=self.base.taskMgr.globalClock.getDt()
@@ -99,10 +103,10 @@ class Mundo(NodePath):
         for _personaje in self._personajes:
             if _personaje.quieto:
                 continue
-            _personaje.altitud_suelo=self.terreno.nivel_agua #self.terreno.obtener_altitud(_personaje.cuerpo.getPos())
+            _personaje.altitud_suelo=self.terreno.obtener_altitud(_personaje.cuerpo.getPos()) #nivel_agua
         #
-        self.agua.plano.setX(self.hombre.cuerpo.getX())
-        self.agua.plano.setY(self.hombre.cuerpo.getY())
+        #self.agua.plano.setX(self.hombre.cuerpo.getX())
+        #self.agua.plano.setY(self.hombre.cuerpo.getY())
         self.agua.update(dt)
         #
         return task.cont
