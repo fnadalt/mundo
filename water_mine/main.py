@@ -32,13 +32,15 @@ class Water(ShowBase):
         self.hombre.reparentTo(self.render)
         self.hombre.setPos(0.0, 3.0, -0.5)
         #
+        self.nivel_agua=-0.7#-0.05
         self.agua=self.loader.loadModel("plano")
         self.agua.reparentTo(self.render)
         self.agua.setScale(0.75)
         self.agua.setTransparency(TransparencyAttrib.MAlpha)
-        self.agua.setZ(-0.05)
+        self.agua.setZ(self.nivel_agua)
         #
         self.rotador=self.render.attachNewNode("rotador")
+        #self.rotador.setZ(self.nivel_agua)
         self.camera2=None
         self.camera3=None
         #
@@ -95,7 +97,7 @@ class Water(ShowBase):
 
     def configurar_reflejo(self):
         # reflejo
-        reflection_plane=Plane(Vec3(0.0, 0.0, 1.0), Vec3(0.0, 0.0, -0.15))
+        reflection_plane=Plane(Vec3(0.0, 0.0, 1.0), Vec3(0.0, 0.0, self.nivel_agua-0.15))
         reflection_plane_node=PlaneNode("reflection_plane_node")
         reflection_plane_node.setPlane(reflection_plane)
         reflection_plane_nodeN=self.render.attachNewNode(reflection_plane_node)
@@ -117,7 +119,7 @@ class Water(ShowBase):
         
     def configurar_refraccion(self):
         # refraccion
-        refraction_plane=Plane(Vec3(0.0, 0.0, -1.0), Vec3(0.0, 0.0, 0.109))
+        refraction_plane=Plane(Vec3(0.0, 0.0, -1.0), Vec3(0.0, 0.0, self.nivel_agua+0.109))
         refraction_plane_node=PlaneNode("refraction_plane_node")
         refraction_plane_node.setPlane(refraction_plane)
         refraction_plane_nodeN=self.render.attachNewNode(refraction_plane_node)

@@ -78,7 +78,7 @@ class Mundo(NodePath):
         #
         self.agua=Agua(self, self.sol0, Parcela.tamano*4.0)
         self.agua.plano.reparentTo(self)
-        self.agua.plano.setZ(self.terreno.nivel_agua)
+        self.agua.plano.setZ(0.0)#self.terreno.nivel_agua)
 
     def _cargar_luces(self):
         luz_d=DirectionalLight("sol0")

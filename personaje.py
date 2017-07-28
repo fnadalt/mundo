@@ -92,7 +92,7 @@ class Personaje:
             altura=self.cuerpo.getZ()-self.altitud_suelo-0.5
             if self.velocidad_lineal.getZ()==0.0:
                 self.cuerpo.setH(self.cuerpo, self.velocidad_angular*self.factor_movimiento*dt)
-                self.cuerpo.setZ(self.altitud_suelo+0.5)
+                self.cuerpo.setZ(0.0)#self.altitud_suelo+0.5)
             else:
                 delta_velocidad_lineal=self.mundo.mundo_fisico.getGravity()*dt
                 self.velocidad_lineal+=delta_velocidad_lineal
