@@ -64,7 +64,7 @@ class Water(ShowBase):
             self.camera3.setPos(self.agua, 10.0, -24.0, 10.0)
             self.camera3.lookAt(self.agua)
         # debug info text
-        self.texto1=OnscreenText(text="info?", pos=(0.9, 0.9), scale=0.05, mayChange=True)
+        self.texto1=OnscreenText(text="info?", pos=(0.5, 0.5), scale=0.05, mayChange=True)
         #
         shader=Shader.load(Shader.SL_GLSL, vertex="water.v.glsl", fragment="water.f.glsl")
         self.agua.setShader(shader)
@@ -158,15 +158,18 @@ class Water(ShowBase):
             self.camera2.setPos(self.camera.getPos())
             self.camera2.setZ(-self.camera.getZ())
             self.camera2.setP(-self.camera.getP())
+        if self.camera3!=None:
+            self.camera3.setPos(self.camera.getPos())
+            self.camera3.setHpr(self.camera.getHpr())
         if self.camera2!=None and self.camera3!=None:
-            self.texto1.setText("cam %s\ncam2 %s\ncam3 %s"%(str(self.camera.getPos(self.render)), str(self.camera2.getPos()), str(self.camera3.getPos())))
+            self.texto1.setText("cam %s %s\ncam2 %s %s\ncam3 %s %s"%(str(self.camera.getPos(self.render)), str(self.camera.getHpr(self.render)), str(self.camera2.getPos(self.render)), str(self.camera2.getHpr(self.render)), str(self.camera3.getPos(self.render)), str(self.camera3.getHpr(self.render))))
         #
         dt=self.taskMgr.globalClock.getDt()
         self.move_factor+=0.03*dt
         self.move_factor%=1
         self.agua.setShaderInput("move_factor", self.move_factor)
         self.agua.setShaderInput("cam_pos", self.camera.getPos(self.render))
-        self.rotador.setH(3.0*dt)
+        #self.rotador.setH(3.0*dt)
         if self.vel_cam!=Vec2.zero():
             self.rotador.setPos(self.rotador, Vec3(self.vel_cam, 0.0)*dt)
         #

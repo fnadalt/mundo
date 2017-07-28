@@ -61,5 +61,5 @@ void main()
     
     //
     gl_FragColor=color;
-    //gl_FragColor=color_normal;
+    //gl_FragColor=color_reflection;
 }

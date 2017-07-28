@@ -69,6 +69,9 @@ class Personaje:
             if self.base.mouseWatcherNode.hasMouse():
                 pos_mouse=self.base.mouseWatcherNode.getMouse()
                 if abs(pos_mouse.getX())>0.4:
+                    rot=Vec3(self.nodo_camara.getPos()-self.foco_camara.getPos()).normalized()
+                    print str(rot)
+                    return # !!!
                     foco_cam_H=self.foco_camara.getH()
                     foco_cam_H-=90.0*dt*1.0 if pos_mouse[0]>0.0 else -1.0
                     if self.modo_camara==Personaje.CAM_PRIMERA_PERSONA:
@@ -79,6 +82,7 @@ class Personaje:
                             foco_cam_H=0.0
                     self.foco_camara.setH(foco_cam_H)
                 if abs(pos_mouse.getY())>0.4:
+                    return # !!!
                     foco_cam_P=self.foco_camara.getP()
                     foco_cam_P+=15.0*dt*1.0 if pos_mouse[1]<0.0 else -1.0
                     if foco_cam_P<-25.0: foco_cam_P=-25.0
@@ -150,7 +154,7 @@ class Personaje:
     def liberar_control(self):
         if self.nodo_camara==None:
             return
-        self.nodo_camara.reparentTo(self.cuerpo)
+        self.nodo_camara.wrtReparentTo(self.mundo)
         self.nodo_camara=None
         for e, f in self.controles.items():
             self.mundo.base.ignore(e)
