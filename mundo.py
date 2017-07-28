@@ -27,7 +27,7 @@ class Mundo(NodePath):
         #
         self.horrendo=base.loader.loadModel("objetos/horrendo")
         self.horrendo.reparentTo(self)
-        self.horrendo.setPos(0.0, -5.0, 0.0)
+        self.horrendo.setPos(0.0, 10.0, 0.0)
         #
         self.base.taskMgr.add(self._update, "world_update")
     
@@ -72,17 +72,10 @@ class Mundo(NodePath):
     def _cargar_terreno(self):
         #
         self.terreno=Terreno(self, self.hombre.cuerpo)
-        altitud=self.terreno.obtener_altitud(self.hombre.cuerpo.getPos())
-        self.hombre.altitud_suelo=altitud
+        self.hombre.altitud_suelo=self.terreno.obtener_altitud(self.hombre.cuerpo.getPos())
         #
-<<<<<<< HEAD
-        self.agua=Agua(self, self.sol0, Parcela.tamano*4.0)
-        self.agua.plano.reparentTo(self)
-        self.agua.plano.setZ(0.0)#self.terreno.nivel_agua)
-=======
         self.agua=Agua(self, self.sol0, self.terreno.nivel_agua)
         self.agua.generar()
->>>>>>> 53bb600c17c21806d12f57e5a659203932ee44f5
 
     def _cargar_luces(self):
         luz_d=DirectionalLight("sol0")

@@ -13,13 +13,9 @@ class Agua2:
         self.altitud=altitud
         #
         self.plano=self.mundo.base.loader.loadModel("objetos/plano_agua")
-<<<<<<< HEAD
-        self.plano.setScale(1.0)
-=======
         self.agua.plano.reparentTo(self)
         self.plano.setScale(1.0)
         self.agua.plano.setZ(self.altitud)
->>>>>>> 53bb600c17c21806d12f57e5a659203932ee44f5
         #self.plano.setTransparency(TransparencyAttrib.MAlpha)
         #
         self.move_factor=0.0
@@ -134,21 +130,21 @@ class Agua:
         self.plano.setZ(self.altitud)
 
     def generar(self):
+        # self.shader?
+        self.shader=Shader.load(Shader.SL_GLSL, vertex="shaders/water.v.glsl", fragment="shaders/water.f.glsl")
+        self.plano.setShader(self.shader, 2)
+        self.plano.setShaderInput("light_pos", self.luz.getPos())
+        self.plano.setShaderInput("light_color", self.luz.node().getColor())
         #
         self.configurar_reflejo()
         self.configurar_refraccion()
         self.configurar_dudv()
         self.configurar_normal()
         self.move_factor=0.0
-        #
-        shader=Shader.load(Shader.SL_GLSL, vertex="shaders/water.v.glsl", fragment="shaders/water.f.glsl")
-        self.plano.setShader(shader)
-        self.plano.setShaderInput("light_pos", self.luz.getPos())
-        self.plano.setShaderInput("light_color", self.luz.node().getColor())
 
     def configurar_reflejo(self):
         # reflejo
-        reflection_plane=Plane(Vec3(0.0, 0.0, 1.0), Vec3(0.0, 0.0, -0.15))
+        reflection_plane=Plane(Vec3(0.0, 0.0, 1.0), Vec3(0.0, 0.0, self.altitud-0.15))
         reflection_plane_node=PlaneNode("reflection_plane_node")
         reflection_plane_node.setPlane(reflection_plane)
         reflection_plane_nodeN=self.mundo.attachNewNode(reflection_plane_node)
@@ -161,6 +157,7 @@ class Agua:
         dummy_reflection=NodePath("dummy_reflection")
         dummy_reflection.setTwoSided(False)
         dummy_reflection.setClipPlane(reflection_plane_nodeN)
+        dummy_reflection.setShader(self.shader)
         self.camera2.node().setInitialState(dummy_reflection.getState())
         #
         ts0=TextureStage("tsBuffer_reflection")
@@ -171,7 +168,7 @@ class Agua:
         
     def configurar_refraccion(self):
         # refraccion
-        refraction_plane=Plane(Vec3(0.0, 0.0, -1.0), Vec3(0.0, 0.0, 0.1))
+        refraction_plane=Plane(Vec3(0.0, 0.0, -1.0), Vec3(0.0, 0.0, self.altitud+0.1))
         refraction_plane_node=PlaneNode("refraction_plane_node")
         refraction_plane_node.setPlane(refraction_plane)
         refraction_plane_nodeN=self.mundo.attachNewNode(refraction_plane_node)

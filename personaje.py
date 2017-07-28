@@ -69,9 +69,6 @@ class Personaje:
             if self.base.mouseWatcherNode.hasMouse():
                 pos_mouse=self.base.mouseWatcherNode.getMouse()
                 if abs(pos_mouse.getX())>0.4:
-                    rot=Vec3(self.nodo_camara.getPos()-self.foco_camara.getPos()).normalized()
-                    print str(rot)
-                    return # !!!
                     foco_cam_H=self.foco_camara.getH()
                     foco_cam_H-=90.0*dt*1.0 if pos_mouse[0]>0.0 else -1.0
                     if self.modo_camara==Personaje.CAM_PRIMERA_PERSONA:
@@ -82,7 +79,9 @@ class Personaje:
                             foco_cam_H=0.0
                     self.foco_camara.setH(foco_cam_H)
                 if abs(pos_mouse.getY())>0.4:
-                    return # !!!
+                    self.nodo_camara.setZ(self.nodo_camara, pos_mouse.getY()*dt)
+                    self.nodo_camara.lookAt(self.foco_camara)
+                    return task.cont # !!!
                     foco_cam_P=self.foco_camara.getP()
                     foco_cam_P+=15.0*dt*1.0 if pos_mouse[1]<0.0 else -1.0
                     if foco_cam_P<-25.0: foco_cam_P=-25.0
@@ -96,7 +95,7 @@ class Personaje:
             altura=self.cuerpo.getZ()-self.altitud_suelo-0.5
             if self.velocidad_lineal.getZ()==0.0:
                 self.cuerpo.setH(self.cuerpo, self.velocidad_angular*self.factor_movimiento*dt)
-                self.cuerpo.setZ(0.0)#self.altitud_suelo+0.5)
+                self.cuerpo.setZ(self.altitud_suelo+0.5)
             else:
                 delta_velocidad_lineal=self.mundo.mundo_fisico.getGravity()*dt
                 self.velocidad_lineal+=delta_velocidad_lineal
@@ -171,6 +170,7 @@ class Personaje:
         elif cam_Y<0.0:
             return
         self.nodo_camara.setY(cam_Y)
+        self.nodo_camara.lookAt(self.foco_camara)
         log.debug("self.nodo_camara %s"%str(self.nodo_camara.getPos()))
 
     def alejar_camara(self):
@@ -182,6 +182,7 @@ class Personaje:
             self.modo_camara=Personaje.CAM_TERCERA_PERSONA
             log.info("camara en tercera persona")
         self.nodo_camara.setY(cam_Y)
+        self.nodo_camara.lookAt(self.foco_camara)
         log.debug("self.nodo_camara %s"%str(self.nodo_camara.getPos()))
     
     def mirar_adelante(self):

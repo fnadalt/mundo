@@ -13,9 +13,8 @@ class Aplicacion(ShowBase):
         self.disableMouse()
         self.setFrameRateMeter(True)
         #
-        #self.render.setShaderAuto()
-        #
         self.mundo=Mundo(self)
+        self.mundo.setShaderAuto(1)
         
     def iniciar(self):
         self.run()
