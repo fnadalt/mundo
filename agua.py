@@ -130,17 +130,17 @@ class Agua:
         self.plano.setZ(self.altitud)
 
     def generar(self):
-        # self.shader?
-        self.shader=Shader.load(Shader.SL_GLSL, vertex="shaders/water.v.glsl", fragment="shaders/water.f.glsl")
-        self.plano.setShader(self.shader, 2)
-        self.plano.setShaderInput("light_pos", self.luz.getPos())
-        self.plano.setShaderInput("light_color", self.luz.node().getColor())
         #
         self.configurar_reflejo()
         self.configurar_refraccion()
         self.configurar_dudv()
         self.configurar_normal()
         self.move_factor=0.0
+        # self.shader?
+        shader=Shader.load(Shader.SL_GLSL, vertex="shaders/agua.v.glsl", fragment="shaders/agua.f.glsl")
+        self.plano.setShader(shader)
+        self.plano.setShaderInput("light_pos", self.luz.getPos())
+        self.plano.setShaderInput("light_color", self.luz.node().getColor())
 
     def configurar_reflejo(self):
         # reflejo
@@ -157,7 +157,6 @@ class Agua:
         dummy_reflection=NodePath("dummy_reflection")
         dummy_reflection.setTwoSided(False)
         dummy_reflection.setClipPlane(reflection_plane_nodeN)
-        dummy_reflection.setShader(self.shader)
         self.camera2.node().setInitialState(dummy_reflection.getState())
         #
         ts0=TextureStage("tsBuffer_reflection")

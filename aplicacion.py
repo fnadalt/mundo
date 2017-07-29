@@ -1,4 +1,5 @@
 from direct.showbase.ShowBase import ShowBase
+from panda3d.core import *
 from mundo import Mundo
 
 import logging
@@ -10,11 +11,13 @@ class Aplicacion(ShowBase):
     def __init__(self):
         #
         ShowBase.__init__(self)
+        PStatClient.connect()
+        #
         self.disableMouse()
         self.setFrameRateMeter(True)
         #
         self.mundo=Mundo(self)
-        self.mundo.setShaderAuto(1)
+        #self.mundo.setShaderAuto()
         
     def iniciar(self):
         self.run()

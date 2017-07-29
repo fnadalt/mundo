@@ -68,6 +68,7 @@ class Terreno(NodePath):
         p.setBruteforce(True)
         p.generate()
         _pN=p.getRoot()
+        _pN.setShaderAuto()
         _pN.setMaterial(m)
         #_pN.setRenderModeWireframe()
         #
