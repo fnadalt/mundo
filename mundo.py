@@ -42,6 +42,7 @@ class Mundo(NodePath):
         #
         self.mundo_fisico.setGravity(Vec3(0.0, 0.0, -9.81))
         self.mundo_fisico.setDebugNode(debug_fisica)
+        return
         #
         _shape=BulletBoxShape(Vec3(0.5, 0.5, 0.5))
         _cuerpo=BulletRigidBodyNode("caja_rigid_body")
@@ -81,9 +82,10 @@ class Mundo(NodePath):
         luz_d=DirectionalLight("sol0")
         luz_d.setColor(Vec4(0.5, 0.5, 0.5, 1.0))
         self.sol0=self.attachNewNode(luz_d)
-        self.sol0.setHpr(-45.0, -45.0, 0.0)
+        self.sol0.setHpr(0.0, -45.0, 0.0)
         self.setLight(self.sol0)
         #
+        return
         point=PointLight("foco")
         point.setColor((0.7, 0.7, 0.7, 1.0))
         pointN=self.attachNewNode(point)
@@ -104,8 +106,8 @@ class Mundo(NodePath):
                 continue
             _personaje.altitud_suelo=self.terreno.obtener_altitud(_personaje.cuerpo.getPos()) #nivel_agua
         #
-        #self.agua.plano.setX(self.hombre.cuerpo.getX())
-        #self.agua.plano.setY(self.hombre.cuerpo.getY())
+        self.agua.plano.setX(self.hombre.cuerpo.getX())
+        self.agua.plano.setY(self.hombre.cuerpo.getY())
         self.agua.update(dt)
         #
         return task.cont

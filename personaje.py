@@ -1,8 +1,8 @@
 from direct.actor.Actor import Actor
 from panda3d.bullet import *
 from panda3d.core import *
+from camara import ControladorCamara
 import os, os.path
-import math
 
 import logging
 log=logging.getLogger(__name__)
@@ -113,7 +113,7 @@ class Personaje:
     def controlar(self, camara, controles):
         if self.controlador_camara!=None:
             return
-        self.controlador_camara=ControladorCamara(self.base, camara, self.actor)
+        self.controlador_camara=ControladorCamara(self.base, camara, self.cuerpo)
         self.controles=controles
         #
         for e, f in self.controles.items():
@@ -143,13 +143,8 @@ class Personaje:
             self.controlador_camara.alejar()
     
     def mirar_adelante(self):
-        if self.modo_camara==Personaje.CAM_TERCERA_PERSONA:
-            self.foco_camara.setH(0.0)
-        elif self.modo_camara==Personaje.CAM_PRIMERA_PERSONA:
-            _angulo=self.foco_camara.getH()
-            _cuerpo_H=self.cuerpo.getH()
-            self.cuerpo.setH(_cuerpo_H+_angulo)
-            self.foco_camara.setH(0.0)
+        if self.controlador_camara!=None:
+            self.controlador_camara.mirar_adelante()
         
     def avanzar(self, flag):
         self.velocidad_lineal.setY(-self.max_vel_lineal[0] if flag else 0.0)
@@ -191,88 +186,6 @@ class Personaje:
 
     def colgarse(self, flag):
         pass
-
-#
-#
-# CONTROLADOR DE CAMARA
-#
-#
-class ControladorCamara:
-    
-    CAM_TERCERA_PERSONA=0
-    CAM_PRIMERA_PERSONA=1
-    #
-    CAM_VECTOR_INICIAL=Vec3(0.0, 1.0, 1.0).normalized()
-
-    def __init__(self, base, camara,  objetivo):
-        self.base=base
-        self.objetivo=objetivo
-        self.modo=ControladorCamara.CAM_TERCERA_PERSONA
-        self.distancia=3.0
-        self.pitch=ControladorCamara.CAM_VECTOR_INICIAL.normalized().angleDeg(Vec3(0.0, 0.0, 1.0))
-        print("pitch: "+str(self.pitch))
-        #
-        self.foco=objetivo.attachNewNode("foco")
-        self.foco.setZ(1.0)
-        #
-        self.posicion_camara=ControladorCamara.CAM_VECTOR_INICIAL
-        self.camara=camara
-        self.camara.reparentTo(self.foco)
-        self.camara.setPos(self.posicion_camara)
-        self.camara.lookAt(self.foco)
-
-    def acercar(self):
-        self.distancia-=5.0
-        if self.distancia<1.2 and self.modo==ControladorCamara.CAM_TERCERA_PERSONA:
-            self.distancia=0.0
-            self.modo=ControladorCamara.CAM_PRIMERA_PERSONA
-            log.info("camara en primera persona")
-        elif self.distancia<0.0:
-            self.distancia=0.0
-            return
-        self.posicion_camara=self.posicion_camara.normalized()*self.distancia
-#        log.debug("acercar_camara")
-#        log.debug("self.distancia %s"%str(self.distancia))
-#        log.debug("self.camara %s"%str(self.camara.getPos()))
-
-    def alejar(self):
-        self.distancia+=5.0
-        if self.distancia>=1600.0:
-            self.distancia=1600.0
-            return
-        elif self.modo==ControladorCamara.CAM_PRIMERA_PERSONA and self.distancia>1.2:
-            self.modo=ControladorCamara.CAM_TERCERA_PERSONA
-            log.info("camara en tercera persona")
-            self.posicion_camara=ControladorCamara.CAM_VECTOR_INICIAL
-        self.posicion_camara=self.posicion_camara.normalized()*self.distancia
-#        log.debug("alejar_camara")
-#        log.debug("self.distancia %s"%str(self.distancia))
-#        log.debug("self.camara %s"%str(self.camara.getPos()))
-
-    def update(self, dt):
-        #
-        self.camara.setPos(self.posicion_camara)
-        #
-        if self.base.mouseWatcherNode.hasMouse():
-            pos_mouse=self.base.mouseWatcherNode.getMouse()
-            if abs(pos_mouse.getX())>0.4:
-                foco_cam_H=self.foco.getH()
-                foco_cam_H-=90.0*dt*1.0 if pos_mouse[0]>0.0 else -1.0
-                if self.modo==ControladorCamara.CAM_PRIMERA_PERSONA:
-                    if foco_cam_H<-85.0: foco_cam_H=-85.0
-                    if foco_cam_H>85.0: foco_cam_H=85.0
-                else:
-                    if abs(foco_cam_H)>=360.0:
-                        foco_cam_H=0.0
-                self.foco.setH(foco_cam_H)
-            if abs(pos_mouse.getY())>0.4:
-                self.pitch+=15.0*dt*1.0 if pos_mouse[1]<0.0 else -1.0
-                print "new pitch "+str(self.pitch)
-#                if self.pitch<-25.0: self.pitch=-25.0
-#                if self.pitch>25.0: self.pitch=25.0
-                self.posicion_camara=Vec3(0.0, math.cos(math.radians(self.pitch)), math.sin(math.radians(self.pitch)))
-                self.posicion_camara*=self.distancia
-                self.camara.lookAt(self.foco)
 
 #
 #
