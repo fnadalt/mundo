@@ -9,7 +9,7 @@ log=logging.getLogger(__name__)
 class Terreno(NodePath):
 
     altura_maxima=300.0
-    cantidad_parcelas_expandir=0
+    cantidad_parcelas_expandir=2
     
     def __init__(self,  mundo, foco):
         NodePath.__init__(self, "terreno")
@@ -21,7 +21,7 @@ class Terreno(NodePath):
         self.foco=foco
         # variables externas
         self.idx_pos_parcela_actual=None
-        self.nivel_agua=-11.0
+        self.nivel_agua=-25.0
         # variables internas
         self._ajuste_altura=-0.5
         self._height_map_id=589
@@ -60,16 +60,32 @@ class Terreno(NodePath):
             log.error("se solicito la carga de la parcela %s, que ya se encuentra en self._parcelas"%str(idx_pos))
             return
         #
-        m=Material()
-        m.setDiffuse((0.5+0.35*idx_pos[0], 0.0, 0.0, 1.0))
-        m.setShininess(5.0)
+        #m=Material()
+        #m.setDiffuse((0.5+0.35*idx_pos[0], 0.0, 0.0, 1.0))
+        #m.setShininess(5.0)
         #
         p=Parcela(self._height_map, idx_pos[0], idx_pos[1], self.foco)
         p.setBruteforce(True)
         p.generate()
         _pN=p.getRoot()
-        _pN.setShaderAuto()
-        _pN.setMaterial(m)
+        #
+        tsArena=TextureStage("ts_terreno_arena")
+        texArena=self.base.loader.loadTexture("texturas/arena.png")
+        _pN.setTexture(tsArena, texArena)
+        tsTierra=TextureStage("ts_terreno_tierra")
+        texTierra=self.base.loader.loadTexture("texturas/tierra.png")
+        _pN.setTexture(tsTierra, texTierra)
+        tsPasto=TextureStage("ts_terreno_pasto")
+        texPasto=self.base.loader.loadTexture("texturas/pasto.png")
+        _pN.setTexture(tsPasto, texPasto)
+        tsNieve=TextureStage("ts_terreno_nieve")
+        texNieve=self.base.loader.loadTexture("texturas/nieve.png")
+        _pN.setTexture(tsNieve, texNieve)
+        #
+        shader=Shader.load(Shader.SL_GLSL, vertex="shaders/terreno.v.glsl", fragment="shaders/terreno.f.glsl")
+        _pN.setShader(shader)
+        #_pN.setShaderAuto()
+        #_pN.setMaterial(m)
         #_pN.setRenderModeWireframe()
         #
         _rbody=BulletRigidBodyNode("%s_rigid_body"%p.nombre)

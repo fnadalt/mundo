@@ -18,7 +18,7 @@ class Agua:
         #
         self.plano=self.base.loader.loadModel("objetos/plano_agua")
         self.plano.reparentTo(self.mundo)
-        self.plano.setScale(10.0)
+        self.plano.setScale(128.0)
         #self.plano.setTransparency(TransparencyAttrib.MAlpha)
         self.plano.setZ(self.altitud)
 
