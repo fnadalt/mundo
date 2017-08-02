@@ -80,6 +80,6 @@ class ControladorCamara:
             if abs(pos_mouse.getY())>0.4:
                 foco_cam_P=self.foco.getP()
                 foco_cam_P-=15.0*dt*(1.0 if pos_mouse[1]>0.0 else -1.0)
-                if foco_cam_P<-25.0 or foco_cam_P>25.0:
+                if foco_cam_P<-85.0 or foco_cam_P>85.0:
                     return
                 self.foco.setP(foco_cam_P)
