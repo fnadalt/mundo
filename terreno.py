@@ -64,27 +64,33 @@ class Terreno(NodePath):
         p.generate()
         _pN=p.getRoot()
         # shader texture
-#        tsArena=TextureStage("ts_terreno_arena")
-#        texArena=self.base.loader.loadTexture("texturas/arena.png")
-#        _pN.setTexture(tsArena, texArena)
-#        tsTierra=TextureStage("ts_terreno_tierra")
-#        texTierra=self.base.loader.loadTexture("texturas/tierra.png")
-#        _pN.setTexture(tsTierra, texTierra)
-#        tsPasto=TextureStage("ts_terreno_pasto")
-#        texPasto=self.base.loader.loadTexture("texturas/pasto.png")
-#        _pN.setTexture(tsPasto, texPasto)
-#        tsNieve=TextureStage("ts_terreno_nieve")
-#        texNieve=self.base.loader.loadTexture("texturas/nieve.png")
-#        _pN.setTexture(tsNieve, texNieve)
-#        #
-#        shader=Shader.load(Shader.SL_GLSL, vertex="shaders/terreno.v.glsl", fragment="shaders/terreno.f.glsl")
-#        _pN.setShader(shader)
+        tsArena=TextureStage("ts_terreno_arena")
+        texArena=self.base.loader.loadTexture("texturas/arena.png")
+        _pN.setTexture(tsArena, texArena)
+        tsTierra=TextureStage("ts_terreno_tierra")
+        texTierra=self.base.loader.loadTexture("texturas/tierra.png")
+        _pN.setTexture(tsTierra, texTierra)
+        tsPasto=TextureStage("ts_terreno_pasto")
+        texPasto=self.base.loader.loadTexture("texturas/pasto.png")
+        _pN.setTexture(tsPasto, texPasto)
+        tsNieve=TextureStage("ts_terreno_nieve")
+        texNieve=self.base.loader.loadTexture("texturas/nieve.png")
+        _pN.setTexture(tsNieve, texNieve)
+        #
+        shader=Shader.load(Shader.SL_GLSL, vertex="shaders/terreno.v.glsl", fragment="shaders/terreno.f.glsl")
+        _pN.setShaderInput("Ka", Vec3(0.15, 0.15, 0.15))
+        _pN.setShaderInput("Kd", Vec3(0.85, 0.85, 0.85))
+        _pN.setShaderInput("Ks", Vec3(0.1, 0.1, 0.1))
+        _pN.setShaderInput("brillo", 1.0)
+        _pN.setShaderInput("pos_sol", self.mundo.sol0.getPos(self.base.render))
+        _pN.setShaderInput("intensidad_sol", Vec3(0.85, 0.85, 0.85))
+        _pN.setShader(shader)
         # baked texture
-        tsParcela=TextureStage("ts_parcela")
-        texParcela=self.base.loader.loadTexture("parcelas/%s_textura.png"%p.nombre)
-        _pN.setTexture(tsParcela, texParcela)
-        _pN.setTexRotate(tsParcela, 0.0)
-        _pN.setShaderAuto()
+#        tsParcela=TextureStage("ts_parcela")
+#        texParcela=self.base.loader.loadTexture("parcelas/%s_textura.png"%p.nombre)
+#        _pN.setTexture(tsParcela, texParcela)
+#        _pN.setTexRotate(tsParcela, 0.0)
+#        _pN.setShaderAuto()
         #
         _rbody=BulletRigidBodyNode("%s_rigid_body"%p.nombre)
         for geom_node in _pN.findAllMatches("**/+GeomNode"):
@@ -120,8 +126,8 @@ class Terreno(NodePath):
         idx_pos=self.obtener_indice_parcela_foco()
         if idx_pos!=self.idx_pos_parcela_actual:
             self.idx_pos_parcela_actual=idx_pos
-            #self._cargar_parcela(idx_pos)
-            #return
+            self._cargar_parcela(idx_pos)
+            return
             log.debug("foco sobre parcela "+str(idx_pos))
             #
             idxs_pos_parcelas_obj=[]
@@ -149,3 +155,6 @@ class Terreno(NodePath):
         # poco eficiente?
         for _p in self._parcelas.values():
             _p[1].update()
+
+    def dump_info(self):
+        geom=self._parcelas[(0,0)][0].getChild(0).getChild(0).node().getGeom(0)

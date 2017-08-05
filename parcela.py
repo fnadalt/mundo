@@ -30,7 +30,7 @@ class Parcela(GeoMipTerrain):
         self.setFocalPoint(focal_point)
         self.setHeightfield(self._generar_heightfield())
         #
-        self._generar_imagen_textura()
+        #self._generar_imagen_textura()
     
     def _obtener_altitud(self, x, y):
         offset_x=self.tamano * self.indice_x

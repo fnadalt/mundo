@@ -82,6 +82,7 @@ class Mundo(NodePath):
         luz_d=DirectionalLight("sol0")
         luz_d.setColor(Vec4(0.5, 0.5, 0.5, 1.0))
         self.sol0=self.attachNewNode(luz_d)
+        self.sol0.setPos(1.0, 1.0, 1.0)
         self.sol0.setHpr(0.0, -45.0, 0.0)
         self.setLight(self.sol0)
         #
