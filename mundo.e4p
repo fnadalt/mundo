@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-5.1.dtd">
 <!-- eric project file for project mundo -->
-<!-- Saved: 2017-07-30, 21:11:51 -->
+<!-- Saved: 2017-08-12, 10:47:36 -->
 <!-- Copyright (C) 2017 Fernando Nadal Testa, fnt2006@gmail.com -->
 <Project version="5.1">
   <Language>en_US</Language>
@@ -17,12 +17,14 @@
     <Source>agua.py</Source>
     <Source>aplicacion.py</Source>
     <Source>camara.py</Source>
+    <Source>cielo.py</Source>
     <Source>heightmap.py</Source>
     <Source>hombre.py</Source>
     <Source>main.py</Source>
     <Source>mundo.py</Source>
     <Source>parcela.py</Source>
     <Source>personaje.py</Source>
+    <Source>sol.py</Source>
     <Source>terrain/bakedterrainshadergenerator.py</Source>
     <Source>terrain/basicfunctions.py</Source>
     <Source>terrain/camera.py</Source>

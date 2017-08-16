@@ -1,7 +1,6 @@
 from direct.actor.Actor import Actor
 from panda3d.bullet import *
 from panda3d.core import *
-from camara import ControladorCamara
 import os, os.path
 
 import logging
@@ -110,10 +109,10 @@ class Personaje:
                     self.actor.setPlayRate(1.2, "saltar")
                     self.actor.play("saltar", fromFrame=20, toFrame=59)
 
-    def controlar(self, camara, controles):
+    def controlar(self, controlador_camara, controles):
         if self.controlador_camara!=None:
             return
-        self.controlador_camara=ControladorCamara(self.base, camara, self.cuerpo)
+        self.controlador_camara=controlador_camara
         self.controles=controles
         #
         for e, f in self.controles.items():

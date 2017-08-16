@@ -17,7 +17,6 @@ class Aplicacion(ShowBase):
         self.setFrameRateMeter(True)
         #
         self.mundo=Mundo(self)
-        #self.mundo.setShaderAuto()
         
     def iniciar(self):
         self.run()

@@ -10,10 +10,11 @@ class ControladorCamara:
     #
     CAM_DIST_Y_INICIAL=3.0
 
-    def __init__(self, base, camara,  objetivo):
+    def __init__(self, base, camara,  objetivo, obtener_altitud):
         self.base=base
         self.objetivo=objetivo
         self.modo=ControladorCamara.CAM_TERCERA_PERSONA
+        self.obtener_altitud=obtener_altitud
         #
         self.foco=objetivo.attachNewNode("foco")
         self.foco.setZ(0.5)
@@ -22,6 +23,8 @@ class ControladorCamara:
         self.camara.reparentTo(self.foco)
         self.camara.setY(ControladorCamara.CAM_DIST_Y_INICIAL)
         self.camara.lookAt(self.foco)
+        #
+        self._ajustando_altitud=False
 
     def acercar(self):
         distancia_Y=self.camara.getY()
@@ -64,22 +67,40 @@ class ControladorCamara:
             self.foco.setH(0.0)
 
     def update(self, dt):
-        #
+        pos_mouse=None
         if self.base.mouseWatcherNode.hasMouse():
-            pos_mouse=self.base.mouseWatcherNode.getMouse()
-            if abs(pos_mouse.getX())>0.4:
-                foco_cam_H=self.foco.getH()
-                foco_cam_H-=90.0*dt*(1.0 if pos_mouse[0]>0.0 else -1.0)
-                if self.modo==ControladorCamara.CAM_PRIMERA_PERSONA:
-                    if foco_cam_H<-85.0 or foco_cam_H>85.0:
-                        return
-                else:
-                    if abs(foco_cam_H)>=360.0:
-                        foco_cam_H=0.0
-                self.foco.setH(foco_cam_H)
-            if abs(pos_mouse.getY())>0.4:
-                foco_cam_P=self.foco.getP()
-                foco_cam_P-=15.0*dt*(1.0 if pos_mouse[1]>0.0 else -1.0)
-                if foco_cam_P<-85.0 or foco_cam_P>85.0:
+            mouse=self.base.mouseWatcherNode.getMouse()
+            pos_mouse=[mouse[0], mouse[1]]
+        else:
+            pos_mouse=[0, 0]
+        #
+        pos_camara=self.camara.getPos(self.base.render)
+        altitud_terreno=self.obtener_altitud(pos_camara.getXy())
+        altura=pos_camara.getZ()-altitud_terreno
+        if not self._ajustando_altitud and altura<0.2:
+            self._ajustando_altitud=True
+            #log.debug("ajustar altitud")
+        elif self._ajustando_altitud:
+            pos_mouse[1]=-0.75
+            #log.debug("ajustando, altura=%s..."%str(altura))
+            if altura>0.75:
+                self._ajustando_altitud=False
+                #log.debug("dejar de ajustar altitud")
+        #
+        if abs(pos_mouse[0])>0.4:
+            foco_cam_H=self.foco.getH()
+            foco_cam_H-=90.0*dt*(1.0 if pos_mouse[0]>0.0 else -1.0)
+            if self.modo==ControladorCamara.CAM_PRIMERA_PERSONA:
+                if foco_cam_H<-85.0 or foco_cam_H>85.0:
                     return
-                self.foco.setP(foco_cam_P)
+            else:
+                if abs(foco_cam_H)>=360.0:
+                    foco_cam_H=0.0
+            self.foco.setH(foco_cam_H)
+        if abs(pos_mouse[1])>0.4:
+            foco_cam_P=self.foco.getP()
+            foco_cam_P-=15.0*dt*(1.0 if pos_mouse[1]>0.0 else -1.0)
+            if foco_cam_P<-85.0 or foco_cam_P>85.0:
+                return
+            self.foco.setP(foco_cam_P)
+

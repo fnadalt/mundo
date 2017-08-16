@@ -7,16 +7,12 @@ uniform sampler2D p3d_Texture3; // nieve
 
 uniform vec3 intensidad_sol;
 
-uniform vec3 Ka;
-uniform vec3 Kd;
-uniform vec3 Ks;
-uniform float brillo;
-
 varying float altitud;
 varying float angulo_normal;
 varying vec3 normal;
-varying vec3 posicion;
-varying vec3 posicion_sol;
+varying vec4 posicion;
+varying vec4 posicion_sol;
+varying vec4 color;
 
 void obtener_color_tex(out vec4 color)
 {
@@ -37,28 +33,15 @@ void obtener_color_tex(out vec4 color)
     color=difuso;
 }
 
-void ads(out vec3 color)
-{
-    vec3 n = normalize( normal );
-    vec3 s = normalize( posicion_sol - posicion);
-    vec3 v = normalize(vec3(-posicion));
-    vec3 r = reflect( -s, n );
-    color=intensidad_sol * ( Ka + Kd * max( dot(s, n), 0.0 ));// + Ks * pow( max( dot(r,v), 0.0 ), brillo ) );
-}
-
-
 void main()
 {
     //
-    //vec4 color_tex;
-    //obtener_color_tex(color_tex);
+    vec4 color_tex;
+    obtener_color_tex(color_tex);
     
     //
-    //vec3 color_ads;
-    //ads(color_ads);
-    
-    //
-    vec3 color_debug=normal;
+    vec3 light_v=posicion_sol.xyz-posicion.xyz;
+    vec3 color_debug=max(dot(normalize(light_v),normalize(normal)),0.0) * vec3(1,1,1);
     
     //
     gl_FragColor=vec4(color_debug, 1.0);
