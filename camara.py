@@ -74,9 +74,10 @@ class ControladorCamara:
         else:
             pos_mouse=[0, 0]
         #
-        pos_camara=self.camara.getPos(self.base.render)
-        altitud_terreno=self.obtener_altitud(pos_camara.getXy())
-        altura=pos_camara.getZ()-altitud_terreno
+        #pos_camara=self.camara.getPos(self.base.render)
+        #altitud_terreno=self.obtener_altitud(pos_camara.getXy())
+        #altura=pos_camara.getZ()-altitud_terreno
+        altura=0.3 # paque no funque <<<^^^
         if not self._ajustando_altitud and altura<0.2:
             self._ajustando_altitud=True
             #log.debug("ajustar altitud")

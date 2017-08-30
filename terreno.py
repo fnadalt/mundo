@@ -22,7 +22,7 @@ class Terreno(NodePath):
         self.foco=foco
         # variables externas
         self.idx_pos_parcela_actual=None
-        self.nivel_agua=-25.0
+        self.nivel_agua=-10.5#-25.0
         # variables internas
         self._ajuste_altura=-0.5
         self._height_map_id=589
@@ -41,7 +41,7 @@ class Terreno(NodePath):
                 break
         return z
 
-    def obtener_altitud(self, pos):
+    def obtener_altitud(self, pos): # <- get_height(pos)
         #x_ajustada=pos[0]+Parcela.pos_offset-0.5
         #y_ajustada=pos[1]+Parcela.pos_offset-0.5
         #altitud=(self._height_map.getHeight(x_ajustada, y_ajustada)+self._ajuste_altura)*Terreno.altura_maxima
@@ -135,11 +135,11 @@ class Terreno(NodePath):
                         img_data[1]-=img_data[4].getYSize()
             img_tex.write(Filename(ruta_arch_tex))
         #
-        material=Material(self.mundo.getMaterial())
+        #material=Material(self.mundo.getMaterial())
         #material.setAmbient((0.75, 0.75, 0.75, 1.0))
-        if material!=None:
-            log.debug("estableciendo material '%s'"%material.getName())
-            nodo_parcela.setMaterial(material)
+        #if material!=None:
+        #    log.debug("estableciendo material '%s'"%material.getName())
+        #    nodo_parcela.setMaterial(material)
         #nodo_parcela.setMaterialOff(1000)
         #nodo_parcela.setLightOff(self.mundo.sol_a, 1000)
         #

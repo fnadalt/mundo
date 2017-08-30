@@ -20,6 +20,7 @@ indent_mode=2
 [project]
 name=voxels
 base_path=/home/flaco/panda3d/mundo/voxels
+description=
 
 [long line marker]
 long_line_behaviour=1
@@ -27,10 +28,11 @@ long_line_column=72
 
 [files]
 current_page=1
-FILE_NAME_0=2129;C++;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fpanda3d%2Fmundo%2Fvoxels%2Fmain.cpp;0;4
-FILE_NAME_1=237;Make;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fpanda3d%2Fmundo%2Fvoxels%2FMakefile;0;4
-FILE_NAME_2=0;C++;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fbuild%2Fpolyvox-0.2.1%2Fexamples%2FBasic%2Fmain.cpp;0;4
-FILE_NAME_3=307;Make;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fpanda3d%2Frun4life%2Fcerebrus%2FMakefile;0;4
+FILE_NAME_0=2143;C++;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fpanda3d%2Fmundo%2Fvoxels%2Fmain.cpp;0;4
+FILE_NAME_1=0;C++;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fpanda3d%2Fmundo%2Fvoxels%2Fvoxels.h;0;4
+FILE_NAME_2=904;C++;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fpanda3d%2Fmundo%2Fvoxels%2Fobjeto.h;0;4
+FILE_NAME_3=7425;C++;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fpanda3d%2Fmundo%2Fvoxels%2Fobjeto.cpp;0;4
+FILE_NAME_4=403;Python;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fpanda3d%2Fmundo%2Fvoxels%2Fprobar.py;0;4
 
 [VTE]
-last_dir=/home/flaco
+last_dir=/home/flaco/panda3d/mundo/voxels

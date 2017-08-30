@@ -15,7 +15,7 @@ class Mundo(NodePath):
     def __init__(self, base):
         NodePath.__init__(self, "mundo")
         self.reparentTo(base.render)
-        self.setShaderAuto()
+        #self.setShaderOff()
         #
         self.base=base
         #
@@ -69,7 +69,8 @@ class Mundo(NodePath):
         self.texto1=OnscreenText(text="info?", pos=(0.5, 0.5), scale=0.05, mayChange=True)
 
     def _cargar_material(self):
-        #self.setMaterialOff(1000)
+        self.setMaterialOff()
+        return
         material=self.horrendo.getMaterial()
         if material==None:
             material=Material("mundo")
@@ -93,6 +94,7 @@ class Mundo(NodePath):
         #
         self.agua=Agua(self, self.sol_d, self.terreno.nivel_agua)
         self.agua.generar()
+        self.agua.mostrar_camaras()
 
     def _cargar_luces(self):
         luz_a=AmbientLight("sol_a")

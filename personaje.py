@@ -33,7 +33,7 @@ class Personaje:
         # actor
         _ruta_directorio=os.path.join(os.getcwd(), "personajes", nombre_actor)
         _archivos_egg=[x for x in os.listdir(_ruta_directorio) if x[-4:].lower()==".egg"]
-        print str(os.listdir(_ruta_directorio))
+        print(str(os.listdir(_ruta_directorio)))
         _anims={}
         for _archivo_egg in _archivos_egg:
             _anims[_archivo_egg[:-4]]=os.path.join(_ruta_directorio, _archivo_egg)
@@ -41,6 +41,7 @@ class Personaje:
         self.actor=Actor(os.path.join(_ruta_directorio, "actor"), _anims)
         self.actor.reparentTo(self.cuerpo)
         self.actor.setZ(-0.5)
+        #self.actor.setShaderOff() # paque se refleje en el agua?
         # control
         self.controlador_camara=None
         self.controles={} # {"evento":"funcion"}

@@ -1,3 +1,5 @@
+from direct.gui.DirectFrame import DirectFrame
+from direct.gui.DirectLabel import DirectLabel
 from panda3d.core import *
 
 import logging
@@ -19,6 +21,7 @@ class Agua:
         self.plano=self.base.loader.loadModel("objetos/plano_agua")
         self.plano.reparentTo(self.mundo)
         self.plano.setScale(128.0)
+        self.plano.setP(180.0) # paque ande el agua... maldito 1.10
         #self.plano.setTransparency(TransparencyAttrib.MAlpha)
         self.plano.setZ(self.altitud)
 
@@ -30,6 +33,7 @@ class Agua:
         self.configurar_normal()
         self.move_factor=0.0
         # self.shader?
+        #self.plano.setShaderAuto()
         shader=Shader.load(Shader.SL_GLSL, vertex="shaders/agua.v.glsl", fragment="shaders/agua.f.glsl")
         self.plano.setShader(shader)
         self.plano.setShaderInput("light_pos", self.luz.getPos())
@@ -42,9 +46,9 @@ class Agua:
         reflection_plane_node.setPlane(reflection_plane)
         reflection_plane_nodeN=self.mundo.attachNewNode(reflection_plane_node)
         #
-        reflection_buffer=self.base.win.makeTextureBuffer('reflection_buffer', 512, 512)
-        reflection_buffer.setClearColor(Vec4(0, 0, 0, 1))
-        self.camera2=self.base.makeCamera(reflection_buffer)
+        self.reflection_buffer=self.base.win.makeTextureBuffer('reflection_buffer', 512, 512)
+        self.reflection_buffer.setClearColor(Vec4(0, 0, 0, 1))
+        self.camera2=self.base.makeCamera(self.reflection_buffer)
         self.camera2.reparentTo(self.nodo_camaras)
         self.camera2.node().getLens().setFov(self.camera.find("+Camera").node().getLens().getFov())
         dummy_reflection=NodePath("dummy_reflection")
@@ -53,7 +57,7 @@ class Agua:
         self.camera2.node().setInitialState(dummy_reflection.getState())
         #
         ts0=TextureStage("tsBuffer_reflection")
-        tex0=reflection_buffer.getTexture()
+        tex0=self.reflection_buffer.getTexture()
         tex0.setWrapU(Texture.WMClamp)
         tex0.setWrapV(Texture.WMClamp)
         self.plano.setTexture(ts0, tex0)
@@ -65,9 +69,9 @@ class Agua:
         refraction_plane_node.setPlane(refraction_plane)
         refraction_plane_nodeN=self.mundo.attachNewNode(refraction_plane_node)
         #
-        refraction_buffer=self.base.win.makeTextureBuffer('refraction_buffer', 512, 512)
-        refraction_buffer.setClearColor(Vec4(0, 0, 0, 1))
-        self.camera3=self.base.makeCamera(refraction_buffer)
+        self.refraction_buffer=self.base.win.makeTextureBuffer('refraction_buffer', 512, 512)
+        self.refraction_buffer.setClearColor(Vec4(0, 0, 0, 1))
+        self.camera3=self.base.makeCamera(self.refraction_buffer)
         self.camera3.reparentTo(self.nodo_camaras)
         self.camera3.node().getLens().setFov(self.camera.find("+Camera").node().getLens().getFov())
         dummy_refraction=NodePath("dummy_refraction")
@@ -76,7 +80,7 @@ class Agua:
         self.camera3.node().setInitialState(dummy_refraction.getState())
         #
         ts1=TextureStage("tsBuffer_refraction")
-        tex1=refraction_buffer.getTexture()
+        tex1=self.refraction_buffer.getTexture()
         tex1.setWrapU(Texture.WMClamp)
         tex1.setWrapV(Texture.WMClamp)
         self.plano.setTexture(ts1, tex1)
@@ -121,4 +125,16 @@ class Agua:
         info+="nodo  l:%s|%s w:%s|%s\n"%(str(self.nodo_camaras.getPos()), str(self.nodo_camaras.getHpr()), str(self.nodo_camaras.getPos(self.mundo)), str(self.nodo_camaras.getHpr(self.mundo)))
         info+="cam   l:%s|%s w:%s|%s\n"%(str(self.camera.getPos()), str(self.camera.getHpr()), str(self.camera.getPos(self.mundo)), str(self.camera.getHpr(self.mundo)))
         info+="cam2  l:%s|%s w:%s|%s\n"%(str(self.camera2.getPos()), str(self.camera2.getHpr()), str(self.camera2.getPos(self.mundo)), str(self.camera2.getHpr(self.mundo)))
-        print info
+        print(info)
+
+    def mostrar_camaras(self):
+        #
+        lbl_refl=DirectLabel(text="reflejo", pos=LVector3f(-0.9, 0.8), scale=0.05)
+        lbl_refl.reparentTo(self.base.aspect2d)
+        frame_refl=DirectFrame(image=self.reflection_buffer.getTexture(0), scale=0.25, pos=LVector3f(-0.9, 0.5))
+        frame_refl.reparentTo(self.base.aspect2d)
+        #
+        lbl_refr=DirectLabel(text="refraccion", pos=LVector3f(-0.9, 0.0), scale=0.05)
+        lbl_refr.reparentTo(self.base.aspect2d)
+        frame_refr=DirectFrame(image=self.refraction_buffer.getTexture(0), scale=0.25, pos=LVector3f(-0.9, -0.3))
+        frame_refr.reparentTo(self.base.aspect2d)

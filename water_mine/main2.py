@@ -219,7 +219,7 @@ class Agua:
         info+="nodo  l:%s|%s w:%s|%s\n"%(str(self.nodo_camaras.getPos()), str(self.nodo_camaras.getHpr()), str(self.nodo_camaras.getPos(self.mundo)), str(self.nodo_camaras.getHpr(self.mundo)))
         info+="cam   l:%s|%s w:%s|%s\n"%(str(self.camera.getPos()), str(self.camera.getHpr()), str(self.camera.getPos(self.mundo)), str(self.camera.getHpr(self.mundo)))
         info+="cam2  l:%s|%s w:%s|%s\n"%(str(self.camera2.getPos()), str(self.camera2.getHpr()), str(self.camera2.getPos(self.mundo)), str(self.camera2.getHpr(self.mundo)))
-        print info
+        print(info)
     
 app=App()
 app.run()
