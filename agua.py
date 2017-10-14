@@ -111,8 +111,8 @@ class Agua:
         self.camera2.setR(self.plano, -cam_hpr.getZ())
         self.camera3.setPos(self.plano, cam_pos)
         self.camera3.setHpr(self.plano, cam_hpr)
-        ref=self.plano
-        self.mundo.texto1.setText("cam %s\n%s\ncam2 %s\n%s\ncam3 %s\n%s\n"%(str(self.camera.getPos(ref)), str(self.camera.getHpr(ref)), str(self.camera2.getPos(ref)), str(self.camera2.getHpr(ref)), str(self.camera3.getPos(ref)), str(self.camera3.getHpr(ref))))
+        #ref=self.plano
+        #self.mundo.texto1.setText("cam %s\n%s\ncam2 %s\n%s\ncam3 %s\n%s\n"%(str(self.camera.getPos(ref)), str(self.camera.getHpr(ref)), str(self.camera2.getPos(ref)), str(self.camera2.getHpr(ref)), str(self.camera3.getPos(ref)), str(self.camera3.getHpr(ref))))
         #
         self.move_factor+=0.03*dt
         self.move_factor%=1

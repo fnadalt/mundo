@@ -1,9 +1,9 @@
-from personaje import Personaje
+from personaje import PersonajeViejo
 
 import logging
 log=logging.getLogger(__name__)
 
-class Hombre(Personaje):
+class Hombre(PersonajeViejo):
 
     controles={
                     "w":"avanzar", "s":"retroceder", "a":"desplazar_izquierda", "d":"desplazar_derecha", 
@@ -12,5 +12,4 @@ class Hombre(Personaje):
                     }
 
     def __init__(self, mundo):
-        Personaje.__init__(self, mundo, "hombre")
-        #
+        PersonajeViejo.__init__(self, mundo, "hombre")

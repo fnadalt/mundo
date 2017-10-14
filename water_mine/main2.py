@@ -16,7 +16,7 @@ class App(ShowBase):
         sunN.setHpr(-45, -45, 0)
         self.mundo.setLight(sunN)
         #
-        self.terreno=self.loader.loadModel("terreno")
+        self.terreno=self.loader.loadModel("terreno-flattened")
         self.terreno.reparentTo(self.mundo)
         #self.terreno.setClipPlane(plane_nodeN)
         #
@@ -117,7 +117,7 @@ class Agua:
         self.camera3=None
         self.camara_manual=False
         #
-        self.plano=self.base.loader.loadModel("plano")
+        self.plano=self.base.loader.loadModel("plano-flattened")
         self.plano.reparentTo(self.mundo)
         self.plano.setScale(1.0)
         self.plano.setTransparency(TransparencyAttrib.MAlpha)

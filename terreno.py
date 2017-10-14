@@ -1,7 +1,7 @@
 from panda3d.bullet import *
 from panda3d.core import *
 from heightmap import HeightMap
-from parcela import Parcela
+from parcela import *
 import os.path
 
 import logging
@@ -12,43 +12,46 @@ class Terreno(NodePath):
     altura_maxima=300.0
     cantidad_parcelas_expandir=1
     
-    def __init__(self,  mundo, foco):
+    def __init__(self, base, bullet_world):
         NodePath.__init__(self, "terreno")
-        self.reparentTo(mundo)
-        self.setSz(Terreno.altura_maxima)
-        # componentes
-        self.mundo=mundo
-        self.base=mundo.base
-        self.foco=foco
-        # variables externas
-        self.idx_pos_parcela_actual=None
-        self.nivel_agua=-10.5#-25.0
         # variables internas
         self._ajuste_altura=-0.5
         self._height_map_id=589
         self._height_map=HeightMap(self._height_map_id)
         self._parcelas={} # {idx_pos:cuerpo_parcela_node_path,...}
+        # variables externas
+        self.idx_pos_parcela_actual=None
+        self.nivel_agua=-25.0#-25.0,10.5
+        # referencias
+        self.foco=None
+        self.base=base
+        self.bullet_world=bullet_world
         #
-        self.update()
-    
-    def rayo(self, pos):
-        z=None
-        test=self.mundo.mundo_fisico.rayTestAll(LPoint3(pos[0], pos[1], 1000.0), LPoint3(pos[0], pos[1], -1000.0), BitMask32.bit(1))
-        for hit in test.getHits():
-            #log.debug("rayo %s at %s"%(str(hit.getNode()), str(hit.getHitPos())))    
-            if hit.getNode().getName().startswith("parcela_") and z==None:
-                z=hit.getHitPos().getZ()
-                break
-        return z
+        self.setSz(Terreno.altura_maxima)
+
+    def rayTestAll(self, pos):
+        test=self.bullet_world.rayTestAll(LPoint3(pos[0], pos[1], 1000.0), LPoint3(pos[0], pos[1], -1000.0), BitMask32.bit(1))
+        return test.getHits()
 
     def obtener_altitud(self, pos): # <- get_height(pos)
+        altitud=0
+        # index based
         #x_ajustada=pos[0]+Parcela.pos_offset-0.5
         #y_ajustada=pos[1]+Parcela.pos_offset-0.5
         #altitud=(self._height_map.getHeight(x_ajustada, y_ajustada)+self._ajuste_altura)*Terreno.altura_maxima
-        altitud=self.rayo(pos)
+        # ray test
+        hits=self.rayTestAll(pos)
+        for hit in hits:
+            #log.debug("rayo %s at %s"%(str(hit.getNode()), str(hit.getHitPos())))    
+            if hit.getNode().getName().startswith("cuerpo_suelo_") and altitud==0:
+                altitud=hit.getHitPos().getZ()
+                break
         return altitud
     
     def obtener_indice_parcela_foco(self):
+        if self.foco==None:
+            log.error("no está definido el foco")
+            return (0, 0)
         pos_foco=self.foco.getPos().getXy()
         pos_foco[0]+=-Parcela.pos_offset if pos_foco[0]<0.0 else Parcela.pos_offset
         pos_foco[1]+=-Parcela.pos_offset if pos_foco[1]<0.0 else Parcela.pos_offset
@@ -57,18 +60,23 @@ class Terreno(NodePath):
     def _cargar_parcela(self, idx_pos):
         log.info("cargando parcela "+str(idx_pos))
         #
+        if self.foco==None:
+            log.error("no está definido el foco")
+            return
+        #
         if idx_pos in self._parcelas:
             log.error("se solicito la carga de la parcela %s, que ya se encuentra en self._parcelas"%str(idx_pos))
             return
         #
-        p=Parcela(self._height_map, idx_pos[0], idx_pos[1], self.foco)
-        p.generate()
-        _pN=p.getRoot()
+        p=ParcelaGeoMip(self._height_map, idx_pos[0], idx_pos[1], self.foco)
+        #p=ParcelaVoxel(self._height_map, idx_pos[0], idx_pos[1], self.foco)
+        _pN=p.generar()
         #
         self._aplicar_shader_parcela(_pN, p)
-        _rbodyN=self._aplicar_fisica_parcela(_pN, p, idx_pos)
+        #self._aplicar_shader_parcela2(_pN, p)
+        _rbodyN=self._generar_cuerpo_fisico(_pN, p, idx_pos)
         #
-        self._parcelas[idx_pos]=(_rbodyN, p)
+        self._parcelas[idx_pos]=(NodePath(_rbodyN), p)
 
     def _descargar_parcela(self, idx_pos):
         log.info("descargando parcela "+str(idx_pos))
@@ -76,7 +84,7 @@ class Terreno(NodePath):
             log.error("se solicito la descarga de la parcela %s, que no se encuentra en self._parcelas"%str(idx_pos))
             return
         # no es suficiente... quedan las parcelas anteriores y se siuperponen.
-        _rbodyN, p=self._parcelas[idx_pos]
+        _rbodyN=self._parcelas[idx_pos][0]
         _rbodyN.removeNode()
         del self._parcelas[idx_pos]
     
@@ -109,9 +117,9 @@ class Terreno(NodePath):
             img=list()
             img.append([0, 0, 8, 0.42, PNMImage(Filename("texturas/arena.png"))]) # {tipo:[x,y,step,cutval,img]}
             img.append([0, 0, 8, 0.44, PNMImage(Filename("texturas/tierra.png"))])
-            img.append([0, 0, 8, 0.60, PNMImage(Filename("texturas/pasto.png"))])
-            img.append([0, 0, 8, 0.80, PNMImage(Filename("texturas/tierra.png"))])
-            img.append([0, 0, 8, 1.00, PNMImage(Filename("texturas/nieve.png"))])
+            img.append([0, 0, 8, 0.56, PNMImage(Filename("texturas/pasto.png"))])
+            img.append([0, 0, 8, 0.62, PNMImage(Filename("texturas/tierra.png"))]) # altura_corte |0.8
+            img.append([0, 0, 8, 0.70, PNMImage(Filename("texturas/nieve.png"))]) # altura_corte |1.0
             #
             tamano_tex=128
             img_tex=PNMImage(tamano_tex, tamano_tex)
@@ -174,8 +182,8 @@ class Terreno(NodePath):
         nodo_parcela.setShaderInput("intensidad_sol", Vec3(0.85, 0.85, 0.85))
         nodo_parcela.setShader(shader)
 
-    def _aplicar_fisica_parcela(self, nodo_parcela, parcela, idx_pos):
-        _rbody=BulletRigidBodyNode("%s_rigid_body"%parcela.nombre)
+    def _generar_cuerpo_fisico(self, nodo_parcela, parcela, idx_pos):
+        _rbody=BulletRigidBodyNode("cuerpo_suelo_%s"%parcela.nombre)
         for geom_node in nodo_parcela.findAllMatches("**/+GeomNode"):
             #logging.debug("geom? %s transform=%s"%(str(geom_node), str(geom_node.getTransform(nodo_parcela))))
             _tri_mesh=BulletTriangleMesh()
@@ -186,9 +194,9 @@ class Terreno(NodePath):
         _rbodyN.setPos(Parcela.tamano*idx_pos[0]-Parcela.pos_offset, Parcela.tamano*idx_pos[1]-Parcela.pos_offset, self._ajuste_altura)
         _rbodyN.setCollideMask(BitMask32.bit(1))
         nodo_parcela.reparentTo(_rbodyN)
-        parcela.setBruteforce(False)
-        parcela.generate()
-        self.mundo.mundo_fisico.attachRigidBody(_rbody)
+        parcela.establecer_optimizacion(True)
+        parcela.generar()
+        self.bullet_world.attachRigidBody(_rbody)
         log.debug("parcela cargada "+str(_rbodyN.getPos()))
         return _rbodyN
 
@@ -223,7 +231,7 @@ class Terreno(NodePath):
                 self._cargar_parcela(idx_pos)
         # poco eficiente?
         for _p in self._parcelas.values():
-            _p[1].update()
+            _p[1].actualizar()
 
     def dump_info(self):
         geom=self._parcelas[(0,0)][0].getChild(0).getChild(0).node().getGeom(0)

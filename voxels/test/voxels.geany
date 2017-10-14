@@ -27,16 +27,14 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=5
-FILE_NAME_0=0;Sh;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fpanda3d%2Fmundo%2Fvoxels%2Ftest%2Figate.sh;0;4
-FILE_NAME_1=0;C++;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fpanda3d%2Fmundo%2Fvoxels%2Ftest%2Fmain.cpp;0;4
-FILE_NAME_2=29;Make;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fpanda3d%2Fmundo%2Fvoxels%2Ftest%2FMakefile;0;4
-FILE_NAME_3=5244;C++;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fpanda3d%2Fmundo%2Fvoxels%2Ftest%2Fobjeto.cpp;0;4
-FILE_NAME_4=690;C++;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fpanda3d%2Fmundo%2Fvoxels%2Ftest%2Fobjeto.h;0;4
-FILE_NAME_5=0;C++;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fpanda3d%2Fmundo%2Fvoxels%2Ftest%2Fvoxels.h;0;4
-FILE_NAME_6=67;Sh;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fpanda3d%2Fmundo%2Fvoxels%2Ftest%2Fvoxels.sh;0;4
-FILE_NAME_7=0;C++;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fbuild%2Fpolyvox-0.2.1%2Flibrary%2FPolyVoxCore%2Finclude%2FPolyVoxCore%2FMarchingCubesSurfaceExtractor.h;0;4
-FILE_NAME_8=1741;None;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fbuild%2Fpolyvox-0.2.1%2Flibrary%2FPolyVoxCore%2Finclude%2FPolyVoxCore%2FMarchingCubesSurfaceExtractor.inl;0;4
+current_page=4
+FILE_NAME_0=85;C++;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fpanda3d%2Fmundo%2Fvoxels%2Fobjeto.h;0;4
+FILE_NAME_1=266;C++;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fpanda3d%2Fmundo%2Fvoxels%2Fobjeto.cpp;0;4
+FILE_NAME_2=0;C++;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fpanda3d%2Fmundo%2Fvoxels%2Fvoxels.h;0;4
+FILE_NAME_3=0;Sh;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fpanda3d%2Fmundo%2Fvoxels%2Figate.sh;0;4
+FILE_NAME_4=2359;C++;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fpanda3d%2Fmundo%2Fvoxels%2Ftest%2Fmain.cpp;0;4
+FILE_NAME_5=452;Make;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fpanda3d%2Fmundo%2Fvoxels%2FMakefile;0;4
+FILE_NAME_6=614;Make;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fpanda3d%2Fmundo%2Fvoxels%2Ftest%2FMakefile;0;4
 
 [VTE]
 last_dir=/home/flaco/panda3d/mundo/voxels/test

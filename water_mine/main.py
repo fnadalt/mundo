@@ -14,7 +14,7 @@ class Water(ShowBase):
         sunN.setHpr(-45, -45, 0)
         self.render.setLight(sunN)
         #
-        self.terreno=self.loader.loadModel("terreno")
+        self.terreno=self.loader.loadModel("terreno-flattened")
         self.terreno.reparentTo(self.render)
         #self.terreno.setClipPlane(plane_nodeN)
         #
@@ -33,7 +33,7 @@ class Water(ShowBase):
         self.hombre.setPos(0.0, 3.0, -0.5)
         #
         self.nivel_agua=-0.7#-0.05
-        self.agua=self.loader.loadModel("plano")
+        self.agua=self.loader.loadModel("plano-flattened")
         self.agua.reparentTo(self.render)
         self.agua.setScale(0.75)
         self.agua.setTransparency(TransparencyAttrib.MAlpha)

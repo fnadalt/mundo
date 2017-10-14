@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-5.1.dtd">
 <!-- eric project file for project mundo -->
-<!-- Saved: 2017-08-12, 10:47:36 -->
+<!-- Saved: 2017-09-29, 20:38:03 -->
 <!-- Copyright (C) 2017 Fernando Nadal Testa, fnt2006@gmail.com -->
 <Project version="5.1">
   <Language>en_US</Language>
@@ -20,6 +20,7 @@
     <Source>cielo.py</Source>
     <Source>heightmap.py</Source>
     <Source>hombre.py</Source>
+    <Source>input.py</Source>
     <Source>main.py</Source>
     <Source>mundo.py</Source>
     <Source>parcela.py</Source>

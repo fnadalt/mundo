@@ -4,8 +4,12 @@ from panda3d.core import *
 from terreno import Terreno
 from cielo import Cielo
 from agua import Agua
-from hombre import Hombre
+from personaje import *
 from camara import ControladorCamara
+from input import InputMapper
+from heightmap import HeightMap
+
+import voxels
 
 import logging
 log=logging.getLogger(__name__)
@@ -15,7 +19,6 @@ class Mundo(NodePath):
     def __init__(self, base):
         NodePath.__init__(self, "mundo")
         self.reparentTo(base.render)
-        #self.setShaderOff()
         #
         self.base=base
         #
@@ -23,8 +26,13 @@ class Mundo(NodePath):
         self.horrendo.reparentTo(self)
         self.horrendo.setScale(0.15)
         self.horrendo.setPos(0.0, 0.0, -9.5)
+        # input y camara
+        self.input_mapper=InputMapper(self.base)
+        self.input_mapper.ligar_eventos()
+        self.controlador_camara=ControladorCamara(self.base)
+        self.controlador_camara.input_mapper=self.input_mapper
         # variables internas
-        self._counter=0
+        self._counter=50 # forzar terreno.update antes de hombre.update
         self._personajes=[]
         #
         self._configurar_fisica()
@@ -32,16 +40,34 @@ class Mundo(NodePath):
         self._cargar_debug_info()
         self._cargar_material()
         self._cargar_luces()
-        self._cargar_hombre()
         self._cargar_terreno()
-        # camara y control
-        self.controlador_camara=ControladorCamara(self.base, self.base.camera, self.hombre.cuerpo, self.terreno.obtener_altitud)
-        self.hombre.controlar(self.controlador_camara, Hombre.controles)
+        self._cargar_hombre()
         #
-        self.base.taskMgr.add(self._update, "world_update")
+        #self._cargar_obj_voxel()
+        #
+        self.base.taskMgr.add(self._update, "mundo_update")
+    
+    def _cargar_obj_voxel(self):
+        hm=HeightMap(id=66)
+        N=64
+        self.obj=voxels.Objeto("volumen", N, N, N, 0)
+        for x in range(N-2):
+            for y in range(N-2):
+                h=int(hm.getHeight(x, y)*N)
+                print("%s,%s->%i"%(str(x), str(y), h))
+                for z in range(h):
+                    self.obj.establecer_valor(x+1, y+1, z+1, 255)
+        model_root=ModelRoot("volumen")
+        self.objN=self.attachNewNode(model_root)
+        self.objN.attachNewNode(self.obj.construir_smooth())
+        self.objN.setColor(0.4, 0.4, 0.4, 1)
+        self.objN.setTwoSided(True, 1)
+        self.objN.setShaderAuto()
+        self.objN.setScale(1)
+        self.objN.setPos(-N/2, -N/2, -9.5)
     
     def _configurar_fisica(self):
-        self.mundo_fisico=BulletWorld()
+        self.bullet_world=BulletWorld()
         #
         debug_fisica=BulletDebugNode("debug_fisica")
         debug_fisica.showNormals(True)
@@ -49,8 +75,8 @@ class Mundo(NodePath):
         self.debug_fisicaN.hide()
         self.base.accept("f3", self._toggle_debug_fisica)
         #
-        self.mundo_fisico.setGravity(Vec3(0.0, 0.0, -9.81))
-        self.mundo_fisico.setDebugNode(debug_fisica)
+        self.bullet_world.setGravity(Vec3(0.0, 0.0, -9.81))
+        self.bullet_world.setDebugNode(debug_fisica)
         return
         #
         _shape=BulletBoxShape(Vec3(0.5, 0.5, 0.5))
@@ -60,13 +86,13 @@ class Mundo(NodePath):
         _cuerpoN=self.attachNewNode(_cuerpo)
         _cuerpoN.setPos(0.0, 0.0, 100.0)
         _cuerpoN.setCollideMask(BitMask32.bit(3))
-        self.mundo_fisico.attachRigidBody(_cuerpo)
+        self.bullet_world.attachRigidBody(_cuerpo)
         _cuerpoN.reparentTo(self)
         caja=self.base.loader.loadModel("box.egg")
         caja.reparentTo(_cuerpoN)
     
     def _cargar_debug_info(self):
-        self.texto1=OnscreenText(text="info?", pos=(0.5, 0.5), scale=0.05, mayChange=True)
+        self.texto1=OnscreenText(text="info?", pos=(0.0, 0.9), scale=0.05, align=TextNode.ACenter, mayChange=True)
 
     def _cargar_material(self):
         self.setMaterialOff()
@@ -81,20 +107,30 @@ class Mundo(NodePath):
         self.setMaterial(material, 0)
 
     def _cargar_hombre(self):
-        self.hombre=Hombre(self)
+        #
+        self.hombre=Personaje()
+        self.hombre.nivel_agua=self.terreno.nivel_agua
+        self.hombre.input_mapper=self.input_mapper
+        self.hombre.construir(self, self.bullet_world)
+        self.hombre.cuerpo.setPos(0, 0, 10) # |(214, 600, 100)
+        #
         self._personajes.append(self.hombre)
         #
+        self.controlador_camara.seguir(self.hombre.cuerpo)
+        self.terreno.foco=self.hombre.cuerpo
     
     def _cargar_terreno(self):
         #
-        self.terreno=Terreno(self, self.hombre.cuerpo)
-        self.hombre.altitud_suelo=self.terreno.obtener_altitud(self.hombre.cuerpo.getPos())
+        self.terreno=Terreno(self.base, self.bullet_world)
+        self.terreno.reparentTo(self)
         #
         self.cielo=Cielo(self)
         #
         self.agua=Agua(self, self.sol_d, self.terreno.nivel_agua)
         self.agua.generar()
-        self.agua.mostrar_camaras()
+        #self.agua.mostrar_camaras()
+        #
+        self.controlador_camara.nivel_agua=self.terreno.nivel_agua
 
     def _cargar_luces(self):
         luz_a=AmbientLight("sol_a")
@@ -117,26 +153,31 @@ class Mundo(NodePath):
         #self.setLight(self.pointN)
 
     def _update(self, task):
-        #
+        info=self.hombre.obtener_info()+"\n"+self.input_mapper.obtener_info()
+        self.texto1.setText(info)
+        # tiempo
         dt=self.base.taskMgr.globalClock.getDt()
+        # input
+        self.input_mapper.update()
         # fisica
-        self.mundo_fisico.doPhysics(dt)
+        self.bullet_world.doPhysics(dt)
         # terreno
-        self._counter+=1
         if self._counter==50:
             self._counter=0
-            log.debug("update terreno")
             self.terreno.update()
-        # personajes
-        #self.texto1.setText("_personaje %s:\npos=%s\nvel=%s\naltura=%f\nparcela=%s"%(self.hombre.nombre, str(self.hombre.cuerpo.getPos()), str(self.hombre.velocidad_lineal), self.hombre.altitud_suelo, str(self.terreno.obtener_indice_parcela_foco())))
-        for _personaje in self._personajes:
-            if _personaje.quieto:
-                continue
-            _personaje.altitud_suelo=self.terreno.obtener_altitud(_personaje.cuerpo.getPos()) #nivel_agua
-        #
+        self._counter+=1
+        # agua
         self.agua.plano.setX(self.hombre.cuerpo.getX())
         self.agua.plano.setY(self.hombre.cuerpo.getY())
         self.agua.update(dt)
+        # personajes
+        for _personaje in self._personajes:
+            _altitud_suelo=self.terreno.obtener_altitud(_personaje.cuerpo.getPos())
+            _personaje.altitud_suelo=_altitud_suelo
+            _personaje.update(dt)
+        # controlador cámara
+        self.controlador_camara.altitud_suelo=self.terreno.obtener_altitud(self.controlador_camara.pos_camara.getXy())
+        self.controlador_camara.update(dt)
         #
         return task.cont
     

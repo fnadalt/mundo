@@ -3,24 +3,40 @@
 #include "PolyVoxCore/SurfaceMesh.h"
 #include "PolyVoxCore/SimpleVolume.h"
 
+#include "pandabase.h"
+#include "dtoolbase.h"
+#include "lvector3.h"
+#include "geomNode.h"
+#include "geomVertexFormat.h"
+#include "geomVertexArrayFormat.h"
+#include "internalName.h"
+#include "geomVertexData.h"
+#include "geomVertexWriter.h"
+#include "geomTristrips.h"
+#include "geomTriangles.h"
+#include "geom.h"
+#include "boundingBox.h"
+
 #include "objeto.h"
 
 using namespace PolyVox;
 
-void createSphereInVolume(SimpleVolume<uint8_t>& volData, float fRadius)
+void createSphere(Objeto& objeto, float fRadius)
 {
         //This vector hold the position of the center of the volume
-        Vector3DFloat v3dVolCenter(volData.getWidth() / 2, volData.getHeight() / 2, volData.getDepth() / 2);
+		//Vector3DFloat v3dVolCenter(volData.getWidth() / 2, volData.getHeight() / 2, volData.getDepth() / 2);
+        LVector3 v3dVolCenter(objeto.obtener_dimension_x()/2,objeto.obtener_dimension_y()/2,objeto.obtener_dimension_z()/2);
+        
 
         //This three-level for loop iterates over every voxel in the volume
-        for (int z = 0; z < volData.getDepth(); z++)
+        for (int z = 0; z < objeto.obtener_dimension_z(); z++)
         {
-                for (int y = 0; y < volData.getHeight(); y++)
+                for (int y = 0; y < objeto.obtener_dimension_y(); y++)
                 {
-                        for (int x = 0; x < volData.getWidth(); x++)
+                        for (int x = 0; x < objeto.obtener_dimension_x(); x++)
                         {
                                 //Store our current position as a vector...
-                                Vector3DFloat v3dCurrentPos(x,y,z);
+                                LVector3 v3dCurrentPos(x,y,z);
                                 //And compute how far the current position is from the center of the volume
                                 float fDistToCenter = (v3dCurrentPos - v3dVolCenter).length();
 
@@ -34,7 +50,7 @@ void createSphereInVolume(SimpleVolume<uint8_t>& volData, float fRadius)
                                 }
 
                                 //Wrte the voxel value into the volume
-                                volData.setVoxelAt(x, y, z, uVoxelValue);
+                                objeto.establecer_valor(x, y, z, uVoxelValue);
                         }
                 }
         }
@@ -42,34 +58,13 @@ void createSphereInVolume(SimpleVolume<uint8_t>& volData, float fRadius)
 
 int main(int argc, char *argv[])
 {
-	SimpleVolume<uint8_t> volData(PolyVox::Region(Vector3DInt32(0,0,0), Vector3DInt32(63, 63, 63)));
-	createSphereInVolume(volData, 30.0);
-	SurfaceMesh<PositionMaterialNormal> mesh;
-	CubicSurfaceExtractorWithNormals< SimpleVolume<uint8_t> > surfaceExtractor(&volData, volData.getEnclosingRegion(), &mesh);
-	surfaceExtractor.execute();
 	//
 	Objeto obj("nombre",64,64,64,0);
+	createSphere(obj,30.0);
+	//
 	obj.construir_cubos();
+	//
 	obj.construir_smooth();
 	//
 	return 0;
-	//
-	std::cout << "Numero de vertices: " << mesh.getNoOfVertices() << std::endl;
-	std::cout << "Posicion Material Normal" << std::endl;
-	const std::vector<PositionMaterialNormal>& verts=mesh.getVertices();
-	std::vector<PositionMaterialNormal>::const_iterator iter_pmn(verts.begin());
-	while(iter_pmn!=verts.end()){
-		std::cout << (*iter_pmn).getPosition() << (*iter_pmn).getMaterial() << (*iter_pmn).getNormal() << std::endl;
-		iter_pmn++;
-	}
-	//
-	std::cout << "Numero de indices: " << mesh.getNoOfIndices() << std::endl;
-	std::cout << "Indices" << std::endl;
-	const std::vector<uint32_t>& indices=mesh.getIndices();
-	std::vector<uint32_t>::const_iterator iter_i(indices.begin());
-	while(iter_i!=indices.end()){
-		std::cout << (*iter_i) << "\t";
-		iter_i++;
-	}
-	std::cout << std::endl;
 }
