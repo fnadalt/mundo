@@ -22,7 +22,7 @@ from pandac.PandaModules import AsyncTaskManager
 from direct.task.Task import Task
 #from direct.stdpy import threading2 as threading
 import threading
-import Queue
+from queue import Queue
 import time
 
 

@@ -11,7 +11,7 @@ class Cielo:
         self.mundo=mundo
         self.base=mundo.base
         #
-        return # paque no funque
+        #return # paque no funque
         self.sky_box_node=self.base.cam.attachNewNode("sky_node")
         self.sky_box=self.base.loader.loadModel(Cielo.ruta_modelo)
         self.sky_box.reparentTo(self.sky_box_node)

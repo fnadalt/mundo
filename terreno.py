@@ -10,7 +10,7 @@ log=logging.getLogger(__name__)
 class Terreno(NodePath):
 
     altura_maxima=300.0
-    cantidad_parcelas_expandir=1
+    cantidad_parcelas_expandir=3
     
     def __init__(self, base, bullet_world):
         NodePath.__init__(self, "terreno")

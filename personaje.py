@@ -206,6 +206,7 @@ class Personaje:
             #self.actor.setPlayRate(1.0, "caminar") # |4.0
             self.actor.loop("caminar")
         elif estado_nuevo==Personaje.EstadoCorriendo:
+            self.actor.setPlayRate(1.5, "correr")
             self.actor.loop("correr")
         # capa 1
         #
