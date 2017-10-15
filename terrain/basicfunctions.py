@@ -7,9 +7,9 @@ import time
 
 from direct.gui.OnscreenText import OnscreenText
 from direct.stdpy import thread
-from pandac.PandaModules import TexGenAttrib
-from pandac.PandaModules import TextNode
-from pandac.PandaModules import WindowProperties
+from panda3d.core import TexGenAttrib
+from panda3d.core import TextNode
+from panda3d.core import WindowProperties
 
 # Function returns the width / height ratio of the window or screen
 def getScreenRatio():

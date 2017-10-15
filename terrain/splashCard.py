@@ -8,8 +8,8 @@ __author__ = "Stephen Lujan"
 
 from direct.gui.OnscreenImage import OnscreenImage
 from direct.interval.IntervalGlobal import *
-from pandac.PandaModules import TransparencyAttrib
-from pandac.PandaModules import Vec4
+from panda3d.core import TransparencyAttrib
+from panda3d.core import Vec4
 from config import *
 
 class SplashCard(object):

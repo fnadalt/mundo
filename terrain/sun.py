@@ -18,18 +18,18 @@ limitations under the License.
 
 import math
 
-from pandac.PandaModules import BitMask32
-from pandac.PandaModules import CardMaker
-from pandac.PandaModules import ColorBlendAttrib
-from pandac.PandaModules import DirectionalLight
-from pandac.PandaModules import NodePath
-from pandac.PandaModules import OmniBoundingVolume
-from pandac.PandaModules import Point2
-from pandac.PandaModules import Shader
-from pandac.PandaModules import Texture
-from pandac.PandaModules import TransparencyAttrib
-from pandac.PandaModules import Vec3
-from pandac.PandaModules import Vec4
+from panda3d.core import BitMask32
+from panda3d.core import CardMaker
+from panda3d.core import ColorBlendAttrib
+from panda3d.core import DirectionalLight
+from panda3d.core import NodePath
+from panda3d.core import OmniBoundingVolume
+from panda3d.core import Point2
+from panda3d.core import Shader
+from panda3d.core import Texture
+from panda3d.core import TransparencyAttrib
+from panda3d.core import Vec3
+from panda3d.core import Vec4
 from config import *
 
 class Sun:

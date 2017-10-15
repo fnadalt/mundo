@@ -6,20 +6,20 @@ Another Roaming Ralph demo.
 __author__ = "Stephen Lujan"
 
 from panda3d.core import BoundingBox
-from pandac.PandaModules import CardMaker
-from pandac.PandaModules import CullFaceAttrib
-from pandac.PandaModules import Fog
-from pandac.PandaModules import Plane
-from pandac.PandaModules import PlaneNode
-from pandac.PandaModules import Point3
-from pandac.PandaModules import RenderState
-from pandac.PandaModules import Shader
-from pandac.PandaModules import ShaderPool
-from pandac.PandaModules import Texture
-from pandac.PandaModules import TextureStage
-from pandac.PandaModules import TransparencyAttrib
-from pandac.PandaModules import Vec3
-from pandac.PandaModules import Vec4
+from panda3d.core import CardMaker
+from panda3d.core import CullFaceAttrib
+from panda3d.core import Fog
+from panda3d.core import Plane
+from panda3d.core import PlaneNode
+from panda3d.core import Point3
+from panda3d.core import RenderState
+from panda3d.core import Shader
+from panda3d.core import ShaderPool
+from panda3d.core import Texture
+from panda3d.core import TextureStage
+from panda3d.core import TransparencyAttrib
+from panda3d.core import Vec3
+from panda3d.core import Vec4
 from config import *
 
 class WaterNode():

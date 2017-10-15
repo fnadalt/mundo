@@ -8,10 +8,10 @@ import math
 
 from direct.actor.Actor import Actor
 from direct.showbase.DirectObject import DirectObject
-from pandac.PandaModules import NodePath
-from pandac.PandaModules import PandaNode
-from pandac.PandaModules import Vec2
-from pandac.PandaModules import Vec3
+from panda3d.core import NodePath
+from panda3d.core import PandaNode
+from panda3d.core import Vec2
+from panda3d.core import Vec3
 import random
 from config import *
 

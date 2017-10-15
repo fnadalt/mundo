@@ -1,8 +1,9 @@
 from direct.gui.OnscreenText import OnscreenText
 from panda3d.bullet import *
 from panda3d.core import *
-from terreno import Terreno
 from cielo import Cielo
+from sol import Sol
+from terreno import Terreno
 from agua import Agua
 from personaje import *
 from camara import ControladorCamara
@@ -22,7 +23,7 @@ class Mundo(NodePath):
         #
         self.base=base
         #
-        self.horrendo=base.loader.loadModel("objetos/horrendo")
+        self.horrendo=base.loader.loadModel("objetos/horrendof")
         self.horrendo.reparentTo(self)
         self.horrendo.setScale(0.15)
         self.horrendo.setPos(0.0, 0.0, -9.5)
@@ -120,13 +121,18 @@ class Mundo(NodePath):
         self.terreno.foco=self.hombre.cuerpo
     
     def _cargar_terreno(self):
-        #
+        # cielo
+        self.cielo=Cielo(self.base)
+        self.cielo.nodo.reparentTo(self)
+        # sol
+        self.sol=Sol(self.base)
+        self.sol.pivot.reparentTo(self.cielo.nodo)
+        self.setLight(self.sol.luz)
+        # terreno
         self.terreno=Terreno(self.base, self.bullet_world)
         self.terreno.reparentTo(self)
-        #
-        self.cielo=Cielo(self)
-        #
-        self.agua=Agua(self, self.sol_d, self.terreno.nivel_agua)
+        # agua
+        self.agua=Agua(self, self.sol.luz, self.terreno.nivel_agua)
         self.agua.generar()
         #self.agua.mostrar_camaras()
         #
@@ -138,13 +144,13 @@ class Mundo(NodePath):
         self.sol_a=self.attachNewNode(luz_a)
         self.setLight(self.sol_a)
         #
-        luz_d=DirectionalLight("sol_d")
-        luz_d.setColor(Vec4(1.0, 1.0, 0.9, 1.0))
-        self.sol_d=self.attachNewNode(luz_d)
-        self.sol_d.setPos(0.0, 0.0, 1.0)
-        self.sol_d.setHpr(0.0, -65.0, 0.0)
-        self.sol_d.node()
-        self.setLight(self.sol_d)
+#        luz_d=DirectionalLight("sol_d")
+#        luz_d.setColor(Vec4(1.0, 1.0, 0.9, 1.0))
+#        self.sol_d=self.attachNewNode(luz_d)
+#        self.sol_d.setPos(0.0, 0.0, 1.0)
+#        self.sol_d.setHpr(0.0, -65.0, 0.0)
+#        self.sol_d.node()
+#        self.setLight(self.sol_d)
         #
         point=PointLight("foco")
         point.setColor((0.7, 0.7, 0.7, 1.0))
@@ -153,7 +159,7 @@ class Mundo(NodePath):
         #self.setLight(self.pointN)
 
     def _update(self, task):
-        info=self.hombre.obtener_info()+"\n"+self.input_mapper.obtener_info()
+        info=self.hombre.obtener_info()+"\n"+self.input_mapper.obtener_info()+"\n"+self.sol.obtener_info()
         self.texto1.setText(info)
         # tiempo
         dt=self.base.taskMgr.globalClock.getDt()
@@ -161,6 +167,8 @@ class Mundo(NodePath):
         self.input_mapper.update()
         # fisica
         self.bullet_world.doPhysics(dt)
+        # sol
+        self.sol.update(dt)
         # terreno
         if self._counter==50:
             self._counter=0

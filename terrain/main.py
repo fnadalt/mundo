@@ -23,8 +23,8 @@ from direct.filter.CommonFilters import CommonFilters
 from direct.showbase.DirectObject import DirectObject
 from direct.task.Task import Task
 from gui import *
-from pandac.PandaModules import LightRampAttrib
-from pandac.PandaModules import PStatClient
+from panda3d.core import LightRampAttrib
+from panda3d.core import PStatClient
 from sky import *
 from splashCard import *
 from terrain import *

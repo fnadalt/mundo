@@ -27,9 +27,12 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=0
+current_page=4
 FILE_NAME_0=24;None;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fpanda3d%2Fmundo%2Frclone-filter.txt;0;4
 FILE_NAME_1=179;None;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fiwana%2Frclone-filter.txt;0;4
+FILE_NAME_2=0;None;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fbuild%2Fpanda3d-1.9.4%2F_instalacion%2Fusr%2Flib%2Fpython2.7%2Fsite-packages%2Fpanda3d.pth;0;4
+FILE_NAME_3=0;Conf;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fbuild%2Fpanda3d-1.9.4%2F_instalacion%2Fetc%2Fld.so.conf.d%2Fpanda3d.conf;0;4
+FILE_NAME_4=0;Conf;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fbuild%2Fpanda3d-1.9.4%2F_instalacion%2Fetc%2FConfig.prc;0;4
 
 [VTE]
 last_dir=/home/flaco/panda3d/mundo/voxels

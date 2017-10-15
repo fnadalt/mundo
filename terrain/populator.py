@@ -5,9 +5,9 @@ __author__ = "Stephen Lujan"
 
 from terraintile import *
 from direct.showbase.RandomNumGen import *
-from pandac.PandaModules import TextNode, CardMaker
-from pandac.PandaModules import Vec3,Vec4,Point3,Point2
-from pandac.PandaModules import Shader, Texture, TextureStage, TransparencyAttrib
+from panda3d.core import TextNode, CardMaker
+from panda3d.core import Vec3,Vec4,Point3,Point2
+from panda3d.core import Shader, Texture, TextureStage, TransparencyAttrib
 from config import *
 
 class LeafModel():

@@ -7,11 +7,11 @@ __author__ = "Stephen Lujan"
 
 
 from panda3d.core import PNMImage
-from pandac.PandaModules import AmbientLight
-from pandac.PandaModules import Fog
-from pandac.PandaModules import TexGenAttrib
-from pandac.PandaModules import Texture
-from pandac.PandaModules import TextureStage
+from panda3d.core import AmbientLight
+from panda3d.core import Fog
+from panda3d.core import TexGenAttrib
+from panda3d.core import Texture
+from panda3d.core import TextureStage
 from sun import *
 from config import *
 

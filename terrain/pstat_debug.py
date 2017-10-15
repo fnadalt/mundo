@@ -6,7 +6,7 @@ This is the easiest way to profile slow code for Panda3d.
 """
 
 def pstat(func):
-    from pandac.PandaModules import PStatCollector
+    from panda3d.core import PStatCollector
     collectorName = "Debug:%s" % func.__name__
     if hasattr(base, 'custom_collectors'):
         if collectorName in base.custom_collectors.keys():

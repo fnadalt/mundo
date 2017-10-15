@@ -8,8 +8,8 @@ __author__ = "Stephen Lujan"
 from config import *
 from direct.gui.DirectGui import *
 from direct.gui.DirectGuiBase import DirectGuiWidget
-from pandac.PandaModules import TextNode
-from pandac.PandaModules import Vec4
+from panda3d.core import TextNode
+from panda3d.core import Vec4
 
 ###############################################################################
 #   SlideControl

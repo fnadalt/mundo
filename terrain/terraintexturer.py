@@ -10,11 +10,11 @@ __date__ = "$Dec 15, 2010 2:14:33 AM$"
 
 from config import *
 from panda3d.core import Shader
-from pandac.PandaModules import TexGenAttrib
-from pandac.PandaModules import Texture
-from pandac.PandaModules import TextureStage
-from pandac.PandaModules import Vec3
-from pandac.PandaModules import Vec4
+from panda3d.core import TexGenAttrib
+from panda3d.core import Texture
+from panda3d.core import TextureStage
+from panda3d.core import Vec3
+from panda3d.core import Vec4
 from fullterrainshadergenerator import *
 from bakedterrainshadergenerator import *
 from terraintexturemap import *

@@ -30,9 +30,9 @@ from panda3d.core import PNMImage
 from panda3d.core import PerlinNoise2
 from panda3d.core import StackedPerlinNoise2
 from panda3d.core import TimeVal
-from pandac.PandaModules import NodePath
-from pandac.PandaModules import PTAFloat
-from pandac.PandaModules import SceneGraphReducer
+from panda3d.core import NodePath
+from panda3d.core import PTAFloat
+from panda3d.core import SceneGraphReducer
 from populator import *
 from pstat_debug import pstat
 from terraintexturer import *

@@ -6,7 +6,7 @@ __author__ = "Stephen Lujan"
 
 from config import *
 from panda3d.core import Shader
-from pandac.PandaModules import PTAFloat
+from panda3d.core import PTAFloat
 from terraintexturemap import *
 
 ###############################################################################

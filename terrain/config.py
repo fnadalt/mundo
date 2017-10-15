@@ -6,7 +6,7 @@ from panda3d.core import ConfigVariableBool
 from panda3d.core import ConfigVariableInt
 from panda3d.core import ConfigVariableDouble
 from panda3d.core import loadPrcFile
-from pandac.PandaModules import Filename
+from panda3d.core import Filename
 import logging
 
 logging.basicConfig(level=logging.INFO,
