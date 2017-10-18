@@ -159,7 +159,10 @@ class Mundo(NodePath):
         #self.setLight(self.pointN)
 
     def _update(self, task):
-        info=self.hombre.obtener_info()+"\n"+self.input_mapper.obtener_info()+"\n"+self.sol.obtener_info()
+        info=""
+        #info+=self.hombre.obtener_info()+"\n"
+        #info+=self.input_mapper.obtener_info()+"\n"
+        info+=self.sol.obtener_info()
         self.texto1.setText(info)
         # tiempo
         dt=self.base.taskMgr.globalClock.getDt()
