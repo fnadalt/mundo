@@ -140,7 +140,7 @@ class Mundo(NodePath):
 
     def _cargar_luces(self):
         luz_a=AmbientLight("sol_a")
-        luz_a.setColor(Cielo.color*0.12)
+        luz_a.setColor(Cielo.Color*0.12)
         self.sol_a=self.attachNewNode(luz_a)
         self.setLight(self.sol_a)
         #
@@ -162,7 +162,12 @@ class Mundo(NodePath):
         info=""
         #info+=self.hombre.obtener_info()+"\n"
         #info+=self.input_mapper.obtener_info()+"\n"
+<<<<<<< HEAD
+        info+=self.sol.obtener_info()+"\n"
+        info+=self.cielo.obtener_info()
+=======
         info+=self.sol.obtener_info()
+>>>>>>> 82bf037d9b4b416c9e8d8df28b6db9e691ac8e07
         self.texto1.setText(info)
         # tiempo
         dt=self.base.taskMgr.globalClock.getDt()
@@ -170,8 +175,14 @@ class Mundo(NodePath):
         self.input_mapper.update()
         # fisica
         self.bullet_world.doPhysics(dt)
+<<<<<<< HEAD
+        # sol y cielo
+        self.sol.update(dt)
+        self.cielo.update(self.sol.hora)
+=======
         # sol
         self.sol.update(dt)
+>>>>>>> 82bf037d9b4b416c9e8d8df28b6db9e691ac8e07
         # terreno
         if self._counter==50:
             self._counter=0

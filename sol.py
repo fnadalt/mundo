@@ -13,7 +13,11 @@ class Sol:
         self.nodo=None
         self.luz=None
         # variables externas
+<<<<<<< HEAD
+        self.hora=0.0 # debe ser normalizada [0.0,1.0); 0.0=>medianoche, 0.5=>mediodía
+=======
         self.hora=0.0
+>>>>>>> 82bf037d9b4b416c9e8d8df28b6db9e691ac8e07
         self.periodo=Periodo(Periodo.Atardecer)
         # variable internas
         self._datos_periodos=dict() # {periodo:[color,hora_max,duracion,prox_periodo], ...}
@@ -21,6 +25,10 @@ class Sol:
         # pivot de rotacion
         self.pivot=self.base.render.attachNewNode("pivot_sol")
         self.pivot.setP(10.0) # inclinacion "estacional"
+<<<<<<< HEAD
+        self.pivot.setR(-45)
+=======
+>>>>>>> 82bf037d9b4b416c9e8d8df28b6db9e691ac8e07
         # esfera solar
         self.nodo=self.base.loader.loadModel("objetos/sol")
         self.nodo.reparentTo(self.pivot)
@@ -44,7 +52,11 @@ class Sol:
         # color luz
         color_luz=self.periodo.computar_color(self.hora)
         # componentes
+<<<<<<< HEAD
+        self.pivot.setR(self.pivot, 7.5 * dt)
+=======
         self.pivot.setR(self.pivot, 0.2 * dt)
+>>>>>>> 82bf037d9b4b416c9e8d8df28b6db9e691ac8e07
         self.luz.lookAt(self.pivot)
         self.luz.node().setColor(color_luz)
         # determinar hora
@@ -96,6 +108,12 @@ class Periodo:
             self.hora_inicio=Periodo.HoraInicioNoche
             self.duracion=Periodo.DuracionNoche
             self.color=Periodo.ColorNoche
+<<<<<<< HEAD
+            # directamente...
+            # self.proximo=Periodo()
+            # self.anterior=Periodo()
+=======
+>>>>>>> 82bf037d9b4b416c9e8d8df28b6db9e691ac8e07
             self.proximo=Periodo.Amanecer
             self.color_anterior=(Periodo.ColorAtardecer+self.color)/2.0
             self.color_proximo=(Periodo.ColorAmanecer+self.color)/2.0
@@ -129,7 +147,11 @@ class Periodo:
         _hora_pico=self.hora_inicio+self.duracion/2.0
         _hora_final=self.hora_inicio+self.duracion
         _hora=hora
+<<<<<<< HEAD
+        if (_hora_pico>24 or _hora_final>24) and hora<self.hora_inicio: # arroja horas >24 !!!
+=======
         if (_hora_pico>24 or _hora_final>24) and hora<self.hora_inicio:
+>>>>>>> 82bf037d9b4b416c9e8d8df28b6db9e691ac8e07
             _hora+=24
         #
         hora1=None
