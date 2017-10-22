@@ -13,7 +13,6 @@ class Cielo:
         self.base=base
         #
         #return # paque no funque
-<<<<<<< HEAD
         # componentes:
         # nodo
         self.nodo=self.base.cam.attachNewNode("sky_node")
@@ -47,15 +46,3 @@ class Cielo:
     def obtener_info(self):
         info="Cielo tinte=%s"%(str(self.tinte))
         return info
-=======
-        self.nodo=self.base.cam.attachNewNode("sky_node")
-        self.sky_box=self.base.loader.loadModel(Cielo.ruta_modelo)
-        self.sky_box.reparentTo(self.nodo)
-        self.sky_box.setScale(400.0)
-        self.sky_box.setMaterialOff(1)
-        self.sky_box.setTextureOff(1)
-        self.sky_box.setLightOff(1)
-        self.sky_box.setShaderOff(1)
-        self.sky_box.setTwoSided(True)
-        self.sky_box.setColor(Cielo.color)
->>>>>>> 82bf037d9b4b416c9e8d8df28b6db9e691ac8e07

@@ -1,6 +1,7 @@
 from direct.gui.OnscreenText import OnscreenText
 from panda3d.bullet import *
 from panda3d.core import *
+from dia import Dia
 from cielo import Cielo
 from sol import Sol
 from terreno import Terreno
@@ -121,6 +122,8 @@ class Mundo(NodePath):
         self.terreno.foco=self.hombre.cuerpo
     
     def _cargar_terreno(self):
+        # dia
+        self.dia=Dia(60.0)
         # cielo
         self.cielo=Cielo(self.base)
         self.cielo.nodo.reparentTo(self)
@@ -162,12 +165,8 @@ class Mundo(NodePath):
         info=""
         #info+=self.hombre.obtener_info()+"\n"
         #info+=self.input_mapper.obtener_info()+"\n"
-<<<<<<< HEAD
         info+=self.sol.obtener_info()+"\n"
         info+=self.cielo.obtener_info()
-=======
-        info+=self.sol.obtener_info()
->>>>>>> 82bf037d9b4b416c9e8d8df28b6db9e691ac8e07
         self.texto1.setText(info)
         # tiempo
         dt=self.base.taskMgr.globalClock.getDt()
@@ -175,14 +174,10 @@ class Mundo(NodePath):
         self.input_mapper.update()
         # fisica
         self.bullet_world.doPhysics(dt)
-<<<<<<< HEAD
         # sol y cielo
-        self.sol.update(dt)
-        self.cielo.update(self.sol.hora)
-=======
-        # sol
-        self.sol.update(dt)
->>>>>>> 82bf037d9b4b416c9e8d8df28b6db9e691ac8e07
+        self.dia.update(dt)
+        self.sol.update(self.dia.hora_normalizada)
+        self.cielo.update(self.dia.hora_normalizada)
         # terreno
         if self._counter==50:
             self._counter=0
