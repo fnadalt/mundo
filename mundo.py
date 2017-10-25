@@ -21,9 +21,10 @@ class Mundo(NodePath):
     def __init__(self, base):
         NodePath.__init__(self, "mundo")
         self.reparentTo(base.render)
-        #
+        # referencias:
         self.base=base
-        #
+        # componentes:
+        # horrendo
         self.horrendo=base.loader.loadModel("objetos/horrendof")
         self.horrendo.reparentTo(self)
         self.horrendo.setScale(0.15)
@@ -33,10 +34,11 @@ class Mundo(NodePath):
         self.input_mapper.ligar_eventos()
         self.controlador_camara=ControladorCamara(self.base)
         self.controlador_camara.input_mapper=self.input_mapper
-        # variables internas
+        # variables internas:
         self._counter=50 # forzar terreno.update antes de hombre.update
         self._personajes=[]
-        #
+        self._periodo_dia_actual=0
+        # inicio: !!! -> def iniciar()...?
         self._configurar_fisica()
         #
         self._cargar_debug_info()
@@ -94,7 +96,8 @@ class Mundo(NodePath):
         caja.reparentTo(_cuerpoN)
     
     def _cargar_debug_info(self):
-        self.texto1=OnscreenText(text="info?", pos=(0.0, 0.9), scale=0.05, align=TextNode.ACenter, mayChange=True)
+        Blanco=Vec4(1.0, 1.0, 1.0, 1.0)
+        self.texto1=OnscreenText(text="info?", pos=(0.0, 0.9), scale=0.05, align=TextNode.ACenter, fg=Blanco, mayChange=True)
 
     def _cargar_material(self):
         self.setMaterialOff()
@@ -123,10 +126,11 @@ class Mundo(NodePath):
     
     def _cargar_terreno(self):
         # dia
-        self.dia=Dia(60.0)
+        self.dia=Dia(60.0, 30.0)
         # cielo
         self.cielo=Cielo(self.base)
         self.cielo.nodo.reparentTo(self)
+        self.setLight(self.cielo.luz)
         # sol
         self.sol=Sol(self.base)
         self.sol.pivot.reparentTo(self.cielo.nodo)
@@ -142,29 +146,17 @@ class Mundo(NodePath):
         self.controlador_camara.nivel_agua=self.terreno.nivel_agua
 
     def _cargar_luces(self):
-        luz_a=AmbientLight("sol_a")
-        luz_a.setColor(Cielo.Color*0.12)
-        self.sol_a=self.attachNewNode(luz_a)
-        self.setLight(self.sol_a)
-        #
-#        luz_d=DirectionalLight("sol_d")
-#        luz_d.setColor(Vec4(1.0, 1.0, 0.9, 1.0))
-#        self.sol_d=self.attachNewNode(luz_d)
-#        self.sol_d.setPos(0.0, 0.0, 1.0)
-#        self.sol_d.setHpr(0.0, -65.0, 0.0)
-#        self.sol_d.node()
-#        self.setLight(self.sol_d)
-        #
-        point=PointLight("foco")
-        point.setColor((0.7, 0.7, 0.7, 1.0))
-        self.pointN=self.attachNewNode(point)
+        # luz
+        self.pointN=self.attachNewNode(PointLight("foco"))
+        self.pointN.node().setColor((0.7, 0.7, 0.7, 1.0))
         self.pointN.setPos(0.0, 0.0, 1.0)
-        #self.setLight(self.pointN)
+        self.setLight(self.pointN)
 
     def _update(self, task):
         info=""
         #info+=self.hombre.obtener_info()+"\n"
         #info+=self.input_mapper.obtener_info()+"\n"
+        info+=self.dia.obtener_info()+"\n"
         info+=self.sol.obtener_info()+"\n"
         info+=self.cielo.obtener_info()
         self.texto1.setText(info)
@@ -174,10 +166,11 @@ class Mundo(NodePath):
         self.input_mapper.update()
         # fisica
         self.bullet_world.doPhysics(dt)
-        # sol y cielo
+        # ciclo dia/noche, cielo, sol
         self.dia.update(dt)
-        self.sol.update(self.dia.hora_normalizada)
-        self.cielo.update(self.dia.hora_normalizada)
+        offset_periodo=self.dia.calcular_offset(self.dia.periodo.actual, self.dia.periodo.posterior)
+        self.cielo.update(self.dia.hora_normalizada, self.dia.periodo.actual, offset_periodo)
+        self.sol.update(self.dia.hora_normalizada, self.dia.periodo.actual, offset_periodo)
         # terreno
         if self._counter==50:
             self._counter=0

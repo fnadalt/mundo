@@ -1,99 +1,61 @@
-from panda3d.core import *
-
 import logging
 log=logging.getLogger(__name__)
 
 class Dia:
 
-    def __init__(self, duracion_segundos):
+    def __init__(self, duracion_segundos, tiempo_inicial):
         # variables externas:
         self.duracion=duracion_segundos
-        self.hora_normalizada=0.0 # [0.0,1.0); 0.0=>mediodía, 0.5=>medianoche
-        self.periodo=Periodo(Periodo.Dia)
+        self.hora_normalizada=0.0 # [0.0,1.0); 0.0=>medianoche, 0.5=>mediodia
+        self.periodo=Periodo(Periodo.Noche)
         # variables internas:
-        self._tiempo=0.0
+        self._tiempo=tiempo_inicial
     
     def update(self, dt):
         # tiempo real
         self._tiempo+=dt
-        if self._tiempo>1.0:
-            self._tiempo-=1.0
+        if self._tiempo>self.duracion:
+            self._tiempo-=self.duracion
         # establecer hora normalizada
         self.hora_normalizada=self._tiempo/self.duracion
         # determinar periodo
-        if self.periodo.finalizado(self.hora_normalizada):
-            self.periodo=Periodo(self.periodo.proximo)
+        _hora_anterior=Periodo.HoraInicio[self.periodo.anterior]
+        _hora_posterior=Periodo.HoraInicio[self.periodo.posterior]
+        if _hora_posterior==0.0 and self.hora_normalizada>_hora_anterior:
+            _hora_posterior+=1.0
+        if self.hora_normalizada>=_hora_posterior:
+            self.periodo=Periodo(self.periodo.posterior)
 
-    def calcular_offset(self, hora_normalizada, periodo_anterior, periodo_posterior):
-        #
-        hora=hora_normalizada
-        hora_anterior=Periodo.HoraPico[periodo_anterior]
-        hora_proxima=Periodo.HoraPico[periodo_posterior]
-        #print("input hn=%.2f pa=%i pp=%i ha=%.2f hp=%.2f"%(hora_normalizada, periodo_anterior, periodo_posterior, hora_anterior, hora_proxima))
-        #
-        if hora_anterior==hora_proxima:
-            #print("horas iguales")
-            if hora<hora_anterior:
-                #print("...incrementar hora +1")
-                hora+=1.0
-            hora_proxima+=1.0
-        elif hora_proxima<hora_anterior:
-            #print("horas proxima<anterior")
-            if hora<hora_anterior:
-                #print("...incrementar hora +1")
-                hora+=1.0
-            hora_proxima+=1.0
-        elif hora_proxima>hora_anterior:
-            pass
-        #
-        offset=(hora-hora_anterior)/(hora_proxima-hora_anterior)
-        #print("output hn=%.2f pa=%i pp=%i ha=%.2f hp=%.2f offset=%.2f"%(hora_normalizada, periodo_anterior, periodo_posterior, hora_anterior, hora_proxima, offset))
+    def obtener_info(self):
+        offset=self.calcular_offset(self.periodo.actual, self.periodo.posterior)
+        info="Dia d=%.2fs hn=%.2f p=%i o=%.2f _t=%.2f"%(self.duracion, self.hora_normalizada, self.periodo.actual, offset, self._tiempo)
+        return info
+
+    def calcular_offset(self, periodo1, periodo2):
+        hora1=Periodo.HoraInicio[periodo1]
+        hora2=Periodo.HoraInicio[periodo2]
+        if hora2==0.0:
+            hora2=1.0
+        #log.info("calcular_offset h1=%.2f h2=%.2f hn=%.2f"%(hora1, hora2, self.hora_normalizada))
+        offset=(self.hora_normalizada-hora1)/(hora2-hora1)
         return offset
 
 class Periodo:
 
     #
-    Dia=0
-    Atardecer=1
-    Noche=2
-    Amanecer=3
+    Noche=0
+    Amanecer=1
+    Dia=2
+    Atardecer=3
     
-    # horas pico
-    HoraPicoMediodia=0.0
-    HoraPicoAtardecer=0.25
-    HoraPicoMedianoche=0.5
-    HoraPicoAmanecer=0.75
-    HoraPico={
-                Dia:HoraPicoMediodia, \
-                Atardecer:HoraPicoAtardecer, \
-                Noche:HoraPicoMedianoche, \
-                Amanecer:HoraPicoAmanecer
+    # horas inicio
+    HoraInicio={
+                Noche:0.0, \
+                Amanecer:0.4,  \
+                Dia:0.5, \
+                Atardecer:0.9
                 }
 
-    # duracion periodos
-    DuracionDia=0.4
-    DuracionAtardecer=0.1
-    DuracionNoche=0.4
-    DuracionAmanecer=0.1
-    Duracion={
-                Dia:DuracionDia, \
-                Atardecer:DuracionAtardecer, \
-                Noche:DuracionNoche, \
-                Amanecer:DuracionAmanecer
-                }
-
-    # colores
-    ColorDia=LVector4(1.0, 1.0, 0.85, 1.0)
-    ColorAtardecer=LVector4(0.95, 0.65, 0.3, 1.0)
-    ColorNoche=LVector4(0.0, 0.0, 0.2, 1.0)
-    ColorAmanecer=LVector4(0.95, 0.75, 0.2, 1.0)
-    Color={
-            Dia:ColorDia, \
-            Atardecer:ColorAtardecer, \
-            Noche: ColorNoche, \
-            Amanecer:ColorAmanecer
-            }
-    
     def __init__(self, periodo_actual):
         #
         self.actual=periodo_actual
@@ -112,9 +74,3 @@ class Periodo:
         elif self.actual==Periodo.Amanecer:
             self.anterior=Periodo.Noche
             self.posterior=Periodo.Dia
-
-    def finalizado(self, hora_normalizada):
-        pass
-    
-    def obtener_info(self):
-        return "Periodo %s:\nhi=%i d=%i color=%s momento=%.2f\ncolor_luz=%s"%(self.nombre, self.hora_inicio, self.duracion, str(self.color), self.momento, str(self.color_luz))
