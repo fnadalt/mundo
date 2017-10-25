@@ -1,4 +1,5 @@
 from direct.gui.OnscreenText import OnscreenText
+from direct.gui.DirectGui import *
 from panda3d.bullet import *
 from panda3d.core import *
 from dia import Dia
@@ -10,6 +11,8 @@ from personaje import *
 from camara import ControladorCamara
 from input import InputMapper
 from heightmap import HeightMap
+
+import math
 
 import voxels
 
@@ -38,14 +41,18 @@ class Mundo(NodePath):
         self._counter=50 # forzar terreno.update antes de hombre.update
         self._personajes=[]
         self._periodo_dia_actual=0
+        # variables inmediatas:
+        _pos_inicial_foco=Vec3(0, 0, 1) # |(214, 600, 100)
         # inicio: !!! -> def iniciar()...?
         self._configurar_fisica()
         #
         self._cargar_debug_info()
         self._cargar_material()
         self._cargar_luces()
-        self._cargar_terreno()
+        self._cargar_terreno(_pos_inicial_foco)
         self._cargar_hombre()
+        self._cargar_objetos()
+        self._cargar_gui()
         #
         #self._cargar_obj_voxel()
         #
@@ -96,8 +103,9 @@ class Mundo(NodePath):
         caja.reparentTo(_cuerpoN)
     
     def _cargar_debug_info(self):
-        Blanco=Vec4(1.0, 1.0, 1.0, 1.0)
-        self.texto1=OnscreenText(text="info?", pos=(0.0, 0.9), scale=0.05, align=TextNode.ACenter, fg=Blanco, mayChange=True)
+        Negro=Vec4(0.0, 0.0, 0.0, 1.0)
+        #Blanco=Vec4(1.0, 1.0, 1.0, 1.0)
+        self.texto1=OnscreenText(text="info?", pos=(0.0, 0.9), scale=0.05, align=TextNode.ACenter, fg=Negro, mayChange=True)
 
     def _cargar_material(self):
         self.setMaterialOff()
@@ -111,25 +119,37 @@ class Mundo(NodePath):
             material.setShininess(0)
         self.setMaterial(material, 0)
 
+    def _cargar_gui(self):
+        self.lblHora=DirectLabel(text="00:00", text_fg=(0.15, 0.15, 0.9, 1.0), text_bg=(1.0, 1.0, 1.0, 1.0), scale=0.1, pos=(1.2, 0.0, -0.9), color=(1, 1, 1, 1))
+
     def _cargar_hombre(self):
         #
         self.hombre=Personaje()
         self.hombre.nivel_agua=self.terreno.nivel_agua
         self.hombre.input_mapper=self.input_mapper
         self.hombre.construir(self, self.bullet_world)
-        self.hombre.cuerpo.setPos(0, 0, 10) # |(214, 600, 100)
+        self.hombre.cuerpo.setPos(self.terreno.pos_foco)
+        self.hombre.cuerpo.setZ(self.terreno.obtener_altitud(self.terreno.pos_foco)+0.5)
         #
         self._personajes.append(self.hombre)
         #
         self.controlador_camara.seguir(self.hombre.cuerpo)
         self.terreno.foco=self.hombre.cuerpo
     
-    def _cargar_terreno(self):
+    def _cargar_objetos(self):
+        self.palo=self.base.loader.loadModel("objetos/palof")
+        self.palo.reparentTo(self.hombre.handR)
+        self.palo.setPos(0.5,0.75,-0.25)
+        self.palo.setR(-85.0)
+        self.palo.setScale(10.0)
+    
+    def _cargar_terreno(self, pos_inicial_foco):
         # dia
-        self.dia=Dia(60.0, 30.0)
+        self.dia=Dia(600.0, 0.5)
         # cielo
         self.cielo=Cielo(self.base)
         self.cielo.nodo.reparentTo(self)
+        self.cielo.nodo.setZ(-65.0)
         self.setLight(self.cielo.luz)
         # sol
         self.sol=Sol(self.base)
@@ -138,8 +158,9 @@ class Mundo(NodePath):
         # terreno
         self.terreno=Terreno(self.base, self.bullet_world)
         self.terreno.reparentTo(self)
+        self.terreno.update(pos_inicial_foco)
         # agua
-        self.agua=Agua(self, self.sol.luz, self.terreno.nivel_agua)
+        self.agua=Agua(self, self.terreno.nivel_agua)
         self.agua.generar()
         #self.agua.mostrar_camaras()
         #
@@ -150,15 +171,15 @@ class Mundo(NodePath):
         self.pointN=self.attachNewNode(PointLight("foco"))
         self.pointN.node().setColor((0.7, 0.7, 0.7, 1.0))
         self.pointN.setPos(0.0, 0.0, 1.0)
-        self.setLight(self.pointN)
+        #self.setLight(self.pointN)
 
     def _update(self, task):
         info=""
-        #info+=self.hombre.obtener_info()+"\n"
+        info+=self.hombre.obtener_info()+"\n"
         #info+=self.input_mapper.obtener_info()+"\n"
         info+=self.dia.obtener_info()+"\n"
-        info+=self.sol.obtener_info()+"\n"
-        info+=self.cielo.obtener_info()
+        #info+=self.sol.obtener_info()+"\n"
+        #info+=self.cielo.obtener_info()
         self.texto1.setText(info)
         # tiempo
         dt=self.base.taskMgr.globalClock.getDt()
@@ -174,12 +195,8 @@ class Mundo(NodePath):
         # terreno
         if self._counter==50:
             self._counter=0
-            self.terreno.update()
+            self.terreno.update(self.hombre.cuerpo.getPos())
         self._counter+=1
-        # agua
-        self.agua.plano.setX(self.hombre.cuerpo.getX())
-        self.agua.plano.setY(self.hombre.cuerpo.getY())
-        self.agua.update(dt)
         # personajes
         for _personaje in self._personajes:
             _altitud_suelo=self.terreno.obtener_altitud(_personaje.cuerpo.getPos())
@@ -188,6 +205,13 @@ class Mundo(NodePath):
         # controlador cámara
         self.controlador_camara.altitud_suelo=self.terreno.obtener_altitud(self.controlador_camara.pos_camara.getXy())
         self.controlador_camara.update(dt)
+        # agua
+        self.agua.plano.setX(self.hombre.cuerpo.getX())
+        self.agua.plano.setY(self.hombre.cuerpo.getY())
+        self.agua.update(dt, self.sol.luz.getPos(), self.sol.luz.node().getColor())
+        # gui
+        _hora_m, _hora_h=math.modf(24*self.dia.hora_normalizada)
+        self.lblHora["text"]="%s:%s"%(str(int(_hora_h)), str("0%i"%int(60*_hora_m))[-2:])
         #
         return task.cont
     

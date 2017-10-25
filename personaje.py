@@ -105,8 +105,11 @@ class Personaje:
         # partes
         self.actor.makeSubpart("torso", ["hips"], ["thigh.L", "thigh.R"])
         self.actor.makeSubpart("pelvis", ["thigh.L", "thigh.R"])
+        # joints
+        self.handR=self.actor.exposeJoint(None,"modelRoot", "hand.R")        
         # establecer estado inicial
         self._estado_capa[0]=Personaje.EstadoQuieto
+        self._cambio_estado(0, Personaje.EstadoNulo, Personaje.EstadoQuieto)
 
     def chequear_estado(self, estado):
         if estado>15: # capa 1

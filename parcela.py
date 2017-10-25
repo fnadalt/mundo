@@ -51,7 +51,7 @@ class ParcelaGeoMip(Parcela):
         _hf=None
         #
         if os.path.exists(self.nombre_archivo_height_map):
-            log.debug("se encontro archivo heightmap "+self.nombre_archivo_height_map)
+            #log.debug("se encontro archivo heightmap "+self.nombre_archivo_height_map)
             _hf=PNMImage()
             _hf.read(Filename(self.nombre_archivo_height_map))
         else:

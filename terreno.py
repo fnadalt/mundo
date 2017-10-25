@@ -23,7 +23,8 @@ class Terreno(NodePath):
         self.idx_pos_parcela_actual=None
         self.nivel_agua=-25.0#-25.0,10.5
         # referencias
-        self.foco=None
+        self.pos_foco=None
+        self.foco=None # eliminar, reemplazar por pos_foco
         self.base=base
         self.bullet_world=bullet_world
         #
@@ -50,26 +51,26 @@ class Terreno(NodePath):
     
     def obtener_indice_parcela_foco(self):
         if self.foco==None:
-            log.error("no está definido el foco")
-            return (0, 0)
-        pos_foco=self.foco.getPos().getXy()
-        pos_foco[0]+=-Parcela.pos_offset if pos_foco[0]<0.0 else Parcela.pos_offset
-        pos_foco[1]+=-Parcela.pos_offset if pos_foco[1]<0.0 else Parcela.pos_offset
-        return (int(pos_foco[0]/Parcela.tamano), int(pos_foco[1]/Parcela.tamano))
+            pass#log.error("no está definido el foco")
+            #return (0, 0)
+        _pos_foco=self.pos_foco.getXy()#self.foco.getPos().getXy()
+        _pos_foco[0]+=-Parcela.pos_offset if _pos_foco[0]<0.0 else Parcela.pos_offset
+        _pos_foco[1]+=-Parcela.pos_offset if _pos_foco[1]<0.0 else Parcela.pos_offset
+        return (int(_pos_foco[0]/Parcela.tamano), int(_pos_foco[1]/Parcela.tamano))
     
     def _cargar_parcela(self, idx_pos):
         log.info("cargando parcela "+str(idx_pos))
         #
         if self.foco==None:
-            log.error("no está definido el foco")
-            return
+            pass#log.error("no está definido el foco")
+            #return
         #
         if idx_pos in self._parcelas:
             log.error("se solicito la carga de la parcela %s, que ya se encuentra en self._parcelas"%str(idx_pos))
             return
         #
-        p=ParcelaGeoMip(self._height_map, idx_pos[0], idx_pos[1], self.foco)
-        #p=ParcelaVoxel(self._height_map, idx_pos[0], idx_pos[1], self.foco)
+        p=ParcelaGeoMip(self._height_map, idx_pos[0], idx_pos[1], self.pos_foco)
+        #p=ParcelaVoxel(self._height_map, idx_pos[0], idx_pos[1], self.pos_foco)
         _pN=p.generar()
         #
         self._aplicar_shader_parcela(_pN, p)
@@ -79,7 +80,7 @@ class Terreno(NodePath):
         self._parcelas[idx_pos]=(NodePath(_rbodyN), p)
 
     def _descargar_parcela(self, idx_pos):
-        log.info("descargando parcela "+str(idx_pos))
+        #log.info("descargando parcela "+str(idx_pos))
         if idx_pos not in self._parcelas:
             log.error("se solicito la descarga de la parcela %s, que no se encuentra en self._parcelas"%str(idx_pos))
             return
@@ -109,7 +110,7 @@ class Terreno(NodePath):
         img_tex=None
         ruta_arch_tex=os.path.join(os.getcwd(), "parcelas", "%s_textura.png"%parcela.nombre)
         if os.path.exists(ruta_arch_tex):
-            log.info("se encontro textura en %s"%ruta_arch_tex)
+            #log.info("se encontro textura en %s"%ruta_arch_tex)
             img_tex=PNMImage(Filename(ruta_arch_tex))
         else:
             log.info("generando textura %s"%ruta_arch_tex)
@@ -200,7 +201,9 @@ class Terreno(NodePath):
         log.debug("parcela cargada "+str(_rbodyN.getPos()))
         return _rbodyN
 
-    def update(self):
+    def update(self, pos_foco):
+        if self.pos_foco!=pos_foco:
+            self.pos_foco=pos_foco
         #
         idx_pos=self.obtener_indice_parcela_foco()
         if idx_pos!=self.idx_pos_parcela_actual:
@@ -214,16 +217,16 @@ class Terreno(NodePath):
             for idx_pos_x in range(idx_pos[0]-Terreno.cantidad_parcelas_expandir, idx_pos[0]+Terreno.cantidad_parcelas_expandir+1):
                 for idx_pos_y in range(idx_pos[1]-Terreno.cantidad_parcelas_expandir, idx_pos[1]+Terreno.cantidad_parcelas_expandir+1):
                     idxs_pos_parcelas_obj.append((idx_pos_x, idx_pos_y))
-            log.debug("indices de parcelas a cargar: "+str(idxs_pos_parcelas_obj))
+            #log.debug("indices de parcelas a cargar: "+str(idxs_pos_parcelas_obj))
             #
             for idx_pos in self._parcelas.keys():
                 if idx_pos not in idxs_pos_parcelas_obj:
                     idxs_pos_parcelas_descargar.append(idx_pos)
-                    log.debug("se descargara parcela "+str(idx_pos))
+                    #log.debug("se descargara parcela "+str(idx_pos))
             for idx_pos in idxs_pos_parcelas_obj:
                 if idx_pos not in self._parcelas:
                     idxs_pos_parcelas_cargar.append(idx_pos)
-                    log.debug("se cargara parcela "+str(idx_pos))
+                    #log.debug("se cargara parcela "+str(idx_pos))
             #
             for idx_pos in idxs_pos_parcelas_descargar:
                 self._descargar_parcela(idx_pos)

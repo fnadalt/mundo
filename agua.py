@@ -7,10 +7,9 @@ log=logging.getLogger(__name__)
 
 class Agua:
     
-    def __init__(self, mundo, luz, altitud):
+    def __init__(self, mundo, altitud):
         self.base=mundo.base
         self.mundo=mundo
-        self.luz=luz
         self.altitud=altitud
         #
         self.camera=base.camera
@@ -36,8 +35,6 @@ class Agua:
         #self.plano.setShaderAuto()
         shader=Shader.load(Shader.SL_GLSL, vertex="shaders/agua.v.glsl", fragment="shaders/agua.f.glsl")
         self.plano.setShader(shader)
-        self.plano.setShaderInput("light_pos", self.luz.getPos())
-        self.plano.setShaderInput("light_color", self.luz.node().getColor())
 
     def configurar_reflejo(self):
         # reflejo
@@ -99,7 +96,7 @@ class Agua:
         tex3.setWrapV(Texture.WMRepeat)
         self.plano.setTexture(ts3, tex3)
     
-    def update(self, dt):
+    def update(self, dt, pos_luz, color_luz):
         #
         cam_pos=self.camera.getPos(self.plano)
         cam_hpr=self.camera.getHpr(self.plano)
@@ -118,6 +115,8 @@ class Agua:
         self.move_factor%=1
         self.plano.setShaderInput("move_factor", self.move_factor)
         self.plano.setShaderInput("cam_pos", self.camera.getPos(self.plano))
+        self.plano.setShaderInput("light_pos", pos_luz)
+        self.plano.setShaderInput("light_color", color_luz)
 
     def dump_info(self):
         info=""
