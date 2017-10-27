@@ -31,7 +31,7 @@ class Sol:
         # esfera solar
         self.nodo=self.base.loader.loadModel("objetos/sol")
         self.nodo.reparentTo(self.pivot)
-        self.nodo.setX(300.0)
+        self.nodo.setX(400.0)
         self.nodo.setScale(5.0)
         self.nodo.setColor(1.0, 1.0, 0.2, 1.0)
         self.nodo.setLightOff(1)

@@ -185,6 +185,9 @@ class Mundo(NodePath):
         self.input_mapper.update()
         # fisica
         self.bullet_world.doPhysics(dt)
+        # controlador cámara
+        self.controlador_camara.altitud_suelo=self.terreno.obtener_altitud(self.controlador_camara.pos_camara.getXy())
+        self.controlador_camara.update(dt)
         # ciclo dia/noche, cielo, sol
         self.dia.update(dt)
         offset_periodo=self.dia.calcular_offset(self.dia.periodo.actual, self.dia.periodo.posterior)
@@ -193,20 +196,17 @@ class Mundo(NodePath):
         # terreno
         if self._counter==50:
             self._counter=0
-            self.terreno.update(self.hombre.cuerpo.getPos())
+            self.terreno.update(self.controlador_camara.target_node_path.getPos())
         self._counter+=1
+        # agua
+        self.agua.plano.setX(self.controlador_camara.target_node_path.getPos().getX())
+        self.agua.plano.setY(self.controlador_camara.target_node_path.getPos().getY())
+        self.agua.update(dt, self.sol.luz.getPos(), self.sol.luz.node().getColor())
         # personajes
         for _personaje in self._personajes:
             _altitud_suelo=self.terreno.obtener_altitud(_personaje.cuerpo.getPos())
             _personaje.altitud_suelo=_altitud_suelo
             _personaje.update(dt)
-        # controlador cámara
-        self.controlador_camara.altitud_suelo=self.terreno.obtener_altitud(self.controlador_camara.pos_camara.getXy())
-        self.controlador_camara.update(dt)
-        # agua
-        self.agua.plano.setX(self.hombre.cuerpo.getX())
-        self.agua.plano.setY(self.hombre.cuerpo.getY())
-        self.agua.update(dt, self.sol.luz.getPos(), self.sol.luz.node().getColor())
         # gui
         self.lblHora["text"]=self.dia.obtener_hora()
         #
