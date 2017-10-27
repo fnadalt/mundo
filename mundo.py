@@ -12,8 +12,6 @@ from camara import ControladorCamara
 from input import InputMapper
 from heightmap import HeightMap
 
-import math
-
 import voxels
 
 import logging
@@ -210,8 +208,7 @@ class Mundo(NodePath):
         self.agua.plano.setY(self.hombre.cuerpo.getY())
         self.agua.update(dt, self.sol.luz.getPos(), self.sol.luz.node().getColor())
         # gui
-        _hora_m, _hora_h=math.modf(24*self.dia.hora_normalizada)
-        self.lblHora["text"]="%s:%s"%(str(int(_hora_h)), str("0%i"%int(60*_hora_m))[-2:])
+        self.lblHora["text"]=self.dia.obtener_hora()
         #
         return task.cont
     

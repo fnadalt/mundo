@@ -1,3 +1,5 @@
+import math
+
 import logging
 log=logging.getLogger(__name__)
 
@@ -39,6 +41,17 @@ class Dia:
         #log.info("calcular_offset h1=%.2f h2=%.2f hn=%.2f"%(hora1, hora2, self.hora_normalizada))
         offset=(self.hora_normalizada-hora1)/(hora2-hora1)
         return offset
+    
+    def obtener_hora(self):
+        _hn=self.hora_normalizada
+        _hn-=0.2
+        if _hn<0.0:
+            _hn=1.0-_hn
+        _hn*=24.0
+        _m, _h=math.modf(_hn)
+        _hora_f="%i:%s"%(int(_h), str("0%i"%int(_m*60.0))[-2:])
+        #log.info("obtener_hora hn=%.2f _h=%.1f _m=%.2f _texto=%s"%(self.hora_normalizada, _h, _m, _hora_f))
+        return _hora_f
 
 class Periodo:
 
