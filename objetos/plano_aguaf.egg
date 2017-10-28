@@ -1,0 +1,45 @@
+<CoordinateSystem> { Z-Up }
+
+<Comment> {
+  "egg-trans -F objetos/plano_agua.egg"
+}
+<Material> Material {
+  <Scalar> diffr { 0.447248011827469 }
+  <Scalar> diffg { 0.800000011920929 }
+  <Scalar> diffb { 0.75457501411438 }
+  <Scalar> ambr { 1 }
+  <Scalar> ambg { 1 }
+  <Scalar> ambb { 1 }
+  <Scalar> emitr { 0 }
+  <Scalar> emitg { 0 }
+  <Scalar> emitb { 0 }
+  <Scalar> specr { 0 }
+  <Scalar> specg { 0 }
+  <Scalar> specb { 0 }
+  <Scalar> shininess { 12.5 }
+}
+<Group> Plane {
+  <VertexPool> Plane {
+    <Vertex> 0 {
+      -128 -128 0
+      <UV> { 0.0001 0.0001 }
+    }
+    <Vertex> 1 {
+      128 -128 0
+      <UV> { 0.9999 0.0001 }
+    }
+    <Vertex> 2 {
+      128 128 0
+      <UV> { 0.9999 0.9999 }
+    }
+    <Vertex> 3 {
+      -128 128 0
+      <UV> { 0.0001 0.9999 }
+    }
+  }
+  <Polygon> {
+    <Normal> { 0 0 1 }
+    <MRef> { Material }
+    <VertexRef> { 0 1 2 3 <Ref> { Plane } }
+  }
+}

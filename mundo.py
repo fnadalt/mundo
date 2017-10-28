@@ -103,7 +103,7 @@ class Mundo(NodePath):
     def _cargar_debug_info(self):
         Negro=Vec4(0.0, 0.0, 0.0, 1.0)
         #Blanco=Vec4(1.0, 1.0, 1.0, 1.0)
-        self.texto1=OnscreenText(text="info?", pos=(0.0, 0.9), scale=0.05, align=TextNode.ACenter, fg=Negro, mayChange=True)
+        self.texto1=OnscreenText(text="info?", pos=(-1.2, 0.9), scale=0.045, align=TextNode.ALeft, fg=Negro, mayChange=True)
 
     def _cargar_material(self):
         self.setMaterialOff()
@@ -158,9 +158,10 @@ class Mundo(NodePath):
         self.terreno.reparentTo(self)
         self.terreno.update(pos_inicial_foco)
         # agua
-        self.agua=Agua(self, self.terreno.nivel_agua)
+        self.agua=Agua(self.base, self.terreno.nivel_agua)
         self.agua.generar()
-        #self.agua.mostrar_camaras()
+        self.agua.mostrar_camaras()
+        self.agua.superficie.reparentTo(self)
         #
         self.controlador_camara.nivel_agua=self.terreno.nivel_agua
 
@@ -170,12 +171,13 @@ class Mundo(NodePath):
         self.pointN.node().setColor((0.7, 0.7, 0.7, 1.0))
         self.pointN.setPos(0.0, 0.0, 1.0)
         #self.setLight(self.pointN)
-
+    
     def _update(self, task):
         info=""
-        info+=self.hombre.obtener_info()+"\n"
-        #info+=self.input_mapper.obtener_info()+"\n"
         info+=self.dia.obtener_info()+"\n"
+        info+=self.hombre.obtener_info()+"\n"
+        info+=self.agua.obtener_info()+"\n"
+        #info+=self.input_mapper.obtener_info()+"\n"
         #info+=self.sol.obtener_info()+"\n"
         #info+=self.cielo.obtener_info()
         self.texto1.setText(info)
@@ -198,15 +200,15 @@ class Mundo(NodePath):
             self._counter=0
             self.terreno.update(self.controlador_camara.target_node_path.getPos())
         self._counter+=1
-        # agua
-        self.agua.plano.setX(self.controlador_camara.target_node_path.getPos().getX())
-        self.agua.plano.setY(self.controlador_camara.target_node_path.getPos().getY())
-        self.agua.update(dt, self.sol.luz.getPos(), self.sol.luz.node().getColor())
         # personajes
         for _personaje in self._personajes:
             _altitud_suelo=self.terreno.obtener_altitud(_personaje.cuerpo.getPos())
             _personaje.altitud_suelo=_altitud_suelo
             _personaje.update(dt)
+        # agua
+        self.agua.superficie.setX(self.controlador_camara.target_node_path.getPos().getX())
+        self.agua.superficie.setY(self.controlador_camara.target_node_path.getPos().getY())
+        self.agua.update(dt, self.sol.luz.getPos(), self.sol.luz.node().getColor())
         # gui
         self.lblHora["text"]=self.dia.obtener_hora()
         #
