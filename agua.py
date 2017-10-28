@@ -17,7 +17,7 @@ class Agua:
         self.camera3=None
         self.nodo_camaras=self.camera.getParent()
         #
-        self.plano=self.base.loader.loadModel("objetos/plano_agua")
+        self.plano=self.base.loader.loadModel("objetos/plano_aguaf")
         self.plano.reparentTo(self.mundo)
         self.plano.setScale(128.0)
         self.plano.setP(180.0) # paque ande el agua... maldito 1.10

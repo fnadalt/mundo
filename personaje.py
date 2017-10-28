@@ -199,7 +199,7 @@ class Personaje:
         return estado_nuevo
     
     def _cambio_estado(self, idx_capa, estado_previo, estado_nuevo):
-        log.info("%s: cambio de estado en capa %i, de %s a %s"%(self.clase, idx_capa, str(estado_previo), str(estado_nuevo)))
+        #log.info("%s: cambio de estado en capa %i, de %s a %s"%(self.clase, idx_capa, str(estado_previo), str(estado_nuevo)))
         # capa 0
         if estado_nuevo==Personaje.EstadoQuieto:
             self._velocidad_lineal=LVector3(0.0, 0.0, 0.0)
@@ -215,7 +215,7 @@ class Personaje:
         #
 
     def _cambio_params(self, params_previos, params_nuevos):
-        log.info("%s: cambio de parámetros de estados de %s a %s"%(self.clase, str(bin(params_previos)), str(bin(params_nuevos))))
+        #log.info("%s: cambio de parámetros de estados de %s a %s"%(self.clase, str(bin(params_previos)), str(bin(params_nuevos))))
         # detener giro
         if params_previos & Personaje.ParamEstadoGirando and not params_nuevos & Personaje.ParamEstadoGirando:
             self._velocidad_angular=LVector3(0.0, 0.0, 0.0)
