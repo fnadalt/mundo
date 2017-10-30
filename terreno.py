@@ -7,28 +7,38 @@ import os.path
 import logging
 log=logging.getLogger(__name__)
 
-class Terreno(NodePath):
+class Terreno:
 
-    altura_maxima=300.0
-    cantidad_parcelas_expandir=2
+    # alturas
+    AlturaMaxima=300.0
+    #
+    AlturaArena=0.44 # 0.42
+    AlturaTierraBaja=0.48 # 0.44
+    AlturaPasto=0.55 # 0.56
+    AlturaTierraAlta=0.63 # 0.62
+    AlturaNieve=0.70
+    
+    # radio de expansion
+    CantidadParcelasExpandir=2
+    
+    #
+    HeightMapSeed=589
     
     def __init__(self, base, bullet_world):
-        NodePath.__init__(self, "terreno")
-        # variables internas
-        self._ajuste_altura=-0.5
-        self._height_map_id=589
-        self._height_map=HeightMap(self._height_map_id)
-        self._parcelas={} # {idx_pos:cuerpo_parcela_node_path,...}
-        # variables externas
-        self.idx_pos_parcela_actual=None
-        self.nivel_agua=-25.0#-25.0,10.5
-        # referencias
+        # referencias:
         self.pos_foco=None
-        self.foco=None # eliminar, reemplazar por pos_foco
         self.base=base
         self.bullet_world=bullet_world
-        #
-        self.setSz(Terreno.altura_maxima)
+        # componentes:
+        self.nodo=self.base.render.attachNewNode("terreno")
+        self.nodo.setSz(Terreno.AlturaMaxima)
+        # variables externas:
+        self.idx_pos_parcela_actual=None
+        self.nivel_agua=-25.0#-25.0,10.5
+        # variables internas:
+        self._ajuste_altura=-0.5
+        self._height_map=HeightMap(Terreno.HeightMapSeed)
+        self._parcelas={} # {idx_pos:cuerpo_parcela_node_path,...}
 
     def rayTestAll(self, pos):
         test=self.bullet_world.rayTestAll(LPoint3(pos[0], pos[1], 1000.0), LPoint3(pos[0], pos[1], -1000.0), BitMask32.bit(1))
@@ -50,20 +60,13 @@ class Terreno(NodePath):
         return altitud
     
     def obtener_indice_parcela_foco(self):
-        if self.foco==None:
-            pass#log.error("no está definido el foco")
-            #return (0, 0)
-        _pos_foco=self.pos_foco.getXy()#self.foco.getPos().getXy()
+        _pos_foco=self.pos_foco.getXy()
         _pos_foco[0]+=-Parcela.pos_offset if _pos_foco[0]<0.0 else Parcela.pos_offset
         _pos_foco[1]+=-Parcela.pos_offset if _pos_foco[1]<0.0 else Parcela.pos_offset
         return (int(_pos_foco[0]/Parcela.tamano), int(_pos_foco[1]/Parcela.tamano))
     
     def _cargar_parcela(self, idx_pos):
         log.info("cargando parcela "+str(idx_pos))
-        #
-        if self.foco==None:
-            pass#log.error("no está definido el foco")
-            #return
         #
         if idx_pos in self._parcelas:
             log.error("se solicito la carga de la parcela %s, que ya se encuentra en self._parcelas"%str(idx_pos))
@@ -116,11 +119,11 @@ class Terreno(NodePath):
             log.info("generando textura %s"%ruta_arch_tex)
             #
             img=list()
-            img.append([0, 0, 8, 0.42, PNMImage(Filename("texturas/arena.png"))]) # {tipo:[x,y,step,cutval,img]}
-            img.append([0, 0, 8, 0.44, PNMImage(Filename("texturas/tierra.png"))])
-            img.append([0, 0, 8, 0.56, PNMImage(Filename("texturas/pasto.png"))])
-            img.append([0, 0, 8, 0.62, PNMImage(Filename("texturas/tierra.png"))]) # altura_corte |0.8
-            img.append([0, 0, 8, 0.70, PNMImage(Filename("texturas/nieve.png"))]) # altura_corte |1.0
+            img.append([0, 0, 8, Terreno.AlturaArena, PNMImage(Filename("texturas/arena.png"))]) # {tipo:[x,y,step,cutval,img]}
+            img.append([0, 0, 8, Terreno.AlturaTierraBaja, PNMImage(Filename("texturas/tierra.png"))])
+            img.append([0, 0, 8, Terreno.AlturaPasto, PNMImage(Filename("texturas/pasto.png"))])
+            img.append([0, 0, 8, Terreno.AlturaTierraAlta, PNMImage(Filename("texturas/tierra.png"))]) # altura_corte |0.8
+            img.append([0, 0, 8, Terreno.AlturaNieve, PNMImage(Filename("texturas/nieve.png"))]) # altura_corte |1.0
             #
             tamano_tex=128
             img_tex=PNMImage(tamano_tex, tamano_tex)
@@ -144,18 +147,9 @@ class Terreno(NodePath):
                         img_data[1]-=img_data[4].getYSize()
             img_tex.write(Filename(ruta_arch_tex))
         #
-        #material=Material(self.mundo.getMaterial())
-        #material.setAmbient((0.75, 0.75, 0.75, 1.0))
-        #if material!=None:
-        #    log.debug("estableciendo material '%s'"%material.getName())
-        #    nodo_parcela.setMaterial(material)
-        #nodo_parcela.setMaterialOff(1000)
-        #nodo_parcela.setLightOff(self.mundo.sol_a, 1000)
-        #
         ts0=TextureStage("ts_parcela")
         tex0=Texture("tex_parcela")
         tex0.load(img_tex)
-        #nodo_parcela.setLight(self.mundo.sol_a)
         nodo_parcela.setTexture(ts0, tex0)
         nodo_parcela.setShaderOff(1000)
         
@@ -191,7 +185,7 @@ class Terreno(NodePath):
             _tri_mesh.addGeom(geom_node.node().getGeom(0))
             _shape=BulletTriangleMeshShape(_tri_mesh, dynamic=False)
             _rbody.addShape(_shape, geom_node.getTransform())
-        _rbodyN=self.attachNewNode(_rbody)
+        _rbodyN=self.nodo.attachNewNode(_rbody)
         _rbodyN.setPos(Parcela.tamano*idx_pos[0]-Parcela.pos_offset, Parcela.tamano*idx_pos[1]-Parcela.pos_offset, self._ajuste_altura)
         _rbodyN.setCollideMask(BitMask32.bit(1))
         nodo_parcela.reparentTo(_rbodyN)
@@ -214,8 +208,8 @@ class Terreno(NodePath):
             idxs_pos_parcelas_cargar=[]
             idxs_pos_parcelas_descargar=[]
             #
-            for idx_pos_x in range(idx_pos[0]-Terreno.cantidad_parcelas_expandir, idx_pos[0]+Terreno.cantidad_parcelas_expandir+1):
-                for idx_pos_y in range(idx_pos[1]-Terreno.cantidad_parcelas_expandir, idx_pos[1]+Terreno.cantidad_parcelas_expandir+1):
+            for idx_pos_x in range(idx_pos[0]-Terreno.CantidadParcelasExpandir, idx_pos[0]+Terreno.CantidadParcelasExpandir+1):
+                for idx_pos_y in range(idx_pos[1]-Terreno.CantidadParcelasExpandir, idx_pos[1]+Terreno.CantidadParcelasExpandir+1):
                     idxs_pos_parcelas_obj.append((idx_pos_x, idx_pos_y))
             #log.debug("indices de parcelas a cargar: "+str(idxs_pos_parcelas_obj))
             #
@@ -235,7 +229,3 @@ class Terreno(NodePath):
         # poco eficiente?
         for _p in self._parcelas.values():
             _p[1].actualizar()
-
-    def dump_info(self):
-        geom=self._parcelas[(0,0)][0].getChild(0).getChild(0).node().getGeom(0)
-        return geom

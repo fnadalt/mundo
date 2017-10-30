@@ -5,16 +5,17 @@ attribute vec4 p3d_MultiTexCoord0;
 uniform mat4 p3d_ModelMatrix;
 uniform mat4 p3d_ModelViewProjectionMatrix;
 
+uniform vec3 light_pos;
+uniform vec3 cam_pos;
+uniform float nivel_agua;
+
 varying vec4 vpos;
 varying vec2 texcoords;
 varying vec3 to_cam_vec;
 varying vec3 from_light_vec;
 
-uniform vec3 light_pos;
-uniform vec3 cam_pos;
-
 void main() {
-  vec4 wpos=p3d_ModelMatrix * vec4(p3d_Vertex.x,0.0,p3d_Vertex.y,1.0);
+  vec4 wpos=p3d_ModelMatrix * vec4(p3d_Vertex.x,nivel_agua,p3d_Vertex.y,1.0);
   vpos = p3d_ModelViewProjectionMatrix * p3d_Vertex;
   gl_Position=vpos;
   gl_TexCoord[0] = p3d_MultiTexCoord0;

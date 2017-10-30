@@ -41,8 +41,8 @@ void main()
     
     //
     vec3 view_vector=normalize(to_cam_vec);
-    float refractive_factor=dot(view_vector,vec3(0.0,1.0,0.0));
-    refractive_factor=pow(refractive_factor,0.9);
+    float refractive_factor=abs(dot(view_vector,vec3(0.0,1.0,0.0))); // abs()? esto era no más, parece
+    refractive_factor=pow(refractive_factor,0.9); // renderiza negro ante ciertos desplazamientos de la superficie de agua, habria que corregir. abs()!
     
     //
     vec4 color_normal=texture2D(p3d_Texture3,distorted_texcoords);

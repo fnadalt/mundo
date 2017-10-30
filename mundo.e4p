@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-5.1.dtd">
 <!-- eric project file for project mundo -->
-<!-- Saved: 2017-10-21, 12:06:33 -->
+<!-- Saved: 2017-10-29, 09:36:07 -->
 <!-- Copyright (C) 2017 Fernando Nadal Testa, fnt2006@gmail.com -->
 <Project version="5.1">
   <Language>en_US</Language>
@@ -26,6 +26,7 @@
     <Source>mundo.py</Source>
     <Source>parcela.py</Source>
     <Source>personaje.py</Source>
+    <Source>poblador.py</Source>
     <Source>sol.py</Source>
     <Source>terrain/bakedterrainshadergenerator.py</Source>
     <Source>terrain/basicfunctions.py</Source>

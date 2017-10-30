@@ -46,7 +46,7 @@ class Dia:
         _hn=self.hora_normalizada
         _hn-=0.2
         if _hn<0.0:
-            _hn=1.0-_hn
+            _hn+=1.0
         _hn*=24.0
         _m, _h=math.modf(_hn)
         _hora_f="%i:%s"%(int(_h), str("0%i"%int(_m*60.0))[-2:])
