@@ -1,0 +1,97 @@
+<CoordinateSystem> { Z-up } 
+<Material> grass.004 {
+  <Scalar> diffr { 0.640000 }
+  <Scalar> diffg { 0.640000 }
+  <Scalar> diffb { 0.640000 }
+  <Scalar> diffa { 0.000000 }
+  <Scalar> specr { 0.500000 }
+  <Scalar> specg { 0.500000 }
+  <Scalar> specb { 0.500000 }
+  <Scalar> shininess { 12.5 }
+  <Scalar> ambr { 1.000000 }
+  <Scalar> ambg { 1.000000 }
+  <Scalar> ambb { 1.000000 }
+  <Scalar> emitr { 0.000000 }
+  <Scalar> emitg { 0.000000 }
+  <Scalar> emitb { 0.000000 }
+}
+
+<Texture> grass.004 {
+  "./texturas/grass.004.png"
+  <Scalar> envtype { MODULATE }
+  <Scalar> minfilter { LINEAR_MIPMAP_LINEAR }
+  <Scalar> magfilter { LINEAR_MIPMAP_LINEAR }
+  <Scalar> wrap { REPEAT }
+  <Scalar> alpha-file { "./texturas/grass.004.png" }
+  <Scalar> alpha-file-channel { 4 }
+}
+
+  <Group> pasto.01 {
+    <Transform> {
+      <Matrix4> {
+        1.0 0.0 0.0 0.0 
+        0.0 1.0 0.0 0.0 
+        0.0 0.0 1.0 0.0 
+        -1.7313446998596191 -0.793724000453949 0.007260918617248535 1.0 
+      }
+    }
+    
+    <VertexPool> pasto.01 {
+    
+      <Vertex> 0 {-1.731345 -0.870094 0.001770
+        <UV>  {
+          0.000000 0.000000 
+        }
+      }
+      <Vertex> 1 {-1.731345 -0.717354 0.001770
+        <UV>  {
+          1.000000 0.000000 
+        }
+      }
+      <Vertex> 2 {-1.731345 -0.717354 0.243378
+        <UV>  {
+          1.000000 1.000000 
+        }
+      }
+      <Vertex> 3 {-1.731345 -0.870094 0.243378
+        <UV>  {
+          0.000000 1.000000 
+        }
+      }
+      <Vertex> 4 {-1.807715 -0.793724 0.001770
+        <UV>  {
+          0.000000 0.000000 
+        }
+      }
+      <Vertex> 5 {-1.654974 -0.793724 0.001770
+        <UV>  {
+          1.000000 0.000000 
+        }
+      }
+      <Vertex> 6 {-1.654974 -0.793724 0.243378
+        <UV>  {
+          1.000000 1.000000 
+        }
+      }
+      <Vertex> 7 {-1.807715 -0.793724 0.243378
+        <UV>  {
+          0.000000 1.000000 
+        }
+      }}
+    
+    
+    <Polygon> {
+      <TRef> { grass.004 }
+      <MRef> { grass.004 }
+      <Normal> {1.000000 0.000000 0.000000}
+      <BFace> { 1 }
+      <VertexRef> { 0 1 2 3 <Ref> { pasto.01 }} 
+    }
+    <Polygon> {
+      <TRef> { grass.004 }
+      <MRef> { grass.004 }
+      <Normal> {0.000000 -1.000000 0.000000}
+      <BFace> { 1 }
+      <VertexRef> { 4 5 6 7 <Ref> { pasto.01 }} 
+    }
+  }

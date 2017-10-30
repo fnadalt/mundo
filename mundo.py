@@ -136,11 +136,16 @@ class Mundo(NodePath):
         self.terreno.foco=self.hombre.cuerpo
     
     def _cargar_objetos(self):
+        #
         self.palo=self.base.loader.loadModel("objetos/palof")
         self.palo.reparentTo(self.hombre.handR)
         self.palo.setPos(0.5,0.75,-0.25)
         self.palo.setR(-85.0)
         self.palo.setScale(10.0)
+        #
+        self.arbusto=self.base.loader.loadModel("objetos/arbustof.01.egg")
+        self.arbusto.reparentTo(self)
+        self.arbusto.setZ(self.terreno.obtener_altitud(self.arbusto.getPos()))
     
     def _cargar_terreno(self, pos_inicial_foco):
         # dia
@@ -163,7 +168,7 @@ class Mundo(NodePath):
         # agua
         self.agua=Agua(self.base, self.terreno.nivel_agua)
         self.agua.generar()
-        self.agua.mostrar_camaras()
+        #self.agua.mostrar_camaras()
         self.agua.superficie.reparentTo(self)
         #
         self.controlador_camara.nivel_agua=self.terreno.nivel_agua
@@ -178,8 +183,8 @@ class Mundo(NodePath):
     def _update(self, task):
         info=""
         info+=self.dia.obtener_info()+"\n"
-        info+=self.hombre.obtener_info()+"\n"
-        info+=self.agua.obtener_info()+"\n"
+        #info+=self.hombre.obtener_info()+"\n"
+        #info+=self.agua.obtener_info()+"\n"
         #info+=self.input_mapper.obtener_info()+"\n"
         #info+=self.sol.obtener_info()+"\n"
         #info+=self.cielo.obtener_info()
