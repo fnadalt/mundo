@@ -41,7 +41,7 @@ class Mundo(NodePath):
         self._personajes=[]
         self._periodo_dia_actual=0
         # variables inmediatas:
-        _pos_inicial_foco=Vec3(0, 0, 1) # |(214, 600, 100)
+        _pos_inicial_foco=Vec3(1352,1736,10) # |(214, 600, 100)|(352,736,10)
         # inicio: !!! -> def iniciar()...?
         self._configurar_fisica()
         #
