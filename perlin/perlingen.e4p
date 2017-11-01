@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-5.1.dtd">
 <!-- eric project file for project perlingen -->
-<!-- Saved: 2017-10-30, 10:36:43 -->
+<!-- Saved: 2017-11-01, 11:32:34 -->
 <!-- Copyright (C) 2017 ,  -->
 <Project version="5.1">
   <Language></Language>
@@ -14,7 +14,7 @@
   <Eol index="0"/>
   <Sources>
     <Source>__init__.py</Source>
-    <Source>main.py</Source>
+    <Source>textura.py</Source>
   </Sources>
   <Forms/>
   <Translations/>
