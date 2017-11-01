@@ -20,12 +20,12 @@ class App(ShowBase):
         self.frame=None
         self.frame_dlg=None
         # variables:
-        self.pila_actual=None
+        self.nombre_pila_actual=None
         # init:
         self.disableMouse()
         self.camera.setPos(-0.3, -2.5, 0)
         self.generar_plano()
-        self._generar_gui()
+        self.generar_gui()
         #
         self.accept("aspectRatioChanged", self._on_aspect_ratio_changed)
     
@@ -35,6 +35,7 @@ class App(ShowBase):
         #
         archivo="perlin_%s.png"%nombre
         if not os.path.exists(archivo):
+            print("generando imágen '%s'..."%archivo)
             imagen=PNMImage(512, 512, 1, 65535)
             for x in range(imagen.getXSize()):
                 for y in range(imagen.getYSize()):
@@ -61,21 +62,36 @@ class App(ShowBase):
         tex0.setWrapU(Texture.WMClamp)
         tex0.setWrapV(Texture.WMClamp)
         self.plano.setTexture(ts0, tex0)
-
-    def _generar_gui(self):
-        ar=self.getAspectRatio()
+    
+    def generar_gui(self):
+        # resetear stacked_perlins
         if len(self.stacked_perlins)>0:
             self.stacked_perlins.clear()
+        #
+        ar=self.getAspectRatio()
         # frame y titulo
         self.frame=DirectFrame(frameColor=App.ColorFondoFrame, frameSize=(0, 1, -1, 1), pos=(-ar, 0, 0))
         DirectLabel(parent=self.frame, text="perlin", text_fg=App.ColorTexto, frameColor=App.ColorFondoFrame, scale=0.1, pos=(0.5, 0, 0.9))
         # stacks
         DirectLabel(parent=self.frame, text="stacks", text_fg=App.ColorTexto, frameColor=App.ColorFondoFrame, scale=0.08, pos=(0.15, 0, 0.75))
-        opts=DirectOptionMenu(parent=self.frame, text_scale=0.5, text_pos=(0.25, 0),  scale=0.1, pos=(0.3, 0, 0.75), text_fg=App.ColorTexto, frameColor=App.ColorFondoWidgets, command=self._on_option_selected)
+        opts=DirectOptionMenu(parent=self.frame, items=["(seleccioná...)"], text_scale=0.5, text_pos=(0.25, 0),  scale=0.1, pos=(0.3, 0, 0.75), text_fg=App.ColorTexto, frameColor=App.ColorFondoWidgets, command=self._on_option_selected)
         DirectButton(parent=self.frame, text="+", frameSize=(-0.5, 0.5, -0.5, 0.5), frameColor=App.ColorFondoWidgets, command=self._on_btn_agregar_stack, pos=(0.35, 0, 0.62), scale=0.1, text_fg=App.ColorTexto, text_pos=(-0.05,-0.15))
         DirectButton(parent=self.frame, text="-", frameSize=(-0.5, 0.5, -0.5, 0.5), frameColor=App.ColorFondoWidgets, command=self._on_btn_eliminar_stack, pos=(0.5, 0, 0.62), scale=0.1, text_fg=App.ColorTexto, text_pos=(-0.05,-0.2))
         # perlin
-        #self.frame_perlin=DirectFrame(parent=self.frame,  frameColor=App.ColorFondoWidgets, frameSize=(-0.3, 0.3, -0.3, 0.3), pos=(0, 0, 0))
+        DirectLabel(parent=self.frame, text="scale x", text_align=TextNode.ARight, text_fg=App.ColorTexto, frameColor=App.ColorFondoFrame, scale=0.08, pos=(0.45, 0, 0.25))
+        DirectLabel(parent=self.frame, text="scale y", text_align=TextNode.ARight, text_fg=App.ColorTexto, frameColor=App.ColorFondoFrame, scale=0.08, pos=(0.45, 0, 0.15))
+        DirectLabel(parent=self.frame, text="levels", text_align=TextNode.ARight, text_fg=App.ColorTexto, frameColor=App.ColorFondoFrame, scale=0.08, pos=(0.45, 0, 0.05))
+        DirectLabel(parent=self.frame, text="scale factor", text_align=TextNode.ARight, text_fg=App.ColorTexto, frameColor=App.ColorFondoFrame, scale=0.08, pos=(0.45, 0, -0.05))
+        DirectLabel(parent=self.frame, text="amp scale", text_align=TextNode.ARight, text_fg=App.ColorTexto, frameColor=App.ColorFondoFrame, scale=0.08, pos=(0.45, 0, -0.15))
+        DirectLabel(parent=self.frame, text="table size", text_align=TextNode.ARight, text_fg=App.ColorTexto, frameColor=App.ColorFondoFrame, scale=0.08, pos=(0.45, 0, -0.25))
+        DirectLabel(parent=self.frame, text="seed", text_align=TextNode.ARight, text_fg=App.ColorTexto, frameColor=App.ColorFondoFrame, scale=0.08, pos=(0.45, 0, -0.35))
+        DirectEntry(parent=self.frame, initialText="1", text_scale=0.6, text_pos=(0.25, 0), pos=(0.5, 0, 0.25), text_fg=App.ColorTexto, frameColor=App.ColorFondoWidgets, scale=(0.075, 0.1, 0.1)).setName("entry_scale_x")
+        DirectEntry(parent=self.frame, initialText="1", text_scale=0.6, text_pos=(0.25, 0), pos=(0.5, 0, 0.15), text_fg=App.ColorTexto, frameColor=App.ColorFondoWidgets, scale=(0.075, 0.1, 0.1)).setName("entry_scale_y")
+        DirectEntry(parent=self.frame, initialText="3", text_scale=0.6, text_pos=(0.25, 0), pos=(0.5, 0, 0.05), text_fg=App.ColorTexto, frameColor=App.ColorFondoWidgets, scale=(0.075, 0.1, 0.1)).setName("entry_levels")
+        DirectEntry(parent=self.frame, initialText="1", text_scale=0.6, text_pos=(0.25, 0), pos=(0.5, 0, -0.05), text_fg=App.ColorTexto, frameColor=App.ColorFondoWidgets, scale=(0.075, 0.1, 0.1)).setName("entry_scale_factor")
+        DirectEntry(parent=self.frame, initialText="1", text_scale=0.6, text_pos=(0.25, 0), pos=(0.5, 0, -0.15), text_fg=App.ColorTexto, frameColor=App.ColorFondoWidgets, scale=(0.075, 0.1, 0.1)).setName("entry_amp_scale")
+        DirectEntry(parent=self.frame, initialText="256", text_scale=0.6, text_pos=(0.25, 0), pos=(0.5, 0, -0.25), text_fg=App.ColorTexto, frameColor=App.ColorFondoWidgets, scale=(0.075, 0.1, 0.1)).setName("entry_table_size")
+        DirectEntry(parent=self.frame, initialText="123", text_scale=0.6, text_pos=(0.25, 0), pos=(0.5, 0, -0.35), text_fg=App.ColorTexto, frameColor=App.ColorFondoWidgets, scale=(0.075, 0.1, 0.1)).setName("entry_seed")
         # stacked_perlins
         items=["(seleccioná...)"]
         for archivo in [archivo for archivo in os.listdir() if re.fullmatch("perlin\_.*\.txt", archivo)]:
@@ -100,10 +116,10 @@ class App(ShowBase):
     def _on_option_selected(self, arg):
         print("option selected %s"%arg)
         if arg=="(seleccioná...)":
-            self.pila_actual=None
+            self.nombre_pila_actual=None
             self.generar_plano()
         else:
-            self.pila_actual=arg
+            self.nombre_pila_actual=arg
             self.generar_plano("perlin_%s.png"%arg)
 
     def _on_btn_agregar_stack(self):
@@ -118,28 +134,20 @@ class App(ShowBase):
         DirectLabel(parent=self.frame_dlg, text="agregar pila", text_fg=App.ColorTexto, frameColor=App.ColorFondoFrame, scale=0.1, pos=(0.5, 0, 0.9))
         #
         DirectLabel(parent=self.frame_dlg, text="nombre", text_align=TextNode.ARight, text_fg=App.ColorTexto, frameColor=App.ColorFondoFrame, scale=0.08, pos=(0.45, 0, 0.65)).setName("entry_nombre")
-        DirectLabel(parent=self.frame_dlg, text="scale x", text_align=TextNode.ARight, text_fg=App.ColorTexto, frameColor=App.ColorFondoFrame, scale=0.08, pos=(0.45, 0, 0.55))
-        DirectLabel(parent=self.frame_dlg, text="scale y", text_align=TextNode.ARight, text_fg=App.ColorTexto, frameColor=App.ColorFondoFrame, scale=0.08, pos=(0.45, 0, 0.45))
-        DirectLabel(parent=self.frame_dlg, text="levels", text_align=TextNode.ARight, text_fg=App.ColorTexto, frameColor=App.ColorFondoFrame, scale=0.08, pos=(0.45, 0, 0.35))
-        DirectLabel(parent=self.frame_dlg, text="scale factor", text_align=TextNode.ARight, text_fg=App.ColorTexto, frameColor=App.ColorFondoFrame, scale=0.08, pos=(0.45, 0, 0.25))
-        DirectLabel(parent=self.frame_dlg, text="amp scale", text_align=TextNode.ARight, text_fg=App.ColorTexto, frameColor=App.ColorFondoFrame, scale=0.08, pos=(0.45, 0, 0.15))
-        DirectLabel(parent=self.frame_dlg, text="table size", text_align=TextNode.ARight, text_fg=App.ColorTexto, frameColor=App.ColorFondoFrame, scale=0.08, pos=(0.45, 0, 0.05))
-        DirectLabel(parent=self.frame_dlg, text="seed", text_align=TextNode.ARight, text_fg=App.ColorTexto, frameColor=App.ColorFondoFrame, scale=0.08, pos=(0.45, 0, -0.05))
         #
         DirectEntry(parent=self.frame_dlg, initialText="pila_%i"%len(self.stacked_perlins), text_scale=0.6, text_pos=(0.25, 0), pos=(0.5, 0, 0.65), text_fg=App.ColorTexto, frameColor=App.ColorFondoWidgets, scale=(0.075, 0.1, 0.1)).setName("entry_nombre")
-        DirectEntry(parent=self.frame_dlg, initialText="1", text_scale=0.6, text_pos=(0.25, 0), pos=(0.5, 0, 0.55), text_fg=App.ColorTexto, frameColor=App.ColorFondoWidgets, scale=(0.075, 0.1, 0.1)).setName("entry_scale_x")
-        DirectEntry(parent=self.frame_dlg, initialText="1", text_scale=0.6, text_pos=(0.25, 0), pos=(0.5, 0, 0.45), text_fg=App.ColorTexto, frameColor=App.ColorFondoWidgets, scale=(0.075, 0.1, 0.1)).setName("entry_scale_y")
-        DirectEntry(parent=self.frame_dlg, initialText="3", text_scale=0.6, text_pos=(0.25, 0), pos=(0.5, 0, 0.35), text_fg=App.ColorTexto, frameColor=App.ColorFondoWidgets, scale=(0.075, 0.1, 0.1)).setName("entry_levels")
-        DirectEntry(parent=self.frame_dlg, initialText="1", text_scale=0.6, text_pos=(0.25, 0), pos=(0.5, 0, 0.25), text_fg=App.ColorTexto, frameColor=App.ColorFondoWidgets, scale=(0.075, 0.1, 0.1)).setName("entry_scale_factor")
-        DirectEntry(parent=self.frame_dlg, initialText="1", text_scale=0.6, text_pos=(0.25, 0), pos=(0.5, 0, 0.15), text_fg=App.ColorTexto, frameColor=App.ColorFondoWidgets, scale=(0.075, 0.1, 0.1)).setName("entry_amp_scale")
-        DirectEntry(parent=self.frame_dlg, initialText="256", text_scale=0.6, text_pos=(0.25, 0), pos=(0.5, 0, 0.05), text_fg=App.ColorTexto, frameColor=App.ColorFondoWidgets, scale=(0.075, 0.1, 0.1)).setName("entry_table_size")
-        DirectEntry(parent=self.frame_dlg, initialText="123", text_scale=0.6, text_pos=(0.25, 0), pos=(0.5, 0, -0.05), text_fg=App.ColorTexto, frameColor=App.ColorFondoWidgets, scale=(0.075, 0.1, 0.1)).setName("entry_seed")
         # aceptar / cancelar
         DirectButton(parent=self.frame_dlg, text="aceptar", frameSize=(-1.3, 1.3, -0.5, 0.5), frameColor=App.ColorFondoWidgets, command=self._on_nombre_pila_ok, pos=(0.55, 0, -0.9), scale=0.1, text_fg=App.ColorTexto, text_pos=(-0.05,-0.15), text_scale=0.6)
         DirectButton(parent=self.frame_dlg, text="cancelar", frameSize=(-1.3, 1.3, -0.5, 0.5), frameColor=App.ColorFondoWidgets, command=self._cerrar_dialogo, pos=(0.85, 0, -0.9), scale=0.1, text_fg=App.ColorTexto, text_pos=(-0.05,-0.15), text_scale=0.6)
 
     def _on_btn_eliminar_stack(self):
-        print("eliminar stack")
+        if self.nombre_pila_actual==None:
+            return
+        archivo="perlin_%s."%self.nombre_pila_actual
+        print("eliminar stack '%s'..."%archivo)
+        os.remove(archivo+"txt")
+        os.remove(archivo+"png")
+        self.generar_gui()
     
     def _on_nombre_pila_ok(self):
         #
@@ -186,7 +194,7 @@ class App(ShowBase):
             self.frame_dlg.removeNode()
             self.frame_dlg=None
         if self.frame==None:
-            self._generar_gui()
+            self.generar_gui()
 
 if __name__=="__main__":
     app=App()
