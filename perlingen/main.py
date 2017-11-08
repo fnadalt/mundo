@@ -1,53 +1,45 @@
 #!/usr/bin/python
 
 from direct.showbase.ShowBase import ShowBase
-from direct.gui.DirectGui import *
+from direct.showbase.DirectObject import DirectObject
 from panda3d.core import *
 
-from textura import Textura
+import logging
+logging.basicConfig(level=logging.INFO)
+log=logging.getLogger(__name__)
 
-class App(ShowBase):
+import gui
 
-    ColorFondoFrame=(0, 0.7, 0.7, 1)
-    ColorFondoWidgets=(0.1, 0.78, 0.78,  1)
-    ColorTexto=(0.9, 0.9, 0.5, 1)
+class App(DirectObject):
+
+    FrameBgColor=(0, 0.7, 0.7, 1)
+    WidgetsBgColor=(0.1, 0.78, 0.78,  1)
+    TextFgColor=(0.9, 0.9, 0.5, 1)
     
     def __init__(self):
-        super(App, self).__init__()
-        # escenas:
-        self.textura=None
-        self.terreno=None
-        # componentes:
-        self.frame=None
-        # init:
+        super(DirectObject, self).__init__()
+        #
         PStatClient.connect()
-        self.disableMouse()
-        self.camera.setPos(-0.3, -2.5, 0)
-        self.win.setClearColor(App.ColorFondoFrame)
-        self.construir_gui()
+        # base
+        base.disableMouse()
+        base.camera.setPos(-0.3, -2.5, 0)
+        base.win.setClearColor(App.FrameBgColor)
+        base.taskMgr.add(self.update, "update")
+        # gui
+        gui.initialize()
+        gui.manager.load_main() # load_main
 
-    def construir_gui(self):
-        print("construir_gui")
-        self.clean_up()
-        if not self.frame:
-            print("crear frame")
-            self.frame=DirectFrame(frameColor=App.ColorFondoFrame, frameSize=(1, 1, -1, 1), pos=(0, 0, 0))
-        else:
-            print("show frame")
-            self.frame.show()
-        DirectButton(parent=self.frame, text="textura", frameSize=(-2., 2., -0.7, 0.7), frameColor=App.ColorFondoWidgets, scale=0.1, pos=(0, 0, 0.0), text_fg=App.ColorTexto, text_pos=(0, -0.15), command=self.abrir_textura)
-        DirectButton(parent=self.frame, text="terreno", frameSize=(-2., 2., -0.7, 0.7), frameColor=App.ColorFondoWidgets, scale=0.1, pos=(0, 0, -0.2), text_fg=App.ColorTexto, text_pos=(0, -0.15))
+    def update(self, task):
+        if not gui.manager.update():
+            return task.done
+        return task.cont
     
-    def clean_up(self):
-        if self.textura:
-            self.textura=None
-    
-    def abrir_textura(self):
-        print("abrir_textura")
-        self.frame.hide()
-        self.textura=Textura(self)
-        self.textura.construir()
-        
+    def clean_up(self): # clean
+        gui.terminate()
+
 if __name__=="__main__":
+    #        
+    base=ShowBase()
     app=App()
-    app.run()
+    base.run()
+    app.clean_up()
