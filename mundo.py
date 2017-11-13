@@ -41,7 +41,7 @@ class Mundo(NodePath):
         self._personajes=[]
         self._periodo_dia_actual=0
         # variables inmediatas:
-        _pos_inicial_foco=Vec3(1352,1736,10) # |(214, 600, 100)|(352,736,10)
+        _pos_inicial_foco=Vec3(0,0,1) # |(214, 600, 100)|(352,736,10)|(1352,1736,10)
         # inicio: !!! -> def iniciar()...?
         self._configurar_fisica()
         #
@@ -209,8 +209,7 @@ class Mundo(NodePath):
         if self._counter==50:
             self._counter=0
             self.terreno.update(self.controlador_camara.target_node_path.getPos())
-            self.poblador.update(self.terreno.obtener_indice_parcela_foco())
-        self._counter+=1
+            self.poblador.update(self.idx_pos_parcela_actual)
         # personajes
         for _personaje in self._personajes:
             _altitud_suelo=self.terreno.obtener_altitud(_personaje.cuerpo.getPos())
@@ -223,6 +222,7 @@ class Mundo(NodePath):
         # gui
         self.lblHora["text"]=self.dia.obtener_hora()
         #
+        self._counter+=1
         return task.cont
     
     def _toggle_debug_fisica(self):
