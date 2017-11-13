@@ -6,7 +6,7 @@ from dia import Dia
 from cielo import Cielo
 from sol import Sol
 from terreno import Terreno
-from poblador import PobladorTerreno
+from terreno2 import Terreno2
 from agua import Agua
 from personaje import *
 from camara import ControladorCamara
@@ -163,8 +163,10 @@ class Mundo(NodePath):
         self.terreno=Terreno(self.base, self.bullet_world)
         self.terreno.nodo.reparentTo(self)
         self.terreno.update(pos_inicial_foco)
-        # poblador
-        self.poblador=PobladorTerreno(self.base, Terreno.HeightMapSeed)
+        # terreno2
+        self.terreno2=Terreno2(self.base, self.bullet_world)
+        self.terreno2.nodo.reparentTo(self)
+        self.terreno2.update(pos_inicial_foco)
         # agua
         self.agua=Agua(self.base, self.terreno.nivel_agua)
         self.agua.generar()
@@ -209,7 +211,6 @@ class Mundo(NodePath):
         if self._counter==50:
             self._counter=0
             self.terreno.update(self.controlador_camara.target_node_path.getPos())
-            self.poblador.update(self.idx_pos_parcela_actual)
         # personajes
         for _personaje in self._personajes:
             _altitud_suelo=self.terreno.obtener_altitud(_personaje.cuerpo.getPos())

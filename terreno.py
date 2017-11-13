@@ -19,7 +19,7 @@ class Terreno:
     AlturaNieve=0.70
     
     # radio de expansion
-    RadioExpansion=2
+    RadioExpansion=1
     
     #
     HeightMapSeed=589
