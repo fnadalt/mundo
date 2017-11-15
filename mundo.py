@@ -6,7 +6,7 @@ from dia import Dia
 from cielo import Cielo
 from sol import Sol
 from terreno import Terreno
-from poblador import PobladorTerreno
+from terreno2 import Terreno2
 from agua import Agua
 from personaje import *
 from camara import ControladorCamara
@@ -41,7 +41,7 @@ class Mundo(NodePath):
         self._personajes=[]
         self._periodo_dia_actual=0
         # variables inmediatas:
-        _pos_inicial_foco=Vec3(1352,1736,10) # |(214, 600, 100)|(352,736,10)
+        _pos_inicial_foco=Vec3(0,0,1) # |(214, 600, 100)|(352,736,10)|(1352,1736,10)
         # inicio: !!! -> def iniciar()...?
         self._configurar_fisica()
         #
@@ -163,8 +163,10 @@ class Mundo(NodePath):
         self.terreno=Terreno(self.base, self.bullet_world)
         self.terreno.nodo.reparentTo(self)
         self.terreno.update(pos_inicial_foco)
-        # poblador
-        self.poblador=PobladorTerreno(self.base, Terreno.HeightMapSeed)
+        # terreno2
+        self.terreno2=Terreno2(self.base, self.bullet_world)
+        self.terreno2.nodo.reparentTo(self)
+        self.terreno2.update(pos_inicial_foco)
         # agua
         self.agua=Agua(self.base, self.terreno.nivel_agua)
         self.agua.generar()
@@ -209,8 +211,6 @@ class Mundo(NodePath):
         if self._counter==50:
             self._counter=0
             self.terreno.update(self.controlador_camara.target_node_path.getPos())
-            self.poblador.update(self.terreno.obtener_indice_parcela_foco())
-        self._counter+=1
         # personajes
         for _personaje in self._personajes:
             _altitud_suelo=self.terreno.obtener_altitud(_personaje.cuerpo.getPos())
@@ -223,6 +223,7 @@ class Mundo(NodePath):
         # gui
         self.lblHora["text"]=self.dia.obtener_hora()
         #
+        self._counter+=1
         return task.cont
     
     def _toggle_debug_fisica(self):

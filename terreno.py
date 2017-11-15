@@ -19,7 +19,7 @@ class Terreno:
     AlturaNieve=0.70
     
     # radio de expansion
-    CantidadParcelasExpandir=6
+    RadioExpansion=1
     
     #
     HeightMapSeed=589
@@ -208,8 +208,8 @@ class Terreno:
             idxs_pos_parcelas_cargar=[]
             idxs_pos_parcelas_descargar=[]
             #
-            for idx_pos_x in range(idx_pos[0]-Terreno.CantidadParcelasExpandir, idx_pos[0]+Terreno.CantidadParcelasExpandir+1):
-                for idx_pos_y in range(idx_pos[1]-Terreno.CantidadParcelasExpandir, idx_pos[1]+Terreno.CantidadParcelasExpandir+1):
+            for idx_pos_x in range(idx_pos[0]-Terreno.RadioExpansion, idx_pos[0]+Terreno.RadioExpansion+1):
+                for idx_pos_y in range(idx_pos[1]-Terreno.RadioExpansion, idx_pos[1]+Terreno.RadioExpansion+1):
                     idxs_pos_parcelas_obj.append((idx_pos_x, idx_pos_y))
             #log.debug("indices de parcelas a cargar: "+str(idxs_pos_parcelas_obj))
             #
