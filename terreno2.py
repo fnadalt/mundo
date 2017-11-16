@@ -5,12 +5,15 @@ import logging
 log=logging.getLogger(__name__)
 
 class Terreno2:
+    
+    # altura maxima
+    AlturaMaxima=100
 
     # tamaño de la parcela
-    TamanoParcela=128
+    TamanoParcela=32
 
     # radio de expansion
-    RadioExpansion=2
+    RadioExpansion=1
 
     def __init__(self, base, bullet_world):
         # referencias:
@@ -24,7 +27,7 @@ class Terreno2:
         self.nivel_agua=0.0
         # variables internas:
         self._parcelas={} # {idx_pos:cuerpo_parcela_node_path,...}
-        self._perlin1=StackedPerlinNoise2(256.0, 256.0, 4, 1.2, 1.2, 256, 785)
+        self._perlin1=PerlinNoise2(64.0, 64.0, 256, 123) # StackedPerlinNoise2(256.0, 256.0, 1, 1.2, 1.2, 256, 785)
 
     def obtener_indice_parcela_foco(self):
         x=int(self.pos_foco[0]/Terreno2.TamanoParcela)
@@ -33,9 +36,9 @@ class Terreno2:
 
     def obtener_altitud(self, pos):
         altitud=self._perlin1.noise(pos[0], pos[1])
-        altitud+=2
+        altitud+=1
         altitud/=2
-        return altitud
+        return altitud * Terreno2.AlturaMaxima
 
     def update(self, pos_foco):
         if self.pos_foco!=pos_foco:
@@ -73,14 +76,14 @@ class Terreno2:
         parcela=self.nodo.attachNewNode(nombre)
         parcela.setPos(pos[0], pos[1], 0.0)
         # geometría
-        geom_node=self._crear_geometria(nombre)
+        geom_node=self._crear_geometria(nombre, idx_pos)
         #
         parcela.attachNewNode(geom_node)
 
     def _descargar_parcela(self, idx_pos):
         pass
     
-    def _crear_geometria(self, nombre):
+    def _crear_geometria(self, nombre, idx_pos):
         # formato
         formato=GeomVertexFormat.getV3n3t2()
         # iniciar vértices y primitivas
@@ -96,12 +99,12 @@ class Terreno2:
         for x in range(0, Terreno2.TamanoParcela):
             for y in range(0, Terreno2.TamanoParcela):
                 # vértices
-                v0=Vec3(x, y, 0)
-                v1=Vec3(x+1, y, 0)
-                v2=Vec3(x, y+1, 0)
-                v3=Vec3(x+1, y+1, 0)
+                v0=Vec3(x, y, self.obtener_altitud((Terreno2.TamanoParcela*idx_pos[0]+x, Terreno2.TamanoParcela*idx_pos[1]+y)))
+                v1=Vec3(x+1, y, self.obtener_altitud((Terreno2.TamanoParcela*idx_pos[0]+x+1, Terreno2.TamanoParcela*idx_pos[1]+y)))
+                v2=Vec3(x, y+1, self.obtener_altitud((Terreno2.TamanoParcela*idx_pos[0]+x, Terreno2.TamanoParcela*idx_pos[1]+y+1)))
+                v3=Vec3(x+1, y+1, self.obtener_altitud((Terreno2.TamanoParcela*idx_pos[0]+x+1, Terreno2.TamanoParcela*idx_pos[1]+y+1)))
                 normal=self._calcular_normal(v0, v1, v2)
-                # quad triangle 1
+                # llenar vertex data
                 # v0
                 wrt_v.addData3(v0)
                 wrt_n.addData3(normal)
@@ -114,35 +117,21 @@ class Terreno2:
                 wrt_v.addData3(v2)
                 wrt_n.addData3(normal)
                 wrt_t.addData2(x, y+1)
-                # data
-                # primitiva
-                prim.addVertex(i_vertice)
-                prim.addVertex(i_vertice+1)
-                prim.addVertex(i_vertice+2)
-                prim.closePrimitive()
-                #
-                # quad triangle 2
-                normal=self._calcular_normal(v0, v1, v2)
-                # v2
-                wrt_v.addData3(v2)
-                wrt_n.addData3(normal)
-                wrt_t.addData2(x, y+1)
-                # v1
-                wrt_v.addData3(v1)
-                wrt_n.addData3(normal)
-                wrt_t.addData2(x+1, y)
                 # v3
                 wrt_v.addData3(v3)
                 wrt_n.addData3(normal)
                 wrt_t.addData2(x+1, y+1)
-                # data
-                # primitiva
+                # primitivas
+                prim.addVertex(i_vertice)
+                prim.addVertex(i_vertice+1)
+                prim.addVertex(i_vertice+2)
+                prim.closePrimitive()
                 prim.addVertex(i_vertice+2)
                 prim.addVertex(i_vertice+1)
                 prim.addVertex(i_vertice+3)
                 prim.closePrimitive()
                 #
-                i_vertice+=6
+                i_vertice+=4
         # geom
         geom=Geom(vdata)
         geom.addPrimitive(prim)
