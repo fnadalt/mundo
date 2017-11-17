@@ -1,35 +1,55 @@
+from direct.showbase.DirectObject import DirectObject
 from direct.gui.DirectGui import *
 
 import gui
+from texturegui import TextureGui
 
 import logging
 log=logging.getLogger(__name__)
 
-class MainGui:
+class MainGui(DirectObject):
     
-    def __init__(self):
+    def __init__(self, base):
+        # references:
+        self.base=base
+        # components:
         self.frame=None
-        self.trigger_load_texture_gui=False
+        self.tool=None
     
-    def build(self):
-        log.info("build")
+    def load(self):
+        log.info("load")
+        #
         self.frame=DirectFrame(frameColor=gui.FrameBgColor, frameSize=(1, 1, -1, 1), pos=(0, 0, 0))
         DirectButton(parent=self.frame, text="texture", frameSize=(-2., 2., -0.7, 0.7), frameColor=gui.WidgetsBgColor, scale=0.1, pos=(0, 0, 0.0), text_fg=gui.TextFgColor, text_pos=(0, -0.15), command=self.open_texture_gui)
         DirectButton(parent=self.frame, text="terrain", frameSize=(-2., 2., -0.7, 0.7), frameColor=gui.WidgetsBgColor, scale=0.1, pos=(0, 0, -0.2), text_fg=gui.TextFgColor, text_pos=(0, -0.15))
+        #
+        self.base.taskMgr.add(self._update, "main_gui_update_task")
     
-    def open_texture_gui(self):
-        # DirectButton "TextureGui" just sets a trigger flag and returns
-        self.trigger_load_texture_gui=True
-    
-    def remove(self): # remove
-        log.info("remove")
+    def unload(self):
+        log.info("unload")
+        #
+        self.base.taskMgr.remove("main_gui_update_task")
+        #
         self.frame.destroy()
         self.frame=None
-    
-    def update(self):
-        if self.trigger_load_texture_gui: # check trigger
-            log.info("trigger_load_texture_gui")
-            gui.manager.load_texture_gui() # loads TextureGui into gui.manager.gui_next (gui_next)
-            self.trigger_load_texture_gui=False
-            return False
-        return True
+
+    def open_texture_gui(self):
+        log.info("open_texture_gui")
+        self._unload_tool()
+        self.frame.hide()
+        self.tool=TextureGui(self.base)
+        self.tool.load()
+        
+    def _unload_tool(self):
+        log.info("_unload_tool")
+        if self.tool:
+            self.tool.unload()
+            self.tool=None
+
+    def _update(self, task):
+        if self.tool and gui.close_current_flag:
+            if not self.tool.close_dialog():
+                gui.close_current_flag=False
+                self._unload_tool()
+                self.frame.show()
+        return task.cont
