@@ -24,10 +24,10 @@ class Terreno2:
         # variables externas:
         self.pos_foco=None
         self.idx_pos_parcela_actual=None # (x,y)
-        self.nivel_agua=0.0
+        self.nivel_agua=Terreno2.AlturaMaxima * 0.15
         # variables internas:
         self._parcelas={} # {idx_pos:cuerpo_parcela_node_path,...}
-        self._perlin1=PerlinNoise2(64.0, 64.0, 256, 123) # StackedPerlinNoise2(256.0, 256.0, 1, 1.2, 1.2, 256, 785)
+        self._perlin1=PerlinNoise2(256.0, 256.0, 256, 123) # StackedPerlinNoise2(256.0, 256.0, 1, 1.2, 1.2, 256, 785)
 
     def obtener_indice_parcela_foco(self):
         x=int(self.pos_foco[0]/Terreno2.TamanoParcela)

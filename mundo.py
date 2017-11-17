@@ -164,11 +164,11 @@ class Mundo(NodePath):
         self.terreno.nodo.reparentTo(self)
         self.terreno.update(pos_inicial_foco)
         # terreno2
-        self.terreno2=Terreno2(self.base, self.bullet_world)
-        self.terreno2.nodo.reparentTo(self)
-        self.terreno2.nodo.setZ(-8.5)
-        self.terreno2.update(pos_inicial_foco)
-        self.terreno2.nodo.writeBamFile("terreno2.bam")
+#        self.terreno2=Terreno2(self.base, self.bullet_world)
+#        self.terreno2.nodo.reparentTo(self)
+#        self.terreno2.update(pos_inicial_foco)
+#        self.terreno2.nodo.writeBamFile("terreno2.bam")
+#        self.terreno=self.terreno2
         # agua
         self.agua=Agua(self.base, self.terreno.nivel_agua)
         self.agua.generar()
