@@ -35,7 +35,6 @@ class HeightMap():
                 max = x
         self.normalizerSub = min
         self.normalizerMult = 1.0 / (max-min)
-
         log.info("height normalized from [" + str(min) + "," + str(max) + "]")
 
     def generateStackedPerlin(self, perlin, frequency, layers, frequencySpread, amplitudeSpread, id):

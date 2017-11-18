@@ -47,9 +47,8 @@ class MainGui(DirectObject):
             self.tool=None
 
     def _update(self, task):
-        if self.tool and gui.close_current_flag:
-            if not self.tool.close_dialog():
-                gui.close_current_flag=False
+        if self.tool:
+            if not self.tool.update():
                 self._unload_tool()
                 self.frame.show()
         return task.cont

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-5.1.dtd">
 <!-- eric project file for project perlingen -->
-<!-- Saved: 2017-11-17, 14:44:22 -->
+<!-- Saved: 2017-11-18, 12:33:01 -->
 <!-- Copyright (C) 2017 ,  -->
 <Project version="5.1">
   <Language></Language>
@@ -14,9 +14,11 @@
   <Eol index="0"/>
   <Sources>
     <Source>__init__.py</Source>
+    <Source>gui.py</Source>
     <Source>main.py</Source>
     <Source>maingui.py</Source>
     <Source>texturegui.py</Source>
+    <Source>textureguidialog.py</Source>
   </Sources>
   <Forms/>
   <Translations/>
