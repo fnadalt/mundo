@@ -2,6 +2,7 @@ from direct.gui.OnscreenText import OnscreenText
 from direct.gui.DirectGui import *
 from panda3d.bullet import *
 from panda3d.core import *
+
 from dia import Dia
 from cielo import Cielo
 from sol import Sol
@@ -160,15 +161,14 @@ class Mundo(NodePath):
         self.sol.pivot.reparentTo(self.cielo.nodo)
         self.setLight(self.sol.luz)
         # terreno
-        self.terreno=Terreno(self.base, self.bullet_world)
-        self.terreno.nodo.reparentTo(self)
-        self.terreno.update(pos_inicial_foco)
+#        self.terreno=Terreno(self.base, self.bullet_world)
+#        self.terreno.nodo.reparentTo(self)
+#        self.terreno.update(pos_inicial_foco)
         # terreno2
-#        self.terreno2=Terreno2(self.base, self.bullet_world)
-#        self.terreno2.nodo.reparentTo(self)
-#        self.terreno2.update(pos_inicial_foco)
-#        self.terreno2.nodo.writeBamFile("terreno2.bam")
-#        self.terreno=self.terreno2
+        self.terreno2=Terreno2(self.base, self.bullet_world)
+        self.terreno2.nodo.reparentTo(self)
+        self.terreno2.update(pos_inicial_foco)
+        self.terreno=self.terreno2
         # agua
         self.agua=Agua(self.base, self.terreno.nivel_agua)
         self.agua.generar()
@@ -186,8 +186,8 @@ class Mundo(NodePath):
     
     def _update(self, task):
         info=""
-        info+=self.dia.obtener_info()+"\n"
-        #info+=self.hombre.obtener_info()+"\n"
+        #info+=self.dia.obtener_info()+"\n"
+        info+=self.hombre.obtener_info()+"\n"
         #info+=self.agua.obtener_info()+"\n"
         #info+=self.input_mapper.obtener_info()+"\n"
         #info+=self.sol.obtener_info()+"\n"

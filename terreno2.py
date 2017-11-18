@@ -13,7 +13,7 @@ class Terreno2:
     TamanoParcela=32
 
     # radio de expansion
-    RadioExpansion=1
+    RadioExpansion=3
 
     def __init__(self, base, bullet_world):
         # referencias:
@@ -21,13 +21,14 @@ class Terreno2:
         self.bullet_world=bullet_world
         # componentes:
         self.nodo=self.base.render.attachNewNode("terreno2")
+        #self.nodo.setRenderModeWireframe()
         # variables externas:
         self.pos_foco=None
         self.idx_pos_parcela_actual=None # (x,y)
         self.nivel_agua=Terreno2.AlturaMaxima * 0.15
         # variables internas:
         self._parcelas={} # {idx_pos:cuerpo_parcela_node_path,...}
-        self._perlin1=PerlinNoise2(256.0, 256.0, 256, 123) # StackedPerlinNoise2(256.0, 256.0, 1, 1.2, 1.2, 256, 785)
+        self._perlin1=PerlinNoise2(256.0, 256.0, 256, 34123) # StackedPerlinNoise2(256.0, 256.0, 1, 1.2, 1.2, 256, 785)
 
     def obtener_indice_parcela_foco(self):
         x=int(self.pos_foco[0]/Terreno2.TamanoParcela)
@@ -79,9 +80,13 @@ class Terreno2:
         geom_node=self._crear_geometria(nombre, idx_pos)
         #
         parcela.attachNewNode(geom_node)
+        #
+        self._parcelas[idx_pos]=parcela
 
     def _descargar_parcela(self, idx_pos):
-        pass
+        parcela=self._parcelas[idx_pos]
+        parcela.removeNode()
+        del self._parcelas[idx_pos]
     
     def _crear_geometria(self, nombre, idx_pos):
         # formato
@@ -103,35 +108,44 @@ class Terreno2:
                 v1=Vec3(x+1, y, self.obtener_altitud((Terreno2.TamanoParcela*idx_pos[0]+x+1, Terreno2.TamanoParcela*idx_pos[1]+y)))
                 v2=Vec3(x, y+1, self.obtener_altitud((Terreno2.TamanoParcela*idx_pos[0]+x, Terreno2.TamanoParcela*idx_pos[1]+y+1)))
                 v3=Vec3(x+1, y+1, self.obtener_altitud((Terreno2.TamanoParcela*idx_pos[0]+x+1, Terreno2.TamanoParcela*idx_pos[1]+y+1)))
-                normal=self._calcular_normal(v0, v1, v2)
+                normal1=self._calcular_normal(v0, v1, v2)
+                normal2=self._calcular_normal(v2, v1, v3)
                 # llenar vertex data
                 # v0
                 wrt_v.addData3(v0)
-                wrt_n.addData3(normal)
+                wrt_n.addData3(normal1)
                 wrt_t.addData2(x, y)
                 # v1
                 wrt_v.addData3(v1)
-                wrt_n.addData3(normal)
+                wrt_n.addData3(normal1)
                 wrt_t.addData2(x+1, y)
                 # v2
                 wrt_v.addData3(v2)
-                wrt_n.addData3(normal)
+                wrt_n.addData3(normal1)
                 wrt_t.addData2(x, y+1)
+                # v2
+                wrt_v.addData3(v2)
+                wrt_n.addData3(normal2)
+                wrt_t.addData2(x, y+1)
+                # v1
+                wrt_v.addData3(v1)
+                wrt_n.addData3(normal2)
+                wrt_t.addData2(x+1, y)
                 # v3
                 wrt_v.addData3(v3)
-                wrt_n.addData3(normal)
+                wrt_n.addData3(normal2)
                 wrt_t.addData2(x+1, y+1)
                 # primitivas
                 prim.addVertex(i_vertice)
                 prim.addVertex(i_vertice+1)
                 prim.addVertex(i_vertice+2)
                 prim.closePrimitive()
-                prim.addVertex(i_vertice+2)
-                prim.addVertex(i_vertice+1)
                 prim.addVertex(i_vertice+3)
+                prim.addVertex(i_vertice+4)
+                prim.addVertex(i_vertice+5)
                 prim.closePrimitive()
                 #
-                i_vertice+=4
+                i_vertice+=6
         # geom
         geom=Geom(vdata)
         geom.addPrimitive(prim)
@@ -146,4 +160,65 @@ class Terreno2:
         U=v1-v0
         V=v2-v0
         return U.cross(V)
-        
+
+#
+# TESTER
+#
+from direct.showbase.ShowBase import ShowBase
+class Tester(ShowBase):
+
+    def __init__(self):
+        #
+        super(Tester, self).__init__()
+        self.disableMouse()
+        #
+        bullet_world=BulletWorld()
+        #
+        self.pos_foco=[0, 0, 0]
+        self.cam_pitch=30.0
+        #
+        self.terreno=Terreno2(self, bullet_world)
+        #
+        self.cam_driver=self.render.attachNewNode("cam_driver")
+        self.camera.reparentTo(self.cam_driver)
+        self.camera.setPos(Terreno2.TamanoParcela/2, 450, 0)
+        self.camera.lookAt(self.cam_driver)
+        self.cam_driver.setP(self.cam_pitch)
+        #
+        self.sun=self.render.attachNewNode(DirectionalLight("sun"))
+        self.sun.node().setColor(Vec4(1, 1, 1, 1))
+        self.sun.setPos(self.terreno.nodo, 100, 100, 100)
+        self.sun.lookAt(self.terreno.nodo)
+        #
+        self.render.setLight(self.sun)
+        #
+        self.taskMgr.add(self.update, "update")
+    
+    def update(self, task):
+        nueva_pos_foco=self.pos_foco[:]
+        #
+        mwn=self.mouseWatcherNode
+        if mwn.isButtonDown(KeyboardButton.up()):
+            nueva_pos_foco[1]-=32
+        elif mwn.isButtonDown(KeyboardButton.down()):
+            nueva_pos_foco[1]+=32
+        elif mwn.isButtonDown(KeyboardButton.left()):
+            nueva_pos_foco[0]+=32
+        elif mwn.isButtonDown(KeyboardButton.right()):
+            nueva_pos_foco[0]-=32
+        #
+        if nueva_pos_foco!=self.pos_foco:
+            self.pos_foco=nueva_pos_foco
+            log.info("update")
+            #
+            self.terreno.update(self.pos_foco)
+            #
+            self.cam_driver.setPos(Vec3(self.pos_foco[0], self.pos_foco[1], 50))
+            #
+        return task.cont
+
+if __name__=="__main__":
+    logging.basicConfig(level=logging.INFO)
+    PStatClient.connect()
+    tester=Tester()
+    tester.run()
