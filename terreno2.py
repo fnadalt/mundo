@@ -21,7 +21,6 @@ class Terreno2:
         self.bullet_world=bullet_world
         # componentes:
         self.nodo=self.base.render.attachNewNode("terreno2")
-        #self.nodo.setRenderModeWireframe()
         # variables externas:
         self.pos_foco=None
         self.idx_pos_parcela_actual=None # (x,y)
@@ -80,6 +79,9 @@ class Terreno2:
         geom_node=self._crear_geometria(nombre, idx_pos)
         #
         parcela.attachNewNode(geom_node)
+        # debug: normales
+        #geom_node_normales=self._crear_lineas_normales("normales_%i_%i"%(int(pos[0]), int(pos[1])), geom_node)
+        #parcela.attachNewNode(geom_node_normales)
         #
         self._parcelas[idx_pos]=parcela
 
@@ -160,6 +162,24 @@ class Terreno2:
         U=v1-v0
         V=v2-v0
         return U.cross(V)
+    
+    def _crear_lineas_normales(self, nombre, geom_node_parcela):
+        #
+        geom=LineSegs(nombre)
+        geom.setColor((0, 0, 1, 1))
+        #
+        geom_parcela=geom_node_parcela.getGeom(0)
+        vdata=geom_parcela.getVertexData()
+        v_reader=GeomVertexReader(vdata, InternalName.getVertex())
+        n_reader=GeomVertexReader(vdata, InternalName.getNormal())
+        #
+        while(not v_reader.isAtEnd()):
+            vertex=v_reader.getData3f()
+            normal1=n_reader.getData3f()
+            geom.moveTo(vertex)
+            geom.drawTo(vertex+normal1)
+        #
+        return geom.create()
 
 #
 # TESTER
@@ -216,7 +236,7 @@ class Tester(ShowBase):
             self.cam_driver.setPos(Vec3(self.pos_foco[0], self.pos_foco[1], 50))
             #
         return task.cont
-
+    
 if __name__=="__main__":
     logging.basicConfig(level=logging.INFO)
     PStatClient.connect()
