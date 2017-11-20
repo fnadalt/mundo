@@ -15,19 +15,32 @@ class Terreno2:
     # radio de expansion
     RadioExpansion=3
 
+    # topografia
+    Semilla=435
+    NoiseObjsScales=[256.0, 128.0, 64.0, 32.0, 16.0]
+    NoiseObjsWeights=[1.0, 0.02, 0.01, 0.075, 0.025] # scale_0>scale_1>scale_n
+
     def __init__(self, base, bullet_world):
         # referencias:
         self.base=base
         self.bullet_world=bullet_world
         # componentes:
         self.nodo=self.base.render.attachNewNode("terreno2")
+        self._parcelas={} # {idx_pos:cuerpo_parcela_node_path,...}
+        # 2 abordajes
+        #self._noise_obj=None # StackedPerlinNoise2
+        self._noise_objs=list() # [PerlinNoise2, ...]
         # variables externas:
         self.pos_foco=None
         self.idx_pos_parcela_actual=None # (x,y)
-        self.nivel_agua=Terreno2.AlturaMaxima * 0.15
+        self.nivel_agua=Terreno2.AlturaMaxima * 0.25
+        # debug
+        self.dibujar_normales=False # cada update
+        self.escribir_archivo=False # cada update
         # variables internas:
-        self._parcelas={} # {idx_pos:cuerpo_parcela_node_path,...}
-        self._perlin1=PerlinNoise2(256.0, 256.0, 256, 34123) # StackedPerlinNoise2(256.0, 256.0, 1, 1.2, 1.2, 256, 785)
+        self._noise_scaled_weights=list() # normalizado
+        # init:
+        self._generar_noise_objs()
 
     def obtener_indice_parcela_foco(self):
         x=int(self.pos_foco[0]/Terreno2.TamanoParcela)
@@ -35,10 +48,13 @@ class Terreno2:
         return (x, y)
 
     def obtener_altitud(self, pos):
-        altitud=self._perlin1.noise(pos[0], pos[1])
+        altitud=0
+        for _i_noise_obj in range(len(self._noise_objs)):
+            altitud+=(self._noise_objs[_i_noise_obj].noise(pos[0], pos[1]) * self._noise_scaled_weights[_i_noise_obj])
         altitud+=1
         altitud/=2
-        return altitud * Terreno2.AlturaMaxima
+        altitud*=Terreno2.AlturaMaxima
+        return altitud
 
     def update(self, pos_foco):
         if self.pos_foco!=pos_foco:
@@ -67,6 +83,9 @@ class Terreno2:
                 self._descargar_parcela(idx_pos)
             for idx_pos in idxs_pos_parcelas_cargar:
                 self._cargar_parcela(idx_pos)
+        #
+        if self.escribir_archivo:
+            self.nodo.writeBamFile("terreno2.bam")
 
     def _cargar_parcela(self, idx_pos):
         # posición y nombre
@@ -80,8 +99,9 @@ class Terreno2:
         #
         parcela.attachNewNode(geom_node)
         # debug: normales
-        #geom_node_normales=self._crear_lineas_normales("normales_%i_%i"%(int(pos[0]), int(pos[1])), geom_node)
-        #parcela.attachNewNode(geom_node_normales)
+        if self.dibujar_normales:
+            geom_node_normales=self._crear_lineas_normales("normales_%i_%i"%(int(pos[0]), int(pos[1])), geom_node)
+            parcela.attachNewNode(geom_node_normales)
         #
         self._parcelas[idx_pos]=parcela
 
@@ -111,7 +131,7 @@ class Terreno2:
                 v2=Vec3(x, y+1, self.obtener_altitud((Terreno2.TamanoParcela*idx_pos[0]+x, Terreno2.TamanoParcela*idx_pos[1]+y+1)))
                 v3=Vec3(x+1, y+1, self.obtener_altitud((Terreno2.TamanoParcela*idx_pos[0]+x+1, Terreno2.TamanoParcela*idx_pos[1]+y+1)))
                 normal1=self._calcular_normal(v0, v1, v2)
-                normal2=self._calcular_normal(v2, v1, v3)
+                normal2=normal1 #self._calcular_normal(v2, v1, v3)
                 # llenar vertex data
                 # v0
                 wrt_v.addData3(v0)
@@ -181,10 +201,30 @@ class Terreno2:
         #
         return geom.create()
 
+    def _generar_noise_objs(self):
+        # normalizar coeficientes
+        suma_coefs=0
+        for k in Terreno2.NoiseObjsWeights:
+            suma_coefs+=k
+        for k in Terreno2.NoiseObjsWeights:
+            self._noise_scaled_weights.append(k/suma_coefs)
+        # noise objects
+        escala_general=1
+        escalas=list()
+        for scale in Terreno2.NoiseObjsScales:
+            escalas.append(scale*escala_general)
+        #
+        self._noise_objs.append(PerlinNoise2(escalas[0], escalas[0], 256, Terreno2.Semilla))
+        self._noise_objs.append(PerlinNoise2(escalas[1], escalas[1], 256, Terreno2.Semilla+(128*1)))
+        self._noise_objs.append(PerlinNoise2(escalas[2], escalas[2], 256, Terreno2.Semilla++(128*2)))
+        self._noise_objs.append(PerlinNoise2(escalas[3], escalas[3], 256, Terreno2.Semilla++(128*3)))
+        self._noise_objs.append(PerlinNoise2(escalas[4], escalas[4], 256, Terreno2.Semilla++(128*4)))
+
 #
 # TESTER
 #
 from direct.showbase.ShowBase import ShowBase
+import math
 class Tester(ShowBase):
 
     def __init__(self):
@@ -198,6 +238,13 @@ class Tester(ShowBase):
         self.cam_pitch=30.0
         #
         self.terreno=Terreno2(self, bullet_world)
+        #
+        plano=CardMaker("plano_agua")
+        r=Terreno2.TamanoParcela*6
+        plano.setFrame(-r, r, -r, r)
+        plano.setColor((0, 0, 1, 1))
+        self.plano_agua=self.render.attachNewNode(plano.generate())
+        self.plano_agua.setP(-90.0)
         #
         self.cam_driver=self.render.attachNewNode("cam_driver")
         self.camera.reparentTo(self.cam_driver)
@@ -213,6 +260,8 @@ class Tester(ShowBase):
         self.render.setLight(self.sun)
         #
         self.taskMgr.add(self.update, "update")
+        self.accept("wheel_up", self.zoom, [1])
+        self.accept("wheel_down", self.zoom, [-1])
     
     def update(self, task):
         nueva_pos_foco=self.pos_foco[:]
@@ -232,13 +281,43 @@ class Tester(ShowBase):
             log.info("update")
             #
             self.terreno.update(self.pos_foco)
+            self.plano_agua.setPos(Vec3(self.pos_foco[0], self.pos_foco[1], self.terreno.nivel_agua))
             #
             self.cam_driver.setPos(Vec3(self.pos_foco[0], self.pos_foco[1], 50))
             #
         return task.cont
     
+    def zoom(self, dir):
+        dy=25*dir
+        self.camera.setY(self.camera, dy)
+
+    def analizar_altitudes(self, pos_foco, tamano=1024):
+        log.info("analizar_altitudes en %ix%i"%(tamano, tamano))
+        i=0
+        media=0
+        vals=list()
+        min=999999
+        max=-999999
+        for x in range(tamano):
+            for y in range(tamano):
+                a=self.terreno.obtener_altitud((pos_foco[0]+x, pos_foco[1]+y))
+                vals.append(a)
+                if a>max:
+                    max=a
+                if a<min:
+                    min=a
+                media=((media*i)+a)/(i+1)
+                i+=1
+        sd=0
+        for val in vals:  sd+=((val-media)*(val-media))
+        sd/=(tamano*tamano)
+        sd=math.sqrt(sd)
+        log.info("analizar_altitudes rango:[%.3f/%.3f] media=%.3f sd=%.3f"%(min, max, media, sd))
+        
 if __name__=="__main__":
     logging.basicConfig(level=logging.INFO)
     PStatClient.connect()
     tester=Tester()
+    tester.terreno.dibujar_normales=False
+    tester.terreno.escribir_archivo=False
     tester.run()
