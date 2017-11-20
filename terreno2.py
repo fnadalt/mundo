@@ -7,13 +7,13 @@ log=logging.getLogger(__name__)
 class Terreno2:
     
     # altura maxima
-    AlturaMaxima=100
+    AlturaMaxima=150
 
     # tamaño de la parcela
     TamanoParcela=32
 
     # radio de expansion
-    RadioExpansion=3
+    RadioExpansion=5
 
     # topografia
     Semilla=435
@@ -33,7 +33,7 @@ class Terreno2:
         # variables externas:
         self.pos_foco=None
         self.idx_pos_parcela_actual=None # (x,y)
-        self.nivel_agua=Terreno2.AlturaMaxima * 0.25
+        self.nivel_agua=Terreno2.AlturaMaxima * 0.3
         # debug
         self.dibujar_normales=False # cada update
         self.escribir_archivo=False # cada update
@@ -88,6 +88,7 @@ class Terreno2:
             self.nodo.writeBamFile("terreno2.bam")
 
     def _cargar_parcela(self, idx_pos):
+        log.info("_cargar_parcela %s"%str(idx_pos))
         # posición y nombre
         pos=Vec2(idx_pos[0]*Terreno2.TamanoParcela, idx_pos[1]*Terreno2.TamanoParcela)
         nombre="parcela_%i_%i"%(int(pos[0]), int(pos[1]))
@@ -106,6 +107,7 @@ class Terreno2:
         self._parcelas[idx_pos]=parcela
 
     def _descargar_parcela(self, idx_pos):
+        log.info("_descargar_parcela %s"%str(idx_pos))
         parcela=self._parcelas[idx_pos]
         parcela.removeNode()
         del self._parcelas[idx_pos]
@@ -209,7 +211,7 @@ class Terreno2:
         for k in Terreno2.NoiseObjsWeights:
             self._noise_scaled_weights.append(k/suma_coefs)
         # noise objects
-        escala_general=1
+        escala_general=1.0
         escalas=list()
         for scale in Terreno2.NoiseObjsScales:
             escalas.append(scale*escala_general)
@@ -262,7 +264,9 @@ class Tester(ShowBase):
         self.taskMgr.add(self.update, "update")
         self.accept("wheel_up", self.zoom, [1])
         self.accept("wheel_down", self.zoom, [-1])
-    
+        #
+        self.terreno.update((0, 0))
+        
     def update(self, task):
         nueva_pos_foco=self.pos_foco[:]
         #
