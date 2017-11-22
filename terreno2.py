@@ -1,6 +1,8 @@
 from panda3d.bullet import *
 from panda3d.core import *
 
+import math
+
 import logging
 log=logging.getLogger(__name__)
 
@@ -13,12 +15,16 @@ class Terreno2:
     TamanoParcela=32
 
     # radio de expansion
-    RadioExpansion=5
+    RadioExpansion=3
+    DistanciaRadioExpansion=RadioExpansion*TamanoParcela
 
+    # islas
+    Islas=[{"pos":(128, -96), "radio":2048}]
+    
     # topografia
     Semilla=435
-    NoiseObjsScales=[256.0, 128.0, 64.0, 32.0, 16.0]
-    NoiseObjsWeights=[1.0, 0.02, 0.01, 0.075, 0.025] # scale_0>scale_1>scale_n
+    NoiseObjsScales=[128.0, 64.0, 32.0, 16.0, 8.0]
+    NoiseObjsWeights=[1.0, 0.00, 0.01, 0.075, 0.025] # scale_0>scale_1>scale_n
 
     def __init__(self, base, bullet_world):
         # referencias:
@@ -26,14 +32,16 @@ class Terreno2:
         self.bullet_world=bullet_world
         # componentes:
         self.nodo=self.base.render.attachNewNode("terreno2")
-        self._parcelas={} # {idx_pos:cuerpo_parcela_node_path,...}
+        self.parcelas={} # {idx_pos:parcela_node_path,...}
         # 2 abordajes
         #self._noise_obj=None # StackedPerlinNoise2
         self._noise_objs=list() # [PerlinNoise2, ...]
         # variables externas:
         self.pos_foco=None
+        self.pos_foco_inicial=list(Terreno2.Islas[0]["pos"]) if len(Terreno2.Islas) else [0, 0]
         self.idx_pos_parcela_actual=None # (x,y)
-        self.nivel_agua=Terreno2.AlturaMaxima * 0.3
+        self.nivel_agua=Terreno2.AlturaMaxima * 0.25
+        self.info_parcelas=dict() # {idx_pos:{"isla":None|pos}, ...}
         # debug
         self.dibujar_normales=False # cada update
         self.escribir_archivo=False # cada update
@@ -41,20 +49,74 @@ class Terreno2:
         self._noise_scaled_weights=list() # normalizado
         # init:
         self._generar_noise_objs()
+        #
+        log.info("altitud (%s)=%.3f"%(str((0, 0)), self.obtener_altitud((0, 0))))
 
+    def obtener_indice_parcela(self, idx_pos):
+        x=int(idx_pos[0]/Terreno2.TamanoParcela)
+        y=int(idx_pos[1]/Terreno2.TamanoParcela)
+        return (x, y)
+    
     def obtener_indice_parcela_foco(self):
-        x=int(self.pos_foco[0]/Terreno2.TamanoParcela)
-        y=int(self.pos_foco[1]/Terreno2.TamanoParcela)
+        return self.obtener_indice_parcela(self.pos_foco)
+    
+    def obtener_pos_parcela(self, idx_pos):
+        x=idx_pos[0]*Terreno2.TamanoParcela
+        y=idx_pos[1]*Terreno2.TamanoParcela
         return (x, y)
 
     def obtener_altitud(self, pos):
+        # info de parcela
+        idx_pos=self.obtener_indice_parcela(pos)
+        if not idx_pos in self.info_parcelas:
+            self.info_parcelas[idx_pos]={"isla":{"pos":None, "radio":0}}
+            for info in Terreno2.Islas:
+                if self.dentro_radio(info["pos"], pos, info["radio"]):
+                    self.info_parcelas[idx_pos]["isla"]["pos"]=info["pos"]
+                    self.info_parcelas[idx_pos]["isla"]["radio"]=info["radio"]
+                    break
+        #
         altitud=0
+        # perlin noise object
         for _i_noise_obj in range(len(self._noise_objs)):
             altitud+=(self._noise_objs[_i_noise_obj].noise(pos[0], pos[1]) * self._noise_scaled_weights[_i_noise_obj])
         altitud+=1
         altitud/=2
         altitud*=Terreno2.AlturaMaxima
+        # isla
+        if self.info_parcelas[idx_pos]["isla"]["pos"]!=None:
+            dx=pos[0]-self.info_parcelas[idx_pos]["isla"]["pos"][0]
+            dy=pos[1]-self.info_parcelas[idx_pos]["isla"]["pos"][1]
+            distancia=math.sqrt((dx*dx)+(dy*dy))
+            distancia_normalizada=distancia/self.info_parcelas[idx_pos]["isla"]["radio"]
+            #log.info("pos_isla=%s pos=%s"%(str(self.info_parcelas[idx_pos]["isla"]), str(pos)))
+            #log.info("(dx/dy)=%s distancia=%.3f distancia_normalizada=%.3f "%(str((dx, dy)), distancia, distancia_normalizada))
+            if distancia_normalizada>1.0:
+                distancia_normalizada=1.0
+            #log.info("altitud=%.3f; (dx,dy)=(%.3f,%.3f) dist_n=%.3f"%(altitud, dx, dy, distancia_normalizada))
+            altitud*=(math.cos(2*math.pi*distancia_normalizada)+1)/2
+            #log.info("altitud=%.3f"%(altitud))
+        #
         return altitud
+
+    def dentro_radio(self, pos_1, pos_2, radio):
+        dx=abs(pos_2[0]-pos_1[0])
+        dy=abs(pos_2[1]-pos_1[1])
+        if dx<=radio and dy<=radio:
+            return True
+        else:
+            return False
+
+    def obtener_info(self):
+        pos_parcela_actual=None
+        if len(self.parcelas)>0:
+            parcela_actual=self.parcelas[self.idx_pos_parcela_actual]
+            pos_parcela_actual=parcela_actual.getPos() 
+        #
+        info="Terreno2\n"
+        info+="idx_pos_parcela_actual=%s pos=%s\n"%(str(self.idx_pos_parcela_actual), str(pos_parcela_actual))
+        info+="RadioExpansion=%i Islas=%i\n"%(Terreno2.RadioExpansion, len(Terreno2.Islas))
+        return info
 
     def update(self, pos_foco):
         if self.pos_foco!=pos_foco:
@@ -72,11 +134,11 @@ class Terreno2:
                 for idx_pos_y in range(idx_pos[1]-Terreno2.RadioExpansion, idx_pos[1]+Terreno2.RadioExpansion+1):
                     idxs_pos_parcelas_obj.append((idx_pos_x, idx_pos_y))
             # crear listas de parcelas a descargar y a cargar
-            for idx_pos in self._parcelas.keys():
+            for idx_pos in self.parcelas.keys():
                 if idx_pos not in idxs_pos_parcelas_obj:
                     idxs_pos_parcelas_descargar.append(idx_pos)
             for idx_pos in idxs_pos_parcelas_obj:
-                if idx_pos not in self._parcelas:
+                if idx_pos not in self.parcelas:
                     idxs_pos_parcelas_cargar.append(idx_pos)
             # descarga y carga de parcelas
             for idx_pos in idxs_pos_parcelas_descargar:
@@ -103,14 +165,22 @@ class Terreno2:
         if self.dibujar_normales:
             geom_node_normales=self._crear_lineas_normales("normales_%i_%i"%(int(pos[0]), int(pos[1])), geom_node)
             parcela.attachNewNode(geom_node_normales)
-        #
-        self._parcelas[idx_pos]=parcela
+        # textura
+        ts0=TextureStage("ts0")
+        textura0=self.base.loader.loadTexture("texturas/arena.png")
+        parcela.setTexture(ts0, textura0)
+        # agregar a parcelas
+        self.parcelas[idx_pos]=parcela
 
     def _descargar_parcela(self, idx_pos):
         log.info("_descargar_parcela %s"%str(idx_pos))
-        parcela=self._parcelas[idx_pos]
+        #
+        if idx_pos in self.info_parcelas:
+            del self.info_parcelas[idx_pos]
+        #
+        parcela=self.parcelas[idx_pos]
         parcela.removeNode()
-        del self._parcelas[idx_pos]
+        del self.parcelas[idx_pos]
     
     def _crear_geometria(self, nombre, idx_pos):
         # formato
@@ -179,7 +249,7 @@ class Terreno2:
         geom_node.addGeom(geom)
         geom_node.setBoundsType(BoundingVolume.BT_box)
         return geom_node
-    
+
     def _calcular_normal(self, v0, v1, v2):
         U=v1-v0
         V=v2-v0
@@ -226,17 +296,18 @@ class Terreno2:
 # TESTER
 #
 from direct.showbase.ShowBase import ShowBase
-import math
+from direct.gui.DirectGui import *
 class Tester(ShowBase):
 
     def __init__(self):
         #
         super(Tester, self).__init__()
         self.disableMouse()
+        self.win.setClearColor(Vec4(0.95, 1.0, 1.0, 1.0))
         #
         bullet_world=BulletWorld()
         #
-        self.pos_foco=[0, 0, 0]
+        self.pos_foco=None
         self.cam_pitch=30.0
         #
         self.terreno=Terreno2(self, bullet_world)
@@ -247,6 +318,7 @@ class Tester(ShowBase):
         plano.setColor((0, 0, 1, 1))
         self.plano_agua=self.render.attachNewNode(plano.generate())
         self.plano_agua.setP(-90.0)
+        #self.plano_agua.hide()
         #
         self.cam_driver=self.render.attachNewNode("cam_driver")
         self.camera.reparentTo(self.cam_driver)
@@ -261,14 +333,15 @@ class Tester(ShowBase):
         #
         self.render.setLight(self.sun)
         #
+        #self.pos_foco=[0, 0, 0] # posterga generacion de geometria
         self.taskMgr.add(self.update, "update")
         self.accept("wheel_up", self.zoom, [1])
         self.accept("wheel_down", self.zoom, [-1])
         #
-        self.terreno.update((0, 0))
+        self._cargar_ui()
         
     def update(self, task):
-        nueva_pos_foco=self.pos_foco[:]
+        nueva_pos_foco=self.pos_foco[:] if self.pos_foco else self.terreno.pos_foco_inicial
         #
         mwn=self.mouseWatcherNode
         if mwn.isButtonDown(KeyboardButton.up()):
@@ -282,13 +355,14 @@ class Tester(ShowBase):
         #
         if nueva_pos_foco!=self.pos_foco:
             self.pos_foco=nueva_pos_foco
-            log.info("update")
+            log.info("update pos_foco=%s"%(str(self.pos_foco)))
             #
             self.terreno.update(self.pos_foco)
             self.plano_agua.setPos(Vec3(self.pos_foco[0], self.pos_foco[1], self.terreno.nivel_agua))
             #
             self.cam_driver.setPos(Vec3(self.pos_foco[0], self.pos_foco[1], 50))
             #
+            self.lblInfo["text"]=self.terreno.obtener_info()
         return task.cont
     
     def zoom(self, dir):
@@ -317,7 +391,11 @@ class Tester(ShowBase):
         sd/=(tamano*tamano)
         sd=math.sqrt(sd)
         log.info("analizar_altitudes rango:[%.3f/%.3f] media=%.3f sd=%.3f"%(min, max, media, sd))
-        
+
+    def _cargar_ui(self):
+        self.frame=DirectFrame(parent=self.aspect2d, pos=(0, 0, -0.9), frameSize=(-1, 1, -0.1, 0.1), frameColor=(1, 1, 1, 0.5))
+        self.lblInfo=DirectLabel(parent=self.frame, pos=(-1, 0, 0.0), scale=0.05, text=self.terreno.obtener_info(), frameColor=(1, 1, 1, 0.2), frameSize=(0, 40, -2, 2), text_align=TextNode.ALeft, text_pos=(0, 1, 1))
+
 if __name__=="__main__":
     logging.basicConfig(level=logging.INFO)
     PStatClient.connect()
