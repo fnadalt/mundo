@@ -34,7 +34,7 @@ class Terreno2:
         self.nodo=self.base.render.attachNewNode("terreno2")
         self.parcelas={} # {idx_pos:parcela_node_path,...}
         # 2 abordajes
-        #self._noise_obj=None # StackedPerlinNoise2
+        #self._noise_obj=None # StackedPerlinNoise2 ?
         self._noise_objs=list() # [PerlinNoise2, ...]
         # variables externas:
         self.pos_foco=None
@@ -44,7 +44,6 @@ class Terreno2:
         self.info_parcelas=dict() # {idx_pos:{"isla":None|pos}, ...}
         # debug
         self.dibujar_normales=False # cada update
-        self.escribir_archivo=False # cada update
         # variables internas:
         self._noise_scaled_weights=list() # normalizado
         # init:
@@ -100,6 +99,7 @@ class Terreno2:
         return altitud
 
     def dentro_radio(self, pos_1, pos_2, radio):
+        # Manhattan distance
         dx=abs(pos_2[0]-pos_1[0])
         dy=abs(pos_2[1]-pos_1[1])
         if dx<=radio and dy<=radio:
@@ -145,9 +145,6 @@ class Terreno2:
                 self._descargar_parcela(idx_pos)
             for idx_pos in idxs_pos_parcelas_cargar:
                 self._cargar_parcela(idx_pos)
-        #
-        if self.escribir_archivo:
-            self.nodo.writeBamFile("terreno2.bam")
 
     def _cargar_parcela(self, idx_pos):
         log.info("_cargar_parcela %s"%str(idx_pos))
@@ -158,7 +155,7 @@ class Terreno2:
         parcela=self.nodo.attachNewNode(nombre)
         parcela.setPos(pos[0], pos[1], 0.0)
         # geometría
-        geom_node=self._crear_geometria(nombre, idx_pos)
+        geom_node=self._crear_geometria_parcela(nombre, idx_pos)
         #
         parcela.attachNewNode(geom_node)
         # debug: normales
@@ -168,7 +165,7 @@ class Terreno2:
         # textura
         ts0=TextureStage("ts0")
         textura0=self.base.loader.loadTexture("texturas/arena.png")
-        parcela.setTexture(ts0, textura0)
+        #parcela.setTexture(ts0, textura0)
         # agregar a parcelas
         self.parcelas[idx_pos]=parcela
 
@@ -182,9 +179,9 @@ class Terreno2:
         parcela.removeNode()
         del self.parcelas[idx_pos]
     
-    def _crear_geometria(self, nombre, idx_pos):
+    def _crear_geometria_parcela(self, nombre, idx_pos):
         # formato
-        formato=GeomVertexFormat.getV3n3t2()
+        formato=GeomVertexFormat.getV3n3c4t2()
         # iniciar vértices y primitivas
         vdata=GeomVertexData("vertex_data", formato, Geom.UHStatic)
         vdata.setNumRows((Terreno2.TamanoParcela+1)*(Terreno2.TamanoParcela+1))
@@ -192,6 +189,7 @@ class Terreno2:
         # vertex writers
         wrt_v=GeomVertexWriter(vdata, InternalName.getVertex())
         wrt_n=GeomVertexWriter(vdata, InternalName.getNormal())
+        wrt_c=GeomVertexWriter(vdata, InternalName.getColor())
         wrt_t=GeomVertexWriter(vdata, InternalName.getTexcoord())
         # llenar vértices y primitivas
         i_vertice=0
@@ -204,30 +202,40 @@ class Terreno2:
                 v3=Vec3(x+1, y+1, self.obtener_altitud((Terreno2.TamanoParcela*idx_pos[0]+x+1, Terreno2.TamanoParcela*idx_pos[1]+y+1)))
                 normal1=self._calcular_normal(v0, v1, v2)
                 normal2=normal1 #self._calcular_normal(v2, v1, v3)
+                c0=Vec4(0, v0[2]/Terreno2.AlturaMaxima, 0, 1)
+                c1=Vec4(0, v1[2]/Terreno2.AlturaMaxima, 0, 1)
+                c2=Vec4(0, v2[2]/Terreno2.AlturaMaxima, 0, 1)
+                c3=Vec4(0, v3[2]/Terreno2.AlturaMaxima, 0, 1)
                 # llenar vertex data
                 # v0
                 wrt_v.addData3(v0)
                 wrt_n.addData3(normal1)
+                wrt_c.addData4(c0)
                 wrt_t.addData2(x, y)
                 # v1
                 wrt_v.addData3(v1)
                 wrt_n.addData3(normal1)
+                wrt_c.addData4(c1)
                 wrt_t.addData2(x+1, y)
                 # v2
                 wrt_v.addData3(v2)
                 wrt_n.addData3(normal1)
+                wrt_c.addData4(c2)
                 wrt_t.addData2(x, y+1)
                 # v2
                 wrt_v.addData3(v2)
                 wrt_n.addData3(normal2)
+                wrt_c.addData4(c2)
                 wrt_t.addData2(x, y+1)
                 # v1
                 wrt_v.addData3(v1)
                 wrt_n.addData3(normal2)
+                wrt_c.addData4(c1)
                 wrt_t.addData2(x+1, y)
                 # v3
                 wrt_v.addData3(v3)
                 wrt_n.addData3(normal2)
+                wrt_c.addData4(c3)
                 wrt_t.addData2(x+1, y+1)
                 # primitivas
                 prim.addVertex(i_vertice)
@@ -309,6 +317,7 @@ class Tester(ShowBase):
         #
         self.pos_foco=None
         self.cam_pitch=30.0
+        self.escribir_archivo=False # cada update
         #
         self.terreno=Terreno2(self, bullet_world)
         #
@@ -331,7 +340,7 @@ class Tester(ShowBase):
         self.sun.setPos(self.terreno.nodo, 100, 100, 100)
         self.sun.lookAt(self.terreno.nodo)
         #
-        self.render.setLight(self.sun)
+        #self.render.setLight(self.sun)
         #
         #self.pos_foco=[0, 0, 0] # posterga generacion de geometria
         self.taskMgr.add(self.update, "update")
@@ -358,6 +367,9 @@ class Tester(ShowBase):
             log.info("update pos_foco=%s"%(str(self.pos_foco)))
             #
             self.terreno.update(self.pos_foco)
+            if self.escribir_archivo:
+                log.info("escribir_archivo")
+                self.terreno.nodo.writeBamFile("terreno2.bam")
             self.plano_agua.setPos(Vec3(self.pos_foco[0], self.pos_foco[1], self.terreno.nivel_agua))
             #
             self.cam_driver.setPos(Vec3(self.pos_foco[0], self.pos_foco[1], 50))
@@ -401,5 +413,6 @@ if __name__=="__main__":
     PStatClient.connect()
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    tester.terreno.escribir_archivo=False
+    Terreno2.RadioExpansion=5
+    tester.escribir_archivo=True
     tester.run()
