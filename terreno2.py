@@ -107,10 +107,9 @@ class Terreno2:
         return t
 
     def dentro_radio(self, pos_1, pos_2, radio):
-        # Manhattan distance
-        dx=abs(pos_2[0]-pos_1[0])
-        dy=abs(pos_2[1]-pos_1[1])
-        if dx<=radio and dy<=radio:
+        dx=pos_2[0]-pos_1[0]
+        dy=pos_2[1]-pos_1[1]
+        if math.sqrt((dx**2)+(dy**2))<=radio:
             return True
         else:
             return False
