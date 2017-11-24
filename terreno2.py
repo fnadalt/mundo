@@ -26,6 +26,9 @@ class Terreno2:
     NoiseObjsScales=[128.0, 64.0, 32.0, 16.0, 8.0]
     NoiseObjsWeights=[1.0, 0.00, 0.01, 0.075, 0.025] # scale_0>scale_1>scale_n
 
+    # biomasa
+    RuidoTemperatura=[512.0, 1100] # [scale, seed]
+
     def __init__(self, base, bullet_world):
         # referencias:
         self.base=base
@@ -33,14 +36,13 @@ class Terreno2:
         # componentes:
         self.nodo=self.base.render.attachNewNode("terreno2")
         self.parcelas={} # {idx_pos:parcela_node_path,...}
-        # 2 abordajes
-        #self._noise_obj=None # StackedPerlinNoise2 ?
         self._noise_objs=list() # [PerlinNoise2, ...]
+        self._ruido_temperatura=None
         # variables externas:
         self.pos_foco=None
         self.pos_foco_inicial=list(Terreno2.Islas[0]["pos"]) if len(Terreno2.Islas) else [0, 0]
         self.idx_pos_parcela_actual=None # (x,y)
-        self.nivel_agua=Terreno2.AlturaMaxima * 0.25
+        self.nivel_agua=Terreno2.AlturaMaxima * 0.2
         self.info_parcelas=dict() # {idx_pos:{"isla":None|pos}, ...}
         # debug
         self.dibujar_normales=False # cada update
@@ -93,10 +95,16 @@ class Terreno2:
             if distancia_normalizada>1.0:
                 distancia_normalizada=1.0
             #log.info("altitud=%.3f; (dx,dy)=(%.3f,%.3f) dist_n=%.3f"%(altitud, dx, dy, distancia_normalizada))
-            altitud*=(math.cos(2*math.pi*distancia_normalizada)+1)/2
+            #altitud*=(math.cos(2*math.pi*distancia_normalizada)+1)/2
             #log.info("altitud=%.3f"%(altitud))
         #
         return altitud
+
+    def obtener_temperatura_base(self, pos):
+        t=self._ruido_temperatura.noise(pos)
+        t+=1
+        t/=2
+        return t
 
     def dentro_radio(self, pos_1, pos_2, radio):
         # Manhattan distance
@@ -163,8 +171,8 @@ class Terreno2:
             geom_node_normales=self._crear_lineas_normales("normales_%i_%i"%(int(pos[0]), int(pos[1])), geom_node)
             parcela.attachNewNode(geom_node_normales)
         # textura
-        ts0=TextureStage("ts0")
-        textura0=self.base.loader.loadTexture("texturas/arena.png")
+        #ts0=TextureStage("ts0")
+        #textura0=self.base.loader.loadTexture("texturas/arena.png")
         #parcela.setTexture(ts0, textura0)
         # agregar a parcelas
         self.parcelas[idx_pos]=parcela
@@ -180,6 +188,8 @@ class Terreno2:
         del self.parcelas[idx_pos]
     
     def _crear_geometria_parcela(self, nombre, idx_pos):
+        # posicion
+        pos=self.obtener_pos_parcela(idx_pos)
         # formato
         formato=GeomVertexFormat.getV3n3c4t2()
         # iniciar vértices y primitivas
@@ -202,10 +212,11 @@ class Terreno2:
                 v3=Vec3(x+1, y+1, self.obtener_altitud((Terreno2.TamanoParcela*idx_pos[0]+x+1, Terreno2.TamanoParcela*idx_pos[1]+y+1)))
                 normal1=self._calcular_normal(v0, v1, v2)
                 normal2=normal1 #self._calcular_normal(v2, v1, v3)
-                c0=Vec4(0, v0[2]/Terreno2.AlturaMaxima, 0, 1)
-                c1=Vec4(0, v1[2]/Terreno2.AlturaMaxima, 0, 1)
-                c2=Vec4(0, v2[2]/Terreno2.AlturaMaxima, 0, 1)
-                c3=Vec4(0, v3[2]/Terreno2.AlturaMaxima, 0, 1)
+                temperatura_base=self.obtener_temperatura_base((pos[0]+x, pos[1]+y))
+                c0=Vec4(temperatura_base, temperatura_base, temperatura_base, 1) #Vec4(0, v0[2]/Terreno2.AlturaMaxima, 0, 1)
+                c1=c0 #Vec4(0, v1[2]/Terreno2.AlturaMaxima, 0, 1)
+                c2=c0 #Vec4(0, v2[2]/Terreno2.AlturaMaxima, 0, 1)
+                c3=c0 #Vec4(0, v3[2]/Terreno2.AlturaMaxima, 0, 1)
                 # llenar vertex data
                 # v0
                 wrt_v.addData3(v0)
@@ -282,6 +293,7 @@ class Terreno2:
         return geom.create()
 
     def _generar_noise_objs(self):
+        # topografia:
         # normalizar coeficientes
         suma_coefs=0
         for k in Terreno2.NoiseObjsWeights:
@@ -293,12 +305,15 @@ class Terreno2:
         escalas=list()
         for scale in Terreno2.NoiseObjsScales:
             escalas.append(scale*escala_general)
-        #
+        # lista
         self._noise_objs.append(PerlinNoise2(escalas[0], escalas[0], 256, Terreno2.Semilla))
         self._noise_objs.append(PerlinNoise2(escalas[1], escalas[1], 256, Terreno2.Semilla+(128*1)))
         self._noise_objs.append(PerlinNoise2(escalas[2], escalas[2], 256, Terreno2.Semilla++(128*2)))
         self._noise_objs.append(PerlinNoise2(escalas[3], escalas[3], 256, Terreno2.Semilla++(128*3)))
         self._noise_objs.append(PerlinNoise2(escalas[4], escalas[4], 256, Terreno2.Semilla++(128*4)))
+        # biomasa:
+        # temperatura
+        self._ruido_temperatura=PerlinNoise2(Terreno2.RuidoTemperatura[0], Terreno2.RuidoTemperatura[0], 256, Terreno2.RuidoTemperatura[1])
 
 #
 # TESTER
@@ -413,6 +428,6 @@ if __name__=="__main__":
     PStatClient.connect()
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    Terreno2.RadioExpansion=5
+    Terreno2.RadioExpansion=2
     tester.escribir_archivo=True
     tester.run()
