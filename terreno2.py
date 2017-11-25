@@ -9,7 +9,7 @@ log=logging.getLogger(__name__)
 class Terreno2:
     
     # altura maxima
-    AlturaMaxima=150
+    AlturaMaxima=300
 
     # tamaño de la parcela
     TamanoParcela=32
@@ -18,13 +18,10 @@ class Terreno2:
     RadioExpansion=3
     DistanciaRadioExpansion=RadioExpansion*TamanoParcela
 
-    # islas
-    Islas=[{"pos":(128, -96), "radio":2048}]
-    
     # topografia
-    Semilla=435
-    NoiseObjsScales=[128.0, 64.0, 32.0, 16.0, 8.0]
-    NoiseObjsWeights=[1.0, 0.00, 0.01, 0.075, 0.025] # scale_0>scale_1>scale_n
+    Semilla=4069
+    NoiseObjsScales=[1024.0, 128.0, 32.0, 16.0, 8.0]
+    NoiseObjsWeights=[1.0, 0.55, 0.1, 0.005, 0.001] # scale_0>scale_1>scale_n
 
     # biomasa
     RuidoTemperatura=[512.0, 1100] # [scale, seed]
@@ -40,10 +37,9 @@ class Terreno2:
         self._ruido_temperatura=None
         # variables externas:
         self.pos_foco=None
-        self.pos_foco_inicial=list(Terreno2.Islas[0]["pos"]) if len(Terreno2.Islas) else [0, 0]
+        self.pos_foco_inicial=[0, 0]
         self.idx_pos_parcela_actual=None # (x,y)
-        self.nivel_agua=Terreno2.AlturaMaxima * 0.2
-        self.info_parcelas=dict() # {idx_pos:{"isla":None|pos}, ...}
+        self.nivel_agua=Terreno2.AlturaMaxima * 0.6
         # debug
         self.dibujar_normales=False # cada update
         # variables internas:
@@ -67,15 +63,6 @@ class Terreno2:
         return (x, y)
 
     def obtener_altitud(self, pos):
-        # info de parcela
-        idx_pos=self.obtener_indice_parcela(pos)
-        if not idx_pos in self.info_parcelas:
-            self.info_parcelas[idx_pos]={"isla":{"pos":None, "radio":0}}
-            for info in Terreno2.Islas:
-                if self.dentro_radio(info["pos"], pos, info["radio"]):
-                    self.info_parcelas[idx_pos]["isla"]["pos"]=info["pos"]
-                    self.info_parcelas[idx_pos]["isla"]["radio"]=info["radio"]
-                    break
         #
         altitud=0
         # perlin noise object
@@ -84,19 +71,6 @@ class Terreno2:
         altitud+=1
         altitud/=2
         altitud*=Terreno2.AlturaMaxima
-        # isla
-        if self.info_parcelas[idx_pos]["isla"]["pos"]!=None:
-            dx=pos[0]-self.info_parcelas[idx_pos]["isla"]["pos"][0]
-            dy=pos[1]-self.info_parcelas[idx_pos]["isla"]["pos"][1]
-            distancia=math.sqrt((dx*dx)+(dy*dy))
-            distancia_normalizada=distancia/self.info_parcelas[idx_pos]["isla"]["radio"]
-            #log.info("pos_isla=%s pos=%s"%(str(self.info_parcelas[idx_pos]["isla"]), str(pos)))
-            #log.info("(dx/dy)=%s distancia=%.3f distancia_normalizada=%.3f "%(str((dx, dy)), distancia, distancia_normalizada))
-            if distancia_normalizada>1.0:
-                distancia_normalizada=1.0
-            #log.info("altitud=%.3f; (dx,dy)=(%.3f,%.3f) dist_n=%.3f"%(altitud, dx, dy, distancia_normalizada))
-            #altitud*=(math.cos(2*math.pi*distancia_normalizada)+1)/2
-            #log.info("altitud=%.3f"%(altitud))
         #
         return altitud
 
@@ -122,7 +96,7 @@ class Terreno2:
         #
         info="Terreno2\n"
         info+="idx_pos_parcela_actual=%s pos=%s\n"%(str(self.idx_pos_parcela_actual), str(pos_parcela_actual))
-        info+="RadioExpansion=%i Islas=%i\n"%(Terreno2.RadioExpansion, len(Terreno2.Islas))
+        info+="RadioExpansion=%i\n"%(Terreno2.RadioExpansion)
         return info
 
     def update(self, pos_foco):
@@ -162,7 +136,7 @@ class Terreno2:
         parcela=self.nodo.attachNewNode(nombre)
         parcela.setPos(pos[0], pos[1], 0.0)
         # geometría
-        geom_node=self._crear_geometria_parcela(nombre, idx_pos)
+        geom_node=self._crear_geometria_parcela_opt(nombre, idx_pos)
         #
         parcela.attachNewNode(geom_node)
         # debug: normales
@@ -170,27 +144,50 @@ class Terreno2:
             geom_node_normales=self._crear_lineas_normales("normales_%i_%i"%(int(pos[0]), int(pos[1])), geom_node)
             parcela.attachNewNode(geom_node_normales)
         # textura
-        #ts0=TextureStage("ts0")
-        #textura0=self.base.loader.loadTexture("texturas/arena.png")
-        #parcela.setTexture(ts0, textura0)
+        ts0=TextureStage("ts0")
+        textura0=self.base.loader.loadTexture("texturas/arena.png")
+        parcela.setTexture(ts0, textura0)
         # agregar a parcelas
         self.parcelas[idx_pos]=parcela
 
     def _descargar_parcela(self, idx_pos):
         log.info("_descargar_parcela %s"%str(idx_pos))
         #
-        if idx_pos in self.info_parcelas:
-            del self.info_parcelas[idx_pos]
-        #
         parcela=self.parcelas[idx_pos]
         parcela.removeNode()
         del self.parcelas[idx_pos]
     
-    def _crear_geometria_parcela(self, nombre, idx_pos):
-        # posicion
+    def _crear_geometria_parcela_opt(self, nombre, idx_pos):
+        # posicion de la parcela
         pos=self.obtener_pos_parcela(idx_pos)
+        # matrix de altitudes; x,y: [i(-1)<i(0)<i(...)<i(tamano-1)<i(tamano)]
+        altitud=list() # [[n, ...], ...]
+        for x in range(Terreno2.TamanoParcela+3):
+            altitud.append(list())
+            for y in range(Terreno2.TamanoParcela+3):
+                data=altitud[x]
+                data.append(self.obtener_altitud((pos[0]+x-1, pos[1]+y-1)))
+        # normales # [[n, ...], ...]
+        normales=list()
+        for x in range(Terreno2.TamanoParcela+1):
+            normales.append(list())
+            for y in range(Terreno2.TamanoParcela+1):
+                v0=Vec3(x, y, altitud[x+1][y+1])
+                v1=Vec3(x+1, y, altitud[x+2][y+1])
+                v2=Vec3(x, y+1, altitud[x+1][y+2])
+                v3=Vec3(x+1, y-1, altitud[x+2][y])
+                v4=Vec3(x-1, y+1, altitud[x][y+2])
+                v5=Vec3(x-1, y, altitud[x][y+1])
+                v6=Vec3(x, y-1, altitud[x+1][y])
+                n0=self._calcular_normal(v0, v1, v2)
+                n1=self._calcular_normal(v0, v3, v1)
+                n2=self._calcular_normal(v0, v2, v4)
+                n3=self._calcular_normal(v0, v5, v6)
+                n_avg=(n0+n1+n2+n3)/4.0
+                #log.info("n0=%s n1=%s n2=%s n3=%s n_avg=%s"%(str(n0), str(n1), str(n2), str(n3), str(n_avg)))
+                normales[x].append(n_avg)
         # formato
-        formato=GeomVertexFormat.getV3n3c4t2()
+        formato=GeomVertexFormat.getV3n3t2()
         # iniciar vértices y primitivas
         vdata=GeomVertexData("vertex_data", formato, Geom.UHStatic)
         vdata.setNumRows((Terreno2.TamanoParcela+1)*(Terreno2.TamanoParcela+1))
@@ -198,7 +195,65 @@ class Terreno2:
         # vertex writers
         wrt_v=GeomVertexWriter(vdata, InternalName.getVertex())
         wrt_n=GeomVertexWriter(vdata, InternalName.getNormal())
-        wrt_c=GeomVertexWriter(vdata, InternalName.getColor())
+        wrt_t=GeomVertexWriter(vdata, InternalName.getTexcoord())
+        # llenar vértices y primitivas
+        i_vertice=0
+        for x in range(0, Terreno2.TamanoParcela):
+            for y in range(0, Terreno2.TamanoParcela):
+                # vértices
+                v=list()
+                v.append(Vec3(x, y, altitud[x+1][y+1])) # 4, para geometría
+                v.append(Vec3(x+1, y, altitud[x+2][y+1]))
+                v.append(Vec3(x, y+1, altitud[x+1][y+2]))
+                v.append(Vec3(x+1, y+1, altitud[x+2][y+2]))
+                # llenar vertex data
+                # v0
+                wrt_v.addData3(v[0])
+                wrt_n.addData3(normales[x][y])
+                wrt_t.addData2(x, y)
+                # v1
+                wrt_v.addData3(v[1])
+                wrt_n.addData3(normales[x+1][y])
+                wrt_t.addData2(x+1, y)
+                # v2
+                wrt_v.addData3(v[2])
+                wrt_n.addData3(normales[x][y+1])
+                wrt_t.addData2(x, y+1)
+                # v3
+                wrt_v.addData3(v[3])
+                wrt_n.addData3(normales[x+1][y+1])
+                wrt_t.addData2(x+1, y+1)
+                # primitivas
+                prim.addVertex(i_vertice)
+                prim.addVertex(i_vertice+1)
+                prim.addVertex(i_vertice+2)
+                prim.closePrimitive()
+                prim.addVertex(i_vertice+2)
+                prim.addVertex(i_vertice+1)
+                prim.addVertex(i_vertice+3)
+                prim.closePrimitive()
+                #
+                i_vertice+=4
+        # geom
+        geom=Geom(vdata)
+        geom.addPrimitive(prim)
+        geom.setBoundsType(BoundingVolume.BT_box)
+        # nodo
+        geom_node=GeomNode(nombre)
+        geom_node.addGeom(geom)
+        geom_node.setBoundsType(BoundingVolume.BT_box)
+        return geom_node
+        
+    def _crear_geometria_parcela(self, nombre, idx_pos):
+        # formato
+        formato=GeomVertexFormat.getV3n3t2()
+        # iniciar vértices y primitivas
+        vdata=GeomVertexData("vertex_data", formato, Geom.UHStatic)
+        vdata.setNumRows((Terreno2.TamanoParcela+1)*(Terreno2.TamanoParcela+1))
+        prim=GeomTriangles(Geom.UHStatic)
+        # vertex writers
+        wrt_v=GeomVertexWriter(vdata, InternalName.getVertex())
+        wrt_n=GeomVertexWriter(vdata, InternalName.getNormal())
         wrt_t=GeomVertexWriter(vdata, InternalName.getTexcoord())
         # llenar vértices y primitivas
         i_vertice=0
@@ -211,41 +266,30 @@ class Terreno2:
                 v3=Vec3(x+1, y+1, self.obtener_altitud((Terreno2.TamanoParcela*idx_pos[0]+x+1, Terreno2.TamanoParcela*idx_pos[1]+y+1)))
                 normal1=self._calcular_normal(v0, v1, v2)
                 normal2=normal1 #self._calcular_normal(v2, v1, v3)
-                temperatura_base=self.obtener_temperatura_base((pos[0]+x, pos[1]+y))
-                c0=Vec4(temperatura_base, temperatura_base, temperatura_base, 1) #Vec4(0, v0[2]/Terreno2.AlturaMaxima, 0, 1)
-                c1=c0 #Vec4(0, v1[2]/Terreno2.AlturaMaxima, 0, 1)
-                c2=c0 #Vec4(0, v2[2]/Terreno2.AlturaMaxima, 0, 1)
-                c3=c0 #Vec4(0, v3[2]/Terreno2.AlturaMaxima, 0, 1)
                 # llenar vertex data
                 # v0
                 wrt_v.addData3(v0)
                 wrt_n.addData3(normal1)
-                wrt_c.addData4(c0)
                 wrt_t.addData2(x, y)
                 # v1
                 wrt_v.addData3(v1)
                 wrt_n.addData3(normal1)
-                wrt_c.addData4(c1)
                 wrt_t.addData2(x+1, y)
                 # v2
                 wrt_v.addData3(v2)
                 wrt_n.addData3(normal1)
-                wrt_c.addData4(c2)
                 wrt_t.addData2(x, y+1)
                 # v2
                 wrt_v.addData3(v2)
                 wrt_n.addData3(normal2)
-                wrt_c.addData4(c2)
                 wrt_t.addData2(x, y+1)
                 # v1
                 wrt_v.addData3(v1)
                 wrt_n.addData3(normal2)
-                wrt_c.addData4(c1)
                 wrt_t.addData2(x+1, y)
                 # v3
                 wrt_v.addData3(v3)
                 wrt_n.addData3(normal2)
-                wrt_c.addData4(c3)
                 wrt_t.addData2(x+1, y+1)
                 # primitivas
                 prim.addVertex(i_vertice)
@@ -354,9 +398,12 @@ class Tester(ShowBase):
         self.sun.setPos(self.terreno.nodo, 100, 100, 100)
         self.sun.lookAt(self.terreno.nodo)
         #
-        #self.render.setLight(self.sun)
+        self.render.setLight(self.sun)
         #
-        #self.pos_foco=[0, 0, 0] # posterga generacion de geometria
+        self.texturaImagen=None
+        self.imagen=None
+        self.zoom_imagen=16
+        #
         self.taskMgr.add(self.update, "update")
         self.accept("wheel_up", self.zoom, [1])
         self.accept("wheel_down", self.zoom, [-1])
@@ -377,18 +424,9 @@ class Tester(ShowBase):
             nueva_pos_foco[0]-=32
         #
         if nueva_pos_foco!=self.pos_foco:
+            log.info("update pos_foco=%s"%str(nueva_pos_foco))
             self.pos_foco=nueva_pos_foco
-            log.info("update pos_foco=%s"%(str(self.pos_foco)))
-            #
-            self.terreno.update(self.pos_foco)
-            if self.escribir_archivo:
-                log.info("escribir_archivo")
-                self.terreno.nodo.writeBamFile("terreno2.bam")
-            self.plano_agua.setPos(Vec3(self.pos_foco[0], self.pos_foco[1], self.terreno.nivel_agua))
-            #
-            self.cam_driver.setPos(Vec3(self.pos_foco[0], self.pos_foco[1], 50))
-            #
-            self.lblInfo["text"]=self.terreno.obtener_info()
+            self._actualizar_terreno(self.pos_foco)
         return task.cont
     
     def zoom(self, dir):
@@ -418,15 +456,93 @@ class Tester(ShowBase):
         sd=math.sqrt(sd)
         log.info("analizar_altitudes rango:[%.3f/%.3f] media=%.3f sd=%.3f"%(min, max, media, sd))
 
+    def _actualizar_terreno(self, pos):
+            log.info("_actualizar_terreno pos=%s"%(str(pos)))
+            #
+            self.terreno.update(pos)
+            if self.escribir_archivo:
+                log.info("escribir_archivo")
+                self.terreno.nodo.writeBamFile("terreno2.bam")
+            self.plano_agua.setPos(Vec3(pos[0], pos[1], self.terreno.nivel_agua))
+            #
+            self.cam_driver.setPos(Vec3(pos[0], pos[1], 50))
+            #
+            self.lblInfo["text"]=self.terreno.obtener_info()
+            #
+            self.pos_foco=pos
+            #
+            self._generar_imagen()
+
+    def _generar_imagen(self):
+        #
+        tamano=128
+        if not self.imagen:
+            self.imagen=PNMImage(tamano+1, tamano+1)
+            self.texturaImagen=Texture()
+            self.frmImagen["image"]=self.texturaImagen
+            self.frmImagen["image_scale"]=0.4
+        #
+        for x in range(tamano+1):
+            for y in range(tamano+1):
+                _x=self.pos_foco[0]-(x-(tamano/2))*self.zoom_imagen
+                _y=self.pos_foco[1]+(y-(tamano/2))*self.zoom_imagen
+                a=self.terreno.obtener_altitud((_x, _y))
+                c=int(255*(1-((self.terreno.nivel_agua-a)/(self.terreno.nivel_agua))))
+                if a>self.terreno.nivel_agua:
+                    self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(c, c, 0, 255))
+                else:
+                    self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(0, 0, c, 255))
+        #
+        self.texturaImagen.load(self.imagen)
+
+    def _ir_a_idx_pos(self):
+        log.info("_ir_a_idx_pos")
+        try:
+            idx_x=int(self.entry_x.get())
+            idx_y=int(self.entry_y.get())
+            pos=self.terreno.obtener_pos_parcela((idx_x, idx_y))
+            log.info("idx_pos:(%i,%i); pos:%s"%(idx_x, idx_y, str(pos)))
+            self._actualizar_terreno(list(pos))
+        except Exception as e:
+            log.exception(str(e))
+
     def _cargar_ui(self):
-        self.frame=DirectFrame(parent=self.aspect2d, pos=(0, 0, -0.9), frameSize=(-1, 1, -0.1, 0.1), frameColor=(1, 1, 1, 0.5))
-        self.lblInfo=DirectLabel(parent=self.frame, pos=(-1, 0, 0.0), scale=0.05, text=self.terreno.obtener_info(), frameColor=(1, 1, 1, 0.2), frameSize=(0, 40, -2, 2), text_align=TextNode.ALeft, text_pos=(0, 1, 1))
+        # frame
+        self.frame=DirectFrame(parent=self.aspect2d, pos=(0, 0, -0.85), frameSize=(-1, 1, -0.15, 0.25), frameColor=(1, 1, 1, 0.5))
+        # info
+        self.lblInfo=DirectLabel(parent=self.frame, pos=(-1, 0, 0.15), scale=0.05, text=self.terreno.obtener_info(), frameColor=(1, 1, 1, 0.2), frameSize=(0, 40, -2, 2), text_align=TextNode.ALeft, text_pos=(0, 1, 1))
+        # idx_pos
+        DirectLabel(parent=self.frame, pos=(-1, 0, 0), scale=0.05, text="idx_pos_x", frameColor=(1, 1, 1, 0), frameSize=(0, 2, -1, 1), text_align=TextNode.ALeft)
+        DirectLabel(parent=self.frame, pos=(-1, 0, -0.1), scale=0.05, text="idx_pos_y", frameColor=(1, 1, 1, 0), frameSize=(0, 2, -1, 1), text_align=TextNode.ALeft)
+        self.entry_x=DirectEntry(parent=self.frame, pos=(-0.7, 0, 0), scale=0.05)
+        self.entry_y=DirectEntry(parent=self.frame, pos=(-0.7, 0, -0.1), scale=0.05)
+        DirectButton(parent=self.frame, pos=(0, 0, -0.1), scale=0.075, text="actualizar", command=self._ir_a_idx_pos)
+        #
+        self.frmImagen=DirectFrame(parent=self.frame, pos=(0.8, 0, 0.2), state=DGG.NORMAL, frameSize=(-0.4, 0.4, -0.4, 0.4))
+        self.frmImagen.bind(DGG.B1PRESS, self._click_imagen)
+        DirectButton(parent=self.frame, pos=(0.5, 0, 0.65), scale=0.1, text="acercar", command=self._acercar_zoom_imagen, frameSize=(-1, 1, -0.4, 0.4), text_scale=0.5)
+        DirectButton(parent=self.frame, pos=(0.725, 0, 0.65), scale=0.1, text="alejar", command=self._alejar_zoom_imagen, frameSize=(-1, 1, -0.4, 0.4), text_scale=0.5)
+
+    def _click_imagen(self, *args):
+        log.info("_click_imagen %s"%str(args))
+
+    def _acercar_zoom_imagen(self):
+        log.info("_acercar_zoom_imagen")
+        if self.zoom_imagen>1:
+            self.zoom_imagen/=2
+            self._generar_imagen()
+
+    def _alejar_zoom_imagen(self):
+        log.info("_alejar_zoom_imagen")
+        if self.zoom_imagen<512:
+            self.zoom_imagen*=2
+            self._generar_imagen()
 
 if __name__=="__main__":
     logging.basicConfig(level=logging.INFO)
     PStatClient.connect()
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    Terreno2.RadioExpansion=2
+    Terreno2.RadioExpansion=0
     tester.escribir_archivo=True
     tester.run()
