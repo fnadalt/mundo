@@ -46,6 +46,7 @@ class Terreno2:
         self._noise_scaled_weights=list() # normalizado
         # init:
         self._generar_noise_objs()
+        self._establecer_shader()
         #
         log.info("altitud (%s)=%.3f"%(str((0, 0)), self.obtener_altitud((0, 0))))
 
@@ -99,6 +100,11 @@ class Terreno2:
         info+="RadioExpansion=%i\n"%(Terreno2.RadioExpansion)
         return info
 
+    def establecer_info_luces(self, posicion_sol, color_sol, color_ambiente):
+        self.nodo.setShaderInput("posicion_sol", posicion_sol)
+        self.nodo.setShaderInput("color_sol", color_sol)
+        self.nodo.setShaderInput("color_ambiente", color_ambiente)
+        
     def update(self, pos_foco):
         if self.pos_foco!=pos_foco:
             self.pos_foco=pos_foco
@@ -133,22 +139,22 @@ class Terreno2:
         pos=Vec2(idx_pos[0]*Terreno2.TamanoParcela, idx_pos[1]*Terreno2.TamanoParcela)
         nombre="parcela_%i_%i"%(int(pos[0]), int(pos[1]))
         # nodo
-        parcela=self.nodo.attachNewNode(nombre)
-        parcela.setPos(pos[0], pos[1], 0.0)
+        parcela_node_path=self.nodo.attachNewNode(nombre)
+        parcela_node_path.setPos(pos[0], pos[1], 0.0)
         # geometría
         geom_node=self._crear_geometria_parcela_opt(nombre, idx_pos)
         #
-        parcela.attachNewNode(geom_node)
+        parcela_node_path.attachNewNode(geom_node)
         # debug: normales
         if self.dibujar_normales:
             geom_node_normales=self._crear_lineas_normales("normales_%i_%i"%(int(pos[0]), int(pos[1])), geom_node)
-            parcela.attachNewNode(geom_node_normales)
+            parcela_node_path.attachNewNode(geom_node_normales)
         # textura
-        ts0=TextureStage("ts0")
-        textura0=self.base.loader.loadTexture("texturas/arena.png")
-        parcela.setTexture(ts0, textura0)
+#        ts0=TextureStage("ts0")
+#        textura0=self.base.loader.loadTexture("texturas/arena.png")
+#        parcela_node_path.setTexture(ts0, textura0)
         # agregar a parcelas
-        self.parcelas[idx_pos]=parcela
+        self.parcelas[idx_pos]=parcela_node_path
 
     def _descargar_parcela(self, idx_pos):
         log.info("_descargar_parcela %s"%str(idx_pos))
@@ -311,6 +317,26 @@ class Terreno2:
         geom_node.addGeom(geom)
         geom_node.setBoundsType(BoundingVolume.BT_box)
         return geom_node
+
+    def _establecer_shader(self):
+        tsArena=TextureStage("ts_terreno_arena")
+        texArena=self.base.loader.loadTexture("texturas/arena.png")
+        self.nodo.setTexture(tsArena, texArena)
+        tsTierra=TextureStage("ts_terreno_tierra")
+        texTierra=self.base.loader.loadTexture("texturas/tierra.png")
+        self.nodo.setTexture(tsTierra, texTierra)
+        tsPasto=TextureStage("ts_terreno_pasto")
+        texPasto=self.base.loader.loadTexture("texturas/pasto.png")
+        self.nodo.setTexture(tsPasto, texPasto)
+        tsNieve=TextureStage("ts_terreno_nieve")
+        texNieve=self.base.loader.loadTexture("texturas/nieve.png")
+        self.nodo.setTexture(tsNieve, texNieve)
+        #
+        shader=Shader.load(Shader.SL_GLSL, vertex="shaders/terreno.v.glsl", fragment="shaders/terreno.f.glsl")
+        self.nodo.setShaderInput("posicion_sol", Vec3.zero())
+        self.nodo.setShaderInput("color_sol", Vec4.zero())
+        self.nodo.setShaderInput("color_ambiente", Vec4.zero())
+        self.nodo.setShader(shader)
 
     def _calcular_normal(self, v0, v1, v2):
         U=v1-v0
@@ -544,5 +570,5 @@ if __name__=="__main__":
     tester=Tester()
     tester.terreno.dibujar_normales=False
     Terreno2.RadioExpansion=0
-    tester.escribir_archivo=True
+    tester.escribir_archivo=False
     tester.run()

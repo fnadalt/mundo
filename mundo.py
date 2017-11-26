@@ -150,7 +150,7 @@ class Mundo(NodePath):
     
     def _cargar_terreno(self, pos_inicial_foco):
         # dia
-        self.dia=Dia(1800.0, 0.5)
+        self.dia=Dia(120.0, 0.5) #|(1800.0, 0.5)
         # cielo
         self.cielo=Cielo(self.base)
         self.cielo.nodo.reparentTo(self)
@@ -213,6 +213,7 @@ class Mundo(NodePath):
         if self._counter==50:
             self._counter=0
             self.terreno.update(self.controlador_camara.target_node_path.getPos())
+        self.terreno.establecer_info_luces(self.sol.luz.getPos(self), self.sol.luz.node().getColor(), self.cielo.luz.node().getColor())
         # personajes
         for _personaje in self._personajes:
             _altitud_suelo=self.terreno.obtener_altitud(_personaje.cuerpo.getPos())
