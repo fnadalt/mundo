@@ -213,7 +213,7 @@ class Mundo(NodePath):
         if self._counter==50:
             self._counter=0
             self.terreno.update(self.controlador_camara.target_node_path.getPos())
-        self.terreno.establecer_info_luces(self.sol.luz.getPos(self), self.sol.luz.node().getColor(), self.cielo.luz.node().getColor())
+        #self.terreno.establecer_info_luces(self.sol.luz.getPos(self), self.sol.luz.node().getColor(), self.cielo.luz.node().getColor())
         # personajes
         for _personaje in self._personajes:
             _altitud_suelo=self.terreno.obtener_altitud(_personaje.cuerpo.getPos())

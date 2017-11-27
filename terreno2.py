@@ -46,7 +46,7 @@ class Terreno2:
         self._noise_scaled_weights=list() # normalizado
         # init:
         self._generar_noise_objs()
-        self._establecer_shader()
+        #self._establecer_shader()
         #
         log.info("altitud (%s)=%.3f"%(str((0, 0)), self.obtener_altitud((0, 0))))
 
@@ -150,9 +150,9 @@ class Terreno2:
             geom_node_normales=self._crear_lineas_normales("normales_%i_%i"%(int(pos[0]), int(pos[1])), geom_node)
             parcela_node_path.attachNewNode(geom_node_normales)
         # textura
-#        ts0=TextureStage("ts0")
-#        textura0=self.base.loader.loadTexture("texturas/arena.png")
-#        parcela_node_path.setTexture(ts0, textura0)
+        ts0=TextureStage("ts0")
+        textura0=self.base.loader.loadTexture("texturas/arena.png")
+        parcela_node_path.setTexture(ts0, textura0)
         # agregar a parcelas
         self.parcelas[idx_pos]=parcela_node_path
 

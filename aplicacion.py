@@ -15,6 +15,7 @@ class Aplicacion(ShowBase):
         #
         self.disableMouse()
         self.setFrameRateMeter(True)
+        #self.render.setShaderAuto()
         #
         self.mundo=Mundo(self)
         
