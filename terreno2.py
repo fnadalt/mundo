@@ -23,8 +23,18 @@ class Terreno2:
     NoiseObjsScales=[1024.0, 128.0, 32.0, 16.0, 8.0]
     NoiseObjsWeights=[1.0, 0.55, 0.1, 0.005, 0.001] # scale_0>scale_1>scale_n
 
-    # biomasa
+    # biomasa:
+    # temperatura
     RuidoTemperatura=[512.0, 1100] # [scale, seed]
+    # tipo de terreno
+    IntervalosTiposTerreno=[0.10, 0.20, 0.40, 0.45, 0.70, 0.80] # [0,1]; 0=nivel_agua; [tope_arena, tope_zona_intermedia, tope_tierra, tope_zona_intermedia, tope_pasto, tope_zona_intermedia]; tope_nieve=1
+    TipoArena=0
+    TipoIntervaloArenaTierra=1
+    TipoTierra=2
+    TipoIntervaloTierraPasto=3
+    TipoPasto=4
+    TipoIntervaloPastoNieve=5
+    TipoNieve=6
 
     def __init__(self, base, bullet_world):
         # referencias:
@@ -75,11 +85,27 @@ class Terreno2:
         #
         return altitud
 
-    def obtener_temperatura_base(self, pos):
+    def obtener_temperatura_media(self, pos):
         t=self._ruido_temperatura.noise(pos)
         t+=1
         t/=2
         return t
+
+    def obtener_tipo_terreno(self, altitud):
+        if altitud>Terreno2.TipoIntervaloPastoNieve:
+            return Terreno2.Nieve
+        elif altitud>Terreno2.TipoPasto:
+            return Terreno2.TipoIntervaloPastoNieve
+        elif altitud>Terreno2.TipoIntervaloTierraPasto:
+            return Terreno2.TipoPasto
+        elif altitud>Terreno2.TipoTierra:
+            return TipoIntervaloTierraPasto
+        elif altitud>Terreno2.TipoIntervaloArenaTierra:
+            return Terreno2.TipoTierra
+        elif altitud>Terreno2.TipoArena:
+            return Terreno2.TipoIntervaloArenaTierra
+        else:
+            return Terreno2.TipoArena
 
     def dentro_radio(self, pos_1, pos_2, radio):
         dx=pos_2[0]-pos_1[0]
@@ -149,10 +175,23 @@ class Terreno2:
         if self.dibujar_normales:
             geom_node_normales=self._crear_lineas_normales("normales_%i_%i"%(int(pos[0]), int(pos[1])), geom_node)
             parcela_node_path.attachNewNode(geom_node_normales)
-        # textura
-        ts0=TextureStage("ts0")
-        textura0=self.base.loader.loadTexture("texturas/arena.png")
-        parcela_node_path.setTexture(ts0, textura0)
+        # texturas
+        ts_arena=TextureStage("ts_arena")
+        ts_arena.setSort(0)
+        textura_arena=self.base.loader.loadTexture("texturas/arena.png")
+        parcela_node_path.setTexture(ts_arena, textura_arena)
+        ts_tierra=TextureStage("ts_tierra")
+        ts_tierra.setSort(1)
+        textura_tierra=self.base.loader.loadTexture("texturas/tierra.png")
+        parcela_node_path.setTexture(ts_tierra, textura_tierra)
+        ts_pasto=TextureStage("ts_pasto")
+        ts_pasto.setSort(2)
+        textura_pasto=self.base.loader.loadTexture("texturas/pasto.png")
+        parcela_node_path.setTexture(ts_pasto, textura_pasto)
+        ts_nieve=TextureStage("ts_nieve")
+        ts_nieve.setSort(3)
+        textura_nieve=self.base.loader.loadTexture("texturas/nieve.png")
+        parcela_node_path.setTexture(ts_nieve, textura_nieve)
         # agregar a parcelas
         self.parcelas[idx_pos]=parcela_node_path
 
@@ -569,6 +608,6 @@ if __name__=="__main__":
     PStatClient.connect()
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    Terreno2.RadioExpansion=0
+    Terreno2.RadioExpansion=3
     tester.escribir_archivo=False
     tester.run()
