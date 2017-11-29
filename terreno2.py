@@ -27,6 +27,7 @@ class Terreno2:
     # temperatura
     RuidoTemperatura=[512.0, 1100] # [scale, seed]
     # tipo de terreno
+    RuidoIntervalo=[32.0, 1133] # [scale, seed]
     IntervalosTiposTerreno=[0.10, 0.20, 0.40, 0.45, 0.70, 0.80] # [0,1]; 0=nivel_agua; [tope_arena, tope_zona_intermedia, tope_tierra, tope_zona_intermedia, tope_pasto, tope_zona_intermedia]; tope_nieve=1
     TipoArena=0
     TipoIntervaloArenaTierra=1
@@ -54,9 +55,13 @@ class Terreno2:
         self.dibujar_normales=False # cada update
         # variables internas:
         self._noise_scaled_weights=list() # normalizado
+        self._intervalos_tipo_terreno_escalados=[]
         # init:
+        altura_sobre_agua=Terreno2.AlturaMaxima-self.nivel_agua
+        for intervalo in Terreno2.IntervalosTiposTerreno:
+            self._intervalos_tipo_terreno_escalados.append(self.nivel_agua+intervalo*altura_sobre_agua)
         self._generar_noise_objs()
-        #self._establecer_shader()
+        self._establecer_shader()
         #
         log.info("altitud (%s)=%.3f"%(str((0, 0)), self.obtener_altitud((0, 0))))
 
@@ -92,17 +97,17 @@ class Terreno2:
         return t
 
     def obtener_tipo_terreno(self, altitud):
-        if altitud>Terreno2.TipoIntervaloPastoNieve:
-            return Terreno2.Nieve
-        elif altitud>Terreno2.TipoPasto:
+        if altitud>self._intervalos_tipo_terreno_escalados[5]:
+            return Terreno2.TipoNieve
+        elif altitud>self._intervalos_tipo_terreno_escalados[4]:
             return Terreno2.TipoIntervaloPastoNieve
-        elif altitud>Terreno2.TipoIntervaloTierraPasto:
+        elif altitud>self._intervalos_tipo_terreno_escalados[3]:
             return Terreno2.TipoPasto
-        elif altitud>Terreno2.TipoTierra:
-            return TipoIntervaloTierraPasto
-        elif altitud>Terreno2.TipoIntervaloArenaTierra:
+        elif altitud>self._intervalos_tipo_terreno_escalados[2]:
+            return Terreno2.TipoIntervaloTierraPasto
+        elif altitud>self._intervalos_tipo_terreno_escalados[1]:
             return Terreno2.TipoTierra
-        elif altitud>Terreno2.TipoArena:
+        elif altitud>self._intervalos_tipo_terreno_escalados[0]:
             return Terreno2.TipoIntervaloArenaTierra
         else:
             return Terreno2.TipoArena
@@ -126,11 +131,6 @@ class Terreno2:
         info+="RadioExpansion=%i\n"%(Terreno2.RadioExpansion)
         return info
 
-    def establecer_info_luces(self, posicion_sol, color_sol, color_ambiente):
-        self.nodo.setShaderInput("posicion_sol", posicion_sol)
-        self.nodo.setShaderInput("color_sol", color_sol)
-        self.nodo.setShaderInput("color_ambiente", color_ambiente)
-        
     def update(self, pos_foco):
         if self.pos_foco!=pos_foco:
             self.pos_foco=pos_foco
@@ -175,23 +175,6 @@ class Terreno2:
         if self.dibujar_normales:
             geom_node_normales=self._crear_lineas_normales("normales_%i_%i"%(int(pos[0]), int(pos[1])), geom_node)
             parcela_node_path.attachNewNode(geom_node_normales)
-        # texturas
-        ts_arena=TextureStage("ts_arena")
-        ts_arena.setSort(0)
-        textura_arena=self.base.loader.loadTexture("texturas/arena.png")
-        parcela_node_path.setTexture(ts_arena, textura_arena)
-        ts_tierra=TextureStage("ts_tierra")
-        ts_tierra.setSort(1)
-        textura_tierra=self.base.loader.loadTexture("texturas/tierra.png")
-        parcela_node_path.setTexture(ts_tierra, textura_tierra)
-        ts_pasto=TextureStage("ts_pasto")
-        ts_pasto.setSort(2)
-        textura_pasto=self.base.loader.loadTexture("texturas/pasto.png")
-        parcela_node_path.setTexture(ts_pasto, textura_pasto)
-        ts_nieve=TextureStage("ts_nieve")
-        ts_nieve.setSort(3)
-        textura_nieve=self.base.loader.loadTexture("texturas/nieve.png")
-        parcela_node_path.setTexture(ts_nieve, textura_nieve)
         # agregar a parcelas
         self.parcelas[idx_pos]=parcela_node_path
 
@@ -232,15 +215,23 @@ class Terreno2:
                 #log.info("n0=%s n1=%s n2=%s n3=%s n_avg=%s"%(str(n0), str(n1), str(n2), str(n3), str(n_avg)))
                 normales[x].append(n_avg)
         # formato
-        formato=GeomVertexFormat.getV3n3t2()
+        col_nombre_intervalo=InternalName.make("intervalo")
+        format_array=GeomVertexArrayFormat()
+        format_array.addColumn(InternalName.getVertex(), 3, Geom.NT_stdfloat, Geom.C_point)
+        format_array.addColumn(InternalName.getNormal(), 3, Geom.NT_stdfloat, Geom.C_normal)
+        format_array.addColumn(InternalName.getTexcoord(), 2, Geom.NT_stdfloat, Geom.C_texcoord)
+        format_array.addColumn(col_nombre_intervalo, 1, Geom.NT_stdfloat, Geom.C_other)
+        formato=GeomVertexFormat() #.getV3n3t2()
+        formato.addArray(format_array)
         # iniciar vértices y primitivas
-        vdata=GeomVertexData("vertex_data", formato, Geom.UHStatic)
+        vdata=GeomVertexData("vertex_data", GeomVertexFormat.registerFormat(formato), Geom.UHStatic)
         vdata.setNumRows((Terreno2.TamanoParcela+1)*(Terreno2.TamanoParcela+1))
         prim=GeomTriangles(Geom.UHStatic)
         # vertex writers
         wrt_v=GeomVertexWriter(vdata, InternalName.getVertex())
         wrt_n=GeomVertexWriter(vdata, InternalName.getNormal())
         wrt_t=GeomVertexWriter(vdata, InternalName.getTexcoord())
+        wrt_i=GeomVertexWriter(vdata, col_nombre_intervalo)
         # llenar vértices y primitivas
         i_vertice=0
         for x in range(0, Terreno2.TamanoParcela):
@@ -251,23 +242,28 @@ class Terreno2:
                 v.append(Vec3(x+1, y, altitud[x+2][y+1]))
                 v.append(Vec3(x, y+1, altitud[x+1][y+2]))
                 v.append(Vec3(x+1, y+1, altitud[x+2][y+2]))
-                # llenar vertex data
-                # v0
-                wrt_v.addData3(v[0])
-                wrt_n.addData3(normales[x][y])
-                wrt_t.addData2(x, y)
-                # v1
-                wrt_v.addData3(v[1])
-                wrt_n.addData3(normales[x+1][y])
-                wrt_t.addData2(x+1, y)
-                # v2
-                wrt_v.addData3(v[2])
-                wrt_n.addData3(normales[x][y+1])
-                wrt_t.addData2(x, y+1)
-                # v3
-                wrt_v.addData3(v[3])
-                wrt_n.addData3(normales[x+1][y+1])
-                wrt_t.addData2(x+1, y+1)
+                # llenar vertex data; (x,y)->(0,0),(1,0),(0,1),(1,1)
+                _i_vertice=0
+                for _y in range(2):
+                    for _x in range(2):
+                        wrt_v.addData3(v[_i_vertice])
+                        wrt_n.addData3(normales[x+_x][y+_y])
+                        wrt_t.addData2(_x/2.0, _y/2.0)
+#                        _i_vertice+=1
+#                        continue
+                        tipo_terreno=self.obtener_tipo_terreno(v[_i_vertice][2])
+                        if tipo_terreno==Terreno2.TipoArena:
+                            wrt_i.addData1(0)
+                        elif tipo_terreno==Terreno2.TipoTierra:
+                            wrt_i.addData1(0)
+                        elif tipo_terreno==Terreno2.TipoPasto:
+                            wrt_i.addData1(0)
+                        elif tipo_terreno==Terreno2.TipoNieve:
+                            wrt_i.addData1(0)
+                        else:
+                            ruido=self._ruido_intervalos_tipo_terreno.noise(x, y)
+                            wrt_i.addData1(0 if ruido <0 else 1)
+                        _i_vertice+=1
                 # primitivas
                 prim.addVertex(i_vertice)
                 prim.addVertex(i_vertice+1)
@@ -358,23 +354,24 @@ class Terreno2:
         return geom_node
 
     def _establecer_shader(self):
-        tsArena=TextureStage("ts_terreno_arena")
-        texArena=self.base.loader.loadTexture("texturas/arena.png")
-        self.nodo.setTexture(tsArena, texArena)
-        tsTierra=TextureStage("ts_terreno_tierra")
-        texTierra=self.base.loader.loadTexture("texturas/tierra.png")
-        self.nodo.setTexture(tsTierra, texTierra)
-        tsPasto=TextureStage("ts_terreno_pasto")
-        texPasto=self.base.loader.loadTexture("texturas/pasto.png")
-        self.nodo.setTexture(tsPasto, texPasto)
-        tsNieve=TextureStage("ts_terreno_nieve")
-        texNieve=self.base.loader.loadTexture("texturas/nieve.png")
-        self.nodo.setTexture(tsNieve, texNieve)
+        # texturas
+        ts_arena=TextureStage("ts_arena") # arena
+        textura_arena=self.base.loader.loadTexture("texturas/arena.png")
+        self.nodo.setTexture(ts_arena, textura_arena)
+        ts_tierra=TextureStage("ts_tierra") # tierra
+        textura_tierra=self.base.loader.loadTexture("texturas/tierra.png")
+        self.nodo.setTexture(ts_tierra, textura_tierra)
+        ts_pasto=TextureStage("ts_pasto") # pasto
+        textura_pasto=self.base.loader.loadTexture("texturas/pasto.png")
+        self.nodo.setTexture(ts_pasto, textura_pasto)
+        ts_nieve=TextureStage("ts_nieve") # nieve
+        textura_nieve=self.base.loader.loadTexture("texturas/nieve.png")
+        self.nodo.setTexture(ts_nieve, textura_nieve)
+        #
+        intervalos_tipos_terreno=LMatrix4(self._intervalos_tipo_terreno_escalados[0], self._intervalos_tipo_terreno_escalados[1], self._intervalos_tipo_terreno_escalados[2], 0, self._intervalos_tipo_terreno_escalados[3], self._intervalos_tipo_terreno_escalados[4], self._intervalos_tipo_terreno_escalados[5], 0, 0, 0, 0, 0, 0, 0, 0, 0)
         #
         shader=Shader.load(Shader.SL_GLSL, vertex="shaders/terreno.v.glsl", fragment="shaders/terreno.f.glsl")
-        self.nodo.setShaderInput("posicion_sol", Vec3.zero())
-        self.nodo.setShaderInput("color_sol", Vec4.zero())
-        self.nodo.setShaderInput("color_ambiente", Vec4.zero())
+        self.nodo.setShaderInput("intervalos_tipos_terreno", intervalos_tipos_terreno)
         self.nodo.setShader(shader)
 
     def _calcular_normal(self, v0, v1, v2):
@@ -416,12 +413,14 @@ class Terreno2:
         # lista
         self._noise_objs.append(PerlinNoise2(escalas[0], escalas[0], 256, Terreno2.Semilla))
         self._noise_objs.append(PerlinNoise2(escalas[1], escalas[1], 256, Terreno2.Semilla+(128*1)))
-        self._noise_objs.append(PerlinNoise2(escalas[2], escalas[2], 256, Terreno2.Semilla++(128*2)))
-        self._noise_objs.append(PerlinNoise2(escalas[3], escalas[3], 256, Terreno2.Semilla++(128*3)))
-        self._noise_objs.append(PerlinNoise2(escalas[4], escalas[4], 256, Terreno2.Semilla++(128*4)))
+        self._noise_objs.append(PerlinNoise2(escalas[2], escalas[2], 256, Terreno2.Semilla+(128*2)))
+        self._noise_objs.append(PerlinNoise2(escalas[3], escalas[3], 256, Terreno2.Semilla+(128*3)))
+        self._noise_objs.append(PerlinNoise2(escalas[4], escalas[4], 256, Terreno2.Semilla+(128*4)))
         # biomasa:
         # temperatura
         self._ruido_temperatura=PerlinNoise2(Terreno2.RuidoTemperatura[0], Terreno2.RuidoTemperatura[0], 256, Terreno2.RuidoTemperatura[1])
+        # intervalos de tipos de terreno
+        self._ruido_intervalos_tipo_terreno=PerlinNoise2(Terreno2.RuidoIntervalo[0], Terreno2.RuidoIntervalo[0], 256, Terreno2.RuidoIntervalo[1])
 
 #
 # TESTER
@@ -454,7 +453,7 @@ class Tester(ShowBase):
         #
         self.cam_driver=self.render.attachNewNode("cam_driver")
         self.camera.reparentTo(self.cam_driver)
-        self.camera.setPos(Terreno2.TamanoParcela/2, 450, 0)
+        self.camera.setPos(Terreno2.TamanoParcela/2, 500, 100)
         self.camera.lookAt(self.cam_driver)
         self.cam_driver.setP(self.cam_pitch)
         #
@@ -530,7 +529,7 @@ class Tester(ShowBase):
                 self.terreno.nodo.writeBamFile("terreno2.bam")
             self.plano_agua.setPos(Vec3(pos[0], pos[1], self.terreno.nivel_agua))
             #
-            self.cam_driver.setPos(Vec3(pos[0], pos[1], 50))
+            self.cam_driver.setPos(Vec3(pos[0], pos[1], 100))
             #
             self.lblInfo["text"]=self.terreno.obtener_info()
             #
@@ -608,6 +607,6 @@ if __name__=="__main__":
     PStatClient.connect()
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    Terreno2.RadioExpansion=3
-    tester.escribir_archivo=False
+    Terreno2.RadioExpansion=0
+    tester.escribir_archivo=True
     tester.run()

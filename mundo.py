@@ -48,8 +48,8 @@ class Mundo(NodePath):
         #
         self._cargar_debug_info()
         self._cargar_material()
-        self._cargar_luces()
         self._cargar_terreno(_pos_inicial_foco)
+        self._cargar_luces()
         self._cargar_hombre()
         self._cargar_objetos()
         self._cargar_gui()
@@ -150,7 +150,7 @@ class Mundo(NodePath):
     
     def _cargar_terreno(self, pos_inicial_foco):
         # dia
-        self.dia=Dia(120.0, 0.5) #|(1800.0, 0.5)
+        self.dia=Dia(1800.0, 0.5) #|(1800.0, 0.5)
         # cielo
         self.cielo=Cielo(self.base)
         self.cielo.nodo.reparentTo(self)
@@ -180,8 +180,8 @@ class Mundo(NodePath):
     def _cargar_luces(self):
         # luz
         self.pointN=self.attachNewNode(PointLight("foco"))
-        self.pointN.node().setColor((0.7, 0.7, 0.7, 1.0))
-        self.pointN.setPos(0.0, 0.0, 1.0)
+        self.pointN.node().setColor((1.0, 0.0, 0.0, 1.0))
+        self.pointN.setPos(0.0, 0.0, self.terreno.obtener_altitud((0, 0))+5)
         #self.setLight(self.pointN)
     
     def _update(self, task):
@@ -213,7 +213,6 @@ class Mundo(NodePath):
         if self._counter==50:
             self._counter=0
             self.terreno.update(self.controlador_camara.target_node_path.getPos())
-        #self.terreno.establecer_info_luces(self.sol.luz.getPos(self), self.sol.luz.node().getColor(), self.cielo.luz.node().getColor())
         # personajes
         for _personaje in self._personajes:
             _altitud_suelo=self.terreno.obtener_altitud(_personaje.cuerpo.getPos())
