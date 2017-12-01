@@ -261,8 +261,8 @@ class Terreno2:
                         elif tipo_terreno==Terreno2.TipoNieve:
                             wrt_i.addData1(0)
                         else:
-                            ruido=self._ruido_intervalos_tipo_terreno.noise(x, y)
-                            wrt_i.addData1(0 if ruido <0 else 1)
+                            ruido=self._ruido_intervalos_tipo_terreno.noise(pos[0]+x, pos[1]+y)
+                            wrt_i.addData1(ruido)
                         _i_vertice+=1
                 # primitivas
                 prim.addVertex(i_vertice)
@@ -607,6 +607,6 @@ if __name__=="__main__":
     PStatClient.connect()
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    Terreno2.RadioExpansion=0
+    Terreno2.RadioExpansion=3
     tester.escribir_archivo=True
     tester.run()

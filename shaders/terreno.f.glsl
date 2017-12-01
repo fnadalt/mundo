@@ -59,7 +59,7 @@ vec4 texture_color(in float altura)
     if(altura>intervalos_tipos_terreno[1][2]){
         color=texture2D(p3d_Texture3, gl_TexCoord[0].st);
     } else if(altura>intervalos_tipos_terreno[1][1]){
-        if(interv<1.0){
+        if(interv>0.0){
             color=texture2D(p3d_Texture3, gl_TexCoord[0].st);
         } else {
             color=texture2D(p3d_Texture2, gl_TexCoord[0].st);
@@ -67,7 +67,7 @@ vec4 texture_color(in float altura)
     } else if(altura>intervalos_tipos_terreno[1][0]){
         color=texture2D(p3d_Texture2, gl_TexCoord[0].st);
     } else if(altura>intervalos_tipos_terreno[0][2]){
-        if(interv<1.0){
+        if(interv>0.0){
             color=texture2D(p3d_Texture2, gl_TexCoord[0].st);
         } else {
             color=texture2D(p3d_Texture1, gl_TexCoord[0].st);
@@ -75,7 +75,7 @@ vec4 texture_color(in float altura)
     } else if(altura>intervalos_tipos_terreno[0][1]){
         color=texture2D(p3d_Texture1, gl_TexCoord[0].st);
     } else if(altura>intervalos_tipos_terreno[0][0]){
-        if(interv<1.0){
+        if(interv>0.0){
             color=texture2D(p3d_Texture1, gl_TexCoord[0].st);
         } else {
             color=texture2D(p3d_Texture0, gl_TexCoord[0].st);
