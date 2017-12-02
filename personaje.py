@@ -60,7 +60,7 @@ class Personaje:
         self._velocidad_angular=LVector3() # grados
         # variables externas
         self.altitud_suelo=0.0
-        self.nivel_agua=0.0
+        self.altitud_agua=0.0
         # parametros
         self.directorio_recursos="personajes"
         self.clase="male"

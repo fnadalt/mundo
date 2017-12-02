@@ -30,7 +30,7 @@ class Agua:
         #self.superficie.setShaderAuto()
         shader=Shader.load(Shader.SL_GLSL, vertex="shaders/agua.v.glsl", fragment="shaders/agua.f.glsl")
         self.superficie.setShader(shader)
-        self.superficie.setShaderInput("nivel_agua", self.altitud)
+        self.superficie.setShaderInput("altitud_agua", self.altitud)
 
     def configurar_reflejo(self):
         # reflejo

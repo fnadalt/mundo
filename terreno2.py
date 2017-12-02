@@ -27,8 +27,8 @@ class Terreno2:
     # temperatura
     RuidoTemperatura=[512.0, 1100] # [scale, seed]
     # tipo de terreno
-    RuidoIntervalo=[32.0, 1133] # [scale, seed]
-    IntervalosTiposTerreno=[0.10, 0.20, 0.40, 0.45, 0.70, 0.80] # [0,1]; 0=nivel_agua; [tope_arena, tope_zona_intermedia, tope_tierra, tope_zona_intermedia, tope_pasto, tope_zona_intermedia]; tope_nieve=1
+    RuidoIntervalo=[16.0, 1133] # [scale, seed]
+    IntervalosTiposTerreno=[0.15, 0.30, 0.45, 0.60, 0.75, 0.90] # [0,1]; SUM>=1.0; 0=altitud_agua; [tope_arena, tope_zona_intermedia, tope_tierra, tope_zona_intermedia, tope_pasto, tope_zona_intermedia]; tope_nieve=1
     TipoArena=0
     TipoIntervaloArenaTierra=1
     TipoTierra=2
@@ -50,16 +50,19 @@ class Terreno2:
         self.pos_foco=None
         self.pos_foco_inicial=[0, 0]
         self.idx_pos_parcela_actual=None # (x,y)
-        self.nivel_agua=Terreno2.AlturaMaxima * 0.6
+        self.altitud_agua=Terreno2.AlturaMaxima * 0.5
         # debug
         self.dibujar_normales=False # cada update
         # variables internas:
         self._noise_scaled_weights=list() # normalizado
-        self._intervalos_tipo_terreno_escalados=[]
+        self._intervalos_tipo_terreno_escalados=[] # valores de altitud
         # init:
-        altura_sobre_agua=Terreno2.AlturaMaxima-self.nivel_agua
+        altura_sobre_agua=Terreno2.AlturaMaxima-self.altitud_agua
         for intervalo in Terreno2.IntervalosTiposTerreno:
-            self._intervalos_tipo_terreno_escalados.append(self.nivel_agua+intervalo*altura_sobre_agua)
+            self._intervalos_tipo_terreno_escalados.append(self.altitud_agua+(intervalo*altura_sobre_agua))
+        log.info("AlturaMaxima=%s altitud_agua=%s"%(str(Terreno2.AlturaMaxima), str(self.altitud_agua)))
+        log.info("_intervalos_tipo_terreno_escalados: %s"%(str(self._intervalos_tipo_terreno_escalados)))
+        #
         self._generar_noise_objs()
         self._establecer_shader()
         #
@@ -260,8 +263,17 @@ class Terreno2:
                             wrt_i.addData1(0)
                         elif tipo_terreno==Terreno2.TipoNieve:
                             wrt_i.addData1(0)
-                        else:
+                        else: # zonas de transicion de terrenos
+                            altura_0, altura_1=0, 0
+                            if tipo_terreno==Terreno2.TipoIntervaloArenaTierra:
+                                altura_0, altura_1=self._intervalos_tipo_terreno_escalados[0], self._intervalos_tipo_terreno_escalados[1]
+                            elif tipo_terreno==Terreno2.TipoIntervaloTierraPasto:
+                                altura_0, altura_1=self._intervalos_tipo_terreno_escalados[2], self._intervalos_tipo_terreno_escalados[3]
+                            elif tipo_terreno==Terreno2.TipoIntervaloPastoNieve:
+                                altura_0, altura_1=self._intervalos_tipo_terreno_escalados[4], self._intervalos_tipo_terreno_escalados[5]
+                            # ruido(altitud)+cos(altura_en_intervalo)
                             ruido=self._ruido_intervalos_tipo_terreno.noise(pos[0]+x, pos[1]+y)
+                            ruido+=0.5*math.cos(math.pi*(v[_i_vertice][2]-altura_0)/(altura_1-altura_0))
                             wrt_i.addData1(ruido)
                         _i_vertice+=1
                 # primitivas
@@ -353,6 +365,7 @@ class Terreno2:
         geom_node.setBoundsType(BoundingVolume.BT_box)
         return geom_node
 
+    
     def _establecer_shader(self):
         # texturas
         ts_arena=TextureStage("ts_arena") # arena
@@ -368,6 +381,10 @@ class Terreno2:
         textura_nieve=self.base.loader.loadTexture("texturas/nieve.png")
         self.nodo.setTexture(ts_nieve, textura_nieve)
         #
+        #   altitud_interv_a_t    altitud_tierra      altitud_interv_t_p  0
+        #   altitud_pasto         altitud_interv_p_n  altitud_nieve       0
+        #   0                     0                   0                   0
+        #   0                     0                   0                   0
         intervalos_tipos_terreno=LMatrix4(self._intervalos_tipo_terreno_escalados[0], self._intervalos_tipo_terreno_escalados[1], self._intervalos_tipo_terreno_escalados[2], 0, self._intervalos_tipo_terreno_escalados[3], self._intervalos_tipo_terreno_escalados[4], self._intervalos_tipo_terreno_escalados[5], 0, 0, 0, 0, 0, 0, 0, 0, 0)
         #
         shader=Shader.load(Shader.SL_GLSL, vertex="shaders/terreno.v.glsl", fragment="shaders/terreno.f.glsl")
@@ -527,7 +544,7 @@ class Tester(ShowBase):
             if self.escribir_archivo:
                 log.info("escribir_archivo")
                 self.terreno.nodo.writeBamFile("terreno2.bam")
-            self.plano_agua.setPos(Vec3(pos[0], pos[1], self.terreno.nivel_agua))
+            self.plano_agua.setPos(Vec3(pos[0], pos[1], self.terreno.altitud_agua))
             #
             self.cam_driver.setPos(Vec3(pos[0], pos[1], 100))
             #
@@ -551,8 +568,8 @@ class Tester(ShowBase):
                 _x=self.pos_foco[0]-(x-(tamano/2))*self.zoom_imagen
                 _y=self.pos_foco[1]+(y-(tamano/2))*self.zoom_imagen
                 a=self.terreno.obtener_altitud((_x, _y))
-                c=int(255*(1-((self.terreno.nivel_agua-a)/(self.terreno.nivel_agua))))
-                if a>self.terreno.nivel_agua:
+                c=int(255*(1-((self.terreno.altitud_agua-a)/(self.terreno.altitud_agua))))
+                if a>self.terreno.altitud_agua:
                     self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(c, c, 0, 255))
                 else:
                     self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(0, 0, c, 255))
@@ -607,6 +624,6 @@ if __name__=="__main__":
     PStatClient.connect()
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    Terreno2.RadioExpansion=3
-    tester.escribir_archivo=True
+    Terreno2.RadioExpansion=4
+    tester.escribir_archivo=False
     tester.run()

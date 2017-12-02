@@ -125,7 +125,7 @@ class Mundo(NodePath):
     def _cargar_hombre(self):
         #
         self.hombre=Personaje()
-        self.hombre.nivel_agua=self.terreno.nivel_agua
+        self.hombre.altitud_agua=self.terreno.altitud_agua
         self.hombre.input_mapper=self.input_mapper
         self.hombre.construir(self, self.bullet_world)
         self.hombre.cuerpo.setPos(self.terreno.pos_foco)
@@ -170,12 +170,12 @@ class Mundo(NodePath):
         self.terreno2.update(pos_inicial_foco)
         self.terreno=self.terreno2
         # agua
-        self.agua=Agua(self.base, self.terreno.nivel_agua)
+        self.agua=Agua(self.base, self.terreno.altitud_agua)
         self.agua.generar()
         #self.agua.mostrar_camaras()
         self.agua.superficie.reparentTo(self)
         #
-        self.controlador_camara.nivel_agua=self.terreno.nivel_agua
+        self.controlador_camara.altitud_agua=self.terreno.altitud_agua
 
     def _cargar_luces(self):
         # luz

@@ -34,7 +34,7 @@ class Terreno:
         self.nodo.setSz(Terreno.AlturaMaxima)
         # variables externas:
         self.idx_pos_parcela_actual=None
-        self.nivel_agua=-25.0#-25.0,10.5
+        self.altitud_agua=-25.0#-25.0,10.5
         # variables internas:
         self._ajuste_altura=-0.5
         self._height_map=HeightMap(Terreno.HeightMapSeed)

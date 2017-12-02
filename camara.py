@@ -26,7 +26,7 @@ class ControladorCamara:
         self.pos_camara=LVector3()
         self.modo=ControladorCamara.ModoTerceraPersona
         self.altitud_suelo=0
-        self.nivel_agua=0
+        self.altitud_agua=0
         # componentes
         self.camara=self.base.camera
         self.target_node_path=None
@@ -62,8 +62,8 @@ class ControladorCamara:
             pos_mouse=[0, 0]
         #
         self.pos_camara=self.camara.getPos(self.base.render)
-        if self.pos_camara.getZ()<self.nivel_agua+1.0:
-            altitud_suelo=self.nivel_agua+1.0
+        if self.pos_camara.getZ()<self.altitud_agua+1.0:
+            altitud_suelo=self.altitud_agua+1.0
         else:
             altitud_suelo=self.altitud_suelo
         altura=self.pos_camara.getZ()-altitud_suelo
