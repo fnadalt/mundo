@@ -26,8 +26,10 @@ class Cielo:
         self._colores_post_pico=False
         # componentes:
         # nodo
-        self.nodo=self.base.cam.attachNewNode("sky_node")
-        self.nodo.setColor(self._color_inicial)
+        self.nodo=self.base.cam.attachNewNode("sky_node_3d")
+        #self.nodo.setColor(self._color_inicial)
+        shader=Shader.load(Shader.SL_GLSL, vertex="shaders/cielo.v.glsl", fragment="shaders/cielo.f.glsl")
+        self.nodo.setShader(shader)
         # modelo
         self.modelo=self.base.loader.loadModel(Cielo.ruta_modelo)
         self.modelo.reparentTo(self.nodo)
@@ -35,8 +37,8 @@ class Cielo:
         self.modelo.setMaterialOff(1)
         self.modelo.setTextureOff(1)
         self.modelo.setLightOff(1)
-        self.modelo.setShaderOff(1)
-        self.modelo.setTwoSided(True)
+        #self.modelo.setShaderOff(1)
+        #self.modelo.setTwoSided(True)
         # luz
         self.luz=self.nodo.attachNewNode(AmbientLight("luz ambiental"))
         self.luz.node().setColor(Cielo.ColorNoche)

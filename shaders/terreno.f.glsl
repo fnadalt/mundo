@@ -4,6 +4,7 @@ varying vec4 vposmodelo;
 varying vec3 vpos;
 varying vec3 normal;
 varying float interv;
+varying float temp;
 
 uniform struct {
     vec4 ambient;
@@ -32,7 +33,13 @@ uniform struct {
     //mat4 shadowViewMatrix;
 } p3d_LightSource[8];
 
-uniform mat3 intervalos_tipos_terreno;
+/*
+        altitud_interv_a_t    altitud_tierra            altitud_interv_t_p  0
+        altitud_pasto           altitud_interv_p_n    altitud_nieve         0
+        altura_sobre_agua  0                              0                            0
+        0                             0                              0                            0
+*/
+uniform mat3 data;
 
 uniform sampler2D p3d_Texture0; // arena
 uniform sampler2D p3d_Texture1; // tierra
@@ -53,28 +60,31 @@ vec4 diff_spec(int iLightSource)
     return ds;
 }
 
-vec4 texture_color(in float altura)
+vec4 texture_color(in float altitud)
 {
     vec4 color;
-    if(altura>intervalos_tipos_terreno[1][2]){
+    //
+    float altitud_corregida=altitud+(temp*data[2][0]);
+    //
+    if(altitud_corregida>data[1][2]){
         color=texture2D(p3d_Texture3, gl_TexCoord[0].st);
-    } else if(altura>intervalos_tipos_terreno[1][1]){
+    } else if(altitud_corregida>data[1][1]){
         if(interv<0.0){
             color=texture2D(p3d_Texture3, gl_TexCoord[0].st);
         } else {
             color=texture2D(p3d_Texture2, gl_TexCoord[0].st);
         }
-    } else if(altura>intervalos_tipos_terreno[1][0]){
+    } else if(altitud_corregida>data[1][0]){
         color=texture2D(p3d_Texture2, gl_TexCoord[0].st);
-    } else if(altura>intervalos_tipos_terreno[0][2]){
+    } else if(altitud_corregida>data[0][2]){
         if(interv<0.0){
             color=texture2D(p3d_Texture2, gl_TexCoord[0].st);
         } else {
             color=texture2D(p3d_Texture1, gl_TexCoord[0].st);
         }
-    } else if(altura>intervalos_tipos_terreno[0][1]){
+    } else if(altitud_corregida>data[0][1]){
         color=texture2D(p3d_Texture1, gl_TexCoord[0].st);
-    } else if(altura>intervalos_tipos_terreno[0][0]){
+    } else if(altitud_corregida>data[0][0]){
         if(interv<0.0){
             color=texture2D(p3d_Texture1, gl_TexCoord[0].st);
         } else {
