@@ -1,19 +1,26 @@
 #version 120
 
+const vec4 ColorNoche=vec4(0.0, 0.0, 0.2, 1.0);
+const vec4 ColorAmanecer=vec4(0.95, 0.75, 0.2, 1.0);
+const vec4 ColorDia=vec4(0.9, 1.0, 1.0, 1.0);
+const vec4 ColorAtardecer=vec4(0.95, 0.65, 0.3, 1.0);
+
+uniform vec3 posicion_sol;
+
 varying vec4 vpos;
+
+vec4 color_2()
+{
+    vec3 v=normalize(vpos.xyz);
+    vec3 l=normalize(posicion_sol);
+    float a=(dot(v,l)+1.0)/2.0;
+    vec4 color=mix(ColorNoche,ColorDia,a);
+    return color;
+}
 
 void main()
 {
-    vec4 color_base=vec4(0.7,0.9,1,1);
-    vec4 color_sol=vec4(1,1,0,1);
-    vec4 color_noche=vec4(0.025,0.025,0.4,1.0);
-    
-    float distancia_centro_sol=1.0;
-    if(vpos.x>0.0) distancia_centro_sol=clamp(length(vpos.yz),0.0,1.0);
-    
-    vec4 color_final=mix(color_sol,color_base,distancia_centro_sol);
-    color_final*=mix(color_noche,color_base,(vpos.x+1.0)/2.0);
-    
+    vec4 color_final=color_2();
     color_final.a=1.0;
     gl_FragColor=color_final;
 }

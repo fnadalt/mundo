@@ -11,8 +11,6 @@ class Cielo:
     ColorDia=Vec4(0.9, 1.0, 1.0, 1.0)
     ColorAtardecer=LVector4(0.95, 0.65, 0.3, 1.0)
     
-    ruta_modelo="objetos/sky_box"
-    
     def __init__(self, base):
         # referencias:
         self.base=base
@@ -26,14 +24,14 @@ class Cielo:
         self._colores_post_pico=False
         # componentes:
         # nodo
-        self.nodo=self.base.cam.attachNewNode("sky_node_3d")
+        self.nodo=self.base.cam.attachNewNode("sky_dome")
         #self.nodo.setColor(self._color_inicial)
         shader=Shader.load(Shader.SL_GLSL, vertex="shaders/cielo.v.glsl", fragment="shaders/cielo.f.glsl")
         self.nodo.setShader(shader)
+        self.nodo.setShaderInput("posicion_sol", Vec3(0, 0, 0))
         # modelo
-        self.modelo=self.base.loader.loadModel(Cielo.ruta_modelo)
+        self.modelo=self.base.loader.loadModel("objetos/sky_dome")
         self.modelo.reparentTo(self.nodo)
-        self.modelo.setScale(400.0)
         self.modelo.setMaterialOff(1)
         self.modelo.setTextureOff(1)
         self.modelo.setLightOff(1)
@@ -43,7 +41,9 @@ class Cielo:
         self.luz=self.nodo.attachNewNode(AmbientLight("luz ambiental"))
         self.luz.node().setColor(Cielo.ColorNoche)
     
-    def update(self, hora_normalizada, periodo, offset_periodo):
+    def update(self, posicion_sol, hora_normalizada, periodo, offset_periodo):
+        # shader
+        self.nodo.setShaderInput("posicion_sol", posicion_sol)
         # determinar periodo
         if periodo!=self._periodo_actual:
             self._periodo_actual=periodo
@@ -63,7 +63,7 @@ class Cielo:
         self._color_actual=self._color_inicial+((self._color_final-self._color_inicial)*_offset)
         #log.info("update p=%i _o=%.2f c=%s cpp=%s"%(periodo, _offset, str(self._color_actual), str(self._colores_post_pico)))
         # aplicar colores
-        self.nodo.setColor(self._color_actual)
+        #self.nodo.setColor(self._color_actual)
         self.luz.node().setColor(Cielo.ColorNoche*(1.0-hora_normalizada)+(self._color_actual*0.2))
 
     def obtener_info(self):

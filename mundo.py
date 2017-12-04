@@ -19,6 +19,7 @@ import voxels
 import logging
 log=logging.getLogger(__name__)
 
+
 class Mundo(NodePath):
     
     def __init__(self, base):
@@ -184,6 +185,7 @@ class Mundo(NodePath):
         self.pointN.node().setColor((1.0, 0.0, 0.0, 1.0))
         self.pointN.setPos(0.0, 0.0, self.terreno.obtener_altitud((0, 0))+5)
         #self.setLight(self.pointN)
+
     
     def _update(self, task):
         info=""
@@ -208,7 +210,7 @@ class Mundo(NodePath):
         offset_periodo=self.dia.calcular_offset(self.dia.periodo.actual, self.dia.periodo.posterior)
         self.cielo.nodo.setX(self.controlador_camara.target_node_path.getPos().getX())
         self.cielo.nodo.setY(self.controlador_camara.target_node_path.getPos().getY())
-        self.cielo.update(self.dia.hora_normalizada, self.dia.periodo.actual, offset_periodo)
+        self.cielo.update(self.sol.nodo.getPos(self), self.dia.hora_normalizada, self.dia.periodo.actual, offset_periodo)
         self.sol.update(self.dia.hora_normalizada, self.dia.periodo.actual, offset_periodo)
         # terreno
         if self._counter==50:
