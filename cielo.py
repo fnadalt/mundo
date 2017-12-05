@@ -54,18 +54,21 @@ class Cielo:
     def update(self, posicion_sol, hora_normalizada, periodo, offset_periodo):
         # determinar periodo
         if periodo!=self._periodo_actual:
+            #log.info("update cambio periodo de %i a %i; posicion_sol=[%s]; hora_normalizada=%.2f; offset_periodo=%.2f"%(self._periodo_actual, periodo, ",".join(["%.2f"%n for n in posicion_sol]), hora_normalizada, offset_periodo))
             self._periodo_actual=periodo
-            self._procesa_cambio_periodo(self._periodo_actual, False)
+            self._procesar_cambio_periodo(self._periodo_actual, False)
         #
+        _offset_corregido=offset_periodo
         if self._periodo_actual==1 or self._periodo_actual==3:
-            if offset_periodo>0.5:
-                offset_periodo-=0.5
+            if _offset_corregido>0.5:
+                _offset_corregido-=0.5
                 if self._offset_periodo_anterior<=0.5:
-                    self._establecer_colores(offset_periodo, True)
-            offset_periodo*=2
+                    #log.info("update cambio subperiodo; posicion_sol=[%s]; hora_normalizada=%.2f; offset_periodo=%.2f (anterior=%.2f)"%(",".join(["%.2f"%n for n in posicion_sol]), hora_normalizada, offset_periodo, self._offset_periodo_anterior))
+                    self._procesar_cambio_periodo(self._periodo_actual, True)
+            _offset_corregido*=2
         # shader
         self.nodo.setShaderInput("posicion_sol", posicion_sol)
-        self.nodo.setShaderInput("offset_periodo", offset_periodo)
+        self.nodo.setShaderInput("offset_periodo", _offset_corregido)
         #
         self._offset_periodo_anterior=offset_periodo
     
@@ -74,7 +77,7 @@ class Cielo:
         return info
 
     def _procesar_cambio_periodo(self, periodo, post_pico):
-        self.nodo.setShaderInput("periodo", self._periodo_actual)
+        self.nodo.setShaderInput("periodo", periodo)
         if periodo==0:
             self.nodo.setShaderInput("color_base_inicial", Cielo.ColorNoche)
             self.nodo.setShaderInput("color_base_final", Cielo.ColorNoche)
@@ -95,12 +98,12 @@ class Cielo:
             self.nodo.setShaderInput("color_base_inicial", Cielo.ColorDia)
             self.nodo.setShaderInput("color_base_final", Cielo.ColorDia)
             self.nodo.setShaderInput("color_halo_inicial", Cielo.ColorDia)
-            self.nodo.setShaderInput("color_halo_final", Cielo.ColorHaloDia)
+            self.nodo.setShaderInput("color_halo_final", Cielo.ColorDia)
         elif self._periodo_actual==3:
             if not post_pico:
                 self.nodo.setShaderInput("color_base_inicial", Cielo.ColorDia)
                 self.nodo.setShaderInput("color_base_final", Cielo.ColorIntermedioDiaNoche)
-                self.nodo.setShaderInput("color_halo_inicial", Cielo.ColorHaloDia)
+                self.nodo.setShaderInput("color_halo_inicial", Cielo.ColorDia)
                 self.nodo.setShaderInput("color_halo_final", Cielo.ColorAtardecer)
             else:
                 self.nodo.setShaderInput("color_base_inicial", Cielo.ColorIntermedioDiaNoche)

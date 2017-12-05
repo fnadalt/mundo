@@ -151,11 +151,11 @@ class Mundo(NodePath):
     
     def _cargar_terreno(self, pos_inicial_foco):
         # dia
-        self.dia=Dia(120.0, 0.5) #|(1800.0, 0.5)
+        self.dia=Dia(120.0, 0.4) #|(1800.0, 0.5)
         # cielo
         self.cielo=Cielo(self.base)
         self.cielo.nodo.reparentTo(self)
-        #self.cielo.nodo.setZ(-65.0)
+        self.cielo.nodo.setZ(175.0)
         self.setLight(self.cielo.luz)
         # sol
         self.sol=Sol(self.base)

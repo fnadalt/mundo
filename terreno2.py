@@ -15,7 +15,7 @@ class Terreno2:
     TamanoParcela=32
 
     # radio de expansion
-    RadioExpansion=1
+    RadioExpansion=3
     DistanciaRadioExpansion=RadioExpansion*TamanoParcela
 
     # topografia
