@@ -1,7 +1,9 @@
 from direct.gui.OnscreenText import OnscreenText
 from direct.gui.DirectGui import *
+from direct.filter.CommonFilters import CommonFilters
 from panda3d.bullet import *
 from panda3d.core import *
+from panda3d.core import loadPrcFileData
 
 from dia import Dia
 from cielo import Cielo
@@ -28,6 +30,8 @@ class Mundo(NodePath):
         # referencias:
         self.base=base
         # componentes:
+        # filtros
+        self.filters = CommonFilters(base.win, base.cam)
         # horrendo
         self.horrendo=base.loader.loadModel("objetos/horrendof")
         self.horrendo.reparentTo(self)
@@ -45,6 +49,8 @@ class Mundo(NodePath):
         # variables inmediatas:
         _pos_inicial_foco=Vec3(0,0,1) # |(214, 600, 100)|(352,736,10)|(1352,1736,10)
         # inicio: !!! -> def iniciar()...?
+        #loadPrcFileData("", "framebuffer-stencil #t")
+        #
         self._configurar_fisica()
         #
         self._cargar_debug_info()
@@ -54,7 +60,9 @@ class Mundo(NodePath):
         self._cargar_hombre()
         self._cargar_objetos()
         self._cargar_gui()
-        #
+        # init:
+        self.base.cam.node().setCameraMask(DrawMask(5))
+        self.base.render.node().adjustDrawMask(DrawMask(3), DrawMask(0), DrawMask(0))
         #self._cargar_obj_voxel()
         #
         self.base.taskMgr.add(self._update, "mundo_update")
@@ -151,16 +159,7 @@ class Mundo(NodePath):
     
     def _cargar_terreno(self, pos_inicial_foco):
         # dia
-        self.dia=Dia(120.0, 0.4) #|(1800.0, 0.5)
-        # cielo
-        self.cielo=Cielo(self.base)
-        self.cielo.nodo.reparentTo(self)
-        self.cielo.nodo.setZ(175.0)
-        self.setLight(self.cielo.luz)
-        # sol
-        self.sol=Sol(self.base)
-        self.sol.pivot.reparentTo(self.cielo.nodo)
-        self.setLight(self.sol.luz)
+        self.dia=Dia(120.0, 0.55) #|(1800.0, 0.5)
         # terreno
 #        self.terreno=Terreno(self.base, self.bullet_world)
 #        self.terreno.nodo.reparentTo(self)
@@ -170,6 +169,16 @@ class Mundo(NodePath):
         self.terreno2.nodo.reparentTo(self)
         self.terreno2.update(pos_inicial_foco)
         self.terreno=self.terreno2
+        # cielo
+        self.cielo=Cielo(self.base)
+        self.cielo.nodo.reparentTo(self)
+        self.cielo.nodo.setZ(self.terreno.altitud_agua)
+        self.setLight(self.cielo.luz)
+        # sol
+        self.sol=Sol(self.base)
+        self.sol.pivot.reparentTo(self.cielo.nodo)
+        self.sol.mostrar_camaras()
+        self.setLight(self.sol.luz)
         # agua
         self.agua=Agua(self.base, self.terreno.altitud_agua)
         self.agua.generar()

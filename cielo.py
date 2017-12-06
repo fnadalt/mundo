@@ -16,15 +16,6 @@ class Cielo:
     def __init__(self, base):
         # referencias:
         self.base=base
-        # variables externas:
-        self.color=Cielo.ColorNoche
-        # variable internas:
-        self._periodo_actual=0 # [0,3]; noche,amanecer,dia,atardecer
-        self._offset_periodo_anterior=0
-        self._color_inicial=Cielo.ColorNoche
-        self._color_final=Cielo.ColorNoche
-        self._color_actual=Cielo.ColorNoche
-        self._colores_post_pico=False
         # componentes:
         # nodo
         self.nodo=self.base.cam.attachNewNode("sky_dome")
@@ -44,11 +35,13 @@ class Cielo:
         self.modelo.setMaterialOff(1)
         self.modelo.setTextureOff(1)
         self.modelo.setLightOff(1)
-        #self.modelo.setShaderOff(1)
-        #self.modelo.setTwoSided(True)
+        self.modelo.node().adjustDrawMask(DrawMask(4), DrawMask(2), DrawMask(0))
         # luz
         self.luz=self.nodo.attachNewNode(AmbientLight("luz ambiental"))
         self.luz.node().setColor(Cielo.ColorNoche)
+        # variable internas:
+        self._periodo_actual=0 # [0,3]; noche,amanecer,dia,atardecer
+        self._offset_periodo_anterior=0
     
     # shader
     def update(self, posicion_sol, hora_normalizada, periodo, offset_periodo):

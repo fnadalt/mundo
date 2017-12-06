@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-5.1.dtd">
 <!-- eric project file for project mundo -->
-<!-- Saved: 2017-12-02, 15:08:01 -->
+<!-- Saved: 2017-12-06, 20:56:41 -->
 <!-- Copyright (C) 2017 Fernando Nadal Testa, fnt2006@gmail.com -->
 <Project version="5.1">
   <Language>en_US</Language>
@@ -28,8 +28,14 @@
     <Source>personaje.py</Source>
     <Source>shaders/agua.f.glsl</Source>
     <Source>shaders/agua.v.glsl</Source>
+    <Source>shaders/blur_x.f.glsl</Source>
+    <Source>shaders/blur_x.v.glsl</Source>
+    <Source>shaders/blur_y.f.glsl</Source>
+    <Source>shaders/blur_y.v.glsl</Source>
     <Source>shaders/cielo.f.glsl</Source>
     <Source>shaders/cielo.v.glsl</Source>
+    <Source>shaders/sol.f.glsl</Source>
+    <Source>shaders/sol.v.glsl</Source>
     <Source>shaders/terreno.f.glsl</Source>
     <Source>shaders/terreno.v.glsl</Source>
     <Source>sol.py</Source>
@@ -62,6 +68,12 @@
   <Resources/>
   <Interfaces/>
   <Others>
+    <Other>shaders/blur_x.f.glsl</Other>
+    <Other>shaders/blur_x.v.glsl</Other>
+    <Other>shaders/blur_y.f.glsl</Other>
+    <Other>shaders/blur_y.v.glsl</Other>
+    <Other>shaders/sol.f.glsl</Other>
+    <Other>shaders/sol.v.glsl</Other>
     <Other>shaders/terreno.f.glsl</Other>
     <Other>shaders/terreno.v.glsl</Other>
   </Others>

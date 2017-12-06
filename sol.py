@@ -1,3 +1,4 @@
+from direct.gui.DirectGui import *
 from panda3d.core import *
 
 import logging
@@ -29,22 +30,33 @@ class Sol:
         self.pivot=self.base.render.attachNewNode("pivot_sol")
         self.pivot.setP(10.0) # inclinacion "estacional"
         # esfera solar
-        self.nodo=self.base.loader.loadModel("objetos/sol")
+        self.nodo=self.base.loader.loadModel("objetos/solf")
         self.nodo.reparentTo(self.pivot)
-        self.nodo.setX(400.0)
-        self.nodo.setScale(5.0)
-        self.nodo.setColor(1.0, 1.0, 0.2, 1.0)
-        self.nodo.setLightOff(1)
-        self.nodo.setShaderOff(1)
-        self.nodo.setFogOff(1)
-#        self.nodo.setCompass()
-#        self.nodo.setBin('background', 2)
-#        self.nodo.setDepthWrite(False)
-#        self.nodo.setDepthTest(False)
+        self.nodo.setX(300.0) # |400.0
+        self.nodo.setScale(20.0)
+        self.nodo.node().adjustDrawMask(DrawMask(3), DrawMask(0), DrawMask(0))
+        self.plano_recorte=None
         # luz direccional
-        self.luz=self.nodo.attachNewNode(DirectionalLight("luz solar"))
+        self.luz=self.nodo.attachNewNode(DirectionalLight("luz_solar"))
         self.luz.node().setColor(Vec4(1.0, 1.0, 0.7, 1.0))
-        
+        # init:
+        self._establecer_shaders()
+    
+    def obtener_info(self):
+            info="Sol roll=%.2f p=%i ci=%s cf=%s c=%s"%(self.pivot.getR(), self._periodo_actual, str(self._color_inicial), str(self._color_final), str(self.luz.node().getColor()))
+            return info
+
+    def mostrar_camaras(self):
+        #
+        DirectLabel(text="glow_map", pos=LVector3f(-1.0, -0.4), scale=0.05)
+        DirectFrame(image=self.glow_buffer.getTexture(0), scale=0.25, pos=LVector3f(-1.0, -0.7))
+        #
+        DirectLabel(text="blur_x_buffer", pos=LVector3f(-0.45, -0.4), scale=0.05)
+        DirectFrame(image=self.blur_x_buffer.getTexture(0), scale=0.25, pos=LVector3f(-0.45, -0.7))
+        #
+        DirectLabel(text="blur_y_buffer", pos=LVector3f(0.15, -0.4), scale=0.05)
+        DirectFrame(image=self.blur_y_buffer.getTexture(0), scale=0.25, pos=LVector3f(0.15, -0.7))
+
     def update(self, hora_normalizada, periodo, offset_periodo):
         # determinar periodo
         if periodo!=self._periodo_actual:
@@ -92,7 +104,38 @@ class Sol:
                 self._color_inicial=Sol.ColorAtardecer if not color_inicial else color_inicial
                 self._color_final=Sol.ColorNoche
         #log.info("_establecer_colores p=%i offset_periodo=%.2f ci=%s cf=%s"%(self._periodo_actual, offset_periodo, str(self._color_inicial), str(self._color_final)))
-    
-    def obtener_info(self):
-            info="Sol roll=%.2f p=%i ci=%s cf=%s c=%s"%(self.pivot.getR(), self._periodo_actual, str(self._color_inicial), str(self._color_final), str(self.luz.node().getColor()))
-            return info
+
+    def _establecer_shaders(self):
+        # glow shader
+        glow_shader=Shader.load(Shader.SL_GLSL, vertex="shaders/sol.v.glsl", fragment="shaders/sol.f.glsl")
+        self.nodo.setShader(glow_shader)
+        # glow buffer
+        self.glow_buffer = base.win.makeTextureBuffer("escena_glow", 512, 512)
+        self.glow_buffer.setSort(-3)
+        self.glow_buffer.setClearColor(LVector4(0, 0, 0, 1))
+        # glow camera
+        tempnode = NodePath(PandaNode("temp_node"))
+        tempnode.setShader(glow_shader, 2)
+        glow_camera = self.base.makeCamera(self.glow_buffer, lens=self.base.cam.node().getLens())
+        glow_camera.node().setInitialState(tempnode.getState())
+        glow_camera.node().setCameraMask(DrawMask(2))
+        # blur shaders
+        self.blur_x_buffer = self._generar_buffer_filtro(self.glow_buffer,  "blur_x", -2, "blur_x")
+        self.blur_y_buffer= self._generar_buffer_filtro(self.blur_x_buffer,  "blur_y", -1, "blur_y")
+        finalcard = self.blur_y_buffer.getTextureCard()
+        finalcard.reparentTo(self.base.render2d)
+        finalcard.setAttrib(ColorBlendAttrib.make(ColorBlendAttrib.MAdd))
+        #finalcard.hide()
+
+    def _generar_buffer_filtro(self, buffer_base, nombre, orden, nombre_base_arch_shader):
+        blur_buffer = self.base.win.makeTextureBuffer(nombre, 512, 512)
+        blur_buffer.setSort(orden)
+        blur_buffer.setClearColor(LVector4(1, 0, 0, 1))
+        blur_camera = self.base.makeCamera2d(blur_buffer)
+        blur_scene = NodePath("escena_filtro_%s"%nombre)
+        blur_camera.node().setScene(blur_scene )
+        card = buffer_base.getTextureCard()
+        card.reparentTo(blur_scene )
+        shader = Shader.load(Shader.SL_GLSL, vertex="shaders/%s.v.glsl"%nombre_base_arch_shader, fragment="shaders/%s.f.glsl"%nombre_base_arch_shader)
+        card.setShader(shader)
+        return blur_buffer
