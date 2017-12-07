@@ -1,7 +1,8 @@
 #version 120
 
-const float TamanoHalo=0.99;
+const float TamanoHalo=0.92;
 
+uniform float altitud_agua;
 uniform vec3 posicion_sol;
 uniform int periodo;
 uniform float offset_periodo;

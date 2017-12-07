@@ -47,7 +47,7 @@ class Mundo(NodePath):
         self._personajes=[]
         self._periodo_dia_actual=0
         # variables inmediatas:
-        _pos_inicial_foco=Vec3(0,0,1) # |(214, 600, 100)|(352,736,10)|(1352,1736,10)
+        _pos_inicial_foco=Vec3(-1000,-150,1) # |(214, 600, 100)|(352,736,10)|(1352,1736,10)
         # inicio: !!! -> def iniciar()...?
         #loadPrcFileData("", "framebuffer-stencil #t")
         #
@@ -159,7 +159,7 @@ class Mundo(NodePath):
     
     def _cargar_terreno(self, pos_inicial_foco):
         # dia
-        self.dia=Dia(120.0, 0.55) #|(1800.0, 0.5)
+        self.dia=Dia(120.0, 0.40) #|(1800.0, 0.5)
         # terreno
 #        self.terreno=Terreno(self.base, self.bullet_world)
 #        self.terreno.nodo.reparentTo(self)
@@ -170,9 +170,8 @@ class Mundo(NodePath):
         self.terreno2.update(pos_inicial_foco)
         self.terreno=self.terreno2
         # cielo
-        self.cielo=Cielo(self.base)
+        self.cielo=Cielo(self.base, self.terreno.altitud_agua)
         self.cielo.nodo.reparentTo(self)
-        self.cielo.nodo.setZ(self.terreno.altitud_agua)
         self.setLight(self.cielo.luz)
         # sol
         self.sol=Sol(self.base)

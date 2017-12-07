@@ -15,7 +15,7 @@ class Dia:
     
     def update(self, dt):
         # tiempo real
-        dt=0.0
+        #dt=0.0
         self._tiempo+=dt
         if self._tiempo>self.duracion:
             self._tiempo-=self.duracion

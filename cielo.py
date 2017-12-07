@@ -13,22 +13,12 @@ class Cielo:
     ColorIntermedioDiaNoche=(ColorDia+ColorNoche)/2.0
     ColorHaloDia=Vec4(1.0, 1.0, 1.0, 1.0)
     
-    def __init__(self, base):
+    def __init__(self, base, altitud_agua):
         # referencias:
         self.base=base
         # componentes:
         # nodo
         self.nodo=self.base.cam.attachNewNode("sky_dome")
-        #self.nodo.setColor(self._color_inicial)
-        shader=Shader.load(Shader.SL_GLSL, vertex="shaders/cielo.v.glsl", fragment="shaders/cielo.f.glsl")
-        self.nodo.setShader(shader)
-        self.nodo.setShaderInput("posicion_sol", Vec3(0, 0, 0))
-        self.nodo.setShaderInput("periodo", 0)
-        self.nodo.setShaderInput("offset_periodo", 0.0)
-        self.nodo.setShaderInput("color_base_inicial", Cielo.ColorNoche)
-        self.nodo.setShaderInput("color_base_final", Cielo.ColorNoche)
-        self.nodo.setShaderInput("color_halo_inicial", Cielo.ColorNoche)
-        self.nodo.setShaderInput("color_halo_final", Cielo.ColorNoche)
         # modelo
         self.modelo=self.base.loader.loadModel("objetos/sky_dome")
         self.modelo.reparentTo(self.nodo)
@@ -39,9 +29,13 @@ class Cielo:
         # luz
         self.luz=self.nodo.attachNewNode(AmbientLight("luz ambiental"))
         self.luz.node().setColor(Cielo.ColorNoche)
+        # variable externas:
+        self.altitud_agua=altitud_agua
         # variable internas:
         self._periodo_actual=0 # [0,3]; noche,amanecer,dia,atardecer
         self._offset_periodo_anterior=0
+        # init:
+        self._establecer_shader()
     
     # shader
     def update(self, posicion_sol, hora_normalizada, periodo, offset_periodo):
@@ -103,3 +97,16 @@ class Cielo:
                 self.nodo.setShaderInput("color_base_final", Cielo.ColorNoche)
                 self.nodo.setShaderInput("color_halo_inicial", Cielo.ColorAtardecer)
                 self.nodo.setShaderInput("color_halo_final", Cielo.ColorNoche)
+
+    def _establecer_shader(self):
+        shader=Shader.load(Shader.SL_GLSL, vertex="shaders/cielo.v.glsl", fragment="shaders/cielo.f.glsl")
+        self.nodo.setShader(shader)
+        self.nodo.setShaderInput("altitud_agua", self.altitud_agua)
+        self.nodo.setShaderInput("posicion_sol", Vec3(0, 0, 0))
+        self.nodo.setShaderInput("periodo", 0)
+        self.nodo.setShaderInput("offset_periodo", 0.0)
+        self.nodo.setShaderInput("color_base_inicial", Cielo.ColorNoche)
+        self.nodo.setShaderInput("color_base_final", Cielo.ColorNoche)
+        self.nodo.setShaderInput("color_halo_inicial", Cielo.ColorNoche)
+        self.nodo.setShaderInput("color_halo_final", Cielo.ColorNoche)
+        
