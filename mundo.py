@@ -3,12 +3,10 @@ from direct.gui.DirectGui import *
 from direct.filter.CommonFilters import CommonFilters
 from panda3d.bullet import *
 from panda3d.core import *
-from panda3d.core import loadPrcFileData
 
 from dia import Dia
 from cielo import Cielo
 from sol import Sol
-from terreno import Terreno
 from terreno2 import Terreno2
 from agua import Agua
 from personaje import *
@@ -47,7 +45,7 @@ class Mundo(NodePath):
         self._personajes=[]
         self._periodo_dia_actual=0
         # variables inmediatas:
-        _pos_inicial_foco=Vec3(-1000,-150,1) # |(214, 600, 100)|(352,736,10)|(1352,1736,10)
+        _pos_inicial_foco=Vec3(-937,-323,1) # |(214, 600, 100)|(352,736,10)|(1352,1736,10)
         # inicio: !!! -> def iniciar()...?
         #loadPrcFileData("", "framebuffer-stencil #t")
         #
@@ -159,18 +157,13 @@ class Mundo(NodePath):
     
     def _cargar_terreno(self, pos_inicial_foco):
         # dia
-        self.dia=Dia(120.0, 0.40) #|(1800.0, 0.5)
+        self.dia=Dia(1800.0, 0.43) #|(1800.0, 0.5)
         # terreno
-#        self.terreno=Terreno(self.base, self.bullet_world)
-#        self.terreno.nodo.reparentTo(self)
-#        self.terreno.update(pos_inicial_foco)
-        # terreno2
-        self.terreno2=Terreno2(self.base, self.bullet_world)
-        self.terreno2.nodo.reparentTo(self)
-        self.terreno2.update(pos_inicial_foco)
-        self.terreno=self.terreno2
+        self.terreno=Terreno2(self.base, self.bullet_world)
+        self.terreno.nodo.reparentTo(self)
+        self.terreno.update(pos_inicial_foco)
         # cielo
-        self.cielo=Cielo(self.base, self.terreno.altitud_agua)
+        self.cielo=Cielo(self.base, self.terreno.altitud_agua+85.0)
         self.cielo.nodo.reparentTo(self)
         self.setLight(self.cielo.luz)
         # sol
@@ -183,7 +176,7 @@ class Mundo(NodePath):
         self.agua.generar()
         #self.agua.mostrar_camaras()
         self.agua.superficie.reparentTo(self)
-        self.agua.superficie.hide()
+        #self.agua.superficie.hide()
         #
         self.controlador_camara.altitud_agua=self.terreno.altitud_agua
 
@@ -218,7 +211,7 @@ class Mundo(NodePath):
         offset_periodo=self.dia.calcular_offset(self.dia.periodo.actual, self.dia.periodo.posterior)
         self.cielo.nodo.setX(self.controlador_camara.target_node_path.getPos().getX())
         self.cielo.nodo.setY(self.controlador_camara.target_node_path.getPos().getY())
-        self.cielo.update(self.sol.nodo.getPos(self), self.dia.hora_normalizada, self.dia.periodo.actual, offset_periodo)
+        self.cielo.update(self.sol.nodo.getPos(self.cielo.nodo), self.dia.hora_normalizada, self.dia.periodo.actual, offset_periodo)
         self.sol.update(self.dia.hora_normalizada, self.dia.periodo.actual, offset_periodo)
         # terreno
         if self._counter==50:

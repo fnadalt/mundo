@@ -16,7 +16,7 @@
 }
 
 <Texture> Tex {
-  "./texturas/sol-blanco.png"
+  "./texturas/sol.png"
   <Scalar> envtype { MODULATE }
   <Scalar> minfilter { LINEAR_MIPMAP_LINEAR }
   <Scalar> magfilter { LINEAR_MIPMAP_LINEAR }

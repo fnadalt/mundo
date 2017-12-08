@@ -27,15 +27,18 @@ class Cielo:
         self.modelo.setLightOff(1)
         self.modelo.node().adjustDrawMask(DrawMask(4), DrawMask(2), DrawMask(0))
         # luz
-        self.luz=self.nodo.attachNewNode(AmbientLight("luz ambiental"))
+        self.luz=self.nodo.attachNewNode(AmbientLight("luz_ambiental"))
         self.luz.node().setColor(Cielo.ColorNoche)
         # variable externas:
         self.altitud_agua=altitud_agua
         # variable internas:
         self._periodo_actual=0 # [0,3]; noche,amanecer,dia,atardecer
         self._offset_periodo_anterior=0
+        self._color_ambiente_inicial=Cielo.ColorNoche
+        self._color_ambiente_final=Cielo.ColorNoche
         # init:
         self._establecer_shader()
+        self.nodo.setZ(self.altitud_agua)
     
     # shader
     def update(self, posicion_sol, hora_normalizada, periodo, offset_periodo):
@@ -56,6 +59,10 @@ class Cielo:
         # shader
         self.nodo.setShaderInput("posicion_sol", posicion_sol)
         self.nodo.setShaderInput("offset_periodo", _offset_corregido)
+        # luz ambiental
+        _color_luz=Vec4(self._color_ambiente_inicial*(1.0-_offset_corregido))+(self._color_ambiente_final*_offset_corregido)
+        _color_luz*=0.1
+        self.luz.node().setColor(_color_luz)
         #
         self._offset_periodo_anterior=offset_periodo
     
@@ -66,37 +73,49 @@ class Cielo:
     def _procesar_cambio_periodo(self, periodo, post_pico):
         self.nodo.setShaderInput("periodo", periodo)
         if periodo==0:
+            self._color_ambiente_inicial=Cielo.ColorNoche
+            self._color_ambiente_final=Cielo.ColorNoche
             self.nodo.setShaderInput("color_base_inicial", Cielo.ColorNoche)
             self.nodo.setShaderInput("color_base_final", Cielo.ColorNoche)
-            self.nodo.setShaderInput("color_halo_inicial", Cielo.ColorNoche)
-            self.nodo.setShaderInput("color_halo_final", Cielo.ColorNoche)
+            self.nodo.setShaderInput("color_halo_inicial", self._color_ambiente_inicial)
+            self.nodo.setShaderInput("color_halo_final", self._color_ambiente_final)
         elif periodo==1:
             if not post_pico:
+                self._color_ambiente_inicial=Cielo.ColorNoche
+                self._color_ambiente_final=Cielo.ColorAmanecer
                 self.nodo.setShaderInput("color_base_inicial", Cielo.ColorNoche)
                 self.nodo.setShaderInput("color_base_final", Cielo.ColorIntermedioDiaNoche)
-                self.nodo.setShaderInput("color_halo_inicial", Cielo.ColorNoche)
-                self.nodo.setShaderInput("color_halo_final", Cielo.ColorAmanecer)
+                self.nodo.setShaderInput("color_halo_inicial", self._color_ambiente_inicial)
+                self.nodo.setShaderInput("color_halo_final", self._color_ambiente_final)
             else:
+                self._color_ambiente_inicial=Cielo.ColorAmanecer
+                self._color_ambiente_final=Cielo.ColorDia
                 self.nodo.setShaderInput("color_base_inicial", Cielo.ColorIntermedioDiaNoche)
                 self.nodo.setShaderInput("color_base_final", Cielo.ColorDia)
-                self.nodo.setShaderInput("color_halo_inicial", Cielo.ColorAmanecer)
-                self.nodo.setShaderInput("color_halo_final", Cielo.ColorDia)
+                self.nodo.setShaderInput("color_halo_inicial", self._color_ambiente_inicial)
+                self.nodo.setShaderInput("color_halo_final", self._color_ambiente_final)
         elif periodo==2:
+            self._color_ambiente_inicial=Cielo.ColorDia
+            self._color_ambiente_final=Cielo.ColorDia
             self.nodo.setShaderInput("color_base_inicial", Cielo.ColorDia)
             self.nodo.setShaderInput("color_base_final", Cielo.ColorDia)
-            self.nodo.setShaderInput("color_halo_inicial", Cielo.ColorDia)
-            self.nodo.setShaderInput("color_halo_final", Cielo.ColorDia)
+            self.nodo.setShaderInput("color_halo_inicial", self._color_ambiente_inicial)
+            self.nodo.setShaderInput("color_halo_final", self._color_ambiente_final)
         elif self._periodo_actual==3:
             if not post_pico:
+                self._color_ambiente_inicial=Cielo.ColorDia
+                self._color_ambiente_final=Cielo.ColorAtardecer
                 self.nodo.setShaderInput("color_base_inicial", Cielo.ColorDia)
                 self.nodo.setShaderInput("color_base_final", Cielo.ColorIntermedioDiaNoche)
-                self.nodo.setShaderInput("color_halo_inicial", Cielo.ColorDia)
-                self.nodo.setShaderInput("color_halo_final", Cielo.ColorAtardecer)
+                self.nodo.setShaderInput("color_halo_inicial", self._color_ambiente_inicial)
+                self.nodo.setShaderInput("color_halo_final", self._color_ambiente_final)
             else:
+                self._color_ambiente_inicial=Cielo.ColorAtardecer
+                self._color_ambiente_final=Cielo.ColorNoche
                 self.nodo.setShaderInput("color_base_inicial", Cielo.ColorIntermedioDiaNoche)
                 self.nodo.setShaderInput("color_base_final", Cielo.ColorNoche)
-                self.nodo.setShaderInput("color_halo_inicial", Cielo.ColorAtardecer)
-                self.nodo.setShaderInput("color_halo_final", Cielo.ColorNoche)
+                self.nodo.setShaderInput("color_halo_inicial", self._color_ambiente_inicial)
+                self.nodo.setShaderInput("color_halo_final", self._color_ambiente_final)
 
     def _establecer_shader(self):
         shader=Shader.load(Shader.SL_GLSL, vertex="shaders/cielo.v.glsl", fragment="shaders/cielo.f.glsl")

@@ -34,8 +34,8 @@ class Sol:
         self.nodo.reparentTo(self.pivot)
         self.nodo.setX(300.0) # |400.0
         self.nodo.setScale(20.0)
+        self.nodo.setColor((1.0, 1.0, 0.7, 1.0))
         self.nodo.node().adjustDrawMask(DrawMask(3), DrawMask(0), DrawMask(0))
-        self.plano_recorte=None
         # luz direccional
         self.luz=self.nodo.attachNewNode(DirectionalLight("luz_solar"))
         self.luz.node().setColor(Vec4(1.0, 1.0, 0.7, 1.0))
@@ -108,7 +108,8 @@ class Sol:
     def _establecer_shaders(self):
         # glow shader
         glow_shader=Shader.load(Shader.SL_GLSL, vertex="shaders/sol.v.glsl", fragment="shaders/sol.f.glsl")
-        self.nodo.setShader(glow_shader)
+        #self.nodo.setShader(glow_shader)
+        self.nodo.setShaderAuto()
         # glow buffer
         self.glow_buffer = base.win.makeTextureBuffer("escena_glow", 512, 512)
         self.glow_buffer.setSort(-3)
@@ -136,6 +137,6 @@ class Sol:
         blur_camera.node().setScene(blur_scene )
         card = buffer_base.getTextureCard()
         card.reparentTo(blur_scene )
-        shader = Shader.load(Shader.SL_GLSL, vertex="shaders/%s.v.glsl"%nombre_base_arch_shader, fragment="shaders/%s.f.glsl"%nombre_base_arch_shader)
+        shader = Shader.load(Shader.SL_GLSL, vertex="shaders/blur.v.glsl", fragment="shaders/%s.f.glsl"%nombre_base_arch_shader)
         card.setShader(shader)
         return blur_buffer

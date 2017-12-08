@@ -10,6 +10,6 @@ void main()
         gl_FragColor=vec4(0,0,0,1);
     } else {
         vec4 color=texture2D(p3d_Texture0, gl_TexCoord[0].st);
-        gl_FragColor=color*2*(color.a - 0.5);
+        gl_FragColor=color;//*2*(color.a - 0.5);
     }
 }

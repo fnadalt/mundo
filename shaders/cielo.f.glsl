@@ -1,6 +1,6 @@
 #version 120
 
-const float TamanoHalo=0.92;
+const float TamanoHalo=0.85;
 
 uniform float altitud_agua;
 uniform vec3 posicion_sol;
@@ -11,13 +11,13 @@ uniform vec4 color_base_final;
 uniform vec4 color_halo_inicial;
 uniform vec4 color_halo_final;
 
-varying vec4 vpos;
+varying vec4 pos_vertex;
 
-vec4 color_2()
+vec4 color_1()
 {
     vec4 color_base=mix(color_base_inicial,color_base_final,offset_periodo);
 
-    vec3 v=normalize(vpos.xyz+vec3(0,0,175));
+    vec3 v=normalize(pos_vertex.xyz+vec3(0,0,100));
     vec3 l=normalize(posicion_sol);
     float a=(dot(v,l)+1.0)/2.0;
     
@@ -35,7 +35,7 @@ vec4 color_2()
 
 void main()
 {
-    vec4 color=color_2();
+    vec4 color=color_1();
     color.a=1.0;
     gl_FragColor=color;
 }

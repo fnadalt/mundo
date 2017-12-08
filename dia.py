@@ -64,10 +64,10 @@ class Periodo:
     
     # horas inicio
     HoraInicio={
-                Noche:0.0, \
+                Noche:0.1, \
                 Amanecer:0.4,  \
                 Dia:0.5, \
-                Atardecer:0.9
+                Atardecer:0.0
                 }
 
     def __init__(self, periodo_actual):

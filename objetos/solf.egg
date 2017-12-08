@@ -4,7 +4,7 @@
   "egg-trans -F -o objetos/solf.egg objetos/sol.egg"
 }
 <Texture> Tex {
-  "texturas/sol-blanco.png"
+  "texturas/sol.png"
   <Scalar> wrap { repeat }
   <Scalar> minfilter { linear_mipmap_linear }
   <Scalar> magfilter { linear_mipmap_linear }
