@@ -126,7 +126,7 @@ class Sol:
         finalcard = self.blur_y_buffer.getTextureCard()
         finalcard.reparentTo(self.base.render2d)
         finalcard.setAttrib(ColorBlendAttrib.make(ColorBlendAttrib.MAdd))
-        #finalcard.hide()
+        finalcard.hide()
 
     def _generar_buffer_filtro(self, buffer_base, nombre, orden, nombre_base_arch_shader):
         blur_buffer = self.base.win.makeTextureBuffer(nombre, 512, 512)

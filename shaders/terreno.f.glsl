@@ -108,8 +108,9 @@ void main()
         diff_spec_sum+=diff_spec(i);
     }
     //
-    vec4 tex_color_ads=tex_color*(diff_spec_sum+p3d_Material.ambient*p3d_LightModel.ambient);
-    
+    vec4 tex_color_ads=tex_color*diff_spec_sum;
+    tex_color_ads*=p3d_LightModel.ambient*p3d_Material.ambient;
+
+    tex_color_ads.a=1.0;
     gl_FragColor=tex_color_ads;
-    gl_FragColor.a=1.0;
 }

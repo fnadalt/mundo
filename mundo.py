@@ -7,12 +7,11 @@ from panda3d.core import *
 from dia import Dia
 from cielo import Cielo
 from sol import Sol
-from terreno2 import Terreno2
+from terreno import Terreno
 from agua import Agua
 from personaje import *
 from camara import ControladorCamara
 from input import InputMapper
-from heightmap import HeightMap
 
 import voxels
 
@@ -59,11 +58,17 @@ class Mundo(NodePath):
         self._cargar_objetos()
         self._cargar_gui()
         # init:
+        self.setShaderAuto()
+        #self._activar_shader_debug()
         self.base.cam.node().setCameraMask(DrawMask(5))
         self.base.render.node().adjustDrawMask(DrawMask(3), DrawMask(0), DrawMask(0))
         #self._cargar_obj_voxel()
         #
         self.base.taskMgr.add(self._update, "mundo_update")
+    
+    def _activar_shader_debug(self):
+        shader=Shader.load(Shader.SL_GLSL, vertex="shaders/debug.v.glsl", fragment="shaders/debug.f.glsl")
+        self.setShader(shader, 1000)
     
     def _cargar_obj_voxel(self):
         hm=HeightMap(id=66)
@@ -115,16 +120,14 @@ class Mundo(NodePath):
         self.texto1=OnscreenText(text="info?", pos=(-1.2, 0.9), scale=0.045, align=TextNode.ALeft, fg=Negro, mayChange=True)
 
     def _cargar_material(self):
-        self.setMaterialOff()
-        return
-        material=self.horrendo.getMaterial()
-        if material==None:
-            material=Material("mundo")
-            material.setAmbient(Vec4(1.0, 1.0, 1.0, 1.0))
-            material.setDiffuse((0.8, 0.8, 0.8, 1.0))
-            material.setSpecular((0.0, 0.0, 0.0, 1.0))
-            material.setShininess(0)
-        self.setMaterial(material, 0)
+        #self.setMaterialOff(1)
+        #return
+        material=Material("mundo")
+        material.setAmbient(Vec4(0.1, 0.1, 0.1, 1.0))
+        material.setDiffuse((1.0, 1.0, 1.0, 1.0))
+        material.setSpecular((0.0, 0.0, 0.0, 1.0))
+        material.setShininess(0)
+        self.setMaterial(material, 1)
 
     def _cargar_gui(self):
         self.lblHora=DirectLabel(text="00:00", text_fg=(0.15, 0.15, 0.9, 1.0), text_bg=(1.0, 1.0, 1.0, 1.0), scale=0.1, pos=(1.2, 0.0, -0.9), color=(1, 1, 1, 1))
@@ -157,9 +160,9 @@ class Mundo(NodePath):
     
     def _cargar_terreno(self, pos_inicial_foco):
         # dia
-        self.dia=Dia(1800.0, 0.43) #|(1800.0, 0.5)
+        self.dia=Dia(1800.0, 0.75) #|(1800.0, 0.5)
         # terreno
-        self.terreno=Terreno2(self.base, self.bullet_world)
+        self.terreno=Terreno(self.base, self.bullet_world)
         self.terreno.nodo.reparentTo(self)
         self.terreno.update(pos_inicial_foco)
         # cielo

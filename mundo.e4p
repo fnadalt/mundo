@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-5.1.dtd">
 <!-- eric project file for project mundo -->
-<!-- Saved: 2017-12-06, 20:56:41 -->
+<!-- Saved: 2017-12-08, 18:37:05 -->
 <!-- Copyright (C) 2017 Fernando Nadal Testa, fnt2006@gmail.com -->
 <Project version="5.1">
   <Language>en_US</Language>
@@ -19,7 +19,6 @@
     <Source>camara.py</Source>
     <Source>cielo.py</Source>
     <Source>dia.py</Source>
-    <Source>heightmap.py</Source>
     <Source>hombre.py</Source>
     <Source>input.py</Source>
     <Source>main.py</Source>
@@ -28,12 +27,13 @@
     <Source>personaje.py</Source>
     <Source>shaders/agua.f.glsl</Source>
     <Source>shaders/agua.v.glsl</Source>
+    <Source>shaders/blur.v.glsl</Source>
     <Source>shaders/blur_x.f.glsl</Source>
-    <Source>shaders/blur_x.v.glsl</Source>
     <Source>shaders/blur_y.f.glsl</Source>
-    <Source>shaders/blur_y.v.glsl</Source>
     <Source>shaders/cielo.f.glsl</Source>
     <Source>shaders/cielo.v.glsl</Source>
+    <Source>shaders/debug.f.glsl</Source>
+    <Source>shaders/debug.v.glsl</Source>
     <Source>shaders/sol.f.glsl</Source>
     <Source>shaders/sol.v.glsl</Source>
     <Source>shaders/terreno.f.glsl</Source>
@@ -61,7 +61,6 @@
     <Source>terrain/terraintile.py</Source>
     <Source>terrain/waterNode.py</Source>
     <Source>terreno.py</Source>
-    <Source>terreno2.py</Source>
   </Sources>
   <Forms/>
   <Translations/>
@@ -69,9 +68,9 @@
   <Interfaces/>
   <Others>
     <Other>shaders/blur_x.f.glsl</Other>
-    <Other>shaders/blur_x.v.glsl</Other>
     <Other>shaders/blur_y.f.glsl</Other>
-    <Other>shaders/blur_y.v.glsl</Other>
+    <Other>shaders/debug.f.glsl</Other>
+    <Other>shaders/debug.v.glsl</Other>
     <Other>shaders/sol.f.glsl</Other>
     <Other>shaders/sol.v.glsl</Other>
     <Other>shaders/terreno.f.glsl</Other>
