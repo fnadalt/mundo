@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-5.1.dtd">
 <!-- eric project file for project mundo -->
-<!-- Saved: 2017-12-08, 18:37:05 -->
+<!-- Saved: 2017-12-09, 12:31:41 -->
 <!-- Copyright (C) 2017 Fernando Nadal Testa, fnt2006@gmail.com -->
 <Project version="5.1">
   <Language>en_US</Language>
@@ -23,7 +23,6 @@
     <Source>input.py</Source>
     <Source>main.py</Source>
     <Source>mundo.py</Source>
-    <Source>parcela.py</Source>
     <Source>personaje.py</Source>
     <Source>shaders/agua.f.glsl</Source>
     <Source>shaders/agua.v.glsl</Source>
@@ -39,27 +38,6 @@
     <Source>shaders/terreno.f.glsl</Source>
     <Source>shaders/terreno.v.glsl</Source>
     <Source>sol.py</Source>
-    <Source>terrain/bakedterrainshadergenerator.py</Source>
-    <Source>terrain/basicfunctions.py</Source>
-    <Source>terrain/camera.py</Source>
-    <Source>terrain/config.py</Source>
-    <Source>terrain/creature.py</Source>
-    <Source>terrain/fullterrainshadergenerator.py</Source>
-    <Source>terrain/gui.py</Source>
-    <Source>terrain/main.py</Source>
-    <Source>terrain/mapeditor.py</Source>
-    <Source>terrain/physics.py</Source>
-    <Source>terrain/populator.py</Source>
-    <Source>terrain/pstat_debug.py</Source>
-    <Source>terrain/sky.py</Source>
-    <Source>terrain/splashCard.py</Source>
-    <Source>terrain/sun.py</Source>
-    <Source>terrain/terrain.py</Source>
-    <Source>terrain/terrainshadergenerator.py</Source>
-    <Source>terrain/terraintexturemap.py</Source>
-    <Source>terrain/terraintexturer.py</Source>
-    <Source>terrain/terraintile.py</Source>
-    <Source>terrain/waterNode.py</Source>
     <Source>terreno.py</Source>
   </Sources>
   <Forms/>

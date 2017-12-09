@@ -1,6 +1,5 @@
 from direct.gui.OnscreenText import OnscreenText
 from direct.gui.DirectGui import *
-from direct.filter.CommonFilters import CommonFilters
 from panda3d.bullet import *
 from panda3d.core import *
 
@@ -20,6 +19,8 @@ log=logging.getLogger(__name__)
 
 
 class Mundo(NodePath):
+
+    PosInicialFoco=Vec3(-937,-323,1) # |(214, 600, 100)|(352,736,10)|(1352,1736,10)
     
     def __init__(self, base):
         NodePath.__init__(self, "mundo")
@@ -27,50 +28,50 @@ class Mundo(NodePath):
         # referencias:
         self.base=base
         # componentes:
-        # filtros
-        self.filters = CommonFilters(base.win, base.cam)
-        # horrendo
-        self.horrendo=base.loader.loadModel("objetos/horrendof")
-        self.horrendo.reparentTo(self)
-        self.horrendo.setScale(0.15)
-        self.horrendo.setPos(0.0, 0.0, -9.5)
-        # input y camara
-        self.input_mapper=InputMapper(self.base)
-        self.input_mapper.ligar_eventos()
-        self.controlador_camara=ControladorCamara(self.base)
-        self.controlador_camara.input_mapper=self.input_mapper
+        self.input_mapper=None
+        self.controlador_camara=None
         # variables internas:
         self._counter=50 # forzar terreno.update antes de hombre.update
         self._personajes=[]
         self._periodo_dia_actual=0
-        # variables inmediatas:
-        _pos_inicial_foco=Vec3(-937,-323,1) # |(214, 600, 100)|(352,736,10)|(1352,1736,10)
-        # inicio: !!! -> def iniciar()...?
-        #loadPrcFileData("", "framebuffer-stencil #t")
-        #
+    
+    def iniciar(self):
+        # fisica:
         self._configurar_fisica()
-        #
-        self._cargar_debug_info()
+        # componentes:
+        self.input_mapper=InputMapper(self.base)
+        self.input_mapper.ligar_eventos()
+        self.controlador_camara=ControladorCamara(self.base)
+        self.controlador_camara.input_mapper=self.input_mapper
+        # mundo:
         self._cargar_material()
-        self._cargar_terreno(_pos_inicial_foco)
-        self._cargar_luces()
+        #
+        self._cargar_terreno(Mundo.PosInicialFoco)
         self._cargar_hombre()
         self._cargar_objetos()
+        self._cargar_obj_voxel()
+        # gui:
+        self._cargar_debug_info()
         self._cargar_gui()
         # init:
-        self.setShaderAuto()
-        #self._activar_shader_debug()
-        self.base.cam.node().setCameraMask(DrawMask(5))
-        self.base.render.node().adjustDrawMask(DrawMask(3), DrawMask(0), DrawMask(0))
-        #self._cargar_obj_voxel()
+        self.setShaderOff(0)
+        self._activar_shader_debug()
+        # ShowBase
+        #self.base.cam.node().setCameraMask(DrawMask(5))
+        #self.base.render.node().adjustDrawMask(DrawMask(3), DrawMask(2), DrawMask(0))
         #
         self.base.taskMgr.add(self._update, "mundo_update")
     
+    def terminar(self):
+        pass    
+    
     def _activar_shader_debug(self):
+        return
         shader=Shader.load(Shader.SL_GLSL, vertex="shaders/debug.v.glsl", fragment="shaders/debug.f.glsl")
         self.setShader(shader, 1000)
     
     def _cargar_obj_voxel(self):
+        return
         hm=HeightMap(id=66)
         N=64
         self.obj=voxels.Objeto("volumen", N, N, N, 0)
@@ -120,14 +121,13 @@ class Mundo(NodePath):
         self.texto1=OnscreenText(text="info?", pos=(-1.2, 0.9), scale=0.045, align=TextNode.ALeft, fg=Negro, mayChange=True)
 
     def _cargar_material(self):
-        #self.setMaterialOff(1)
-        #return
         material=Material("mundo")
-        material.setAmbient(Vec4(0.1, 0.1, 0.1, 1.0))
+        material.setAmbient((0.1, 0.1, 0.1, 1.0))
         material.setDiffuse((1.0, 1.0, 1.0, 1.0))
         material.setSpecular((0.0, 0.0, 0.0, 1.0))
         material.setShininess(0)
-        self.setMaterial(material, 1)
+        self.setMaterialOff(1)
+        self.setMaterial(material, 2)
 
     def _cargar_gui(self):
         self.lblHora=DirectLabel(text="00:00", text_fg=(0.15, 0.15, 0.9, 1.0), text_bg=(1.0, 1.0, 1.0, 1.0), scale=0.1, pos=(1.2, 0.0, -0.9), color=(1, 1, 1, 1))
@@ -160,7 +160,7 @@ class Mundo(NodePath):
     
     def _cargar_terreno(self, pos_inicial_foco):
         # dia
-        self.dia=Dia(1800.0, 0.75) #|(1800.0, 0.5)
+        self.dia=Dia(1800.0, 0.60) #|(1800.0, 0.50)
         # terreno
         self.terreno=Terreno(self.base, self.bullet_world)
         self.terreno.nodo.reparentTo(self)
@@ -172,33 +172,25 @@ class Mundo(NodePath):
         # sol
         self.sol=Sol(self.base)
         self.sol.pivot.reparentTo(self.cielo.nodo)
-        self.sol.mostrar_camaras()
+        #self.sol.mostrar_camaras()
         self.setLight(self.sol.luz)
         # agua
         self.agua=Agua(self.base, self.terreno.altitud_agua)
-        self.agua.generar()
-        #self.agua.mostrar_camaras()
         self.agua.superficie.reparentTo(self)
-        #self.agua.superficie.hide()
+        self.agua.generar()
+        self.agua.mostrar_camaras()
+#        self.agua.superficie.hide()
         #
         self.controlador_camara.altitud_agua=self.terreno.altitud_agua
 
-    def _cargar_luces(self):
-        # luz
-        self.pointN=self.attachNewNode(PointLight("foco"))
-        self.pointN.node().setColor((1.0, 0.0, 0.0, 1.0))
-        self.pointN.setPos(0.0, 0.0, self.terreno.obtener_altitud((0, 0))+5)
-        #self.setLight(self.pointN)
-
-    
     def _update(self, task):
         info=""
-        #info+=self.dia.obtener_info()+"\n"
+        info+=self.dia.obtener_info()+"\n"
         info+=self.hombre.obtener_info()+"\n"
         #info+=self.agua.obtener_info()+"\n"
         #info+=self.input_mapper.obtener_info()+"\n"
-        #info+=self.sol.obtener_info()+"\n"
-        #info+=self.cielo.obtener_info()
+        info+=self.cielo.obtener_info()
+        info+=self.sol.obtener_info()+"\n"
         self.texto1.setText(info)
         # tiempo
         dt=self.base.taskMgr.globalClock.getDt()
@@ -225,7 +217,7 @@ class Mundo(NodePath):
             _altitud_suelo=self.terreno.obtener_altitud(_personaje.cuerpo.getPos())
             _personaje.altitud_suelo=_altitud_suelo
             _personaje.update(dt)
-        # agua
+#        # agua
         self.agua.superficie.setX(self.controlador_camara.target_node_path.getPos().getX())
         self.agua.superficie.setY(self.controlador_camara.target_node_path.getPos().getY())
         self.agua.update(dt, self.sol.luz.getPos(), self.sol.luz.node().getColor())

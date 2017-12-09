@@ -15,7 +15,7 @@ class Terreno:
     TamanoParcela=32
 
     # radio de expansion
-    RadioExpansion=2
+    RadioExpansion=1
     DistanciaRadioExpansion=RadioExpansion*TamanoParcela
 
     # topografia
@@ -42,7 +42,7 @@ class Terreno:
         self.base=base
         self.bullet_world=bullet_world
         # componentes:
-        self.nodo=self.base.render.attachNewNode("terreno2")
+        self.nodo=self.base.render.attachNewNode("terreno")
         self.parcelas={} # {idx_pos:parcela_node_path,...}
         self._noise_objs=list() # [PerlinNoise2, ...]
         self._ruido_temperatura=None
@@ -165,10 +165,10 @@ class Terreno:
             for idx_pos in idxs_pos_parcelas_descargar:
                 self._descargar_parcela(idx_pos)
             for idx_pos in idxs_pos_parcelas_cargar:
-                self._cargar_parcela(idx_pos)
+                self._generar_parcela(idx_pos)
 
-    def _cargar_parcela(self, idx_pos):
-        log.info("_cargar_parcela %s"%str(idx_pos))
+    def _generar_parcela(self, idx_pos):
+        log.info("_generar_parcela %s"%str(idx_pos))
         # posición y nombre
         pos=Vec2(idx_pos[0]*Terreno.TamanoParcela, idx_pos[1]*Terreno.TamanoParcela)
         nombre="parcela_%i_%i"%(int(pos[0]), int(pos[1]))
@@ -176,12 +176,12 @@ class Terreno:
         parcela_node_path=self.nodo.attachNewNode(nombre)
         parcela_node_path.setPos(pos[0], pos[1], 0.0)
         # geometría
-        geom_node=self._crear_geometria_parcela_opt(nombre, idx_pos)
+        geom_node=self._generar_geometria_parcela(nombre, idx_pos)
         #
         parcela_node_path.attachNewNode(geom_node)
         # debug: normales
         if self.dibujar_normales:
-            geom_node_normales=self._crear_lineas_normales("normales_%i_%i"%(int(pos[0]), int(pos[1])), geom_node)
+            geom_node_normales=self._generar_lineas_normales("normales_%i_%i"%(int(pos[0]), int(pos[1])), geom_node)
             parcela_node_path.attachNewNode(geom_node_normales)
         # agregar a parcelas
         self.parcelas[idx_pos]=parcela_node_path
@@ -193,11 +193,11 @@ class Terreno:
         parcela.removeNode()
         del self.parcelas[idx_pos]
     
-    def _crear_geometria_parcela_opt(self, nombre, idx_pos):
+    def _generar_geometria_parcela(self, nombre, idx_pos):
         # posicion de la parcela
         pos=self.obtener_pos_parcela(idx_pos)
         # matrix de altitudes; x,y: [i(-1)<i(0)<i(...)<i(tamano-1)<i(tamano)]
-        altitud=list() # [[n, ...], ...]
+        altitud=list() # x,y: [[n, ...], ...]
         for x in range(Terreno.TamanoParcela+3):
             altitud.append(list())
             for y in range(Terreno.TamanoParcela+3):
@@ -228,6 +228,7 @@ class Terreno:
         format_array=GeomVertexArrayFormat()
         format_array.addColumn(InternalName.getVertex(), 3, Geom.NT_stdfloat, Geom.C_point)
         format_array.addColumn(InternalName.getNormal(), 3, Geom.NT_stdfloat, Geom.C_normal)
+        format_array.addColumn(InternalName.getColor(), 4, Geom.NT_stdfloat, Geom.C_color)
         format_array.addColumn(InternalName.getTexcoord(), 2, Geom.NT_stdfloat, Geom.C_texcoord)
         format_array.addColumn(col_nombre_intervalo, 1, Geom.NT_stdfloat, Geom.C_other)
         format_array.addColumn(col_nombre_temperatura, 1, Geom.NT_stdfloat, Geom.C_other)
@@ -240,6 +241,7 @@ class Terreno:
         # vertex writers
         wrt_v=GeomVertexWriter(vdata, InternalName.getVertex())
         wrt_n=GeomVertexWriter(vdata, InternalName.getNormal())
+        wrt_c=GeomVertexWriter(vdata, InternalName.getColor())
         wrt_t=GeomVertexWriter(vdata, InternalName.getTexcoord())
         wrt_i=GeomVertexWriter(vdata, col_nombre_intervalo)
         wrt_tmp=GeomVertexWriter(vdata, col_nombre_temperatura)
@@ -260,6 +262,7 @@ class Terreno:
                         # vertex, normal, texcoord
                         wrt_v.addData3(v[_i_vertice])
                         wrt_n.addData3(normales[x+_x][y+_y])
+                        wrt_c.addData4((1.0, 1.0, 1.0, 1.0))
                         wrt_t.addData2(_x/2.0, _y/2.0)
                         # intervalo tipo terreno
                         tipo_terreno=self.obtener_tipo_terreno(pos[0]+x, pos[1]+y, v[_i_vertice][2])
@@ -328,14 +331,21 @@ class Terreno:
         #
         shader=Shader.load(Shader.SL_GLSL, vertex="shaders/terreno.v.glsl", fragment="shaders/terreno.f.glsl")
         self.nodo.setShaderInput("data", data)
-        self.nodo.setShader(shader)
+        self.nodo.setShader(shader, 1)
+        #
+        material=Material("mundo")
+        material.setAmbient((0.1, 0.1, 0.1, 1.0))
+        material.setDiffuse((1.0, 1.0, 1.0, 1.0))
+        material.setSpecular((0.0, 0.0, 0.0, 1.0))
+        material.setShininess(1)
+        self.nodo.setMaterial(material, 3)
 
     def _calcular_normal(self, v0, v1, v2):
         U=v1-v0
         V=v2-v0
         return U.cross(V)
     
-    def _crear_lineas_normales(self, nombre, geom_node_parcela):
+    def _generar_lineas_normales(self, nombre, geom_node_parcela):
         #
         geom=LineSegs(nombre)
         geom.setColor((0, 0, 1, 1))
@@ -482,7 +492,7 @@ class Tester(ShowBase):
             self.terreno.update(pos)
             if self.escribir_archivo:
                 log.info("escribir_archivo")
-                self.terreno.nodo.writeBamFile("terreno2.bam")
+                self.terreno.nodo.writeBamFile("terreno.bam")
             self.plano_agua.setPos(Vec3(pos[0], pos[1], self.terreno.altitud_agua))
             #
             self.cam_driver.setPos(Vec3(pos[0], pos[1], 100))

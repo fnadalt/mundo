@@ -25,7 +25,7 @@ class Cielo:
         self.modelo.setMaterialOff(1)
         self.modelo.setTextureOff(1)
         self.modelo.setLightOff(1)
-        self.modelo.node().adjustDrawMask(DrawMask(4), DrawMask(2), DrawMask(0))
+        #self.modelo.node().adjustDrawMask(DrawMask(4), DrawMask(2), DrawMask(0))
         # luz
         self.luz=self.nodo.attachNewNode(AmbientLight("luz_ambiental"))
         self.luz.node().setColor(Cielo.ColorNoche)
@@ -60,13 +60,13 @@ class Cielo:
         self.nodo.setShaderInput("posicion_sol", posicion_sol)
         self.nodo.setShaderInput("offset_periodo", _offset_corregido)
         # luz ambiental
-        _color_luz=Vec4(self._color_ambiente_inicial*(1.0-_offset_corregido))+(self._color_ambiente_final*_offset_corregido)
+        _color_luz=Vec4(self._color_ambiente_inicial*(1.0-_offset_corregido))+Vec4(self._color_ambiente_final*_offset_corregido)
         self.luz.node().setColor(_color_luz)
         #
         self._offset_periodo_anterior=offset_periodo
     
     def obtener_info(self):
-        info="Cielo\n"
+        info="Cielo color_luz=%s\n"%(str(self.luz.node().getColor()))
         return info
 
     def _procesar_cambio_periodo(self, periodo, post_pico):
@@ -118,7 +118,7 @@ class Cielo:
 
     def _establecer_shader(self):
         shader=Shader.load(Shader.SL_GLSL, vertex="shaders/cielo.v.glsl", fragment="shaders/cielo.f.glsl")
-        self.nodo.setShader(shader)
+        self.nodo.setShader(shader, 1)
         self.nodo.setShaderInput("altitud_agua", self.altitud_agua)
         self.nodo.setShaderInput("posicion_sol", Vec3(0, 0, 0))
         self.nodo.setShaderInput("periodo", 0)

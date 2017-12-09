@@ -18,6 +18,7 @@ class Agua:
         self.superficie=self.base.loader.loadModel("objetos/plano_aguaf")
         #self.superficie.setTransparency(TransparencyAttrib.MAlpha)
         self.superficie.setZ(self.altitud)
+        #self.superficie.node().adjustDrawMask(DrawMask(5), DrawMask(0), DrawMask(0))
 
     def generar(self):
         #
@@ -27,9 +28,8 @@ class Agua:
         self.configurar_normal()
         self.move_factor=0.0
         # self.shader?
-        #self.superficie.setShaderAuto()
         shader=Shader.load(Shader.SL_GLSL, vertex="shaders/agua.v.glsl", fragment="shaders/agua.f.glsl")
-        self.superficie.setShader(shader)
+        self.superficie.setShader(shader, 2)
         self.superficie.setShaderInput("altitud_agua", self.altitud)
 
     def configurar_reflejo(self):
@@ -47,6 +47,7 @@ class Agua:
         dummy_reflection=NodePath("dummy_reflection")
         dummy_reflection.setTwoSided(False)
         dummy_reflection.setClipPlane(reflection_plane_nodeN)
+        #self.camera2.node().setCameraMask(DrawMask(5))
         self.camera2.node().setInitialState(dummy_reflection.getState())
         #
         ts0=TextureStage("tsBuffer_reflection")
@@ -70,6 +71,7 @@ class Agua:
         dummy_refraction=NodePath("dummy_refraction")
         dummy_refraction.setTwoSided(False)
         dummy_refraction.setClipPlane(refraction_plane_nodeN)
+        #self.camera3.node().setCameraMask(DrawMask(5))
         self.camera3.node().setInitialState(dummy_refraction.getState())
         #
         ts1=TextureStage("tsBuffer_refraction")

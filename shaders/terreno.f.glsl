@@ -16,6 +16,10 @@ uniform struct {
     vec4 emission;
     vec3 specular;
     float shininess;
+    vec4 baseColor;
+    float roughness;
+    float metallic;
+    float refractiveIndex;
 } p3d_Material;
 
 uniform struct {
@@ -62,39 +66,39 @@ vec4 diff_spec(int iLightSource)
 
 vec4 texture_color(in float altitud)
 {
-    vec4 color;
+    vec4 _color;
     //
     float altitud_corregida=altitud+(temp*data[2][0]);
     //
     if(altitud_corregida>data[1][2]){
-        color=texture2D(p3d_Texture3, gl_TexCoord[0].st);
+        _color=texture2D(p3d_Texture3, gl_TexCoord[0].st);
     } else if(altitud_corregida>data[1][1]){
         if(interv<0.0){
-            color=texture2D(p3d_Texture3, gl_TexCoord[0].st);
+            _color=texture2D(p3d_Texture3, gl_TexCoord[0].st);
         } else {
-            color=texture2D(p3d_Texture2, gl_TexCoord[0].st);
+            _color=texture2D(p3d_Texture2, gl_TexCoord[0].st);
         }
     } else if(altitud_corregida>data[1][0]){
-        color=texture2D(p3d_Texture2, gl_TexCoord[0].st);
+        _color=texture2D(p3d_Texture2, gl_TexCoord[0].st);
     } else if(altitud_corregida>data[0][2]){
         if(interv<0.0){
-            color=texture2D(p3d_Texture2, gl_TexCoord[0].st);
+            _color=texture2D(p3d_Texture2, gl_TexCoord[0].st);
         } else {
-            color=texture2D(p3d_Texture1, gl_TexCoord[0].st);
+            _color=texture2D(p3d_Texture1, gl_TexCoord[0].st);
         }
     } else if(altitud_corregida>data[0][1]){
-        color=texture2D(p3d_Texture1, gl_TexCoord[0].st);
+        _color=texture2D(p3d_Texture1, gl_TexCoord[0].st);
     } else if(altitud_corregida>data[0][0]){
         if(interv<0.0){
-            color=texture2D(p3d_Texture1, gl_TexCoord[0].st);
+            _color=texture2D(p3d_Texture1, gl_TexCoord[0].st);
         } else {
-            color=texture2D(p3d_Texture0, gl_TexCoord[0].st);
+            _color=texture2D(p3d_Texture0, gl_TexCoord[0].st);
         }
     } else {
-        color=texture2D(p3d_Texture0, gl_TexCoord[0].st);
+        _color=texture2D(p3d_Texture0, gl_TexCoord[0].st);
     }
     //
-    return color;
+    return _color;
 }
 
 void main()
@@ -107,10 +111,10 @@ void main()
     {
         diff_spec_sum+=diff_spec(i);
     }
-    //
-    vec4 tex_color_ads=tex_color*diff_spec_sum;
-    tex_color_ads*=p3d_LightModel.ambient*p3d_Material.ambient;
 
+    vec4 componente_ambiental=normalize(p3d_LightModel.ambient)*p3d_Material.ambient;
+    vec4 tex_color_ads=tex_color*(diff_spec_sum+componente_ambiental);
+    
     tex_color_ads.a=1.0;
     gl_FragColor=tex_color_ads;
 }

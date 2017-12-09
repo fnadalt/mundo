@@ -17,6 +17,7 @@ class Aplicacion(ShowBase):
         self.setFrameRateMeter(True)
         #
         self.mundo=Mundo(self)
+        self.mundo.iniciar()
         
     def iniciar(self):
         self.run()
