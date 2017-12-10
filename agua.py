@@ -16,8 +16,8 @@ class Agua:
         self.camera3=None
         #
         self.superficie=self.base.loader.loadModel("objetos/plano_aguaf")
-        #self.superficie.setTransparency(TransparencyAttrib.MAlpha)
         self.superficie.setZ(self.altitud)
+        #self.superficie.hide()
         #self.superficie.node().adjustDrawMask(DrawMask(5), DrawMask(0), DrawMask(0))
 
     def generar(self):
@@ -29,24 +29,28 @@ class Agua:
         self.move_factor=0.0
         # self.shader?
         shader=Shader.load(Shader.SL_GLSL, vertex="shaders/agua.v.glsl", fragment="shaders/agua.f.glsl")
-        self.superficie.setShader(shader, 2)
+        self.superficie.setShader(shader, 1)
         self.superficie.setShaderInput("altitud_agua", self.altitud)
 
     def configurar_reflejo(self):
         # reflejo
-        reflection_plane=Plane(Vec3(0.0, 0.0, 1.0), Vec3(0.0, 0.0, self.altitud-0)) # -0.15
+        reflection_plane=Plane(Vec3(0.0, 0.0, -1.0), Vec3(0.0, 0.0, 0.0)) # self.altitud-0.15
         reflection_plane_node=PlaneNode("reflection_plane_node")
         reflection_plane_node.setPlane(reflection_plane)
-        reflection_plane_nodeN=self.base.render.attachNewNode(reflection_plane_node)
+        self.reflection_plane_nodeN=self.base.render.attachNewNode(reflection_plane_node)
+        self.reflection_plane_nodeN.setPos(-937, -323, 150)
+        #self.reflection_plane_nodeN.show()
         #
         self.reflection_buffer=self.base.win.makeTextureBuffer('reflection_buffer', 512, 512)
         self.reflection_buffer.setClearColor(Vec4(0, 0, 0, 1))
         self.camera2=self.base.makeCamera(self.reflection_buffer)
-        self.camera2.reparentTo(self.superficie)
+        self.camera2.reparentTo(self.base.render)
         self.camera2.node().getLens().setFov(self.camera.find("+Camera").node().getLens().getFov())
+        dummy_shader=Shader.load(Shader.SL_GLSL, vertex="shaders/debug.v.glsl",  fragment="shaders/debug.f.glsl")
         dummy_reflection=NodePath("dummy_reflection")
-        dummy_reflection.setTwoSided(False)
-        dummy_reflection.setClipPlane(reflection_plane_nodeN)
+        dummy_reflection.setShader(dummy_shader, 4)
+        #dummy_reflection.setTwoSided(False)
+        dummy_reflection.setClipPlane(self.reflection_plane_nodeN)
         #self.camera2.node().setCameraMask(DrawMask(5))
         self.camera2.node().setInitialState(dummy_reflection.getState())
         #
@@ -58,19 +62,19 @@ class Agua:
         
     def configurar_refraccion(self):
         # refraccion
-        refraction_plane=Plane(Vec3(0.0, 0.0, -1.0), Vec3(0.0, 0.0, self.altitud+0)) # +0.1
+        refraction_plane=Plane(Vec3(0.0, 0.0, -1.0), Vec3(0.0, 0.0, self.altitud+0.1)) # self.altitud+0.1
         refraction_plane_node=PlaneNode("refraction_plane_node")
         refraction_plane_node.setPlane(refraction_plane)
-        refraction_plane_nodeN=self.base.render.attachNewNode(refraction_plane_node)
+        #self.refraction_plane_nodeN=self.base.render.attachNewNode(refraction_plane_node)
         #
         self.refraction_buffer=self.base.win.makeTextureBuffer('refraction_buffer', 512, 512)
         self.refraction_buffer.setClearColor(Vec4(0, 0, 0, 1))
         self.camera3=self.base.makeCamera(self.refraction_buffer)
-        self.camera3.reparentTo(self.superficie)
+        self.camera3.reparentTo(self.base.render)
         self.camera3.node().getLens().setFov(self.camera.find("+Camera").node().getLens().getFov())
         dummy_refraction=NodePath("dummy_refraction")
         dummy_refraction.setTwoSided(False)
-        dummy_refraction.setClipPlane(refraction_plane_nodeN)
+        #dummy_refraction.setClipPlane(self.refraction_plane_nodeN)
         #self.camera3.node().setCameraMask(DrawMask(5))
         self.camera3.node().setInitialState(dummy_refraction.getState())
         #
@@ -95,10 +99,10 @@ class Agua:
         self.superficie.setTexture(ts3, tex3)
     
     def update(self, dt, pos_luz, color_luz):
-        self._posicionar_camaras()
-        #self._posicionar_camaras_2()
+        #self._posicionar_camaras()
+        self._posicionar_camaras_2()
         #
-        ref=self.superficie #self.base.render
+        ref=self.base.render
         #
         self.move_factor+=0.03*dt
         self.move_factor%=1
@@ -113,15 +117,15 @@ class Agua:
         _dot=_dot.dot(Vec3(0, 1, 0))
         info="Agua:\n"
         info+="plano l:%s|%s\n"%(str(self.superficie.getPos()), str(self.superficie.getHpr()))
-        info+="      w:%s|%s\n"%(str(self.superficie.getPos(self.base.render)), str(self.superficie.getHpr(self.base.render)))
+        info+="      r:%s|%s\n"%(str(self.superficie.getPos(self.base.render)), str(self.superficie.getHpr(self.base.render)))
         info+="cam l:%s|%s\n"%(str(self.camera.getPos()), str(self.camera.getHpr()))
-        info+="    w:%s|%s\n"%(str(self.camera.getPos(self.base.render)), str(self.camera.getHpr(self.base.render)))
+        info+="    r:%s|%s\n"%(str(self.camera.getPos(self.base.render)), str(self.camera.getHpr(self.base.render)))
         info+="    s:%s|%s\n"%(str(self.camera.getPos(self.superficie)), str(self.camera.getHpr(self.superficie)))
         info+="    dot: %s\n"%(str(_dot))
         info+="cam2 l:%s|%s\n"%(str(self.camera2.getPos()), str(self.camera2.getHpr()))
-        info+="     w:%s|%s\n"%(str(self.camera2.getPos(self.base.render)), str(self.camera2.getHpr(self.base.render)))
+        info+="     r:%s|%s\n"%(str(self.camera2.getPos(self.base.render)), str(self.camera2.getHpr(self.base.render)))
         info+="cam3 l:%s|%s\n"%(str(self.camera3.getPos()), str(self.camera3.getHpr()))
-        info+="     w:%s|%s\n"%(str(self.camera3.getPos(self.base.render)), str(self.camera3.getHpr(self.base.render)))
+        info+="     r:%s|%s\n"%(str(self.camera3.getPos(self.base.render)), str(self.camera3.getHpr(self.base.render)))
         return info
 
     def mostrar_camaras(self):
@@ -142,10 +146,11 @@ class Agua:
         cam_hpr=self.camera.getHpr(self.superficie)
         #
         self.camera2.setPos(self.superficie, cam_pos)
-        self.camera2.setHpr(self.superficie, cam_hpr)
         self.camera2.setZ(self.superficie, -cam_pos.getZ())
+        self.camera2.setH(self.superficie, cam_hpr.getX())
         self.camera2.setP(self.superficie, -cam_hpr.getY())
         self.camera2.setR(self.superficie, -cam_hpr.getZ())
+        #
         self.camera3.setPos(self.superficie, cam_pos)
         self.camera3.setHpr(self.superficie, cam_hpr)
 
@@ -156,9 +161,10 @@ class Agua:
         sup_pos=self.superficie.getPos(self.base.render)
         #
         self.camera2.setPos(self.base.render, cam_pos)
-        self.camera2.setHpr(self.base.render, cam_hpr)
         self.camera2.setZ(self.base.render, sup_pos.getZ()-(cam_pos.getZ()-sup_pos.getZ()))
+        self.camera2.setH(self.base.render, cam_hpr.getX())
         self.camera2.setP(self.base.render, -cam_hpr.getY())
         self.camera2.setR(self.base.render, -cam_hpr.getZ())
+        #
         self.camera3.setPos(self.base.render, cam_pos)
         self.camera3.setHpr(self.base.render, cam_hpr)

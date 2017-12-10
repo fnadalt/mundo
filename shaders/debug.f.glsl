@@ -29,8 +29,23 @@ uniform struct {
     //mat4 shadowViewMatrix;
 } p3d_LightSource[8];
 
+uniform vec4 p3d_ClipPlane[2];
+
+varying vec4 vpos;
+
 void main()
 {
+    vec3 clipp=vec3(0,0,1);
+    vec3 pos=normalize(vec3(vpos.x, vpos.y, vpos.z-150));
+    vec4 color=vec4(0.0,0.0,abs(vpos.z/300.0),1.0);
+    
     //vec4 tex_color=texture2D(p3d_Texture0, gl_TexCoord[0].st);
-    gl_FragColor=p3d_LightModel.ambient*p3d_Material.ambient;
+    if(dot(clipp, pos)<0.0){
+        //gl_FragColor=vec4(1,1,1,1);
+        discard;
+        //color=vec4(1,0,0,1);
+    }
+
+    color.a=1.0;
+    gl_FragColor=color;
 }

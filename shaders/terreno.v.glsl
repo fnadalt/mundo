@@ -8,7 +8,7 @@ attribute float temperatura;
 attribute vec4 p3d_MultiTexCoord0;
 
 varying vec4 vposmodelo;
-varying vec3 vpos;
+varying vec4 vpos;
 varying vec3 normal;
 varying float interv;
 varying float temp;
@@ -22,7 +22,7 @@ void main()
     gl_TexCoord[0]=p3d_MultiTexCoord0;
 
     vposmodelo=p3d_Vertex;
-    vpos=vec3(p3d_ModelViewMatrix*p3d_Vertex);
+    vpos=p3d_ModelViewMatrix*vposmodelo;
     normal=normalize(p3d_NormalMatrix*p3d_Normal);
     
     interv=intervalo;

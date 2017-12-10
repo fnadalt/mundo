@@ -1,12 +1,12 @@
 <CoordinateSystem> { Z-Up }
 
 <Comment> {
-  "egg-trans -F plano_agua.egg"
+  "egg-trans -F -o objetos/plano_aguaf.egg objetos/plano_agua.egg"
 }
 <Material> Material {
-  <Scalar> diffr { 0.447248 }
-  <Scalar> diffg { 0.8 }
-  <Scalar> diffb { 0.754575 }
+  <Scalar> diffr { 0.447248011827469 }
+  <Scalar> diffg { 0.800000011920929 }
+  <Scalar> diffb { 0.75457501411438 }
   <Scalar> ambr { 1 }
   <Scalar> ambg { 1 }
   <Scalar> ambb { 1 }

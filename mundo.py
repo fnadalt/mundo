@@ -20,7 +20,7 @@ log=logging.getLogger(__name__)
 
 class Mundo(NodePath):
 
-    PosInicialFoco=Vec3(-937,-323,1) # |(214, 600, 100)|(352,736,10)|(1352,1736,10)
+    PosInicialFoco=Vec3(-937,-323,1) # |(-937,-323,1)
     
     def __init__(self, base):
         NodePath.__init__(self, "mundo")
@@ -54,9 +54,9 @@ class Mundo(NodePath):
         self._cargar_debug_info()
         self._cargar_gui()
         # init:
-        self.setShaderOff(0)
         self._activar_shader_debug()
         # ShowBase
+        self.base.render.setShaderOff(0)
         #self.base.cam.node().setCameraMask(DrawMask(5))
         #self.base.render.node().adjustDrawMask(DrawMask(3), DrawMask(2), DrawMask(0))
         #
@@ -167,7 +167,7 @@ class Mundo(NodePath):
         self.terreno.update(pos_inicial_foco)
         # cielo
         self.cielo=Cielo(self.base, self.terreno.altitud_agua+85.0)
-        self.cielo.nodo.reparentTo(self)
+        #self.cielo.nodo.reparentTo(self)
         self.setLight(self.cielo.luz)
         # sol
         self.sol=Sol(self.base)
@@ -176,7 +176,7 @@ class Mundo(NodePath):
         self.setLight(self.sol.luz)
         # agua
         self.agua=Agua(self.base, self.terreno.altitud_agua)
-        self.agua.superficie.reparentTo(self)
+        self.agua.superficie.reparentTo(self.base.render)
         self.agua.generar()
         self.agua.mostrar_camaras()
 #        self.agua.superficie.hide()
@@ -187,10 +187,10 @@ class Mundo(NodePath):
         info=""
         info+=self.dia.obtener_info()+"\n"
         info+=self.hombre.obtener_info()+"\n"
-        #info+=self.agua.obtener_info()+"\n"
+        info+=self.agua.obtener_info()+"\n"
         #info+=self.input_mapper.obtener_info()+"\n"
-        info+=self.cielo.obtener_info()
-        info+=self.sol.obtener_info()+"\n"
+#        info+=self.cielo.obtener_info()
+#        info+=self.sol.obtener_info()+"\n"
         self.texto1.setText(info)
         # tiempo
         dt=self.base.taskMgr.globalClock.getDt()

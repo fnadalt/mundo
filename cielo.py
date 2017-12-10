@@ -117,8 +117,9 @@ class Cielo:
                 self.nodo.setShaderInput("color_halo_final", self._color_ambiente_final)
 
     def _establecer_shader(self):
-        shader=Shader.load(Shader.SL_GLSL, vertex="shaders/cielo.v.glsl", fragment="shaders/cielo.f.glsl")
-        self.nodo.setShader(shader, 1)
+        shader_nombre_base="cielo" #"cielo"
+        shader=Shader.load(Shader.SL_GLSL, vertex="shaders/%s.v.glsl"%shader_nombre_base, fragment="shaders/%s.f.glsl"%shader_nombre_base)
+        #self.nodo.setShader(shader, 1)
         self.nodo.setShaderInput("altitud_agua", self.altitud_agua)
         self.nodo.setShaderInput("posicion_sol", Vec3(0, 0, 0))
         self.nodo.setShaderInput("periodo", 0)

@@ -16,7 +16,6 @@ class Terreno:
 
     # radio de expansion
     RadioExpansion=1
-    DistanciaRadioExpansion=RadioExpansion*TamanoParcela
 
     # topografia
     SemillaTopografia=4069
@@ -228,7 +227,6 @@ class Terreno:
         format_array=GeomVertexArrayFormat()
         format_array.addColumn(InternalName.getVertex(), 3, Geom.NT_stdfloat, Geom.C_point)
         format_array.addColumn(InternalName.getNormal(), 3, Geom.NT_stdfloat, Geom.C_normal)
-        format_array.addColumn(InternalName.getColor(), 4, Geom.NT_stdfloat, Geom.C_color)
         format_array.addColumn(InternalName.getTexcoord(), 2, Geom.NT_stdfloat, Geom.C_texcoord)
         format_array.addColumn(col_nombre_intervalo, 1, Geom.NT_stdfloat, Geom.C_other)
         format_array.addColumn(col_nombre_temperatura, 1, Geom.NT_stdfloat, Geom.C_other)
@@ -241,7 +239,6 @@ class Terreno:
         # vertex writers
         wrt_v=GeomVertexWriter(vdata, InternalName.getVertex())
         wrt_n=GeomVertexWriter(vdata, InternalName.getNormal())
-        wrt_c=GeomVertexWriter(vdata, InternalName.getColor())
         wrt_t=GeomVertexWriter(vdata, InternalName.getTexcoord())
         wrt_i=GeomVertexWriter(vdata, col_nombre_intervalo)
         wrt_tmp=GeomVertexWriter(vdata, col_nombre_temperatura)
@@ -262,7 +259,6 @@ class Terreno:
                         # vertex, normal, texcoord
                         wrt_v.addData3(v[_i_vertice])
                         wrt_n.addData3(normales[x+_x][y+_y])
-                        wrt_c.addData4((1.0, 1.0, 1.0, 1.0))
                         wrt_t.addData2(_x/2.0, _y/2.0)
                         # intervalo tipo terreno
                         tipo_terreno=self.obtener_tipo_terreno(pos[0]+x, pos[1]+y, v[_i_vertice][2])
@@ -337,7 +333,7 @@ class Terreno:
         material.setAmbient((0.1, 0.1, 0.1, 1.0))
         material.setDiffuse((1.0, 1.0, 1.0, 1.0))
         material.setSpecular((0.0, 0.0, 0.0, 1.0))
-        material.setShininess(1)
+        #material.setShininess(1)
         self.nodo.setMaterial(material, 3)
 
     def _calcular_normal(self, v0, v1, v2):

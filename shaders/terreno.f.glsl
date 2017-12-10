@@ -1,7 +1,7 @@
 #version 120
 
 varying vec4 vposmodelo;
-varying vec3 vpos;
+varying vec4 vpos;
 varying vec3 normal;
 varying float interv;
 varying float temp;
@@ -37,6 +37,8 @@ uniform struct {
     //mat4 shadowViewMatrix;
 } p3d_LightSource[8];
 
+uniform vec4 p3d_ClipPlane[2];
+
 /*
         altitud_interv_a_t    altitud_tierra            altitud_interv_t_p  0
         altitud_pasto           altitud_interv_p_n    altitud_nieve         0
@@ -53,8 +55,8 @@ uniform sampler2D p3d_Texture3; // nieve
 vec4 diff_spec(int iLightSource)
 {
     //
-    vec3 s=normalize(p3d_LightSource[iLightSource].position.xyz-(vpos*p3d_LightSource[iLightSource].position.w));
-    //vec3 v=normalize(-vpos);
+    vec3 s=normalize(p3d_LightSource[iLightSource].position.xyz-(vpos.xyz*p3d_LightSource[iLightSource].position.w));
+    //vec3 v=normalize(-vpos.xyz);
     //vec3 r=normalize(-reflect(s, normal));
     //
     vec4 diffuse=clamp(p3d_Material.diffuse*p3d_LightSource[iLightSource].diffuse*max(dot(normal,s),0),0,1);
@@ -103,6 +105,11 @@ vec4 texture_color(in float altitud)
 
 void main()
 {
+    
+    if(dot(p3d_ClipPlane[0],vpos)<0.0){
+        gl_FragColor=vec4(1,1,1,1);
+    }
+
     vec4 tex_color=texture_color(vposmodelo.z);
     
     vec4 diff_spec_sum=vec4(0,0,0,0);
