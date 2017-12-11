@@ -325,9 +325,11 @@ class Terreno:
                                  self.altura_sobre_agua, Terreno.AlturaMaxima, 0, 0, \
                                  0, 0, 0, 0)
         #
-        shader=Shader.load(Shader.SL_GLSL, vertex="shaders/terreno.v.glsl", fragment="shaders/terreno.f.glsl")
+        shader_nombre_base="debug" # terreno|debug
+        shader=Shader.load(Shader.SL_GLSL, vertex="shaders/%s.v.glsl"%shader_nombre_base, fragment="shaders/%s.f.glsl"%shader_nombre_base)
+        self.nodo.setShaderInput("clipo_dir", 1.0)
         self.nodo.setShaderInput("data", data)
-        self.nodo.setShader(shader, 1)
+        self.nodo.setShader(shader, 22)
         #
         material=Material("mundo")
         material.setAmbient((0.1, 0.1, 0.1, 1.0))

@@ -29,23 +29,27 @@ uniform struct {
     //mat4 shadowViewMatrix;
 } p3d_LightSource[8];
 
-uniform vec4 p3d_ClipPlane[2];
+uniform float clipo_dir;
 
 varying vec4 vpos;
 
 void main()
 {
-    vec3 clipp=vec3(0,0,1);
+    vec3 clipp=vec3(0,0,1)*clipo_dir;
     vec3 pos=normalize(vec3(vpos.x, vpos.y, vpos.z-150));
-    vec4 color=vec4(0.0,0.0,abs(vpos.z/300.0),1.0);
+    vec4 _color=vec4(0.0,0.0,abs(vpos.z/300.0),1.0);
+    
+    if(clipo_dir<0){
+        _color=vec4(1.0,0.0,0.0,1.0);
+    }
     
     //vec4 tex_color=texture2D(p3d_Texture0, gl_TexCoord[0].st);
     if(dot(clipp, pos)<0.0){
         //gl_FragColor=vec4(1,1,1,1);
         discard;
-        //color=vec4(1,0,0,1);
+        //_color=vec4(1,0,0,1);
     }
 
-    color.a=1.0;
-    gl_FragColor=color;
+    _color.a=1.0;
+    gl_FragColor=_color;
 }

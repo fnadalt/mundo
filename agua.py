@@ -17,7 +17,7 @@ class Agua:
         #
         self.superficie=self.base.loader.loadModel("objetos/plano_aguaf")
         self.superficie.setZ(self.altitud)
-        #self.superficie.hide()
+        self.superficie.hide()#
         #self.superficie.node().adjustDrawMask(DrawMask(5), DrawMask(0), DrawMask(0))
 
     def generar(self):
@@ -46,11 +46,12 @@ class Agua:
         self.camera2=self.base.makeCamera(self.reflection_buffer)
         self.camera2.reparentTo(self.base.render)
         self.camera2.node().getLens().setFov(self.camera.find("+Camera").node().getLens().getFov())
-        dummy_shader=Shader.load(Shader.SL_GLSL, vertex="shaders/debug.v.glsl",  fragment="shaders/debug.f.glsl")
         dummy_reflection=NodePath("dummy_reflection")
-        dummy_reflection.setShader(dummy_shader, 4)
+        dummy_shader=Shader.load(Shader.SL_GLSL, vertex="shaders/debug.v.glsl",  fragment="shaders/debug.f.glsl")
+        #dummy_reflection.setShader(dummy_shader, 20)
+        dummy_reflection.setShaderInput("clipo_dir", 1.0)
         #dummy_reflection.setTwoSided(False)
-        dummy_reflection.setClipPlane(self.reflection_plane_nodeN)
+        #dummy_reflection.setClipPlane(self.reflection_plane_nodeN)
         #self.camera2.node().setCameraMask(DrawMask(5))
         self.camera2.node().setInitialState(dummy_reflection.getState())
         #
@@ -73,7 +74,10 @@ class Agua:
         self.camera3.reparentTo(self.base.render)
         self.camera3.node().getLens().setFov(self.camera.find("+Camera").node().getLens().getFov())
         dummy_refraction=NodePath("dummy_refraction")
-        dummy_refraction.setTwoSided(False)
+        dummy_shader=Shader.load(Shader.SL_GLSL, vertex="shaders/debug.v.glsl",  fragment="shaders/debug.f.glsl")
+        dummy_refraction.setShader(dummy_shader, 21)
+        dummy_refraction.setShaderInput("clipo_dir", -1.0)
+        #dummy_refraction.setTwoSided(False)
         #dummy_refraction.setClipPlane(self.refraction_plane_nodeN)
         #self.camera3.node().setCameraMask(DrawMask(5))
         self.camera3.node().setInitialState(dummy_refraction.getState())
