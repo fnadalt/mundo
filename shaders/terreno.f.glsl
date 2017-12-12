@@ -105,11 +105,6 @@ vec4 texture_color(in float altitud)
 
 void main()
 {
-    
-    if(dot(p3d_ClipPlane[0],vpos)<0.0){
-        gl_FragColor=vec4(1,1,1,1);
-    }
-
     vec4 tex_color=texture_color(vposmodelo.z);
     
     vec4 diff_spec_sum=vec4(0,0,0,0);
@@ -121,6 +116,10 @@ void main()
 
     vec4 componente_ambiental=normalize(p3d_LightModel.ambient)*p3d_Material.ambient;
     vec4 tex_color_ads=tex_color*(diff_spec_sum+componente_ambiental);
+
+    if(dot(p3d_ClipPlane[0],vpos)>0.0){
+        discard;
+    }
     
     tex_color_ads.a=1.0;
     gl_FragColor=tex_color_ads;

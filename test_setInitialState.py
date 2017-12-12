@@ -49,7 +49,7 @@ class Tester(ShowBase):
         #
         self.texbuf2=self.win.makeTextureBuffer('camera_2', 512, 512)
         self.camera2=self.makeCamera(self.texbuf2)
-        self.camera2.reparentTo(self.cam_driver)
+        self.camera2.reparentTo(self.render)
         self.camera2.setPos(self.camera.getPos())
         self.camera2.lookAt(self.object)
         self.camera2.node().getLens().setFov(self.camera.find("+Camera").node().getLens().getFov())

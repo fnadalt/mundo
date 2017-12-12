@@ -56,7 +56,6 @@ class Mundo(NodePath):
         # init:
         self._activar_shader_debug()
         # ShowBase
-        self.base.render.setShaderOff(0)
         #self.base.cam.node().setCameraMask(DrawMask(5))
         #self.base.render.node().adjustDrawMask(DrawMask(3), DrawMask(2), DrawMask(0))
         #
