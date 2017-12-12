@@ -10,7 +10,7 @@ attribute vec4 p3d_Vertex;
 varying vec4 vpos;
 
 void main() {
-    vpos=p3d_ModelMatrix*p3d_Vertex;
+    vpos=p3d_ModelViewMatrix*p3d_Vertex;
     gl_Position=p3d_ModelViewProjectionMatrix*p3d_Vertex;
     //gl_TexCoord[0]=p3d_MultiTexCoord0;
 }
