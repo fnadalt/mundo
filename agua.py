@@ -48,7 +48,7 @@ class Agua:
         self.camera2.node().getLens().setFov(self.camera.find("+Camera").node().getLens().getFov())
         dummy_reflection=NodePath("dummy_reflection")
         dummy_shader=Shader.load(Shader.SL_GLSL, vertex="shaders/debug.v.glsl",  fragment="shaders/debug.f.glsl")
-        #dummy_reflection.setShader(dummy_shader, 20)
+        dummy_reflection.setShader(dummy_shader, 20)
         dummy_reflection.setShaderInput("clipo_dir", 1.0)
         #dummy_reflection.setTwoSided(False)
         #dummy_reflection.setClipPlane(self.reflection_plane_nodeN)

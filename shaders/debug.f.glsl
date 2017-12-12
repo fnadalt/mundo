@@ -36,8 +36,8 @@ varying vec4 vpos;
 void main()
 {
     vec3 clipp=vec3(0,0,1)*clipo_dir;
-    vec3 pos=normalize(vec3(vpos.x, vpos.y, vpos.z-150));
-    vec4 _color=vec4(0.0,0.0,abs(vpos.z/300.0),1.0);
+    vec3 pos=normalize(vec3(vpos.x, vpos.y, vpos.z-0));
+    vec4 _color=vec4(0.0,0.0,abs(vpos.z),1.0);
     
     if(clipo_dir<0){
         _color=vec4(1.0,0.0,0.0,1.0);
