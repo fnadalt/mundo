@@ -16,13 +16,12 @@ class Tester(ShowBase):
         #
         self.pos_foco=None
         self.cam_pitch=0.0
-        self.escribir_archivo=False # cada update
         #
         self.object=self.loader.loadModel("objetos/horrendof.egg")
         self.object.reparentTo(self.render)
         shader=Shader.load(Shader.SL_GLSL, vertex="shaders/debug.v.glsl", fragment="shaders/debug.f.glsl")
         self.object.setShader(shader, 1)
-        self.object.setShaderInput("clipo_dir", 1.0)
+        self.object.setShaderInput("dummy_input", 1.0, 0.0, 0.0, 0.0, priority=10)
         #
         self.cam_driver=self.render.attachNewNode("cam_driver")
         self.camera.reparentTo(self.cam_driver)
@@ -50,19 +49,19 @@ class Tester(ShowBase):
         self.texbuf2=self.win.makeTextureBuffer('camera_2', 512, 512)
         self.camera2=self.makeCamera(self.texbuf2)
         self.camera2.reparentTo(self.render)
-        self.camera2.setPos(self.camera.getPos())
+        self.camera2.setPos(self.camera.getPos()+Vec3(0, 0, 0))
         self.camera2.lookAt(self.object)
         self.camera2.node().getLens().setFov(self.camera.find("+Camera").node().getLens().getFov())
-        _plane=Plane(Vec3(0.0, 0.0, -1.0), Vec3(0.0, 0.0, 0.0))
+        _plane=Plane(Vec3(0.0, 0.0, 1.0), Vec3(0.0, 0.0, 0.0))
         _plane_node=PlaneNode("clip_plane")
         _plane_node.setPlane(_plane)
         _plane_node_np=self.render.attachNewNode(_plane_node)
-        _plane_node_np.show()
+        #_plane_node_np.show()
         dummy=NodePath("dummy")
-        dummy.setClipPlane(_plane_node_np)
+        #dummy.setClipPlane(_plane_node_np)
         #dummy_shader=Shader.load(Shader.SL_GLSL, vertex="shaders/debug.v.glsl",  fragment="shaders/debug.f.glsl")
         #dummy.setShader(dummy_shader, 2)
-        #dummy.setShaderInput("clipo_dir", -1.0)
+        dummy.setShaderInput("dummy_input", -1.0, 0.0, 0.0, 0.0, priority=11)
         self.camera2.node().setInitialState(dummy.getState())
         #
         frame_refl=DirectFrame(image=self.texbuf2.getTexture(0), scale=0.25, pos=LVector3f(-1.05, -0.7))

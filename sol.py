@@ -32,10 +32,11 @@ class Sol:
         # esfera solar
         self.nodo=self.base.loader.loadModel("objetos/solf")
         self.nodo.reparentTo(self.pivot)
+        self.nodo.setBin("background",10)
         self.nodo.setX(300.0) # |400.0
         self.nodo.setScale(20.0)
         self.nodo.setColor((1.0, 1.0, 0.7, 1.0))
-        #self.nodo.node().adjustDrawMask(DrawMask(3), DrawMask(0), DrawMask(0))
+        self.nodo.node().adjustDrawMask(DrawMask(7), DrawMask(0), DrawMask(0))
         # luz direccional
         self.luz=self.nodo.attachNewNode(DirectionalLight("luz_solar"))
         self.luz.node().setColor(Vec4(1.0, 1.0, 0.7, 1.0))
@@ -48,16 +49,18 @@ class Sol:
 
     def mostrar_camaras(self):
         #
-        DirectLabel(text="glow_map", pos=LVector3f(-1.0, -0.4), scale=0.05)
-        DirectFrame(image=self.glow_buffer.getTexture(0), scale=0.25, pos=LVector3f(-1.0, -0.7))
+        DirectLabel(text="glow_map", pos=LVector3f(1.0, 0.8), scale=0.05)
+        DirectFrame(image=self.glow_buffer.getTexture(0), scale=0.25, pos=LVector3f(0.85, 0.5))
         #
-        DirectLabel(text="blur_x_buffer", pos=LVector3f(-0.45, -0.4), scale=0.05)
-        DirectFrame(image=self.blur_x_buffer.getTexture(0), scale=0.25, pos=LVector3f(-0.45, -0.7))
+        DirectLabel(text="blur_x_buffer", pos=LVector3f(1.0, 0.2), scale=0.05)
+        DirectFrame(image=self.blur_x_buffer.getTexture(0), scale=0.25, pos=LVector3f(0.85, -0.1))
         #
-        DirectLabel(text="blur_y_buffer", pos=LVector3f(0.15, -0.4), scale=0.05)
-        DirectFrame(image=self.blur_y_buffer.getTexture(0), scale=0.25, pos=LVector3f(0.15, -0.7))
+        DirectLabel(text="blur_y_buffer", pos=LVector3f(1.0, -0.4), scale=0.05)
+        DirectFrame(image=self.blur_y_buffer.getTexture(0), scale=0.25, pos=LVector3f(0.85, -0.7))
 
     def update(self, hora_normalizada, periodo, offset_periodo):
+        #
+        self.nodo.setShaderInput("pos_sol", self.nodo.getPos(self.base.render), 0)
         # determinar periodo
         if periodo!=self._periodo_actual:
             self._periodo_actual=periodo
@@ -108,14 +111,15 @@ class Sol:
     def _establecer_shaders(self):
         # glow shader
         glow_shader=Shader.load(Shader.SL_GLSL, vertex="shaders/sol.v.glsl", fragment="shaders/sol.f.glsl")
-        #self.nodo.setShaderAuto(3)
+        self.nodo.setShaderInput("pos_sol", self.nodo.getPos(self.base.render), 0)
+        self.nodo.setShader(glow_shader, 2)
         # glow buffer
         self.glow_buffer = base.win.makeTextureBuffer("escena_glow", 512, 512)
         self.glow_buffer.setSort(-3)
         self.glow_buffer.setClearColor(LVector4(0, 0, 0, 1))
         # glow camera
         tempnode = NodePath(PandaNode("temp_node"))
-        tempnode.setShader(glow_shader, 2)
+        tempnode.setShader(glow_shader, 3)
         glow_camera = self.base.makeCamera(self.glow_buffer, lens=self.base.cam.node().getLens())
         glow_camera.node().setInitialState(tempnode.getState())
         #glow_camera.node().setCameraMask(DrawMask(2))
@@ -130,7 +134,7 @@ class Sol:
     def _generar_buffer_filtro(self, buffer_base, nombre, orden, nombre_base_arch_shader):
         blur_buffer = self.base.win.makeTextureBuffer(nombre, 512, 512)
         blur_buffer.setSort(orden)
-        blur_buffer.setClearColor(LVector4(1, 0, 0, 1))
+        blur_buffer.setClearColor(LVector4(0, 0, 0, 1))
         blur_camera = self.base.makeCamera2d(blur_buffer)
         blur_scene = NodePath("escena_filtro_%s"%nombre)
         blur_camera.node().setScene(blur_scene )

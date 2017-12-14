@@ -23,7 +23,7 @@ void main()
     gl_TexCoord[0]=p3d_MultiTexCoord0;
 
     vposmodelo=p3d_Vertex;
-    vpos=p3d_ModelViewMatrix*(vposmodelo);
+    vpos=p3d_ModelViewMatrix*vposmodelo;
     normal=normalize(p3d_NormalMatrix*p3d_Normal);
     
     interv=intervalo;

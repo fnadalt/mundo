@@ -19,13 +19,14 @@ class Cielo:
         # componentes:
         # nodo
         self.nodo=self.base.cam.attachNewNode("sky_dome")
+        self.nodo.setBin("background", 10)
         # modelo
         self.modelo=self.base.loader.loadModel("objetos/sky_dome")
         self.modelo.reparentTo(self.nodo)
         self.modelo.setMaterialOff(1)
         self.modelo.setTextureOff(1)
         self.modelo.setLightOff(1)
-        #self.modelo.node().adjustDrawMask(DrawMask(4), DrawMask(2), DrawMask(0))
+        self.modelo.node().adjustDrawMask(DrawMask(3), DrawMask(4), DrawMask(0))
         # luz
         self.luz=self.nodo.attachNewNode(AmbientLight("luz_ambiental"))
         self.luz.node().setColor(Cielo.ColorNoche)
@@ -119,7 +120,7 @@ class Cielo:
     def _establecer_shader(self):
         shader_nombre_base="cielo" #"cielo"
         shader=Shader.load(Shader.SL_GLSL, vertex="shaders/%s.v.glsl"%shader_nombre_base, fragment="shaders/%s.f.glsl"%shader_nombre_base)
-        #self.nodo.setShader(shader, 1)
+        self.nodo.setShader(shader, 1)
         self.nodo.setShaderInput("altitud_agua", self.altitud_agua)
         self.nodo.setShaderInput("posicion_sol", Vec3(0, 0, 0))
         self.nodo.setShaderInput("periodo", 0)

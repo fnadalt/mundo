@@ -2,6 +2,7 @@
 
 uniform sampler2D p3d_Texture0;
 
+varying vec4 wpos;
 varying vec4 vpos;
 
 void main()

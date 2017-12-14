@@ -27,12 +27,10 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=4
-FILE_NAME_0=55;None;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fpanda3d%2Fmundo%2Fsky%2Ffuente.txt;0;4
-FILE_NAME_1=10;GLSL;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fpanda3d%2Fmundo%2Fsky%2Fshader.glsl;0;4
-FILE_NAME_2=0;None;0;EUTF-8;1;1;0;%2Fusr%2Fshare%2Fpanda3d%2Fsamples%2Fglow-filter%2Fshaders%2FglowShader.sha;0;4
-FILE_NAME_3=1062;None;0;EUTF-8;1;1;0;%2Fusr%2Fshare%2Fpanda3d%2Fsamples%2Fglow-filter%2Fshaders%2FXBlurShader.sha;0;4
-FILE_NAME_4=0;None;0;EUTF-8;1;1;0;%2Fusr%2Fshare%2Fpanda3d%2Fsamples%2Fglow-filter%2Fshaders%2FYBlurShader.sha;0;4
+current_page=2
+FILE_NAME_0=0;None;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fbuild%2Fpanda3d-1.10%2Fpanda%2Fsrc%2Fframework%2FpandaFramework.I;0;4
+FILE_NAME_1=37782;C++;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fbuild%2Fpanda3d-1.10%2Fpanda%2Fsrc%2Fframework%2FpandaFramework.cxx;0;4
+FILE_NAME_2=24894;C++;0;EUTF-8;1;1;0;%2Fhome%2Fflaco%2Fbuild%2Fpanda3d-1.10%2Fpanda%2Fsrc%2Fdisplay%2FgraphicsEngine.cxx;0;4
 
 [VTE]
 last_dir=/home/flaco/panda3d/mundo/voxels

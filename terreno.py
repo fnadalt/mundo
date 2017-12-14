@@ -318,17 +318,18 @@ class Terreno:
         #
         #   altitud_interv_a_t    altitud_tierra            altitud_interv_t_p  0
         #   altitud_pasto           altitud_interv_p_n     altitud_nieve         0
-        #   altura_sobre_agua  AlturaMaxima           0                            0
+        #   altura_sobre_agua  AlturaMaxima           altitud_agua          0
         #   0                             0                                0                             0
         data=LMatrix4(self._intervalos_tipo_terreno_escalados[0], self._intervalos_tipo_terreno_escalados[1], self._intervalos_tipo_terreno_escalados[2], 0, \
                                  self._intervalos_tipo_terreno_escalados[3], self._intervalos_tipo_terreno_escalados[4], self._intervalos_tipo_terreno_escalados[5], 0, \
-                                 self.altura_sobre_agua, Terreno.AlturaMaxima, 0, 0, \
+                                 self.altura_sobre_agua, Terreno.AlturaMaxima, self.altitud_agua, 0, \
                                  0, 0, 0, 0)
         #
         shader_nombre_base="terreno" # terreno|debug
         shader=Shader.load(Shader.SL_GLSL, vertex="shaders/%s.v.glsl"%shader_nombre_base, fragment="shaders/%s.f.glsl"%shader_nombre_base)
         self.nodo.setShaderInput("data", data)
-        self.nodo.setShader(shader, 0)
+        self.nodo.setClipPlaneOff(4)
+        self.nodo.setShader(shader, 1)
         #
         material=Material("mundo")
         material.setAmbient((0.1, 0.1, 0.1, 1.0))

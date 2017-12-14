@@ -37,12 +37,12 @@ uniform struct {
     //mat4 shadowViewMatrix;
 } p3d_LightSource[8];
 
-uniform vec4 p3d_ClipPlane[2];
+uniform float water_clipping;
 
 /*
         altitud_interv_a_t    altitud_tierra            altitud_interv_t_p  0
         altitud_pasto           altitud_interv_p_n    altitud_nieve         0
-        altura_sobre_agua  0                              0                            0
+        altura_sobre_agua  AlturaMaxima           altitud_agua          0
         0                             0                              0                            0
 */
 uniform mat3 data;
@@ -105,22 +105,23 @@ vec4 texture_color(in float altitud)
 
 void main()
 {
-    vec4 tex_color=texture_color(vposmodelo.z);
-    
-    vec4 diff_spec_sum=vec4(0,0,0,0);
-    int cnt=p3d_LightSource.length();
-    for(int i=0; i<cnt; ++i)
-    {
-        diff_spec_sum+=diff_spec(i);
-    }
-
-    vec4 componente_ambiental=normalize(p3d_LightModel.ambient)*p3d_Material.ambient;
-    vec4 tex_color_ads=tex_color*(diff_spec_sum+componente_ambiental);
-
-    if(dot(p3d_ClipPlane[0],vpos)>0.0){
+    if((water_clipping>0 && vposmodelo.z<data[2][2]) || (water_clipping<0 && vposmodelo.z>data[2][2])){
         discard;
-    }
+    } else {
     
-    tex_color_ads.a=1.0;
-    gl_FragColor=tex_color_ads;
+        vec4 tex_color=texture_color(vposmodelo.z);
+        
+        vec4 diff_spec_sum=vec4(0,0,0,0);
+        int cnt=p3d_LightSource.length();
+        for(int i=0; i<cnt; ++i)
+        {
+            diff_spec_sum+=diff_spec(i);
+        }
+
+        vec4 componente_ambiental=normalize(p3d_LightModel.ambient)*p3d_Material.ambient;
+        vec4 tex_color_ads=tex_color*(diff_spec_sum+componente_ambiental);
+
+        tex_color_ads.a=1.0;
+        gl_FragColor=tex_color_ads;
+    }
 }

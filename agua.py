@@ -17,8 +17,10 @@ class Agua:
         #
         self.superficie=self.base.loader.loadModel("objetos/plano_aguaf")
         self.superficie.setZ(self.altitud)
-        self.superficie.hide()#
-        #self.superficie.node().adjustDrawMask(DrawMask(5), DrawMask(0), DrawMask(0))
+        self.superficie.node().adjustDrawMask(DrawMask(5), DrawMask(2), DrawMask(0))
+        self.superficie.setShaderInput("water_clipping", 0, 0, 0, 0, priority=2)
+        self.superficie.setBin("transparent", 30)
+        #self.superficie.hide()
 
     def generar(self):
         #
@@ -34,20 +36,20 @@ class Agua:
 
     def configurar_reflejo(self):
         # reflejo
-        reflection_plane=Plane(Vec3(0.0, 0.0, 1.0), Vec3(0.0, 0.0, 149.0)) # self.altitud-0.15
+        reflection_plane=Plane(Vec3(0.0, 0.0, 1.0), Vec3(0.0, 0.0, -0.1)) # self.altitud-0.15
         reflection_plane_node=PlaneNode("reflection_plane_node")
         reflection_plane_node.setPlane(reflection_plane)
-        self.reflection_plane_nodeN=self.base.render.attachNewNode(reflection_plane_node)
+        self.reflection_plane_nodeN=self.superficie.attachNewNode(reflection_plane_node)
         #
         self.reflection_buffer=self.base.win.makeTextureBuffer('reflection_buffer', 512, 512)
         self.reflection_buffer.setClearColor(Vec4(0, 0, 0, 1))
         self.camera2=self.base.makeCamera(self.reflection_buffer)
-        self.camera2.reparentTo(self.base.render)
+        self.camera2.reparentTo(self.superficie)
         self.camera2.node().getLens().setFov(self.camera.find("+Camera").node().getLens().getFov())
         dummy_reflection=self.base.render.attachNewNode("dummy_reflection")
-        #dummy_reflection.setTwoSided(False)
-        dummy_reflection.setClipPlane(self.reflection_plane_nodeN)
-        #self.camera2.node().setCameraMask(DrawMask(5))
+        #dummy_reflection.setShaderInput("water_clipping", 1, 0, 0, 0, priority=3)
+        dummy_reflection.setClipPlane(self.reflection_plane_nodeN, priority=2)
+        self.camera2.node().setCameraMask(DrawMask(2))
         self.camera2.node().setInitialState(dummy_reflection.getState())
         #
         ts0=TextureStage("tsBuffer_reflection")
@@ -57,31 +59,27 @@ class Agua:
         self.superficie.setTexture(ts0, tex0)
         
     def configurar_refraccion(self):
-        # refraccion
-        refraction_plane=Plane(Vec3(0.0, 0.0, -1.0), Vec3(0.0, 0.0, self.altitud+0.1)) # self.altitud+0.1
-        refraction_plane_node=PlaneNode("refraction_plane_node")
+        # reflejo
+        refraction_plane=Plane(Vec3(0.0, 0.0, -1.0), Vec3(0.0, 0.0, -0.1)) # self.altitud-0.15
+        refraction_plane_node=PlaneNode("reflection_plane_node")
         refraction_plane_node.setPlane(refraction_plane)
-        #self.refraction_plane_nodeN=self.base.render.attachNewNode(refraction_plane_node)
+        self.refraction_plane_plane_nodeN=self.superficie.attachNewNode(refraction_plane_node)
         #
         self.refraction_buffer=self.base.win.makeTextureBuffer('refraction_buffer', 512, 512)
         self.refraction_buffer.setClearColor(Vec4(0, 0, 0, 1))
         self.camera3=self.base.makeCamera(self.refraction_buffer)
         self.camera3.reparentTo(self.base.render)
         self.camera3.node().getLens().setFov(self.camera.find("+Camera").node().getLens().getFov())
-        #dummy_refraction=NodePath("dummy_refraction")
-        #dummy_shader=Shader.load(Shader.SL_GLSL, vertex="shaders/debug.v.glsl",  fragment="shaders/debug.f.glsl")
-        #dummy_refraction.setShader(dummy_shader, 21)
-        #dummy_refraction.setShaderInput("clipo_dir", -1.0)
-        #dummy_refraction.setTwoSided(False)
-        #dummy_refraction.setClipPlane(self.refraction_plane_nodeN)
-        #self.camera3.node().setCameraMask(DrawMask(5))
-        #self.camera3.node().setInitialState(dummy_refraction.getState())
+        dummy_refraction=NodePath("dummy_refraction")
+        dummy_refraction.setClipPlane(self.refraction_plane_plane_nodeN, priority=3)
+        self.camera3.node().setCameraMask(DrawMask(2))
+        self.camera3.node().setInitialState(dummy_refraction.getState())
         #
         ts1=TextureStage("tsBuffer_refraction")
         tex1=self.refraction_buffer.getTexture()
         tex1.setWrapU(Texture.WMClamp)
         tex1.setWrapV(Texture.WMClamp)
-        #self.superficie.setTexture(ts1, tex1)
+        self.superficie.setTexture(ts1, tex1)
     
     def configurar_dudv(self):
         ts2=TextureStage("tsBuffer_dudv")

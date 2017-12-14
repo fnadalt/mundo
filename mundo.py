@@ -54,10 +54,11 @@ class Mundo(NodePath):
         self._cargar_debug_info()
         self._cargar_gui()
         # init:
+        self.setShaderInput("water_clipping", 0, 0, 0, 0, priority=2)
         self._activar_shader_debug()
         # ShowBase
-        #self.base.cam.node().setCameraMask(DrawMask(5))
-        #self.base.render.node().adjustDrawMask(DrawMask(3), DrawMask(2), DrawMask(0))
+        self.base.cam.node().setCameraMask(DrawMask(5))
+        self.base.render.node().adjustDrawMask(DrawMask(7), DrawMask(0), DrawMask(0))
         #
         self.base.taskMgr.add(self._update, "mundo_update")
     
@@ -159,26 +160,25 @@ class Mundo(NodePath):
     
     def _cargar_terreno(self, pos_inicial_foco):
         # dia
-        self.dia=Dia(1800.0, 0.60) #|(1800.0, 0.50)
+        self.dia=Dia(1800.0, 0.45) #|(1800.0, 0.50)
         # terreno
         self.terreno=Terreno(self.base, self.bullet_world)
         self.terreno.nodo.reparentTo(self)
         self.terreno.update(pos_inicial_foco)
         # cielo
         self.cielo=Cielo(self.base, self.terreno.altitud_agua+85.0)
-        #self.cielo.nodo.reparentTo(self)
+        self.cielo.nodo.reparentTo(self)
         self.setLight(self.cielo.luz)
         # sol
         self.sol=Sol(self.base)
         self.sol.pivot.reparentTo(self.cielo.nodo)
-        #self.sol.mostrar_camaras()
+        self.sol.mostrar_camaras()
         self.setLight(self.sol.luz)
         # agua
         self.agua=Agua(self.base, self.terreno.altitud_agua)
         self.agua.superficie.reparentTo(self.base.render)
         self.agua.generar()
         self.agua.mostrar_camaras()
-#        self.agua.superficie.hide()
         #
         self.controlador_camara.altitud_agua=self.terreno.altitud_agua
 
