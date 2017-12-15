@@ -328,6 +328,7 @@ class Terreno:
         shader_nombre_base="terreno" # terreno|debug
         shader=Shader.load(Shader.SL_GLSL, vertex="shaders/%s.v.glsl"%shader_nombre_base, fragment="shaders/%s.f.glsl"%shader_nombre_base)
         self.nodo.setShaderInput("data", data)
+        self.nodo.setShaderInput("water_clipping", Vec3(0, 0, 0), priority=0)
         self.nodo.setClipPlaneOff(3)
         self.nodo.setShader(shader, 1)
         #
@@ -572,6 +573,6 @@ if __name__=="__main__":
     PStatClient.connect()
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    Terreno.RadioExpansion=3
+    Terreno.RadioExpansion=1
     tester.escribir_archivo=False
     tester.run()

@@ -170,13 +170,13 @@ class Mundo(NodePath):
         # sol
         self.sol=Sol(self.base)
         self.sol.pivot.reparentTo(self.cielo.nodo)
-        self.sol.mostrar_camaras()
+        #self.sol.mostrar_camaras()
         self.setLight(self.sol.luz)
         # agua
         self.agua=Agua(self.base, self.terreno.altitud_agua)
         self.agua.superficie.reparentTo(self.base.render)
         self.agua.generar()
-        self.agua.mostrar_camaras()
+        #self.agua.mostrar_camaras()
         #
         self.controlador_camara.altitud_agua=self.terreno.altitud_agua
 
@@ -188,7 +188,7 @@ class Mundo(NodePath):
         #info+=self.input_mapper.obtener_info()+"\n"
 #        info+=self.cielo.obtener_info()
 #        info+=self.sol.obtener_info()+"\n"
-        self.texto1.setText(info)
+        #self.texto1.setText(info)
         # tiempo
         dt=self.base.taskMgr.globalClock.getDt()
         # input
@@ -219,7 +219,7 @@ class Mundo(NodePath):
         self.agua.superficie.setY(self.controlador_camara.target_node_path.getPos().getY())
         self.agua.update(dt, self.sol.luz.getPos(self), self.sol.luz.node().getColor())
         # gui
-        self.lblHora["text"]=self.dia.obtener_hora()
+        #self.lblHora["text"]=self.dia.obtener_hora()
         #
         self._counter+=1
         return task.cont
