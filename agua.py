@@ -18,8 +18,6 @@ class Agua:
         self.superficie=self.base.loader.loadModel("objetos/plano_aguaf")
         self.superficie.setZ(self.altitud)
         self.superficie.node().adjustDrawMask(DrawMask(5), DrawMask(2), DrawMask(0))
-        self.superficie.setShaderInput("water_clipping", 0, 0, 0, 0, priority=2)
-        self.superficie.setBin("transparent", 30)
         #self.superficie.hide()
 
     def generar(self):
@@ -47,8 +45,8 @@ class Agua:
         self.camera2.reparentTo(self.superficie)
         self.camera2.node().getLens().setFov(self.camera.find("+Camera").node().getLens().getFov())
         dummy_reflection=self.base.render.attachNewNode("dummy_reflection")
-        #dummy_reflection.setShaderInput("water_clipping", 1, 0, 0, 0, priority=3)
         dummy_reflection.setClipPlane(self.reflection_plane_nodeN, priority=2)
+        dummy_reflection.setShaderInput("water_clipping", Vec4(0, 0, 1, self.altitud), priority=4)
         self.camera2.node().setCameraMask(DrawMask(2))
         self.camera2.node().setInitialState(dummy_reflection.getState())
         #
@@ -72,6 +70,7 @@ class Agua:
         self.camera3.node().getLens().setFov(self.camera.find("+Camera").node().getLens().getFov())
         dummy_refraction=NodePath("dummy_refraction")
         dummy_refraction.setClipPlane(self.refraction_plane_plane_nodeN, priority=3)
+        dummy_refraction.setShaderInput("water_clipping", Vec4(0, 0, -1, self.altitud), priority=5)
         self.camera3.node().setCameraMask(DrawMask(2))
         self.camera3.node().setInitialState(dummy_refraction.getState())
         #
@@ -105,7 +104,6 @@ class Agua:
         self.move_factor%=1
         self.superficie.setShaderInput("move_factor", self.move_factor)
         self.superficie.setShaderInput("cam_pos", self.camera.getPos(ref)) # self.superficie|self.base.render
-        #pos_luz=Vec4(0, 0, 10, 1) # fijar, para debug
         self.superficie.setShaderInput("light_pos", pos_luz)
         self.superficie.setShaderInput("light_color", color_luz)
 

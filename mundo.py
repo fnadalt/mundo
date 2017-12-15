@@ -36,6 +36,7 @@ class Mundo(NodePath):
         self._periodo_dia_actual=0
     
     def iniciar(self):
+        self._establecer_shader()
         # fisica:
         self._configurar_fisica()
         # componentes:
@@ -48,14 +49,11 @@ class Mundo(NodePath):
         #
         self._cargar_terreno(Mundo.PosInicialFoco)
         self._cargar_hombre()
-        self._cargar_objetos()
+        #self._cargar_objetos()
         self._cargar_obj_voxel()
         # gui:
         self._cargar_debug_info()
         self._cargar_gui()
-        # init:
-        self.setShaderInput("water_clipping", 0, 0, 0, 0, priority=2)
-        self._activar_shader_debug()
         # ShowBase
         self.base.cam.node().setCameraMask(DrawMask(5))
         self.base.render.node().adjustDrawMask(DrawMask(7), DrawMask(0), DrawMask(0))
@@ -64,11 +62,11 @@ class Mundo(NodePath):
     
     def terminar(self):
         pass    
-    
-    def _activar_shader_debug(self):
-        return
-        shader=Shader.load(Shader.SL_GLSL, vertex="shaders/debug.v.glsl", fragment="shaders/debug.f.glsl")
-        self.setShader(shader, 1000)
+
+    def _establecer_shader(self):
+        self.setShaderOff(0)
+        self.base.render.setShaderInput("sun_wpos", Vec3(0, 0, 0), priority=0)
+        self.base.render.setShaderInput("water_clipping", Vec4(0, 0, 0, 0), priority=0)
     
     def _cargar_obj_voxel(self):
         return
@@ -216,10 +214,10 @@ class Mundo(NodePath):
             _altitud_suelo=self.terreno.obtener_altitud(_personaje.cuerpo.getPos())
             _personaje.altitud_suelo=_altitud_suelo
             _personaje.update(dt)
-#        # agua
+        # agua
         self.agua.superficie.setX(self.controlador_camara.target_node_path.getPos().getX())
         self.agua.superficie.setY(self.controlador_camara.target_node_path.getPos().getY())
-        self.agua.update(dt, self.sol.luz.getPos(), self.sol.luz.node().getColor())
+        self.agua.update(dt, self.sol.luz.getPos(self), self.sol.luz.node().getColor())
         # gui
         self.lblHora["text"]=self.dia.obtener_hora()
         #

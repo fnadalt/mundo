@@ -37,8 +37,6 @@ uniform struct {
     //mat4 shadowViewMatrix;
 } p3d_LightSource[8];
 
-uniform float water_clipping;
-
 /*
         altitud_interv_a_t    altitud_tierra            altitud_interv_t_p  0
         altitud_pasto           altitud_interv_p_n    altitud_nieve         0
@@ -46,6 +44,8 @@ uniform float water_clipping;
         0                             0                              0                            0
 */
 uniform mat3 data;
+
+uniform vec4 water_clipping;
 
 uniform sampler2D p3d_Texture0; // arena
 uniform sampler2D p3d_Texture1; // tierra
@@ -105,7 +105,7 @@ vec4 texture_color(in float altitud)
 
 void main()
 {
-    if((water_clipping>0 && vposmodelo.z<data[2][2]) || (water_clipping<0 && vposmodelo.z>data[2][2])){
+    if((water_clipping.z>0 && vposmodelo.z<data[2][2]) || (water_clipping.z<0 && vposmodelo.z>data[2][2])){
         discard;
     } else {
     

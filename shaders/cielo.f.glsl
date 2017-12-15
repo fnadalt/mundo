@@ -11,7 +11,10 @@ uniform vec4 color_base_final;
 uniform vec4 color_halo_inicial;
 uniform vec4 color_halo_final;
 
+uniform vec4 water_clipping;
+
 varying vec4 pos_vertex;
+varying vec4 wpos_vertex;
 
 vec4 color_1()
 {
@@ -35,7 +38,11 @@ vec4 color_1()
 
 void main()
 {
-    vec4 color=color_1();
-    color.a=1.0;
-    gl_FragColor=color;
+    if(water_clipping.z<0.0 && wpos_vertex.z<water_clipping.w){
+        discard;
+    } else {
+        vec4 color=color_1();
+        color.a=1.0;
+        gl_FragColor=color;
+    }
 }

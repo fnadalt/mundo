@@ -32,7 +32,7 @@ class Sol:
         # esfera solar
         self.nodo=self.base.loader.loadModel("objetos/solf")
         self.nodo.reparentTo(self.pivot)
-        self.nodo.setBin("background",10)
+        self.nodo.setClipPlaneOff(4)
         self.nodo.setX(300.0) # |400.0
         self.nodo.setScale(20.0)
         self.nodo.setColor((1.0, 1.0, 0.7, 1.0))
@@ -60,7 +60,7 @@ class Sol:
 
     def update(self, hora_normalizada, periodo, offset_periodo):
         #
-        self.nodo.setShaderInput("pos_sol", self.nodo.getPos(self.base.render), 0)
+        self.nodo.setShaderInput("sun_wpos", self.nodo.getPos(self.base.render), 2)
         # determinar periodo
         if periodo!=self._periodo_actual:
             self._periodo_actual=periodo
@@ -111,7 +111,7 @@ class Sol:
     def _establecer_shaders(self):
         # glow shader
         glow_shader=Shader.load(Shader.SL_GLSL, vertex="shaders/sol.v.glsl", fragment="shaders/sol.f.glsl")
-        self.nodo.setShaderInput("pos_sol", self.nodo.getPos(self.base.render), 0)
+        self.nodo.setShaderInput("sun_wpos", self.nodo.getPos(self.base.render), 1)
         self.nodo.setShader(glow_shader, 2)
         # glow buffer
         self.glow_buffer = base.win.makeTextureBuffer("escena_glow", 512, 512)
@@ -122,14 +122,13 @@ class Sol:
         tempnode.setShader(glow_shader, 3)
         glow_camera = self.base.makeCamera(self.glow_buffer, lens=self.base.cam.node().getLens())
         glow_camera.node().setInitialState(tempnode.getState())
-        #glow_camera.node().setCameraMask(DrawMask(2))
         # blur shaders
         self.blur_x_buffer = self._generar_buffer_filtro(self.glow_buffer,  "blur_x", -2, "blur_x")
         self.blur_y_buffer= self._generar_buffer_filtro(self.blur_x_buffer,  "blur_y", -1, "blur_y")
         finalcard = self.blur_y_buffer.getTextureCard()
         finalcard.reparentTo(self.base.render2d)
         finalcard.setAttrib(ColorBlendAttrib.make(ColorBlendAttrib.MAdd))
-        finalcard.hide()
+        #finalcard.hide()
 
     def _generar_buffer_filtro(self, buffer_base, nombre, orden, nombre_base_arch_shader):
         blur_buffer = self.base.win.makeTextureBuffer(nombre, 512, 512)

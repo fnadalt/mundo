@@ -19,7 +19,6 @@ class Cielo:
         # componentes:
         # nodo
         self.nodo=self.base.cam.attachNewNode("sky_dome")
-        self.nodo.setBin("background", 10)
         # modelo
         self.modelo=self.base.loader.loadModel("objetos/sky_dome")
         self.modelo.reparentTo(self.nodo)
@@ -129,4 +128,5 @@ class Cielo:
         self.nodo.setShaderInput("color_base_final", Cielo.ColorNoche)
         self.nodo.setShaderInput("color_halo_inicial", Cielo.ColorNoche)
         self.nodo.setShaderInput("color_halo_final", Cielo.ColorNoche)
+        self.nodo.setClipPlaneOff(4)
         

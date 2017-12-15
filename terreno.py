@@ -328,7 +328,7 @@ class Terreno:
         shader_nombre_base="terreno" # terreno|debug
         shader=Shader.load(Shader.SL_GLSL, vertex="shaders/%s.v.glsl"%shader_nombre_base, fragment="shaders/%s.f.glsl"%shader_nombre_base)
         self.nodo.setShaderInput("data", data)
-        self.nodo.setClipPlaneOff(4)
+        self.nodo.setClipPlaneOff(3)
         self.nodo.setShader(shader, 1)
         #
         material=Material("mundo")
