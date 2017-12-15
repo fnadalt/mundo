@@ -16,8 +16,8 @@ Además, tomé como base hasta el momento:
 
 Para ejecutar y modificar el proyecto se necesita tener instalado [Panda3D](https://www.panda3d.org/download.php).
 ### usuarios de Windows
-El SDK del motor suele instalarse en la raiz de C, por ejemplo: C:\Panda3D-1.9.4. Para ejecutar un cualquier script de Panda3D, basta con utilizar un intérprete especializado incluido C:\Panda3D-1.9.4\python\ppython.exe. Para iniciar Mundo desde Símbolo de Sistema, una vez en el directorio del proyecto, utilizamos el comando:
-* C:\Panda3D-1.9.4\python\ppython.exe main.py
+El SDK del motor suele instalarse en la raiz de C, por ejemplo: C:\Panda3D-1.10.0. Para ejecutar un cualquier script de Panda3D, basta con utilizar un intérprete especializado incluido C:\Panda3D-1.10.0\python\ppython.exe. Para iniciar Mundo desde Símbolo de Sistema, una vez en el directorio del proyecto, utilizamos el comando:
+* C:\Panda3D-1.10.0\python\ppython.exe main.py
 O, desde el explorador de archivos, elegimos "Abrir con..." y escogemos la ruta a ppython.exe.
 
 ---
