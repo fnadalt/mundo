@@ -158,7 +158,7 @@ class Mundo(NodePath):
     
     def _cargar_terreno(self, pos_inicial_foco):
         # dia
-        self.dia=Dia(1800.0, 0.45) #|(1800.0, 0.50)
+        self.dia=Dia(180.0, 0.45) #|(1800.0, 0.50)
         # terreno
         self.terreno=Terreno(self.base, self.bullet_world)
         self.terreno.nodo.reparentTo(self)
