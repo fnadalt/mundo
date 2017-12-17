@@ -20,7 +20,7 @@ log=logging.getLogger(__name__)
 
 class Mundo(NodePath):
 
-    PosInicialFoco=Vec3(-937,-323,1) # |(-937,-323,1)
+    PosInicialFoco=Vec3(0, 0, 1) # |(-937,-323,1)
     
     def __init__(self, base):
         NodePath.__init__(self, "mundo")
@@ -158,7 +158,7 @@ class Mundo(NodePath):
     
     def _cargar_terreno(self, pos_inicial_foco):
         # dia
-        self.dia=Dia(180.0, 0.45) #|(1800.0, 0.50)
+        self.dia=Dia(1800.0, 0.50) #|(1800.0, 0.50)
         # terreno
         self.terreno=Terreno(self.base, self.bullet_world)
         self.terreno.nodo.reparentTo(self)
@@ -188,7 +188,7 @@ class Mundo(NodePath):
         #info+=self.input_mapper.obtener_info()+"\n"
 #        info+=self.cielo.obtener_info()
 #        info+=self.sol.obtener_info()+"\n"
-        #self.texto1.setText(info)
+        self.texto1.setText(info)
         # tiempo
         dt=self.base.taskMgr.globalClock.getDt()
         # input
@@ -219,7 +219,7 @@ class Mundo(NodePath):
         self.agua.superficie.setY(self.controlador_camara.target_node_path.getPos().getY())
         self.agua.update(dt, self.sol.luz.getPos(self), self.sol.luz.node().getColor())
         # gui
-        #self.lblHora["text"]=self.dia.obtener_hora()
+        self.lblHora["text"]=self.dia.obtener_hora()
         #
         self._counter+=1
         return task.cont

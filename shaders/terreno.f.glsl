@@ -3,8 +3,7 @@
 varying vec4 vposmodelo;
 varying vec4 vpos;
 varying vec3 normal;
-varying float interv;
-varying float temp;
+varying float info_tipo;
 
 uniform struct {
     vec4 ambient;
@@ -70,35 +69,7 @@ vec4 texture_color(in float altitud)
 {
     vec4 _color;
     //
-    float altitud_corregida=altitud+(temp*data[2][0]);
-    //
-    if(altitud_corregida>data[1][2]){
-        _color=texture2D(p3d_Texture3, gl_TexCoord[0].st);
-    } else if(altitud_corregida>data[1][1]){
-        if(interv<0.0){
-            _color=texture2D(p3d_Texture3, gl_TexCoord[0].st);
-        } else {
-            _color=texture2D(p3d_Texture2, gl_TexCoord[0].st);
-        }
-    } else if(altitud_corregida>data[1][0]){
-        _color=texture2D(p3d_Texture2, gl_TexCoord[0].st);
-    } else if(altitud_corregida>data[0][2]){
-        if(interv<0.0){
-            _color=texture2D(p3d_Texture2, gl_TexCoord[0].st);
-        } else {
-            _color=texture2D(p3d_Texture1, gl_TexCoord[0].st);
-        }
-    } else if(altitud_corregida>data[0][1]){
-        _color=texture2D(p3d_Texture1, gl_TexCoord[0].st);
-    } else if(altitud_corregida>data[0][0]){
-        if(interv<0.0){
-            _color=texture2D(p3d_Texture1, gl_TexCoord[0].st);
-        } else {
-            _color=texture2D(p3d_Texture0, gl_TexCoord[0].st);
-        }
-    } else {
-        _color=texture2D(p3d_Texture0, gl_TexCoord[0].st);
-    }
+    _color=texture2D(p3d_Texture0, gl_TexCoord[0].st);
     //
     return _color;
 }

@@ -31,7 +31,7 @@ uniform struct {
 } p3d_LightSource[8];
 
 uniform vec4 p3d_ClipPlane[1];
-uniform float dummy_input;
+//uniform float dummy_input;
 
 varying vec4 vpos;
 varying vec4 vpos_inv;
@@ -41,9 +41,9 @@ void main()
 {
     vec4 _color=vec4(0.0,0.0,abs(vpos.z),1.0);
 
-    if(dummy_input<0.0){
+    /*if(dummy_input<0.0){
         _color=vec4(1.0,0.0,0.0,1.0);
-    }
+    }*/
     
     if(p3d_ClipPlane[0].z!=0.0){
         //_color=vec4(1.0,0.0,0.0,1.0);

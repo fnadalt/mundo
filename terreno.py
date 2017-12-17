@@ -15,7 +15,7 @@ class Terreno:
     TamanoParcela=32
 
     # radio de expansion
-    RadioExpansion=1
+    RadioExpansion=3
 
     # topografia
     SemillaTopografia=4069
@@ -97,9 +97,9 @@ class Terreno:
         temperatura=self._ruido_temperatura.noise(*pos)
         return temperatura
 
-    def obtener_tipo_terreno(self, x, y, altitud):
+    def obtener_tipo_terreno(self, pos, altitud):
         #
-        temperatura=self._ruido_temperatura(x, y)
+        temperatura=self._ruido_temperatura(pos[0], pos[1])
         altitud_corregida=altitud+(temperatura*self.altura_sobre_agua)
         #
         if altitud_corregida>self._intervalos_tipo_terreno_escalados[5]:
@@ -169,7 +169,7 @@ class Terreno:
     def _generar_parcela(self, idx_pos):
         log.info("_generar_parcela %s"%str(idx_pos))
         # posición y nombre
-        pos=Vec2(idx_pos[0]*Terreno.TamanoParcela, idx_pos[1]*Terreno.TamanoParcela)
+        pos=self.obtener_pos_parcela(idx_pos)
         nombre="parcela_%i_%i"%(int(pos[0]), int(pos[1]))
         # nodo
         parcela_node_path=self.nodo.attachNewNode(nombre)
@@ -192,105 +192,94 @@ class Terreno:
         parcela.removeNode()
         del self.parcelas[idx_pos]
     
-    def _generar_geometria_parcela(self, nombre, idx_pos):
-        # posicion de la parcela
+    def _generar_datos_parcela(self, idx_pos):
+        # obtener posición
         pos=self.obtener_pos_parcela(idx_pos)
-        # matrix de altitudes; x,y: [i(-1)<i(0)<i(...)<i(tamano-1)<i(tamano)]
-        altitud=list() # x,y: [[n, ...], ...]
+        # matriz de DatosLocalesTerreno; x,y->TamanoParcela +/- 1
+        data=list() # x,y: [[n, ...], ...]
         for x in range(Terreno.TamanoParcela+3):
-            altitud.append(list())
+            data.append(list())
             for y in range(Terreno.TamanoParcela+3):
-                data=altitud[x]
-                data.append(self.obtener_altitud((pos[0]+x-1, pos[1]+y-1)))
-        # normales # [[n, ...], ...]
-        normales=list()
+                d=DatosLocalesTerreno()
+                #data.index=None # no establecer en esta instancia
+                d.pos=Vec3(x-1, y-1, self.obtener_altitud((pos[0]+x, pos[1]+y)))
+                d.tipo=self.obtener_tipo_terreno(pos, d.pos[2])
+                data[x].append(d)
+        # calcular normales
         for x in range(Terreno.TamanoParcela+1):
-            normales.append(list())
             for y in range(Terreno.TamanoParcela+1):
-                v0=Vec3(x, y, altitud[x+1][y+1])
-                v1=Vec3(x+1, y, altitud[x+2][y+1])
-                v2=Vec3(x, y+1, altitud[x+1][y+2])
-                v3=Vec3(x+1, y-1, altitud[x+2][y])
-                v4=Vec3(x-1, y+1, altitud[x][y+2])
-                v5=Vec3(x-1, y, altitud[x][y+1])
-                v6=Vec3(x, y-1, altitud[x+1][y])
+                v0=data[x+1][y+1].pos
+                v1=data[x+2][y+1].pos
+                v2=data[x+1][y+2].pos
+                v3=data[x+2][y].pos
+                v4=data[x][y+2].pos
+                v5=data[x][y+1].pos
+                v6=data[x+1][y].pos
                 n0=self._calcular_normal(v0, v1, v2)
                 n1=self._calcular_normal(v0, v3, v1)
                 n2=self._calcular_normal(v0, v2, v4)
                 n3=self._calcular_normal(v0, v5, v6)
                 n_avg=(n0+n1+n2+n3)/4.0
-                #log.info("n0=%s n1=%s n2=%s n3=%s n_avg=%s"%(str(n0), str(n1), str(n2), str(n3), str(n_avg)))
-                normales[x].append(n_avg)
+                data[x+1][y+1].normal=n_avg
+        # algoritmo para colocar objetos...
+        pass
+        #
+        return data
+
+    def _generar_geometria_parcela(self, nombre, idx_pos):
+        # datos
+        data=self._generar_datos_parcela(idx_pos)
         # formato
-        col_nombre_intervalo=InternalName.make("intervalo")
-        col_nombre_temperatura=InternalName.make("temperatura")
+        co_info_tipo_terreno=InternalName.make("info_tipo_terreno") # int()->tipo; fract()->intervalo
         format_array=GeomVertexArrayFormat()
         format_array.addColumn(InternalName.getVertex(), 3, Geom.NT_stdfloat, Geom.C_point)
         format_array.addColumn(InternalName.getNormal(), 3, Geom.NT_stdfloat, Geom.C_normal)
         format_array.addColumn(InternalName.getTexcoord(), 2, Geom.NT_stdfloat, Geom.C_texcoord)
-        format_array.addColumn(col_nombre_intervalo, 1, Geom.NT_stdfloat, Geom.C_other)
-        format_array.addColumn(col_nombre_temperatura, 1, Geom.NT_stdfloat, Geom.C_other)
+        format_array.addColumn(co_info_tipo_terreno, 1, Geom.NT_stdfloat, Geom.C_other)
         formato=GeomVertexFormat()
         formato.addArray(format_array)
         # iniciar vértices y primitivas
         vdata=GeomVertexData("vertex_data", GeomVertexFormat.registerFormat(formato), Geom.UHStatic)
-        vdata.setNumRows((Terreno.TamanoParcela+1)*(Terreno.TamanoParcela+1))
+        vdata.setNumRows((Terreno.TamanoParcela+1)*(Terreno.TamanoParcela+1)) # +1 ?
         prim=GeomTriangles(Geom.UHStatic)
         # vertex writers
         wrt_v=GeomVertexWriter(vdata, InternalName.getVertex())
         wrt_n=GeomVertexWriter(vdata, InternalName.getNormal())
         wrt_t=GeomVertexWriter(vdata, InternalName.getTexcoord())
-        wrt_i=GeomVertexWriter(vdata, col_nombre_intervalo)
-        wrt_tmp=GeomVertexWriter(vdata, col_nombre_temperatura)
-        # llenar vértices y primitivas
+        wrt_i=GeomVertexWriter(vdata, co_info_tipo_terreno)
+        # llenar datos de vertices
         i_vertice=0
-        for x in range(0, Terreno.TamanoParcela):
-            for y in range(0, Terreno.TamanoParcela):
-                # vértices
-                v=list()
-                v.append(Vec3(x, y, altitud[x+1][y+1])) # 4, para geometría
-                v.append(Vec3(x+1, y, altitud[x+2][y+1]))
-                v.append(Vec3(x, y+1, altitud[x+1][y+2]))
-                v.append(Vec3(x+1, y+1, altitud[x+2][y+2]))
-                # llenar vertex data; (x,y)->(0,0),(1,0),(0,1),(1,1)
-                _i_vertice=0
-                for _y in range(2):
-                    for _x in range(2):
-                        # vertex, normal, texcoord
-                        wrt_v.addData3(v[_i_vertice])
-                        wrt_n.addData3(normales[x+_x][y+_y])
-                        wrt_t.addData2(_x/2.0, _y/2.0)
-                        # intervalo tipo terreno
-                        tipo_terreno=self.obtener_tipo_terreno(pos[0]+x, pos[1]+y, v[_i_vertice][2])
-                        if tipo_terreno==Terreno.TipoIntervaloArenaTierra or tipo_terreno==Terreno.TipoIntervaloTierraPasto or tipo_terreno==Terreno.TipoIntervaloPastoNieve:
-                            # zonas de transicion de terrenos
-                            altura_0, altura_1=0, 0
-                            if tipo_terreno==Terreno.TipoIntervaloArenaTierra:
-                                altura_0, altura_1=self._intervalos_tipo_terreno_escalados[0], self._intervalos_tipo_terreno_escalados[1]
-                            elif tipo_terreno==Terreno.TipoIntervaloTierraPasto:
-                                altura_0, altura_1=self._intervalos_tipo_terreno_escalados[2], self._intervalos_tipo_terreno_escalados[3]
-                            elif tipo_terreno==Terreno.TipoIntervaloPastoNieve:
-                                altura_0, altura_1=self._intervalos_tipo_terreno_escalados[4], self._intervalos_tipo_terreno_escalados[5]
-                            # ruido(altitud)+cos(altura_en_intervalo)
-                            ruido=self._ruido_intervalos_tipo_terreno.noise(pos[0]+x, pos[1]+y)
-                            ruido+=0.5*math.cos(math.pi*(v[_i_vertice][2]-altura_0)/(altura_1-altura_0))
-                            wrt_i.addData1(ruido)
-                        else:
-                            wrt_i.addData1(0)
-                        # temperatura
-                        wrt_tmp.addData1(self.obtener_temperatura_base((pos[0]+x, pos[1]+y)))
-                        _i_vertice+=1
+        tc_x, tc_y=1.0, 1.0
+        for x in range(Terreno.TamanoParcela+1):
+            tc_x=0.0 if tc_x==1.0 else 1.0
+            for y in range(Terreno.TamanoParcela+1):
+                tc_y=0.0 if tc_y==1.0 else 1.0
+                # data
+                d=data[x+1][y+1]
+                d.index=i_vertice # aqui se define el indice
+                # llenar vertex data
+                wrt_v.addData3(d.pos)
+                wrt_n.addData3(d.normal)
+                wrt_t.addData2(tc_x, tc_y)
+                wrt_i.addData1(d.tipo)
+                i_vertice+=1
+        # llenar datos de primitivas
+        for x in range(Terreno.TamanoParcela):
+            for y in range(Terreno.TamanoParcela):
+                # vertices
+                i0=data[x+1][y+1].index
+                i1=data[x+2][y+1].index
+                i2=data[x+1][y+2].index
+                i3=data[x+2][y+2].index
                 # primitivas
-                prim.addVertex(i_vertice)
-                prim.addVertex(i_vertice+1)
-                prim.addVertex(i_vertice+2)
+                prim.addVertex(i0)
+                prim.addVertex(i1)
+                prim.addVertex(i2)
                 prim.closePrimitive()
-                prim.addVertex(i_vertice+2)
-                prim.addVertex(i_vertice+1)
-                prim.addVertex(i_vertice+3)
+                prim.addVertex(i2)
+                prim.addVertex(i1)
+                prim.addVertex(i3)
                 prim.closePrimitive()
-                #
-                i_vertice+=4
         # geom
         geom=Geom(vdata)
         geom.addPrimitive(prim)
@@ -328,7 +317,7 @@ class Terreno:
         shader_nombre_base="terreno" # terreno|debug
         shader=Shader.load(Shader.SL_GLSL, vertex="shaders/%s.v.glsl"%shader_nombre_base, fragment="shaders/%s.f.glsl"%shader_nombre_base)
         self.nodo.setShaderInput("data", data)
-        self.nodo.setShaderInput("water_clipping", Vec3(0, 0, 0), priority=0)
+        self.nodo.setShaderInput("water_clipping", Vec4(0, 0, 0, 0), priority=0)
         self.nodo.setClipPlaneOff(3)
         self.nodo.setShader(shader, 1)
         #
@@ -388,6 +377,19 @@ class Terreno:
         self._ruido_intervalos_tipo_terreno=PerlinNoise2(Terreno.RuidoIntervalo[0], Terreno.RuidoIntervalo[0], 256, Terreno.RuidoIntervalo[1])
 
 #
+# DATOS LOCALES TERRENO
+#
+class DatosLocalesTerreno:
+    
+    def __init__(self):
+        #
+        self.index=None # vertex array index
+        self.pos=None
+        self.normal=None
+        self.tipo=None # int()->tipo, [0,6]; fract()->intervalo, [0,1)
+        self.objeto=None
+
+#
 # TESTER
 #
 from direct.showbase.ShowBase import ShowBase
@@ -407,6 +409,7 @@ class Tester(ShowBase):
         self.escribir_archivo=False # cada update
         #
         self.terreno=Terreno(self, bullet_world)
+        #self.terreno.nodo.setRenderModeWireframe(True)
         #
         plano=CardMaker("plano_agua")
         r=Terreno.TamanoParcela*6
@@ -573,6 +576,6 @@ if __name__=="__main__":
     PStatClient.connect()
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    Terreno.RadioExpansion=1
+    Terreno.RadioExpansion=5
     tester.escribir_archivo=False
     tester.run()
