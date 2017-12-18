@@ -23,9 +23,9 @@ class Terreno:
     NoiseObjsWeights=[1.0, 0.25, 0.1, 0.005, 0.001] # scale_0>scale_1>scale_n
 
     # biomasa:
-    # temperatura
+    # temperatura; 0->1 => calor->frio
     RuidoTemperatura=[8*1024.0, 5643] # [scale, seed]
-    # tipo de terreno
+    # tipo de terreno; [0,6]
     RuidoIntervalo=[16.0, 1133] # [scale, seed]
     IntervalosTiposTerreno=[0.10, 0.30, 0.40, 0.60, 0.70, 0.80] # [0,1]; SUM>=1.0; 0=altitud_agua; [tope_arena, tope_zona_intermedia, tope_tierra, tope_zona_intermedia, tope_pasto, tope_zona_intermedia]; tope_nieve=1
     TipoArena=0
@@ -98,24 +98,7 @@ class Terreno:
         return temperatura
 
     def obtener_tipo_terreno(self, pos, altitud):
-        #
-        temperatura=self._ruido_temperatura(pos[0], pos[1])
-        altitud_corregida=altitud+(temperatura*self.altura_sobre_agua)
-        #
-        if altitud_corregida>self._intervalos_tipo_terreno_escalados[5]:
-            return Terreno.TipoNieve
-        elif altitud_corregida>self._intervalos_tipo_terreno_escalados[4]:
-            return Terreno.TipoIntervaloPastoNieve
-        elif altitud_corregida>self._intervalos_tipo_terreno_escalados[3]:
-            return Terreno.TipoPasto
-        elif altitud_corregida>self._intervalos_tipo_terreno_escalados[2]:
-            return Terreno.TipoIntervaloTierraPasto
-        elif altitud_corregida>self._intervalos_tipo_terreno_escalados[1]:
-            return Terreno.TipoTierra
-        elif altitud_corregida>self._intervalos_tipo_terreno_escalados[0]:
-            return Terreno.TipoIntervaloArenaTierra
-        else:
-            return Terreno.TipoArena
+        return Terreno.TipoArena
 
     def dentro_radio(self, pos_1, pos_2, radio):
         dx=pos_2[0]-pos_1[0]
@@ -202,7 +185,7 @@ class Terreno:
             for y in range(Terreno.TamanoParcela+3):
                 d=DatosLocalesTerreno()
                 #data.index=None # no establecer en esta instancia
-                d.pos=Vec3(x-1, y-1, self.obtener_altitud((pos[0]+x, pos[1]+y)))
+                d.pos=Vec3(x-1, y-1, self.obtener_altitud((pos[0]+x-1, pos[1]+y-1)))
                 d.tipo=self.obtener_tipo_terreno(pos, d.pos[2])
                 data[x].append(d)
         # calcular normales
