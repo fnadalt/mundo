@@ -26,6 +26,12 @@ class Terreno:
     # temperatura; 0->1 => calor->frio
     RuidoTemperatura=[8*1024.0, 5643] # [scale, seed]
     # tipo de terreno; [0,6]
+    #    t-      t       t+
+    # a+ N   T   TP  A   A
+    #    N   T   TP  TA  A
+    # a  N   TN  P   T   A
+    #    N   TN  P   T   A
+    # a- N   N   P   TP  A
     RuidoIntervalo=[16.0, 1133] # [scale, seed]
     IntervalosTiposTerreno=[0.10, 0.30, 0.40, 0.60, 0.70, 0.80] # [0,1]; SUM>=1.0; 0=altitud_agua; [tope_arena, tope_zona_intermedia, tope_tierra, tope_zona_intermedia, tope_pasto, tope_zona_intermedia]; tope_nieve=1
     TipoArena=0
