@@ -67,10 +67,44 @@ vec4 diff_spec(int iLightSource)
 
 vec4 texture_color(in float altitud)
 {
-    vec4 _color;
+    vec4 _color0;
+    vec4 _color1;
     //
-    _color=texture2D(p3d_Texture0, gl_TexCoord[0].st);
+    float factor_mix_tipo=fract(info_tipo);
+    float tipo0=floor(info_tipo/10);
+    float tipo1=mod(info_tipo,10);
     //
+    if(tipo0==1){
+        _color0=texture2D(p3d_Texture3, gl_TexCoord[0].st);
+    } else if(tipo0==2){
+        _color0=texture2D(p3d_Texture1, gl_TexCoord[0].st);
+    } else if(tipo0==3){
+        _color0=texture2D(p3d_Texture2, gl_TexCoord[0].st);
+    } else if(tipo0==4){
+        _color0=texture2D(p3d_Texture1, gl_TexCoord[0].st);
+    } else if(tipo0==5){
+        _color0=texture2D(p3d_Texture0, gl_TexCoord[0].st);
+    } else {
+        _color0=vec4(0,0,0,1);
+    }
+    if(tipo1==1){
+        _color1=texture2D(p3d_Texture3, gl_TexCoord[0].st);
+    } else if(tipo1==2){
+        _color1=texture2D(p3d_Texture1, gl_TexCoord[0].st);
+    } else if(tipo1==3){
+        _color1=texture2D(p3d_Texture2, gl_TexCoord[0].st);
+    } else if(tipo1==4){
+        _color1=texture2D(p3d_Texture1, gl_TexCoord[0].st);
+    } else if(tipo1==5){
+        _color1=texture2D(p3d_Texture0, gl_TexCoord[0].st);
+    } else {
+        _color1=vec4(1,1,1,1);
+    }
+    _color0=vec4(tipo0,tipo0,tipo0,1);
+    _color1=vec4(tipo0,tipo0,tipo0,1);
+    //
+    vec4 _color=mix(_color0,_color1,factor_mix_tipo);
+    _color.a=1.0;
     return _color;
 }
 
@@ -93,6 +127,6 @@ void main()
         vec4 tex_color_ads=tex_color*(diff_spec_sum+componente_ambiental);
 
         tex_color_ads.a=1.0;
-        gl_FragColor=tex_color_ads;
+        gl_FragColor=tex_color;//_ads;
     }
 }

@@ -25,21 +25,7 @@ class Terreno:
     # biomasa:
     # temperatura; 0->1 => calor->frio
     ParamsRuidoTemperatura=[8*1024.0, 5643] # [scale, seed]
-    # tipo de terreno; [0,6]
-    #    t-      t       t+
-    # a+ N   T   TP  A   A
-    #    N   T   TP  TA  A
-    # a  N   TN  P   T   A
-    #    N   TN  P   T   A
-    # a- N   N   P   TP  A
-
-    #    t-              t               t+
-    # a+ N   T   T   T   TP  T   TA  A   A
-    #    N   T   T   T   TP  T   T   A   A
-    # a  N   T   T   TP  P   TP  T   A   A
-    #    N   T   T   P   P   P   TP  A   A
-    # a- N   T   T   P   P   P   TP  T   A
-
+    # tipo de terreno
     ParamsRuidoIntervalo=[16.0, 1133] # [scale, seed]
     TipoNulo=0
     TipoNieve=1
@@ -104,18 +90,22 @@ class Terreno:
         temperatura=self._ruido_temperatura.noise(*pos)
         return temperatura
 
-    def obtener_tipo_terreno_tuple(self, temperatura_base, altitud):
+    def obtener_tipo_terreno_tuple(self, temperatura_base, altitud, debug=False):
         # f()->(tipo1,tipo2,factor_mix); factor_mix: [0,1)
+        if debug:
+            info="obtener_tipo_terreno_tuple tb=%.2f alt=%.2f "%(temperatura_base, altitud)
         c0=0.25
         c1=1.0-c0
         a=(altitud-self.altitud_agua)/(Terreno.AlturaMaxima-self.altitud_agua)
-        a=altitud/Terreno.AlturaMaxima
+        #a=altitud/Terreno.AlturaMaxima
         #
         offset_medio=2.0*temperatura_base-1.0
         tipo_t=c1+4.5*temperatura_base # 4.5==4+2*c0?
-        tipo_t-=0.5*offset_medio
-        tipo_t+=10*offset_medio*a
-        #tipo_t+=(2.0*temperatura_base-1)*(a*1.5)
+        if debug:
+            info+="a=%.2f of_m=%.2f tipo_t=%.2f "%(a, offset_medio, tipo_t)
+        tipo_t+=a*(-0.95*offset_medio+0.75*(1 if offset_medio>0 else -1))
+        if debug:
+            info+="tipo_t_=%.2f "%tipo_t
         if tipo_t<Terreno.TipoNieve:
             tipo_t=Terreno.TipoNieve
         if tipo_t>Terreno.TipoArena:
@@ -134,11 +124,15 @@ class Terreno:
         else:
             fract=0.0
         #
-        return (int(tipo_0), int(tipo_1), fract)
+        tipo=(int(tipo_0), int(tipo_1), fract)
+        if debug:
+            info+="tipo=%s"%str(tipo)
+            log.debug(info)
+        return tipo
 
     def obtener_tipo_terreno_float(self, temperatura_base, altitud):
         # f()->tipo1*10 + tipo2 + factor_mix; factor_mix: [0,1)
-        tipo=self.obtener_tipo_terreno_tuple(temperatura_base, altitud)
+        tipo=self.obtener_tipo_terreno_tuple(temperatura_base, altitud, True)
         return 10.0*tipo[0]+tipo[1]+tipo[2]
 
     def dentro_radio(self, pos_1, pos_2, radio):
@@ -290,6 +284,10 @@ class Terreno:
                 wrt_t.addData2(tc_x, tc_y)
                 wrt_i.addData1(d.tipo)
                 i_vertice+=1
+        # debug data
+        for fila in data:
+            for _d in fila:
+                log.debug(str(_d))
         # llenar datos de primitivas
         for x in range(Terreno.TamanoParcela):
             for y in range(Terreno.TamanoParcela):
@@ -415,6 +413,9 @@ class DatosLocalesTerreno:
         self.normal=None
         self.tipo=0.0
         self.objeto=None
+    
+    def __str__(self):
+        return "DatosLocalesTerreno: i=%s; pos=%s; normal=%s; tipo=%.3f"%(str(self.index), str(self.pos), str(self.normal), self.tipo)
 
 #
 # TESTER
@@ -572,22 +573,20 @@ class Tester(ShowBase):
                  Terreno.TipoNieve:Vec4(250, 250, 250, 255)
                 }
         #
-        with open("output.txt", "w+") as arch:
-            for x in range(tamano+1):
-                for y in range(tamano+1):
-                    t=x/(tamano+1)
-                    a=(y/(tamano+1))*Terreno.AlturaMaxima
-                    tt=self.terreno.obtener_tipo_terreno_tuple(t, a)
-                    arch.write(str(tt)+"\n")
-                    c0=colores[tt[0]]
-                    c1=colores[tt[1]]
-                    color=None
-                    if tt[2]>0.0:
-                        color=(c0*(1.0-tt[2]))+(c1*tt[2])
-                    else:
-                        color=c0
-                    color=(int(color[0]), int(color[1]), int(color[2]), 255)
-                    self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(color[0], color[1], color[2], 255))
+        for x in range(tamano+1):
+            for y in range(tamano+1):
+                t=x/(tamano+1)
+                a=(y/(tamano+1))*Terreno.AlturaMaxima
+                tt=self.terreno.obtener_tipo_terreno_tuple(t, a)
+                c0=colores[tt[0]]
+                c1=colores[tt[1]]
+                color=None
+                if tt[2]>0.0:
+                    color=(c0*(1.0-tt[2]))+(c1*tt[2])
+                else:
+                    color=c0
+                color=(int(color[0]), int(color[1]), int(color[2]), 255)
+                self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(color[0], color[1], color[2], 255))
         #
         self.texturaImagen.load(self.imagen)
 
@@ -634,11 +633,19 @@ class Tester(ShowBase):
             self.zoom_imagen*=2
             self._generar_imagen()
 
+def debug_tipos_terreno(terreno):
+    log.debug("debug_tipos_terreno")
+    tamano=10
+    for t in range(tamano):
+        for a in range(tamano):
+            terreno.obtener_tipo_terreno_tuple(t/tamano, a*Terreno.AlturaMaxima/tamano, True)
+
 if __name__=="__main__":
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
     PStatClient.connect()
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    Terreno.RadioExpansion=0
+    Terreno.RadioExpansion=4
     tester.escribir_archivo=False
+    #debug_tipos_terreno(tester.terreno)
     tester.run()

@@ -2,9 +2,8 @@
 
 attribute vec4 p3d_Vertex;
 attribute vec3 p3d_Normal;
-attribute float info_tipo_terreno;
-
 attribute vec4 p3d_MultiTexCoord0;
+attribute float info_tipo_terreno;
 
 varying vec4 vposmodelo;
 varying vec4 vpos;
