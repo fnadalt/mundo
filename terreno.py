@@ -108,21 +108,30 @@ class Terreno:
         # f()->(tipo1,tipo2,factor_mix); factor_mix: [0,1)
         c0=0.25
         c1=1.0-c0
+        a=(altitud-self.altitud_agua)/(Terreno.AlturaMaxima-self.altitud_agua)
         a=altitud/Terreno.AlturaMaxima
+        #
+        offset_medio=2.0*temperatura_base-1.0
         tipo_t=c1+4.5*temperatura_base # 4.5==4+2*c0?
-        tipo_t+=(2.0*temperatura_base-1)
+        tipo_t-=0.5*offset_medio
+        tipo_t+=10*offset_medio*a
+        #tipo_t+=(2.0*temperatura_base-1)*(a*1.5)
+        if tipo_t<Terreno.TipoNieve:
+            tipo_t=Terreno.TipoNieve
+        if tipo_t>Terreno.TipoArena:
+            tipo_t=Terreno.TipoArena
+        #
         fract, tipo_0=math.modf(tipo_t)
         tipo_1=Terreno.TipoNulo
         if fract>c0:
             if fract>c1:
-                tipo_0=min(math.floor(tipo_t)+1, Terreno.TipoArena)
+                tipo_0=math.floor(tipo_t)+1
                 fract=0.0
             else:
-                tipo_1=min(math.floor(tipo_t)+1, Terreno.TipoArena)
+                tipo_1=math.floor(tipo_t)+1
                 fract-=c0
                 fract/=(c1-c0)
         else:
-            tipo_0=min(max(tipo_0, Terreno.TipoNieve), Terreno.TipoArena)
             fract=0.0
         #
         return (int(tipo_0), int(tipo_1), fract)
