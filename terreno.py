@@ -24,7 +24,7 @@ class Terreno:
 
     # biomasa:
     # temperatura; 0->1 => calor->frio
-    RuidoTemperatura=[8*1024.0, 5643] # [scale, seed]
+    ParamsRuidoTemperatura=[8*1024.0, 5643] # [scale, seed]
     # tipo de terreno; [0,6]
     #    t-      t       t+
     # a+ N   T   TP  A   A
@@ -32,15 +32,21 @@ class Terreno:
     # a  N   TN  P   T   A
     #    N   TN  P   T   A
     # a- N   N   P   TP  A
-    RuidoIntervalo=[16.0, 1133] # [scale, seed]
-    IntervalosTiposTerreno=[0.10, 0.30, 0.40, 0.60, 0.70, 0.80] # [0,1]; SUM>=1.0; 0=altitud_agua; [tope_arena, tope_zona_intermedia, tope_tierra, tope_zona_intermedia, tope_pasto, tope_zona_intermedia]; tope_nieve=1
-    TipoArena=0
-    TipoIntervaloArenaTierra=1
-    TipoTierra=2
-    TipoIntervaloTierraPasto=3
-    TipoPasto=4
-    TipoIntervaloPastoNieve=5
-    TipoNieve=6
+
+    #    t-              t               t+
+    # a+ N   T   T   T   TP  T   TA  A   A
+    #    N   T   T   T   TP  T   T   A   A
+    # a  N   T   T   TP  P   TP  T   A   A
+    #    N   T   T   P   P   P   TP  A   A
+    # a- N   T   T   P   P   P   TP  T   A
+
+    ParamsRuidoIntervalo=[16.0, 1133] # [scale, seed]
+    TipoNulo=0
+    TipoNieve=1
+    TipoTierra1=2
+    TipoPasto=3
+    TipoTierra2=4
+    TipoArena=5
 
     def __init__(self, base, bullet_world):
         # referencias:
@@ -64,11 +70,6 @@ class Terreno:
         self._intervalos_tipo_terreno_escalados=[] # valores de altitud
         self.altura_sobre_agua
         # init:
-        for intervalo in Terreno.IntervalosTiposTerreno:
-            self._intervalos_tipo_terreno_escalados.append(self.altitud_agua+(intervalo*self.altura_sobre_agua))
-        log.info("AlturaMaxima=%s altitud_agua=%s"%(str(Terreno.AlturaMaxima), str(self.altitud_agua)))
-        log.info("_intervalos_tipo_terreno_escalados: %s"%(str(self._intervalos_tipo_terreno_escalados)))
-        #
         self._generar_noise_objs()
         self._establecer_shader()
         #
@@ -103,8 +104,33 @@ class Terreno:
         temperatura=self._ruido_temperatura.noise(*pos)
         return temperatura
 
-    def obtener_tipo_terreno(self, pos, altitud):
-        return Terreno.TipoArena
+    def obtener_tipo_terreno_tuple(self, temperatura_base, altitud):
+        # f()->(tipo1,tipo2,factor_mix); factor_mix: [0,1)
+        c0=0.25
+        c1=1.0-c0
+        a=altitud/Terreno.AlturaMaxima
+        tipo_t=c1+4.5*temperatura_base # 4.5==4+2*c0?
+        tipo_t+=(2.0*temperatura_base-1)
+        fract, tipo_0=math.modf(tipo_t)
+        tipo_1=Terreno.TipoNulo
+        if fract>c0:
+            if fract>c1:
+                tipo_0=min(math.floor(tipo_t)+1, Terreno.TipoArena)
+                fract=0.0
+            else:
+                tipo_1=min(math.floor(tipo_t)+1, Terreno.TipoArena)
+                fract-=c0
+                fract/=(c1-c0)
+        else:
+            tipo_0=min(max(tipo_0, Terreno.TipoNieve), Terreno.TipoArena)
+            fract=0.0
+        #
+        return (int(tipo_0), int(tipo_1), fract)
+
+    def obtener_tipo_terreno_float(self, temperatura_base, altitud):
+        # f()->tipo1*10 + tipo2 + factor_mix; factor_mix: [0,1)
+        tipo=self.obtener_tipo_terreno_tuple(temperatura_base, altitud)
+        return 10.0*tipo[0]+tipo[1]+tipo[2]
 
     def dentro_radio(self, pos_1, pos_2, radio):
         dx=pos_2[0]-pos_1[0]
@@ -186,13 +212,16 @@ class Terreno:
         pos=self.obtener_pos_parcela(idx_pos)
         # matriz de DatosLocalesTerreno; x,y->TamanoParcela +/- 1
         data=list() # x,y: [[n, ...], ...]
+        _pos=(0, 0)
         for x in range(Terreno.TamanoParcela+3):
             data.append(list())
             for y in range(Terreno.TamanoParcela+3):
                 d=DatosLocalesTerreno()
                 #data.index=None # no establecer en esta instancia
-                d.pos=Vec3(x-1, y-1, self.obtener_altitud((pos[0]+x-1, pos[1]+y-1)))
-                d.tipo=self.obtener_tipo_terreno(pos, d.pos[2])
+                _pos=(pos[0]+x-1, pos[1]+y-1)
+                temperatura_base=self.obtener_temperatura_base(_pos)
+                d.pos=Vec3(x-1, y-1, self.obtener_altitud(_pos))
+                d.tipo=self.obtener_tipo_terreno_float(temperatura_base, d.pos[2])
                 data[x].append(d)
         # calcular normales
         for x in range(Terreno.TamanoParcela+1):
@@ -298,10 +327,10 @@ class Terreno:
         #   altitud_pasto           altitud_interv_p_n     altitud_nieve         0
         #   altura_sobre_agua  AlturaMaxima           altitud_agua          0
         #   0                             0                                0                             0
-        data=LMatrix4(self._intervalos_tipo_terreno_escalados[0], self._intervalos_tipo_terreno_escalados[1], self._intervalos_tipo_terreno_escalados[2], 0, \
-                                 self._intervalos_tipo_terreno_escalados[3], self._intervalos_tipo_terreno_escalados[4], self._intervalos_tipo_terreno_escalados[5], 0, \
-                                 self.altura_sobre_agua, Terreno.AlturaMaxima, self.altitud_agua, 0, \
-                                 0, 0, 0, 0)
+        data=LMatrix4(0, 0, 0, 0, \
+                      0, 0, 0, 0, \
+                      self.altura_sobre_agua, Terreno.AlturaMaxima, self.altitud_agua, 0, \
+                      0, 0, 0, 0)
         #
         shader_nombre_base="terreno" # terreno|debug
         shader=Shader.load(Shader.SL_GLSL, vertex="shaders/%s.v.glsl"%shader_nombre_base, fragment="shaders/%s.f.glsl"%shader_nombre_base)
@@ -361,9 +390,9 @@ class Terreno:
         self._noise_objs.append(PerlinNoise2(escalas[4], escalas[4], 256, Terreno.SemillaTopografia+(128*4)))
         # biomasa:
         # temperatura
-        self._ruido_temperatura=PerlinNoise2(Terreno.RuidoTemperatura[0], Terreno.RuidoTemperatura[0], 256, Terreno.RuidoTemperatura[1])
+        self._ruido_temperatura=PerlinNoise2(Terreno.ParamsRuidoTemperatura[0], Terreno.ParamsRuidoTemperatura[0], 256, Terreno.ParamsRuidoTemperatura[1])
         # intervalos de tipos de terreno
-        self._ruido_intervalos_tipo_terreno=PerlinNoise2(Terreno.RuidoIntervalo[0], Terreno.RuidoIntervalo[0], 256, Terreno.RuidoIntervalo[1])
+        self._ruido_intervalos_tipo_terreno=PerlinNoise2(Terreno.ParamsRuidoIntervalo[0], Terreno.ParamsRuidoIntervalo[0], 256, Terreno.ParamsRuidoIntervalo[1])
 
 #
 # DATOS LOCALES TERRENO
@@ -375,7 +404,7 @@ class DatosLocalesTerreno:
         self.index=None # vertex array index
         self.pos=None
         self.normal=None
-        self.tipo=None # int()->tipo, [0,6]; fract()->intervalo, [0,1)
+        self.tipo=0.0
         self.objeto=None
 
 #
@@ -492,7 +521,7 @@ class Tester(ShowBase):
             #
             self.pos_foco=pos
             #
-            self._generar_imagen()
+            self._generar_imagen_tipos_terreno()
 
     def _generar_imagen(self):
         #
@@ -514,6 +543,42 @@ class Tester(ShowBase):
                     self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(c, c, 0, 255))
                 else:
                     self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(0, 0, c, 255))
+        #
+        self.texturaImagen.load(self.imagen)
+
+    def _generar_imagen_tipos_terreno(self):
+        #
+        tamano=128
+        if not self.imagen:
+            self.imagen=PNMImage(tamano+1, tamano+1)
+            self.texturaImagen=Texture()
+            self.frmImagen["image"]=self.texturaImagen
+            self.frmImagen["image_scale"]=0.4
+        #
+        colores={Terreno.TipoNulo:Vec4(0, 0, 0, 255), 
+                 Terreno.TipoArena:Vec4(240, 230, 0, 255), 
+                 Terreno.TipoTierra1:Vec4(70, 60, 0, 255), 
+                 Terreno.TipoPasto:Vec4(0, 190, 10, 255), 
+                 Terreno.TipoTierra2:Vec4(70, 60, 0, 255), 
+                 Terreno.TipoNieve:Vec4(250, 250, 250, 255)
+                }
+        #
+        with open("output.txt", "w+") as arch:
+            for x in range(tamano+1):
+                for y in range(tamano+1):
+                    t=x/(tamano+1)
+                    a=(y/(tamano+1))*Terreno.AlturaMaxima
+                    tt=self.terreno.obtener_tipo_terreno_tuple(t, a)
+                    arch.write(str(tt)+"\n")
+                    c0=colores[tt[0]]
+                    c1=colores[tt[1]]
+                    color=None
+                    if tt[2]>0.0:
+                        color=(c0*(1.0-tt[2]))+(c1*tt[2])
+                    else:
+                        color=c0
+                    color=(int(color[0]), int(color[1]), int(color[2]), 255)
+                    self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(color[0], color[1], color[2], 255))
         #
         self.texturaImagen.load(self.imagen)
 
@@ -565,6 +630,6 @@ if __name__=="__main__":
     PStatClient.connect()
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    Terreno.RadioExpansion=5
+    Terreno.RadioExpansion=0
     tester.escribir_archivo=False
     tester.run()
