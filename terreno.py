@@ -40,6 +40,7 @@ class Terreno:
         self.bullet_world=bullet_world
         # componentes:
         self.nodo=self.base.render.attachNewNode("terreno")
+        self.nodo.setRenderModeWireframe(True)
         self.parcelas={} # {idx_pos:parcela_node_path,...}
         self._noise_objs=list() # [PerlinNoise2, ...]
         self._ruido_temperatura=None
@@ -88,6 +89,8 @@ class Terreno:
 
     def obtener_temperatura_base(self, pos):
         temperatura=self._ruido_temperatura.noise(*pos)
+        temperatura+=1.0
+        temperatura/=2.0
         return temperatura
 
     def obtener_tipo_terreno_tuple(self, temperatura_base, altitud, debug=False):
@@ -132,7 +135,7 @@ class Terreno:
 
     def obtener_tipo_terreno_float(self, temperatura_base, altitud):
         # f()->tipo1*10 + tipo2 + factor_mix; factor_mix: [0,1)
-        tipo=self.obtener_tipo_terreno_tuple(temperatura_base, altitud, True)
+        tipo=self.obtener_tipo_terreno_tuple(temperatura_base, altitud, False)
         return 10.0*tipo[0]+tipo[1]+tipo[2]
 
     def dentro_radio(self, pos_1, pos_2, radio):
@@ -285,9 +288,9 @@ class Terreno:
                 wrt_i.addData1(d.tipo)
                 i_vertice+=1
         # debug data
-        for fila in data:
-            for _d in fila:
-                log.debug(str(_d))
+        #for fila in data:
+        #    for _d in fila:
+        #        log.debug(str(_d))
         # llenar datos de primitivas
         for x in range(Terreno.TamanoParcela):
             for y in range(Terreno.TamanoParcela):

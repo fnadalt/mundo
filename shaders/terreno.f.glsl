@@ -67,12 +67,13 @@ vec4 diff_spec(int iLightSource)
 
 vec4 texture_color(in float altitud)
 {
+    vec4 _color;
     vec4 _color0;
     vec4 _color1;
     //
     float factor_mix_tipo=fract(info_tipo);
     float tipo0=floor(info_tipo/10);
-    float tipo1=mod(info_tipo,10);
+    float tipo1=mod(floor(info_tipo),10);
     //
     if(tipo0==1){
         _color0=texture2D(p3d_Texture3, gl_TexCoord[0].st);
@@ -100,10 +101,15 @@ vec4 texture_color(in float altitud)
     } else {
         _color1=vec4(1,1,1,1);
     }
-    _color0=vec4(tipo0,tipo0,tipo0,1);
-    _color1=vec4(tipo0,tipo0,tipo0,1);
     //
-    vec4 _color=mix(_color0,_color1,factor_mix_tipo);
+    if(factor_mix_tipo==0.0){
+        _color=_color0;
+    } else if(factor_mix_tipo==1.0){
+        _color=_color1;
+    } else {
+        _color=factor_mix_tipo<0.5?_color0:_color1;
+    }
+    //
     _color.a=1.0;
     return _color;
 }
