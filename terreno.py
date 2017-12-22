@@ -40,7 +40,7 @@ class Terreno:
         self.bullet_world=bullet_world
         # componentes:
         self.nodo=self.base.render.attachNewNode("terreno")
-        self.nodo.setRenderModeWireframe(True)
+        #self.nodo.setRenderModeWireframe()
         self.parcelas={} # {idx_pos:parcela_node_path,...}
         self._noise_objs=list() # [PerlinNoise2, ...]
         self._ruido_temperatura=None
@@ -100,13 +100,12 @@ class Terreno:
         c0=0.25
         c1=1.0-c0
         a=(altitud-self.altitud_agua)/(Terreno.AlturaMaxima-self.altitud_agua)
-        #a=altitud/Terreno.AlturaMaxima
         #
         offset_medio=2.0*temperatura_base-1.0
         tipo_t=c1+4.5*temperatura_base # 4.5==4+2*c0?
         if debug:
             info+="a=%.2f of_m=%.2f tipo_t=%.2f "%(a, offset_medio, tipo_t)
-        tipo_t+=a*(-0.95*offset_medio+0.75*(1 if offset_medio>0 else -1))
+        tipo_t+=a*(0.08*offset_medio+0.3*(1 if offset_medio>0 else -1))
         if debug:
             info+="tipo_t_=%.2f "%tipo_t
         if tipo_t<Terreno.TipoNieve:
@@ -440,7 +439,7 @@ class Tester(ShowBase):
         self.escribir_archivo=False # cada update
         #
         self.terreno=Terreno(self, bullet_world)
-        #self.terreno.nodo.setRenderModeWireframe(True)
+        #self.terreno.nodo.setRenderModeWireframe()
         #
         plano=CardMaker("plano_agua")
         r=Terreno.TamanoParcela*6
@@ -648,7 +647,7 @@ if __name__=="__main__":
     PStatClient.connect()
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    Terreno.RadioExpansion=4
+    Terreno.RadioExpansion=0
     tester.escribir_archivo=False
     #debug_tipos_terreno(tester.terreno)
     tester.run()
