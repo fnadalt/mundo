@@ -1,4 +1,4 @@
-#version 120
+#version 130
 
 attribute vec4 p3d_Vertex;
 attribute vec3 p3d_Normal;
@@ -8,7 +8,8 @@ attribute float info_tipo_terreno;
 varying vec4 vposmodelo;
 varying vec4 vpos;
 varying vec3 normal;
-varying float info_tipo;
+flat out float info_tipo;
+smooth out float info_tipo_factor;
 
 uniform mat3 p3d_NormalMatrix;
 uniform mat4 p3d_ModelMatrix;
@@ -23,7 +24,8 @@ void main()
     vpos=p3d_ModelViewMatrix*vposmodelo;
     normal=normalize(p3d_NormalMatrix*p3d_Normal);
     
-    info_tipo=info_tipo_terreno;
+    info_tipo=floor(info_tipo_terreno);
+    info_tipo_factor=fract(info_tipo_terreno);
     
     gl_Position=p3d_ModelViewProjectionMatrix * vposmodelo;
 }

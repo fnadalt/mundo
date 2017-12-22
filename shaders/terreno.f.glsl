@@ -1,9 +1,10 @@
-#version 120
+#version 130
 
 varying vec4 vposmodelo;
 varying vec4 vpos;
 varying vec3 normal;
-varying float info_tipo;
+flat in float info_tipo;
+smooth in float info_tipo_factor;
 
 uniform struct {
     vec4 ambient;
@@ -71,9 +72,8 @@ vec4 texture_color(in float altitud)
     vec4 _color0;
     vec4 _color1;
     //
-    float factor_mix_tipo=fract(info_tipo);
     float tipo0=floor(info_tipo/10);
-    float tipo1=mod(floor(info_tipo),10);
+    float tipo1=mod(info_tipo,10);
     //
     if(tipo0==1){
         _color0=texture2D(p3d_Texture3, gl_TexCoord[0].st);
@@ -102,12 +102,12 @@ vec4 texture_color(in float altitud)
         _color1=vec4(1,1,1,1);
     }
     //
-    if(factor_mix_tipo==0.0){
+    if(info_tipo_factor==0.0){
         _color=_color0;
-    } else if(factor_mix_tipo==1.0){
+    } else if(info_tipo_factor==1.0){
         _color=_color1;
     } else {
-        _color=factor_mix_tipo<0.5?_color0:_color1;
+        _color=info_tipo_factor<0.5?_color0:_color1;
     }
     //
     _color.a=1.0;
@@ -133,6 +133,6 @@ void main()
         vec4 tex_color_ads=tex_color*(diff_spec_sum+componente_ambiental);
 
         tex_color_ads.a=1.0;
-        gl_FragColor=tex_color;//_ads;
+        gl_FragColor=tex_color_ads;
     }
 }

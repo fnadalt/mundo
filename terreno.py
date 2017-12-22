@@ -44,6 +44,7 @@ class Terreno:
         self.parcelas={} # {idx_pos:parcela_node_path,...}
         self._noise_objs=list() # [PerlinNoise2, ...]
         self._ruido_temperatura=None
+        self._ruido_intervalos_tipo_terreno=None
         # variables externas:
         self.pos_foco=None
         self.pos_foco_inicial=[0, 0]
@@ -93,24 +94,38 @@ class Terreno:
         temperatura/=2.0
         return temperatura
 
+    def obtener_temperatura_actual(self, pos, hora_normalizada):
+        # ?; ineficiente?
+        # temperatura_base [0,1] => [-25,25]
+        # amplitud(altitud [0,1]) => [25,50] ?= 10+15*altitud
+        # amplitud_altitud(temperatura_base [0,1]) => amplitud_altitud*(0.5+0.5*temperatura_base)
+        # temperatura(factor_horario) => temperatura_base-(amplitud_temperatura_base_altitud/2)+amplitud_temperatura_base_altitud*factor_horario
+        #
+        temperatura_base=self.obtener_temperatura_base(pos)
+        altitud=self.obtener_altitud(pos)
+        #
+        factor_horario=abs((hora_normalizada-0.25)/0.75)
+        #
+        return 20.0;
+
     def obtener_tipo_terreno_tuple(self, temperatura_base, altitud, debug=False):
         # f()->(tipo1,tipo2,factor_mix); factor_mix: [0,1)
-        if debug:
+        if debug: # ineficiente
             info="obtener_tipo_terreno_tuple tb=%.2f alt=%.2f "%(temperatura_base, altitud)
-        c0=0.25
-        c1=1.0-c0
+        c0=0.25 # ineficiente?
+        c1=1.0-c0 # ineficiente?
         a=(altitud-self.altitud_agua)/(Terreno.AlturaMaxima-self.altitud_agua)
         #
         offset_medio=2.0*temperatura_base-1.0
         tipo_t=c1+4.5*temperatura_base # 4.5==4+2*c0?
-        if debug:
+        if debug: # ineficiente
             info+="a=%.2f of_m=%.2f tipo_t=%.2f "%(a, offset_medio, tipo_t)
-        tipo_t+=a*(0.08*offset_medio+0.3*(1 if offset_medio>0 else -1))
-        if debug:
+        tipo_t+=2.5*a*a*offset_medio
+        if debug: # ineficiente
             info+="tipo_t_=%.2f "%tipo_t
-        if tipo_t<Terreno.TipoNieve:
+        if tipo_t<Terreno.TipoNieve: # ineficiente?
             tipo_t=Terreno.TipoNieve
-        if tipo_t>Terreno.TipoArena:
+        if tipo_t>Terreno.TipoArena: # ineficiente?
             tipo_t=Terreno.TipoArena
         #
         fract, tipo_0=math.modf(tipo_t)
@@ -121,20 +136,25 @@ class Terreno:
                 fract=0.0
             else:
                 tipo_1=math.floor(tipo_t)+1
+                # no perlin
                 fract-=c0
-                fract/=(c1-c0)
+                fract/=c1-c0
+                # perlin
+                fract=self._ruido_intervalos_tipo_terreno(temperatura_base, altitud)
+                fract+=1
+                fract/=2
         else:
             fract=0.0
         #
         tipo=(int(tipo_0), int(tipo_1), fract)
-        if debug:
+        if debug: # ineficiente
             info+="tipo=%s"%str(tipo)
             log.debug(info)
         return tipo
 
-    def obtener_tipo_terreno_float(self, temperatura_base, altitud):
+    def obtener_tipo_terreno_float(self, temperatura_base, altitud, debug=False):
         # f()->tipo1*10 + tipo2 + factor_mix; factor_mix: [0,1)
-        tipo=self.obtener_tipo_terreno_tuple(temperatura_base, altitud, False)
+        tipo=self.obtener_tipo_terreno_tuple(temperatura_base, altitud, debug)
         return 10.0*tipo[0]+tipo[1]+tipo[2]
 
     def dentro_radio(self, pos_1, pos_2, radio):
@@ -226,7 +246,8 @@ class Terreno:
                 _pos=(pos[0]+x-1, pos[1]+y-1)
                 temperatura_base=self.obtener_temperatura_base(_pos)
                 d.pos=Vec3(x-1, y-1, self.obtener_altitud(_pos))
-                d.tipo=self.obtener_tipo_terreno_float(temperatura_base, d.pos[2])
+                d.tipo=self.obtener_tipo_terreno_float(temperatura_base, d.pos[2], False)
+                #log.debug(str(d.tipo))
                 data[x].append(d)
         # calcular normales
         for x in range(Terreno.TamanoParcela+1):
@@ -647,7 +668,7 @@ if __name__=="__main__":
     PStatClient.connect()
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    Terreno.RadioExpansion=0
+    Terreno.RadioExpansion=2
     tester.escribir_archivo=False
     #debug_tipos_terreno(tester.terreno)
     tester.run()
