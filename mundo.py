@@ -20,7 +20,7 @@ log=logging.getLogger(__name__)
 
 class Mundo(NodePath):
 
-    PosInicialFoco=Vec3(0, 0, 1) # |(-937,-323,1)
+    PosInicialFoco=Vec3(-5152, -3555, 1) # |(-937,-323,1)
     
     def __init__(self, base):
         NodePath.__init__(self, "mundo")
@@ -200,7 +200,7 @@ class Mundo(NodePath):
         # controlador cámara
         self.controlador_camara.altitud_suelo=self.terreno.obtener_altitud(self.controlador_camara.pos_camara.getXy())
         self.controlador_camara.update(dt)
-        pos_pivot_camara=self.controlador_camara.pivot.getPos().getXy()
+        pos_pivot_camara=self.controlador_camara.pivot.getPos(self).getXy()
         altitud_pivot_camara=self.terreno.obtener_altitud(pos_pivot_camara)
         temperatura_base_pivot_camara=self.terreno.obtener_temperatura_base(pos_pivot_camara)
         # ciclo dia/noche, cielo, sol

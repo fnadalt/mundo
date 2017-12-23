@@ -107,7 +107,7 @@ class Terreno:
         temperatura_base_c=-5.0+(40.0*temperatura_base)
         temperatura=temperatura_base_c-(amplitud/2.0)+(amplitud*factor_horario)
         #
-        #log.debug("obtener_temperatura_actual tbc=%.2f asa=%.2f ampl=%.2f fh=%.2f t=%.2f"%(temperatura_base_c, altura_sobre_agua_n, amplitud, factor_horario, temperatura))
+        #log.debug("obtener_temperatura_actual tb=%.2f hn=%.2f tbc=%.2f asa=%.2f ampl=%.2f fh=%.2f t=%.2f"%(temperatura_base, hora_normalizada, temperatura_base_c, altura_sobre_agua_n, amplitud, factor_horario, temperatura))
         #
         return temperatura
 
@@ -450,6 +450,14 @@ from direct.showbase.ShowBase import ShowBase
 from direct.gui.DirectGui import *
 class Tester(ShowBase):
 
+    ColoresTipoTerreno={Terreno.TipoNulo:Vec4(0, 0, 0, 255), 
+                        Terreno.TipoArena:Vec4(240, 230, 0, 255), 
+                        Terreno.TipoTierra1:Vec4(70, 60, 0, 255), 
+                        Terreno.TipoPasto:Vec4(0, 190, 10, 255), 
+                        Terreno.TipoTierra2:Vec4(70, 60, 0, 255), 
+                        Terreno.TipoNieve:Vec4(250, 250, 250, 255)
+                        }
+
     def __init__(self):
         #
         super(Tester, self).__init__()
@@ -557,7 +565,8 @@ class Tester(ShowBase):
             #
             self.pos_foco=pos
             #
-            self._generar_imagen_tipos_terreno()
+            self._generar_imagen()
+            #self._generar_imagen_tipos_terreno()
 
     def _generar_imagen(self):
         #
@@ -573,10 +582,22 @@ class Tester(ShowBase):
                 _x=self.pos_foco[0]-(x-(tamano/2))*self.zoom_imagen
                 _y=self.pos_foco[1]+(y-(tamano/2))*self.zoom_imagen
                 a=self.terreno.obtener_altitud((_x, _y))
-                c=int(255*(1-((self.terreno.altitud_agua-a)/(self.terreno.altitud_agua))))
-                c=int(255*((self.terreno.obtener_temperatura_base((_x, _y))+1.0)/2.0))
+                c=int(255*a/Terreno.AlturaMaxima)
                 if a>self.terreno.altitud_agua:
-                    self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(c, c, 0, 255))
+                    tb=self.terreno.obtener_temperatura_base((_x, _y))
+                    tt=self.terreno.obtener_tipo_terreno_tuple(tb, a)
+                    c0=None
+                    c1=None
+                    if tt[2]==0.0:
+                        c=Tester.ColoresTipoTerreno[tt[0]]
+                    elif tt[2]==1.0:
+                        c=Tester.ColoresTipoTerreno[tt[1]]
+                    else:
+                        c0=Tester.ColoresTipoTerreno[tt[0]]
+                        c1=Tester.ColoresTipoTerreno[tt[1]]
+                        c=(c0*(1-tt[2]))+(c1*tt[2])
+                    #log.debug("_generar_imagen tt=%s c0=%s c1=%s c=%s"%(str(tt), str(c0), str(c1), str(c)))
+                    self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(int(c[0]), int(c[1]), int(c[2]), 255))
                 else:
                     self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(0, 0, c, 255))
         #
@@ -591,21 +612,13 @@ class Tester(ShowBase):
             self.frmImagen["image"]=self.texturaImagen
             self.frmImagen["image_scale"]=0.4
         #
-        colores={Terreno.TipoNulo:Vec4(0, 0, 0, 255), 
-                 Terreno.TipoArena:Vec4(240, 230, 0, 255), 
-                 Terreno.TipoTierra1:Vec4(70, 60, 0, 255), 
-                 Terreno.TipoPasto:Vec4(0, 190, 10, 255), 
-                 Terreno.TipoTierra2:Vec4(70, 60, 0, 255), 
-                 Terreno.TipoNieve:Vec4(250, 250, 250, 255)
-                }
-        #
         for x in range(tamano+1):
             for y in range(tamano+1):
                 t=x/(tamano+1)
                 a=(y/(tamano+1))*Terreno.AlturaMaxima
                 tt=self.terreno.obtener_tipo_terreno_tuple(t, a)
-                c0=colores[tt[0]]
-                c1=colores[tt[1]]
+                c0=Tester.ColoresTipoTerreno[tt[0]]
+                c1=Tester.ColoresTipoTerreno[tt[1]]
                 color=None
                 if tt[2]>0.0:
                     color=(c0*(1.0-tt[2]))+(c1*tt[2])
@@ -689,7 +702,7 @@ if __name__=="__main__":
     PStatClient.connect()
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    Terreno.RadioExpansion=0
+    Terreno.RadioExpansion=4
     tester.escribir_archivo=False
     #debug_tipos_terreno(tester.terreno)
     #debug_temperaturas(tester.terreno)
