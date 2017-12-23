@@ -94,33 +94,36 @@ class Terreno:
         temperatura/=2.0
         return temperatura
 
-    def obtener_temperatura_actual(self, pos, hora_normalizada):
-        # ?; ineficiente?
-        # temperatura_base [0,1] => [-25,25]
-        # amplitud(altitud [0,1]) => [25,50] ?= 10+15*altitud
-        # amplitud_altitud(temperatura_base [0,1]) => amplitud_altitud*(0.5+0.5*temperatura_base)
-        # temperatura(factor_horario) => temperatura_base-(amplitud_temperatura_base_altitud/2)+amplitud_temperatura_base_altitud*factor_horario
+    def obtener_temperatura_actual(self, temperatura_base, altitud, hora_normalizada):
+        # f()-> grados_c
         #
-        temperatura_base=self.obtener_temperatura_base(pos)
-        altitud=self.obtener_altitud(pos)
+        altura_sobre_agua_n=(altitud-self.altitud_agua)/self.altura_sobre_agua
         #
-        factor_horario=abs((hora_normalizada-0.25)/0.75)
+        amplitud=15.0+25.0*altura_sobre_agua_n
+        amplitud*=0.5+0.75*temperatura_base
         #
-        return 20.0;
+        factor_horario=0.5+math.sin(2.0*(hora_normalizada-0.5)*math.pi)/2.0
+        #
+        temperatura_base_c=-5.0+(40.0*temperatura_base)
+        temperatura=temperatura_base_c-(amplitud/2.0)+(amplitud*factor_horario)
+        #
+        #log.debug("obtener_temperatura_actual tbc=%.2f asa=%.2f ampl=%.2f fh=%.2f t=%.2f"%(temperatura_base_c, altura_sobre_agua_n, amplitud, factor_horario, temperatura))
+        #
+        return temperatura
 
     def obtener_tipo_terreno_tuple(self, temperatura_base, altitud, debug=False):
         # f()->(tipo1,tipo2,factor_mix); factor_mix: [0,1)
         if debug: # ineficiente
             info="obtener_tipo_terreno_tuple tb=%.2f alt=%.2f "%(temperatura_base, altitud)
-        c0=0.25 # ineficiente?
+        c0=0.3 # ineficiente?
         c1=1.0-c0 # ineficiente?
-        a=(altitud-self.altitud_agua)/(Terreno.AlturaMaxima-self.altitud_agua)
+        a=(altitud-self.altitud_agua)/self.altura_sobre_agua
         #
         offset_medio=2.0*temperatura_base-1.0
         tipo_t=c1+4.5*temperatura_base # 4.5==4+2*c0?
         if debug: # ineficiente
             info+="a=%.2f of_m=%.2f tipo_t=%.2f "%(a, offset_medio, tipo_t)
-        tipo_t+=2.5*a*a*offset_medio
+        tipo_t+=-0.35+1.5*a*a*offset_medio
         if debug: # ineficiente
             info+="tipo_t_=%.2f "%tipo_t
         if tipo_t<Terreno.TipoNieve: # ineficiente?
@@ -175,7 +178,7 @@ class Terreno:
         #
         info="Terreno\n"
         info+="idx_pos_parcela_actual=%s pos=%s\n"%(str(self.idx_pos_parcela_actual), str(pos_parcela_actual))
-        info+="RadioExpansion=%i\n temp_media=%s"%(Terreno.RadioExpansion, str(temp))
+        info+="RadioExpansion=%i pos_foco=%s altitud=%.2f temp_base=%s\n"%(Terreno.RadioExpansion, str(self.pos_foco), self.obtener_altitud(self.pos_foco), str(temp))
         return info
 
     def update(self, pos_foco):
@@ -628,7 +631,7 @@ class Tester(ShowBase):
         # frame
         self.frame=DirectFrame(parent=self.aspect2d, pos=(0, 0, -0.85), frameSize=(-1, 1, -0.15, 0.25), frameColor=(1, 1, 1, 0.5))
         # info
-        self.lblInfo=DirectLabel(parent=self.frame, pos=(-1, 0, 0.15), scale=0.05, text=self.terreno.obtener_info(), frameColor=(1, 1, 1, 0.2), frameSize=(0, 40, -2, 2), text_align=TextNode.ALeft, text_pos=(0, 1, 1))
+        self.lblInfo=DirectLabel(parent=self.frame, pos=(-1, 0, 0.15), scale=0.05, text="info terreno?", frameColor=(1, 1, 1, 0.2), frameSize=(0, 40, -2, 2), text_align=TextNode.ALeft, text_pos=(0, 1, 1))
         # idx_pos
         DirectLabel(parent=self.frame, pos=(-1, 0, 0), scale=0.05, text="idx_pos_x", frameColor=(1, 1, 1, 0), frameSize=(0, 2, -1, 1), text_align=TextNode.ALeft)
         DirectLabel(parent=self.frame, pos=(-1, 0, -0.1), scale=0.05, text="idx_pos_y", frameColor=(1, 1, 1, 0), frameSize=(0, 2, -1, 1), text_align=TextNode.ALeft)
@@ -663,12 +666,31 @@ def debug_tipos_terreno(terreno):
         for a in range(tamano):
             terreno.obtener_tipo_terreno_tuple(t/tamano, a*Terreno.AlturaMaxima/tamano, True)
 
+def debug_temperaturas(terreno):
+    log.debug("debug_temperaturas")
+    log.debug("frio:")
+    terreno.obtener_temperatura_actual(0.0, 150, 0.25)
+    terreno.obtener_temperatura_actual(0.0, 150, 0.75)
+    terreno.obtener_temperatura_actual(0.0, 300, 0.25)
+    terreno.obtener_temperatura_actual(0.0, 300, 0.75)
+    log.debug("templado:")
+    terreno.obtener_temperatura_actual(0.5, 150, 0.25)
+    terreno.obtener_temperatura_actual(0.5, 150, 0.75)
+    terreno.obtener_temperatura_actual(0.5, 300, 0.25)
+    terreno.obtener_temperatura_actual(0.5, 300, 0.75)
+    log.debug("caluroso:")
+    terreno.obtener_temperatura_actual(1.0, 150, 0.25)
+    terreno.obtener_temperatura_actual(1.0, 150, 0.75)
+    terreno.obtener_temperatura_actual(1.0, 300, 0.25)
+    terreno.obtener_temperatura_actual(1.0, 300, 0.75)
+
 if __name__=="__main__":
     logging.basicConfig(level=logging.DEBUG)
     PStatClient.connect()
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    Terreno.RadioExpansion=2
+    Terreno.RadioExpansion=0
     tester.escribir_archivo=False
     #debug_tipos_terreno(tester.terreno)
+    #debug_temperaturas(tester.terreno)
     tester.run()

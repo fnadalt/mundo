@@ -30,20 +30,20 @@ class ControladorCamara:
         # componentes
         self.camara=self.base.camera
         self.target_node_path=None
-        self.foco=None
+        self.pivot=None
     
     def seguir(self, target_node_path):
         #
-        if self.foco!=None:
-            self.foco.removeNode()
+        if self.pivot!=None:
+            self.pivot.removeNode()
         #
         self.target_node_path=target_node_path
-        self.foco=self.target_node_path.attachNewNode("foco")
-        self.foco.setZ(0.5)
+        self.pivot=self.target_node_path.attachNewNode("pivot")
+        self.pivot.setZ(0.5)
         #
-        self.camara.reparentTo(self.foco)
+        self.camara.reparentTo(self.pivot)
         self.camara.setY(ControladorCamara.DistanciaInicial)
-        self.camara.lookAt(self.foco)
+        self.camara.lookAt(self.pivot)
     
     def update(self, dt):
         # input
@@ -75,7 +75,7 @@ class ControladorCamara:
                 self._ajustando_altitud=False
         #
         if abs(pos_mouse[0])>0.4:
-            foco_cam_H=self.foco.getH()
+            foco_cam_H=self.pivot.getH()
             foco_cam_H-=90.0*dt*(1.0 if pos_mouse[0]>0.0 else -1.0)
             if self.modo==ControladorCamara.ModoPrimeraPersona:
                 if foco_cam_H<-85.0 or foco_cam_H>85.0:
@@ -83,13 +83,13 @@ class ControladorCamara:
             else:
                 if abs(foco_cam_H)>=360.0:
                     foco_cam_H=0.0
-            self.foco.setH(foco_cam_H)
+            self.pivot.setH(foco_cam_H)
         if abs(pos_mouse[1])>0.4:
-            foco_cam_P=self.foco.getP()
+            foco_cam_P=self.pivot.getP()
             foco_cam_P-=15.0*dt*(1.0 if pos_mouse[1]>0.0 else -1.0)
             if foco_cam_P<-85.0 or foco_cam_P>85.0:
                 return
-            self.foco.setP(foco_cam_P)
+            self.pivot.setP(foco_cam_P)
 
     def _acercar(self):
         distancia_Y=self.camara.getY()
@@ -97,7 +97,7 @@ class ControladorCamara:
         if distancia_Y<1.2 and self.modo==ControladorCamara.ModoTerceraPersona:
             distancia_Y=0.0
             self.modo=ControladorCamara.ModoPrimeraPersona
-            self.foco.setP(0.0)
+            self.pivot.setP(0.0)
             log.info("camara en primera persona")
         elif distancia_Y<0.0:
             distancia_Y=0.0
@@ -118,10 +118,10 @@ class ControladorCamara:
 
     def _mirar_adelante(self):
         if self.modo==ControladorCamara.ModoTerceraPersona:
-            self.foco.setH(0.0)
+            self.pivot.setH(0.0)
         elif self.modo==ControladorCamara.ModoPrimeraPersona:
-            _angulo=self.foco.getH()
+            _angulo=self.pivot.getH()
             _cuerpo_H=self.target_node_path.getH()
             self.target_node_path.setH(_cuerpo_H+_angulo)
-            self.foco.setH(0.0)
+            self.pivot.setH(0.0)
 

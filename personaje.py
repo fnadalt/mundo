@@ -85,7 +85,7 @@ class Personaje:
             if archivo[:-4]=="actor":
                 archivo_actor=archivo
             else:
-                dict_animaciones[archivo[:-4]]=os.path.join(ruta_dir, archivo)
+                dict_animaciones[archivo[:-4]]=Filename.fromOsSpecific(os.path.join(ruta_dir, archivo))
         if archivo_actor=="":
             raise Exception("no se encontró ningún archivo de actor (actor.[egg|bam]) en '%s'"%ruta_dir)
         # cuerpo
@@ -98,7 +98,7 @@ class Personaje:
         self.cuerpo=parent_node_path.attachNewNode(rb)
         self.cuerpo.setCollideMask(BitMask32.bit(2))
         # actor
-        self.actor=Actor(os.path.join(ruta_dir, archivo_actor), dict_animaciones)
+        self.actor=Actor(Filename.fromOsSpecific(os.path.join(ruta_dir, archivo_actor)), dict_animaciones)
         self.actor.reparentTo(self.cuerpo)
         self.actor.setScale(0.06)
         self.actor.setZ(-0.5)

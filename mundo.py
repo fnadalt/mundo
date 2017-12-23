@@ -128,7 +128,8 @@ class Mundo(NodePath):
         self.setMaterial(material, 2)
 
     def _cargar_gui(self):
-        self.lblHora=DirectLabel(text="00:00", text_fg=(0.15, 0.15, 0.9, 1.0), text_bg=(1.0, 1.0, 1.0, 1.0), scale=0.1, pos=(1.2, 0.0, -0.9), color=(1, 1, 1, 1))
+        self.lblHora=DirectLabel(text="00:00", text_fg=(0.15, 0.15, 0.9, 1.0), text_bg=(1.0, 1.0, 1.0, 1.0), scale=0.1, pos=(1.2, 0.0, -0.8), color=(1, 1, 1, 1))
+        self.lblTemperatura=DirectLabel(text="0º", text_fg=(0.15, 0.15, 0.9, 1.0), text_bg=(1.0, 1.0, 1.0, 1.0), scale=0.1, pos=(1.2, 0.0, -0.93), color=(1, 1, 1, 1))
 
     def _cargar_hombre(self):
         #
@@ -183,11 +184,12 @@ class Mundo(NodePath):
     def _update(self, task):
         info=""
         info+=self.dia.obtener_info()+"\n"
-        info+=self.hombre.obtener_info()+"\n"
-        info+=self.agua.obtener_info()+"\n"
+        info+=self.terreno.obtener_info()+"\n"
+        #info+=self.hombre.obtener_info()+"\n"
+        #info+=self.agua.obtener_info()+"\n"
         #info+=self.input_mapper.obtener_info()+"\n"
-#        info+=self.cielo.obtener_info()
-#        info+=self.sol.obtener_info()+"\n"
+        #info+=self.cielo.obtener_info()
+        #info+=self.sol.obtener_info()+"\n"
         self.texto1.setText(info)
         # tiempo
         dt=self.base.taskMgr.globalClock.getDt()
@@ -198,6 +200,9 @@ class Mundo(NodePath):
         # controlador cámara
         self.controlador_camara.altitud_suelo=self.terreno.obtener_altitud(self.controlador_camara.pos_camara.getXy())
         self.controlador_camara.update(dt)
+        pos_pivot_camara=self.controlador_camara.pivot.getPos().getXy()
+        altitud_pivot_camara=self.terreno.obtener_altitud(pos_pivot_camara)
+        temperatura_base_pivot_camara=self.terreno.obtener_temperatura_base(pos_pivot_camara)
         # ciclo dia/noche, cielo, sol
         self.dia.update(dt)
         offset_periodo=self.dia.calcular_offset(self.dia.periodo.actual, self.dia.periodo.posterior)
@@ -205,10 +210,6 @@ class Mundo(NodePath):
         self.cielo.nodo.setY(self.controlador_camara.target_node_path.getPos().getY())
         self.cielo.update(self.sol.nodo.getPos(self.cielo.nodo), self.dia.hora_normalizada, self.dia.periodo.actual, offset_periodo)
         self.sol.update(self.dia.hora_normalizada, self.dia.periodo.actual, offset_periodo)
-        # terreno
-        if self._counter==50:
-            self._counter=0
-            self.terreno.update(self.controlador_camara.target_node_path.getPos())
         # personajes
         for _personaje in self._personajes:
             _altitud_suelo=self.terreno.obtener_altitud(_personaje.cuerpo.getPos())
@@ -218,8 +219,14 @@ class Mundo(NodePath):
         self.agua.superficie.setX(self.controlador_camara.target_node_path.getPos().getX())
         self.agua.superficie.setY(self.controlador_camara.target_node_path.getPos().getY())
         self.agua.update(dt, self.sol.luz.getPos(self), self.sol.luz.node().getColor())
-        # gui
-        self.lblHora["text"]=self.dia.obtener_hora()
+        # contador 1/50
+        if self._counter==50:
+            # terreno
+            self._counter=0
+            self.terreno.update(self.controlador_camara.target_node_path.getPos())
+            # gui
+            self.lblHora["text"]=self.dia.obtener_hora()
+            self.lblTemperatura["text"]="%.0fº"%self.terreno.obtener_temperatura_actual(temperatura_base_pivot_camara, altitud_pivot_camara, self.dia.hora_normalizada)
         #
         self._counter+=1
         return task.cont
