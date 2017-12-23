@@ -1,11 +1,16 @@
 from panda3d.bullet import *
 from panda3d.core import *
 
+from objetos import *
+
 import math
 
 import logging
 log=logging.getLogger(__name__)
 
+#
+# TERRENO
+#
 class Terreno:
     
     # altura maxima
@@ -15,7 +20,7 @@ class Terreno:
     TamanoParcela=32
 
     # radio de expansion
-    RadioExpansion=3
+    RadioExpansion=0
 
     # topografia
     SemillaTopografia=4069
@@ -56,13 +61,19 @@ class Terreno:
         # variables internas:
         self._noise_scaled_weights=list() # normalizado
         self._intervalos_tipo_terreno_escalados=[] # valores de altitud
-        self.altura_sobre_agua
-        # init:
+
+    def iniciar(self):
+        log.info("iniciar")
+        #
         self._generar_noise_objs()
         self._establecer_shader()
         #
         log.info("altitud (%s)=%.3f"%(str((0, 0)), self.obtener_altitud((0, 0))))
-
+    
+    def terminar(self):
+        log.info("terminar")
+        objetos.cerrar_db()    
+    
     def obtener_indice_parcela(self, idx_pos):
         x=int(idx_pos[0]/Terreno.TamanoParcela)
         y=int(idx_pos[1]/Terreno.TamanoParcela)
@@ -229,9 +240,13 @@ class Terreno:
         parcela_node_path=self.nodo.attachNewNode(nombre)
         parcela_node_path.setPos(pos[0], pos[1], 0.0)
         # geometría
-        geom_node=self._generar_geometria_parcela(nombre, idx_pos)
+        datos_parcela=self._generar_datos_parcela(idx_pos)
+        geom_node=self._generar_geometria_parcela(nombre, idx_pos, datos_parcela)
         #
         parcela_node_path.attachNewNode(geom_node)
+        # objetos
+        nodo_objetos=self._generar_nodo_objetos(idx_pos, datos_parcela)
+        #nodo_objetos.reparentTo(parcela_node_path)
         # debug: normales
         if self.dibujar_normales:
             geom_node_normales=self._generar_lineas_normales("normales_%i_%i"%(int(pos[0]), int(pos[1])), geom_node)
@@ -261,6 +276,7 @@ class Terreno:
                 temperatura_base=self.obtener_temperatura_base(_pos)
                 d.pos=Vec3(x-1, y-1, self.obtener_altitud(_pos))
                 d.tipo=self.obtener_tipo_terreno_float(_pos, temperatura_base, d.pos[2], False)
+                d.temperatura_base=temperatura_base
                 #log.debug(str(d.tipo))
                 data[x].append(d)
         # calcular normales
@@ -279,14 +295,10 @@ class Terreno:
                 n3=self._calcular_normal(v0, v5, v6)
                 n_avg=(n0+n1+n2+n3)/4.0
                 data[x+1][y+1].normal=n_avg
-        # algoritmo para colocar objetos...
-        pass
         #
         return data
 
-    def _generar_geometria_parcela(self, nombre, idx_pos):
-        # datos
-        data=self._generar_datos_parcela(idx_pos)
+    def _generar_geometria_parcela(self, nombre, idx_pos, data):
         # formato
         co_info_tipo_terreno=InternalName.make("info_tipo_terreno") # int()->tipo; fract()->intervalo
         format_array=GeomVertexArrayFormat()
@@ -352,6 +364,23 @@ class Terreno:
         geom_node.setBoundsType(BoundingVolume.BT_box)
         return geom_node
     
+    def _generar_nodo_objetos(self, idx_pos, data):
+        #
+        tamano=Terreno.TamanoParcela+1
+        naturaleza=Naturaleza(Terreno.AlturaMaxima, tamano)
+        naturaleza.iniciar()
+        cnt=0
+        for x in range(tamano):
+            for y in range(tamano):
+                _d=data[x+1][y+1]
+                #log.debug(str(_d))
+                naturaleza.cargar_datos(_d.pos, _d.temperatura_base)
+                cnt+=1
+        #log.debug("_generar_nodo_objetos se cargaron %i datos"%cnt)
+        nodo=naturaleza.generar()
+        naturaleza.terminar()
+        return nodo
+
     def _establecer_shader(self):
         # texturas
         ts_arena=TextureStage("ts_arena") # arena
@@ -449,10 +478,10 @@ class DatosLocalesTerreno:
         self.pos=None
         self.normal=None
         self.tipo=0.0
-        self.objeto=None
+        self.temperatura_base=0.0
     
     def __str__(self):
-        return "DatosLocalesTerreno: i=%s; pos=%s; normal=%s; tipo=%.3f"%(str(self.index), str(self.pos), str(self.normal), self.tipo)
+        return "DatosLocalesTerreno: i=%s; pos=%s; normal=%s; tipo=%.3f; temp_b=%.3f"%(str(self.index), str(self.pos), str(self.normal), self.tipo, self.temperatura_base)
 
 #
 # TESTER

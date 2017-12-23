@@ -36,6 +36,8 @@ class Mundo(NodePath):
         self._periodo_dia_actual=0
     
     def iniciar(self):
+        log.info("iniciar")
+        #
         self._establecer_shader()
         # fisica:
         self._configurar_fisica()
@@ -49,7 +51,7 @@ class Mundo(NodePath):
         #
         self._cargar_terreno(Mundo.PosInicialFoco)
         self._cargar_hombre()
-        #self._cargar_objetos()
+        self._cargar_objetos()
         self._cargar_obj_voxel()
         # gui:
         self._cargar_debug_info()
@@ -61,7 +63,8 @@ class Mundo(NodePath):
         self.base.taskMgr.add(self._update, "mundo_update")
     
     def terminar(self):
-        pass    
+        log.info("terminar")
+        self.terreno.terminar()
 
     def _establecer_shader(self):
         self.setShaderOff(0)
@@ -152,16 +155,13 @@ class Mundo(NodePath):
         self.palo.setPos(0.5,0.75,-0.25)
         self.palo.setR(-85.0)
         self.palo.setScale(10.0)
-        #
-        self.arbusto=self.base.loader.loadModel("objetos/arbustof.01.egg")
-        self.arbusto.reparentTo(self)
-        self.arbusto.setZ(self.terreno.obtener_altitud(self.arbusto.getPos()))
     
     def _cargar_terreno(self, pos_inicial_foco):
         # dia
         self.dia=Dia(1800.0, 0.60) #|(1800.0, 0.50)
         # terreno
         self.terreno=Terreno(self.base, self.bullet_world)
+        self.terreno.iniciar()
         self.terreno.nodo.reparentTo(self)
         self.terreno.update(pos_inicial_foco)
         # cielo

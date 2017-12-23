@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-5.1.dtd">
 <!-- eric project file for project mundo -->
-<!-- Saved: 2017-12-13, 08:13:52 -->
+<!-- Saved: 2017-12-23, 17:46:46 -->
 <!-- Copyright (C) 2017 Fernando Nadal Testa, fnt2006@gmail.com -->
 <Project version="5.1">
   <Language>en_US</Language>
@@ -18,12 +18,16 @@
     <Source>aplicacion.py</Source>
     <Source>camara.py</Source>
     <Source>cielo.py</Source>
+    <Source>corregir_egg.py</Source>
     <Source>dia.py</Source>
     <Source>hombre.py</Source>
     <Source>input.py</Source>
     <Source>main.py</Source>
     <Source>mundo.py</Source>
+    <Source>objetos.csv</Source>
+    <Source>objetos.py</Source>
     <Source>personaje.py</Source>
+    <Source>shader.py</Source>
     <Source>shaders/agua.f.glsl</Source>
     <Source>shaders/agua.v.glsl</Source>
     <Source>shaders/blur.v.glsl</Source>
@@ -46,6 +50,8 @@
   <Resources/>
   <Interfaces/>
   <Others>
+    <Other>objetos.csv</Other>
+    <Other>objetos.ini</Other>
     <Other>shaders/blur_x.f.glsl</Other>
     <Other>shaders/blur_y.f.glsl</Other>
     <Other>shaders/debug.f.glsl</Other>
