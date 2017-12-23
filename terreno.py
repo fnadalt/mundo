@@ -85,6 +85,9 @@ class Terreno:
         altitud+=1
         altitud/=2
         altitud*=Terreno.AlturaMaxima
+        if altitud>self.altura_sobre_agua:
+            altura_sobre_agua_n=(altitud-self.altitud_agua)/self.altura_sobre_agua
+            altitud=min(Terreno.AlturaMaxima, altitud+(50*altura_sobre_agua_n*altura_sobre_agua_n))
         #
         return altitud
 
