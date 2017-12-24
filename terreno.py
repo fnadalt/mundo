@@ -20,7 +20,7 @@ class Terreno:
     TamanoParcela=32
 
     # radio de expansion
-    RadioExpansion=0
+    RadioExpansion=4
 
     # topografia
     SemillaTopografia=4069
