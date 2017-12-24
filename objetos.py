@@ -1,7 +1,8 @@
 from panda3d.core import *
 import sqlite3
 import csv
-import os.path
+import os, os.path
+import random
 
 import logging
 log=logging.getLogger(__name__)
@@ -132,7 +133,7 @@ class Naturaleza:
         # referencias:
         self.base=base
         # componentes:
-        self.ruido=PerlinNoise2(Naturaleza.ParamsRuido[0], Naturaleza.ParamsRuido[0], 256, Naturaleza.ParamsRuido[1])
+        self.ruido_perlin=PerlinNoise2(Naturaleza.ParamsRuido[0], Naturaleza.ParamsRuido[0], 256, Naturaleza.ParamsRuido[1])
         # variables internas:
         self._altura_maxima_terreno=altura_maxima_terreno
         self._tamano=tamano
@@ -140,6 +141,7 @@ class Naturaleza:
     
     def iniciar(self):
         #log.debug("iniciar")
+        os.remove(NombreArchivoDB)
         # db
         iniciar_db()
         # pool de modelos
@@ -159,6 +161,7 @@ class Naturaleza:
         self._data[x][y]=(altitud, temperatura_base)
 
     def generar(self, nombre):
+        random.seed(Naturaleza.ParamsRuido[1])
         # normalizar densidad de objetos de mismo grupo
         info_gpos=dict() # {gpo_altitud:{gpo_temp_base:(cant_tipos,factor_densidad,[pos,...]),...},...}
         for x in range(self._tamano):
@@ -194,23 +197,42 @@ class Naturaleza:
         for x in range(self._tamano):
             fila=list()
             for y in range(self._tamano):
-                fila.append(0.0) # radio de objeto en esa posicion; 0.0==vacio
+                fila.append((0.0, (0.0, 0.0))) # radio de objeto en esa posicion, (dx,dy) aleatorio; 0.0==vacio
             espacio.append(fila)
         #
         for gpo_altitud, gpos_temp_base in info_gpos.items():
             for gpo_temp_base, datos in gpos_temp_base.items():
-                log.debug(str(datos))
+                #log.debug(str(datos))
                 tipos_objeto, factor_densidad, lista_pos=datos
                 for tipo_objeto in tipos_objeto:
                     for pos in lista_pos:
-                        ruido=(self.ruido(pos[0], pos[1])+1.0)/2.0
-                        trigger=0.7 #tipo_objeto[4]*factor_densidad
-                        log.debug("ruido=%.3f, trigger=%.3f"%(ruido, trigger))
+                        ruido=(self.ruido_perlin(pos[0], pos[1])+1.0)/2.0
+                        trigger=tipo_objeto[4]*factor_densidad
                         if ruido>trigger:
-                            log.debug("colocar objeto %s en posicion %s"%(str(tipo_objeto), str(pos)))
-                            modelo=pool[tipo_objeto[6]]
-                            instancia=modelo.copyTo(nodo_central)
-                            instancia.setPos(self.base.render, pos)
+                            log.debug("colocar objeto %s en posicion %s?"%(str(tipo_objeto), str(pos)))
+                            sin_espacio=False
+                            for dx in range(-1, 2):
+                                for dy in range(-1, 2):
+                                    _x=pos[0]+dx
+                                    _y=pos[1]+dy
+                                    if _x<0 or _x>=self._tamano or _y<0 or _y>=self._tamano:
+                                        continue
+                                    radio=espacio[_x][_y][0]
+                                    if radio==0.0:
+                                        continue
+                                    if (radio+tipo_objeto[5])/2.0>1.0:
+                                        sin_espacio=True
+                                        log.debug("sin_espacio")
+                                        break
+                            if not sin_espacio:
+                                log.debug("se agregara")
+                                dpos=[random.random(), random.random()]
+                                modelo=pool[tipo_objeto[6]]
+                                dummy=nodo_central.attachNewNode("dummy")
+                                dummy.setPos(self.base.render, Vec3(pos[0]+dpos[0], pos[1]+dpos[1], pos[2]))
+                                modelo.instanceTo(dummy)
+                                espacio[pos[0]][pos[1]]=(tipo_objeto[5], dpos)
+        log.debug(str(espacio))
         #
         nodo_central.setShaderAuto()
         nodo_central.flattenStrong()
