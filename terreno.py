@@ -72,7 +72,7 @@ class Terreno:
     
     def terminar(self):
         log.info("terminar")
-        objetos.cerrar_db()    
+        objetos.terminar()
     
     def obtener_indice_parcela(self, idx_pos):
         x=int(idx_pos[0]/Terreno.TamanoParcela)
@@ -246,6 +246,7 @@ class Terreno:
         parcela_node_path.attachNewNode(geom_node)
         # objetos
         nodo_objetos=self._generar_nodo_objetos(idx_pos, datos_parcela)
+        nodo_objetos.reparentTo(parcela_node_path)
         #nodo_objetos.reparentTo(parcela_node_path)
         # debug: normales
         if self.dibujar_normales:
@@ -367,7 +368,7 @@ class Terreno:
     def _generar_nodo_objetos(self, idx_pos, data):
         #
         tamano=Terreno.TamanoParcela+1
-        naturaleza=Naturaleza(Terreno.AlturaMaxima, tamano)
+        naturaleza=Naturaleza(self.base, Terreno.AlturaMaxima, tamano)
         naturaleza.iniciar()
         cnt=0
         for x in range(tamano):
@@ -377,8 +378,7 @@ class Terreno:
                 naturaleza.cargar_datos(_d.pos, _d.temperatura_base)
                 cnt+=1
         #log.debug("_generar_nodo_objetos se cargaron %i datos"%cnt)
-        nodo=naturaleza.generar()
-        naturaleza.terminar()
+        nodo=naturaleza.generar("nodo_objetos_%i_%i"%(idx_pos[0], idx_pos[1]))
         return nodo
 
     def _establecer_shader(self):

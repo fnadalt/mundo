@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-5.1.dtd">
 <!-- eric project file for project mundo -->
-<!-- Saved: 2017-12-23, 17:46:46 -->
+<!-- Saved: 2017-12-24, 12:04:49 -->
 <!-- Copyright (C) 2017 Fernando Nadal Testa, fnt2006@gmail.com -->
 <Project version="5.1">
   <Language>en_US</Language>
@@ -51,7 +51,6 @@
   <Interfaces/>
   <Others>
     <Other>objetos.csv</Other>
-    <Other>objetos.ini</Other>
     <Other>shaders/blur_x.f.glsl</Other>
     <Other>shaders/blur_y.f.glsl</Other>
     <Other>shaders/debug.f.glsl</Other>
