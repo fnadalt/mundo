@@ -245,9 +245,8 @@ class Terreno:
         #
         parcela_node_path.attachNewNode(geom_node)
         # objetos
-        nodo_objetos=self._generar_nodo_objetos(idx_pos, datos_parcela)
+        nodo_objetos=self._generar_nodo_objetos(pos, idx_pos, datos_parcela)
         nodo_objetos.reparentTo(parcela_node_path)
-        #nodo_objetos.reparentTo(parcela_node_path)
         # debug: normales
         if self.dibujar_normales:
             geom_node_normales=self._generar_lineas_normales("normales_%i_%i"%(int(pos[0]), int(pos[1])), geom_node)
@@ -365,19 +364,16 @@ class Terreno:
         geom_node.setBoundsType(BoundingVolume.BT_box)
         return geom_node
     
-    def _generar_nodo_objetos(self, idx_pos, data):
+    def _generar_nodo_objetos(self, pos, idx_pos, data):
         #
         tamano=Terreno.TamanoParcela+1
-        naturaleza=Naturaleza(self.base, Terreno.AlturaMaxima, tamano)
+        naturaleza=Naturaleza(self.base, pos, Terreno.AlturaMaxima, tamano, self.altitud_agua)
         naturaleza.iniciar()
-        cnt=0
         for x in range(tamano):
             for y in range(tamano):
                 _d=data[x+1][y+1]
                 #log.debug(str(_d))
                 naturaleza.cargar_datos(_d.pos, _d.temperatura_base)
-                cnt+=1
-        #log.debug("_generar_nodo_objetos se cargaron %i datos"%cnt)
         nodo=naturaleza.generar("nodo_objetos_%i_%i"%(idx_pos[0], idx_pos[1]))
         return nodo
 
@@ -511,6 +507,7 @@ class Tester(ShowBase):
         self.escribir_archivo=False # cada update
         #
         self.terreno=Terreno(self, bullet_world)
+        self.terreno.iniciar()
         #self.terreno.nodo.setRenderModeWireframe()
         #
         plano=CardMaker("plano_agua")

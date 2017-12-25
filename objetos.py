@@ -33,7 +33,7 @@ NombreArchivoLlenadoDB="objetos.csv"
 #  densidad [0,1); se usara como umbral en el ruido Perlin.
 SqlCreacionDB="""
 DROP TABLE IF EXISTS naturaleza;
-CREATE TABLE naturaleza (_id INTEGER PRIMARY KEY, gpo_altitud INTEGER, gpo_temp_base INTEGER, tipo INTEGER, densidad FLOAT, radio_inferior FLOAT, radio_superior FLOAT, nombre_archivo VARCHAR(32));
+CREATE TABLE naturaleza (_id INTEGER PRIMARY KEY, gpo_altitud INTEGER, gpo_temp_base INTEGER, tipo INTEGER, densidad FLOAT, radio_inferior FLOAT, radio_superior FLOAT, ambiente INTEGER, nombre_archivo VARCHAR(32));
 """
 #
 def iniciar_db():
@@ -56,7 +56,7 @@ def iniciar_db():
         with open(NombreArchivoLlenadoDB, "r") as archivo_csv:
             lector_csv=csv.DictReader(archivo_csv)
             for fila in lector_csv:
-                sql="INSERT INTO %s (gpo_altitud,gpo_temp_base,tipo,densidad,radio_inferior,radio_superior,nombre_archivo) VALUES (%s,%s,%s,%s,%s,%s,'%s')"%(fila["tabla"], fila["gpo_altitud"], fila["gpo_temp_base"], fila["tipo"], fila["densidad"], fila["radio_inferior"], fila["radio_superior"], fila["nombre_archivo"])
+                sql="INSERT INTO %s (gpo_altitud,gpo_temp_base,tipo,densidad,radio_inferior,radio_superior,ambiente,nombre_archivo) VALUES (%s,%s,%s,%s,%s,%s,%s,'%s')"%(fila["tabla"], fila["gpo_altitud"], fila["gpo_temp_base"], fila["tipo"], fila["densidad"], fila["radio_inferior"], fila["radio_superior"], fila["ambiente"], fila["nombre_archivo"])
                 con.execute(sql)
         con.commit()
         con.close()
@@ -95,12 +95,12 @@ def iniciar_pool_modelos(loader):
         cursor=conexion_db.execute(sql)
         filas=cursor.fetchall()
         for fila in filas:
-            if fila[7] in pool:
+            if fila[8] in pool:
                 continue
-            ruta_archivo_modelo=os.path.join("objetos", "%s.egg"%fila[7])
+            ruta_archivo_modelo=os.path.join("objetos", "%s.egg"%fila[8])
             log.info("-cargar %s"%ruta_archivo_modelo)
             modelo=loader.loadModel(ruta_archivo_modelo)
-            pool[fila[7]]=modelo
+            pool[fila[8]]=modelo
 #
 def terminar_pool_modelos():
     log.info("terminar_pool_modelos")
@@ -120,6 +120,11 @@ class Naturaleza:
     # ruido de distribucion de objetos
     ParamsRuido=[16.0, 345]
     
+    # ambiente
+    AmbienteNulo=0
+    AmbienteSubacuatico=1
+    AmbienteTerrestre=2
+    
     # tipos de objeto
     TipoObjetoNulo=0
     TipoObjetoArbol=1
@@ -133,19 +138,22 @@ class Naturaleza:
     # parametros
     RadioMaximo=4.0
     
-    def __init__(self, base, altura_maxima_terreno, tamano):
+    def __init__(self, base, pos_base, altura_maxima_terreno, tamano, altitud_agua):
         # referencias:
         self.base=base
         # componentes:
         self.ruido_perlin=PerlinNoise2(Naturaleza.ParamsRuido[0], Naturaleza.ParamsRuido[0], 256, Naturaleza.ParamsRuido[1])
         # variables internas:
+        self._pos_base=pos_base
         self._altura_maxima_terreno=altura_maxima_terreno
         self._tamano=tamano
+        self._altitud_agua=altitud_agua
         self._data=None
     
     def iniciar(self):
         #log.debug("iniciar")
         if os.path.exists(NombreArchivoDB):
+            log.warning("se elimina el archivo de base de datos %s"%NombreArchivoDB)
             os.remove(NombreArchivoDB)
         # db
         iniciar_db()
@@ -175,7 +183,7 @@ class Naturaleza:
         for x in range(self._tamano):
             fila=list()
             for y in range(self._tamano):
-                fila.append((0.0, 0.0, (0.0, 0.0))) # radios inferior y superior de objeto en esa posicion, (dx,dy) aleatorio; 0.0==vacio
+                fila.append([0.0, 0.0, (0.0, 0.0)]) # radios inferior y superior de objeto en esa posicion, (dx,dy) aleatorio; 0.0==vacio
             espacio.append(fila)
         # normalizar densidad de objetos de mismo grupo
         info_gpos=dict() # {gpo_altitud:{gpo_temp_base:(descripcion_tipo_objeto,factor_densidad,[pos,...]),...},...}
@@ -189,7 +197,7 @@ class Naturaleza:
                     info_gpos[gpo_altitud]=dict()
                 if not gpo_temp_base in info_gpos[gpo_altitud]:
                     sql="SELECT * FROM naturaleza WHERE gpo_altitud=%i AND gpo_temp_base=%i ORDER BY densidad DESC"%(gpo_altitud, gpo_temp_base)
-                    log.debug(sql)
+                    #log.debug(sql)
                     cursor=conexion_db.execute(sql)
                     filas_objetos=cursor.fetchall()
                     #log.debug(str(filas_objetos))
@@ -205,31 +213,40 @@ class Naturaleza:
                 else:
                     info_gpos[gpo_altitud][gpo_temp_base][2].append((x, y, altitud))
         # distribuir objetos
+        cnt_objetos=0
         for gpo_altitud, gpos_temp_base in info_gpos.items(): # para cada grupo de altitud
             for gpo_temp_base, datos in gpos_temp_base.items(): # para cada grupo de temperatura_base por grupo de altitud
                 #log.debug(str(datos))
                 descripciones_tipo_objeto, factor_densidad, lista_pos=datos
                 for descripcion_tipo_objeto in descripciones_tipo_objeto: # para cada tipo de objeto en cada grupo altitud/temperatura_base
                     for pos in lista_pos: # testear para cada posicion posible
-                        ruido=(self.ruido_perlin(pos[0], pos[1])+1.0)/2.0
+                        # filtrar por ambiente
+                        if descripcion_tipo_objeto[7]==Naturaleza.AmbienteNulo or \
+                           (descripcion_tipo_objeto[7]==Naturaleza.AmbienteSubacuatico and pos[2]>self._altitud_agua) or \
+                           (descripcion_tipo_objeto[7]==Naturaleza.AmbienteTerrestre and pos[2]<self._altitud_agua):
+                               continue
+                        # ruido -> trigger por "densidad"
+                        ruido=(self.ruido_perlin(self._pos_base[0]+pos[0], self._pos_base[1]+pos[1])+1.0)/2.0
                         trigger=descripcion_tipo_objeto[4]*factor_densidad
                         if ruido>trigger: # testear colocacion de objeto en una posicion
-                            log.debug("colocar objeto %s en posicion %s?"%(str(descripcion_tipo_objeto), str(pos)))
+                            #log.debug("colocar objeto %s en posicion %s?"%(str(descripcion_tipo_objeto), str(pos)))
                             radio_inferior=descripcion_tipo_objeto[5]
                             radio_superior=descripcion_tipo_objeto[6]
                             # si hay espacio inferior y superior colocar objeto
                             if self._chequear_espacio(pos, radio_inferior, radio_superior, espacio):
-                                log.debug("se agregara")
+                                #log.debug("se agregara")
                                 # desplazamiento aleatorio
                                 dpos=[random.random(), random.random()]
                                 # colocar modelo
-                                modelo=pool[descripcion_tipo_objeto[7]]
+                                modelo=pool[descripcion_tipo_objeto[8]]
                                 dummy=nodo_central.attachNewNode("dummy")
                                 dummy.setPos(self.base.render, Vec3(pos[0]+dpos[0], pos[1]+dpos[1], pos[2]))
                                 modelo.instanceTo(dummy)
                                 # establecer informacion espacial de radios
                                 self._establecer_informacion_espacial(pos, radio_inferior, radio_superior, espacio)
-        #log.debug(str(espacio))
+                                # contador de objetos colocados
+                                cnt_objetos+=1
+        log.info("%s: se colocaron %i objetos"%(nombre, cnt_objetos))
         #
         nodo_central.setShaderAuto()
         nodo_central.flattenStrong()
@@ -237,7 +254,83 @@ class Naturaleza:
         return nodo_central
 
     def _chequear_espacio(self, pos, radio_inferior, radio_superior, espacio):
+        #log.debug("_chequear_espacio pos=%s radio_inferior=%.1f radio_superior=%.1f"%(str(pos), radio_inferior, radio_superior))
+        #
+        x, y=pos[0], pos[1]
+        # esta el espacio ocupado?
+        if espacio[x][y][0]>0.0 or espacio[x][y][1]>0.0:
+            #log.debug("ocupado")
+            return False
+        # suficientemente lejos del borde?
+        radio_mayor=radio_inferior if radio_inferior>radio_superior else radio_superior
+        if (x+1)<radio_mayor or (self._tamano-x)<radio_mayor or \
+           (y+1)<radio_mayor or (self._tamano-y)<radio_mayor:
+               #log.debug("proximo a borde")
+               return False
+        # testear radio_inferior
+        for i in range(int(radio_inferior)):
+            d=i+1
+            limite=1+d
+            if (radio_inferior+espacio[x+d][y][0])>limite or \
+               (radio_inferior+espacio[x][y+d][0])>limite or \
+               (radio_inferior+espacio[x-d][y][0])>limite or \
+               (radio_inferior+espacio[x][y-d][0])>limite or \
+               (radio_inferior+espacio[x+d][y+d][0])>limite or \
+               (radio_inferior+espacio[x+d][y+d][0])>limite or \
+               (radio_inferior+espacio[x-d][y-d][0])>limite or \
+               (radio_inferior+espacio[x-d][y-d][0])>limite:
+                   #log.debug("radio_inferior")
+                   return False
+        # testear radio_superior
+        for i in range(int(radio_superior)):
+            d=i+1
+            limite=1+d
+            if (radio_inferior+espacio[x+d][y][1])>limite or \
+               (radio_inferior+espacio[x][y+d][1])>limite or \
+               (radio_inferior+espacio[x-d][y][1])>limite or \
+               (radio_inferior+espacio[x][y-d][1])>limite or \
+               (radio_inferior+espacio[x+d][y+d][1])>limite or \
+               (radio_inferior+espacio[x-d][y+d][1])>limite or \
+               (radio_inferior+espacio[x+d][y-d][1])>limite or \
+               (radio_inferior+espacio[x-d][y-d][1])>limite:
+                   #log.debug("radio_superior")
+                   return False
+        #
+        #log.debug("ok")
         return True
 
     def _establecer_informacion_espacial(self, pos, radio_inferior, radio_superior, espacio):
-        pass
+        # esta el espacio ocupado o suficientemente lejos del borde?
+        # no testear, ya deberia haber sido descartado por _chequear_espacio()
+        #
+        x, y=pos[0], pos[1]
+        # establecer alcance radio_inferior
+        piso_radio_inferior=int(radio_inferior)
+        for i in range(piso_radio_inferior):
+            d=i+1
+            r=1.0
+            if radio_inferior>piso_radio_inferior and d==piso_radio_inferior:
+                r=radio_inferior-piso_radio_inferior
+            espacio[x+d][y][0]=r
+            espacio[x][y+d][0]=r
+            espacio[x-d][y][0]=r
+            espacio[x][y-1][0]=r
+            espacio[x+d][y+d][0]=r
+            espacio[x-d][y+d][0]=r
+            espacio[x+d][y-d][0]=r
+            espacio[x-d][y-d][0]=r
+        # establecer alcance radio_superior
+        piso_radio_superior=int(radio_superior)
+        for i in range(piso_radio_superior):
+            d=i+1
+            r=1.0
+            if radio_superior>piso_radio_superior and d==piso_radio_superior:
+                r=radio_superior-piso_radio_superior
+            espacio[x+d][y][0]=r
+            espacio[x][y+d][0]=r
+            espacio[x-d][y][0]=r
+            espacio[x][y-1][0]=r
+            espacio[x+d][y+d][0]=r
+            espacio[x-d][y+d][0]=r
+            espacio[x+d][y-d][0]=r
+            espacio[x-d][y-d][0]=r

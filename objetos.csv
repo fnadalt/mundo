@@ -1,3 +1,7 @@
-tabla,gpo_altitud,gpo_temp_base,tipo,densidad,radio_inferior,radio_superior,nombre_archivo
-naturaleza,4,2,1,0.67,3.5,1.0,arbol.01
-naturaleza,5,2,1,0.75,3.5,1.0,arbol.01
+tabla,gpo_altitud,gpo_temp_base,tipo,densidad,radio_inferior,radio_superior,ambiente,nombre_archivo
+naturaleza,4,2,1,0.7,1.0,3.5,2,arbol.01
+naturaleza,5,2,1,0.82,1.0,3.5,2,arbol.01
+naturaleza,6,2,1,0.82,1.0,3.5,2,arbol.01
+naturaleza,7,2,1,0.82,1.0,3.5,2,arbol.01
+naturaleza,8,2,1,0.82,1.0,3.5,2,arbol.01
+naturaleza,9,2,1,0.82,1.0,3.5,2,arbol.01
