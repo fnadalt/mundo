@@ -249,7 +249,8 @@ class Naturaleza:
         log.info("%s: se colocaron %i objetos"%(nombre, cnt_objetos))
         #
         nodo_central.setShaderAuto()
-        nodo_central.flattenStrong()
+        #nodo_central.flattenStrong()
+        nodo_central.ls()
         #
         return nodo_central
 

@@ -1,10 +1,10 @@
-#version 130
+#version 120
 
 varying vec4 vposmodelo;
 varying vec4 vpos;
 varying vec3 normal;
-flat in float info_tipo;
-smooth in float info_tipo_factor;
+varying float info_tipo;
+varying float info_tipo_factor;
 
 uniform struct {
     vec4 ambient;
@@ -73,7 +73,7 @@ vec4 texture_color(in float altitud)
     vec4 _color1;
     //
     float tipo0=floor(info_tipo/10);
-    float tipo1=mod(info_tipo,10);
+    float tipo1=mod(floor(info_tipo),10);
     //
     if(tipo0==1){
         _color0=texture2D(p3d_Texture3, gl_TexCoord[0].st);

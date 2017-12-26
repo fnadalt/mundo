@@ -1,4 +1,4 @@
-#version 130
+#version 120
 
 attribute vec4 p3d_Vertex;
 attribute vec3 p3d_Normal;
@@ -8,8 +8,8 @@ attribute float info_tipo_terreno;
 varying vec4 vposmodelo;
 varying vec4 vpos;
 varying vec3 normal;
-flat out float info_tipo;
-smooth out float info_tipo_factor;
+varying float info_tipo;
+varying float info_tipo_factor;
 
 uniform mat3 p3d_NormalMatrix;
 uniform mat4 p3d_ModelMatrix;
