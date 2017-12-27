@@ -248,11 +248,12 @@ class Naturaleza:
                                 cnt_objetos+=1
         log.info("%s: se colocaron %i objetos"%(nombre, cnt_objetos))
         #
+        lod0=NodePath(LODNode("%s_lod"%nombre))
+        lod0.node().addSwitch(5.0*1.4142*self._tamano, 0.0)
+        nodo_central.reparentTo(lod0)
         nodo_central.setShaderAuto()
-        #nodo_central.flattenStrong()
-        nodo_central.ls()
         #
-        return nodo_central
+        return lod0
 
     def _chequear_espacio(self, pos, radio_inferior, radio_superior, espacio):
         #log.debug("_chequear_espacio pos=%s radio_inferior=%.1f radio_superior=%.1f"%(str(pos), radio_inferior, radio_superior))

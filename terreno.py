@@ -20,7 +20,7 @@ class Terreno:
     TamanoParcela=32
 
     # radio de expansion
-    RadioExpansion=0
+    RadioExpansion=4 #4
 
     # topografia
     SemillaTopografia=4069
@@ -739,7 +739,7 @@ if __name__=="__main__":
     PStatClient.connect()
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    Terreno.RadioExpansion=4
+    Terreno.RadioExpansion=0
     tester.escribir_archivo=False
     #debug_tipos_terreno(tester.terreno)
     #debug_temperaturas(tester.terreno)
