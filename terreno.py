@@ -20,7 +20,7 @@ class Terreno:
     TamanoParcela=32
 
     # radio de expansion
-    RadioExpansion=4 #4
+    RadioExpansion=1 #4
 
     # topografia
     SemillaTopografia=4069
@@ -403,10 +403,10 @@ class Terreno:
         #
         shader_nombre_base="terreno" # terreno|debug
         shader=Shader.load(Shader.SL_GLSL, vertex="shaders/%s.v.glsl"%shader_nombre_base, fragment="shaders/%s.f.glsl"%shader_nombre_base)
+        self.nodo.setShader(shader, 1)
         self.nodo.setShaderInput("data", data)
         self.nodo.setShaderInput("water_clipping", Vec4(0, 0, 0, 0), priority=0)
         self.nodo.setClipPlaneOff(3)
-        self.nodo.setShader(shader, 1)
         #
         material=Material("mundo")
         material.setAmbient((0.1, 0.1, 0.1, 1.0))

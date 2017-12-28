@@ -11,6 +11,7 @@ from agua import Agua
 from personaje import *
 from camara import ControladorCamara
 from input import InputMapper
+from shader import *
 
 import voxels
 
@@ -142,6 +143,11 @@ class Mundo(NodePath):
         self.hombre.construir(self, self.bullet_world)
         self.hombre.cuerpo.setPos(self.terreno.pos_foco)
         self.hombre.cuerpo.setZ(self.terreno.obtener_altitud(self.terreno.pos_foco)+0.5)
+        # shader:
+        shader=GeneradorShader(GeneradorShader.ClaseGenerico, self.hombre.cuerpo)
+        shader.activar_textura(0)
+        shader.activar_recorte_agua(Vec3(1, 0, 0), 0.0)
+        shader.generar_aplicar()
         #
         self._personajes.append(self.hombre)
         #
@@ -158,7 +164,7 @@ class Mundo(NodePath):
     
     def _cargar_terreno(self, pos_inicial_foco):
         # dia
-        self.dia=Dia(1800.0, 0.60) #|(1800.0, 0.50)
+        self.dia=Dia(1800.0, 0.475) #|(1800.0, 0.50)
         # terreno
         self.terreno=Terreno(self.base, self.bullet_world)
         self.terreno.iniciar()
@@ -177,7 +183,7 @@ class Mundo(NodePath):
         self.agua=Agua(self.base, self.terreno.altitud_agua)
         self.agua.superficie.reparentTo(self.base.render)
         self.agua.generar()
-        #self.agua.mostrar_camaras()
+        self.agua.mostrar_camaras()
         #
         self.controlador_camara.altitud_agua=self.terreno.altitud_agua
 

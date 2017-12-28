@@ -21,7 +21,7 @@ void main() {
   vpos = p3d_ModelViewProjectionMatrix * p3d_Vertex;
   gl_Position=vpos;
   gl_TexCoord[0] = p3d_MultiTexCoord0;
-  texcoords = vec2(p3d_Vertex.x/2.0+0.5, p3d_Vertex.y/2.0+0.5);//*1.5;
+  texcoords = vec2(p3d_Vertex.x/2.0+0.5, p3d_Vertex.y/2.0+0.5)*1.5;
   to_cam_vec=vec3(cam_pos.x,cam_pos.z,cam_pos.y)-wpos.xyz;
   from_light_vec=wpos.xyz-vec3(light_pos.x,light_pos.z,light_pos.y);
 }
