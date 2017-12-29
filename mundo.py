@@ -145,8 +145,8 @@ class Mundo(NodePath):
         self.hombre.cuerpo.setZ(self.terreno.obtener_altitud(self.terreno.pos_foco)+0.5)
         # shader:
         shader=GeneradorShader(GeneradorShader.ClaseGenerico, self.hombre.cuerpo)
-        shader.activar_textura(0)
-        shader.activar_recorte_agua(Vec3(1, 0, 0), 0.0)
+        shader.cantidad_texturas=1
+        shader.activar_recorte_agua(Vec3(0, 0, 1), self.terreno.altitud_agua)
         shader.generar_aplicar()
         #
         self._personajes.append(self.hombre)
@@ -190,13 +190,13 @@ class Mundo(NodePath):
     def _update(self, task):
         info=""
         info+=self.dia.obtener_info()+"\n"
-        info+=self.terreno.obtener_info()+"\n"
-        #info+=self.hombre.obtener_info()+"\n"
+        #info+=self.terreno.obtener_info()+"\n"
+        info+=self.hombre.obtener_info()+"\n"
         #info+=self.agua.obtener_info()+"\n"
         #info+=self.input_mapper.obtener_info()+"\n"
         #info+=self.cielo.obtener_info()
         #info+=self.sol.obtener_info()+"\n"
-        #self.texto1.setText(info)
+        self.texto1.setText(info)
         # tiempo
         dt=self.base.taskMgr.globalClock.getDt()
         # input

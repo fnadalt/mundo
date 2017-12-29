@@ -17,41 +17,40 @@ class GeneradorShader:
         # referencias:
         self.nodo=nodo
         # variables externas:
-        self.clase=clase
-        self._altitud_agua=0.0
-        self._posicion_sol=Vec3(0, 0, 0)
+        self.prioridad_shader=1
+        self.cantidad_texturas=0
         self.plano_recorte_agua=Vec4(0, 0, 0, 0)
         self.plano_recorte_agua_inv=Vec4(0, 0, 0, 0)
         # variables internas:
-        self._cantidad_texturas=0
+        self._clase=clase
+        self._altitud_agua=0.0
+        self._posicion_sol=Vec3(0, 0, 0)
         
     def generar_aplicar(self):
         # generico
-        if self.clase==GeneradorShader.ClaseGenerico:
+        if self._clase==GeneradorShader.ClaseGenerico:
             shader=self._generar_generico()
         # aplicar shader
-        prioridad=1000
-        self.nodo.setShader(shader, prioridad)
-        self.nodo.setShaderInput("altitud_agua", self._altitud_agua, prioridad)
-        self.nodo.setShaderInput("posicion_sol", self._posicion_sol, prioridad)
+        self.nodo.setShader(shader, priority=self.prioridad_shader)
+        self.nodo.setShaderInput("altitud_agua", self._altitud_agua, priority=self.prioridad_shader)
+        self.nodo.setShaderInput("posicion_sol", self._posicion_sol, priority=self.prioridad_shader)
         if self.plano_recorte_agua!=Vec4(0, 0, 0, 0):
-            self.nodo.setShaderInput("plano_recorte_agua", self.plano_recorte_agua, prioridad)
-        self.nodo.setShaderInput("periodo", 0.0, prioridad)
-        self.nodo.setShaderInput("offset_periodo", 0.0, prioridad)
-        self.nodo.setShaderInput("color_cielo_base_inicial", Vec4(0, 0, 0, 0), prioridad)
-        self.nodo.setShaderInput("color_cielo_base_final", Vec4(0, 0, 0, 0), prioridad)
-        self.nodo.setShaderInput("color_halo_sol_inicial", Vec4(0, 0, 0, 0), prioridad)
-        self.nodo.setShaderInput("color_halo_sol_final", Vec4(0, 0, 0, 0), prioridad)
-
-    def activar_textura(self, indice):
-        if indice>self._cantidad_texturas:
-            log.error("textura de indice %i, ya esta activada"%indice)
-            return
-        self._cantidad_texturas+=1
+            self.nodo.setShaderInput("plano_recorte_agua", self.plano_recorte_agua, priority=self.prioridad_shader)
+        self.nodo.setShaderInput("periodo", 0.0, priority=self.prioridad_shader)
+        self.nodo.setShaderInput("offset_periodo", 0.0, priority=self.prioridad_shader)
+        self.nodo.setShaderInput("color_cielo_base_inicial", Vec4(0, 0, 0, 0), priority=self.prioridad_shader)
+        self.nodo.setShaderInput("color_cielo_base_final", Vec4(0, 0, 0, 0), priority=self.prioridad_shader)
+        self.nodo.setShaderInput("color_halo_sol_inicial", Vec4(0, 0, 0, 0), priority=self.prioridad_shader)
+        self.nodo.setShaderInput("color_halo_sol_final", Vec4(0, 0, 0, 0), priority=self.prioridad_shader)
 
     def activar_recorte_agua(self, direccion, altitud_agua):
         self.plano_recorte_agua=Vec4(direccion[0], direccion[1], direccion[2], altitud_agua)
-        self.plano_recorte_agua=Vec4(direccion[0], direccion[1], -direccion[2], altitud_agua)
+        self.plano_recorte_agua_inv=Vec4(-direccion[0], -direccion[1], -direccion[2], -altitud_agua)
+
+    def invertir_plano_recorte_agua(self):
+        tmp=self.plano_recorte_agua
+        self.plano_recorte_agua=self.plano_recorte_agua_inv
+        self.plano_recorte_agua_inv=tmp
 
     def _generar_generico(self):
         # texto
@@ -64,31 +63,39 @@ class GeneradorShader:
         texto_fs_func_tex_0=""
         texto_fs_func_tex_1=""
         texto_fs_main_tex_0=""
-        if self._cantidad_texturas>0:
+        if self.cantidad_texturas>0:
             texto_vs_attrib_tc=VS_ATTR_TC
             texto_vs_main_tc=VS_MAIN_TC
             texto_fs_main_tex_0=FS_MAIN_TEX_0
-            for i in range(self._cantidad_texturas):
+            for i in range(self.cantidad_texturas):
                 texto_fs_unif_tc+=FS_UNIF_TC%{"indice_textura":i}
                 texto_fs_func_tex_1+=FS_FUNC_TEX_1%{"indice_textura":i}
             texto_fs_func_tex_0=FS_FUNC_TEX_0%{"FS_FUNC_TEX_1":texto_fs_func_tex_1}
         # plano_recorte_agua
+        texto_vs_var_clip=""
+        texto_vs_main_clip=""
         texto_fs_unif_clip=""
+        texto_fs_var_clip=""
         texto_fs_main_clip_0=""
         texto_fs_main_clip_1=""
         if self.plano_recorte_agua!=Vec4(0, 0, 0, 0):
+            texto_vs_var_clip=VS_VAR_CLIP
+            texto_vs_main_clip=VS_MAIN_CLIP
             texto_fs_unif_clip=FS_UNIF_CLIP
+            texto_fs_var_clip=FS_VAR_CLIP
             texto_fs_main_clip_0=FS_MAIN_CLIP_0
             texto_fs_main_clip_1=FS_MAIN_CLIP_1
         # vs
         texto_vs+=VS_ATTR_0%{"VS_ATTR_TC":texto_vs_attrib_tc}
         texto_vs+=VS_UNIF_0
         texto_vs+=VS_VAR_0
-        texto_vs+=VS_MAIN_0%{"VS_MAIN_TC":texto_vs_main_tc}
+        texto_vs+=texto_vs_var_clip
+        texto_vs+=VS_MAIN_0%{"VS_MAIN_TC":texto_vs_main_tc, "VS_MAIN_CLIP":texto_vs_main_clip}
         # fs
         texto_fs+=FS_UNIF_0%{"FS_UNIF_TC":texto_fs_unif_tc}
         texto_fs+=FS_UNIF_1%{"FS_UNIF_CLIP":texto_fs_unif_clip}
         texto_fs+=FS_VAR_0
+        texto_fs+=texto_fs_var_clip
         texto_fs+=FS_FUNC_ADS
         texto_fs+=texto_fs_func_tex_0
         texto_fs+=FS_MAIN_0%{"FS_MAIN_TEX_0":texto_fs_main_tex_0, "FS_MAIN_CLIP_0":texto_fs_main_clip_0, "FS_MAIN_CLIP_1":texto_fs_main_clip_1}
@@ -126,6 +133,7 @@ VS_VAR_0="""
 varying vec4 Position;
 varying vec3 Normal;
 """
+VS_VAR_CLIP="varying vec4 PositionW;"
 # main
 VS_MAIN_0="""
 void main() {
@@ -133,9 +141,11 @@ void main() {
     Normal=normalize(p3d_NormalMatrix*p3d_Normal);
     %(VS_MAIN_TC)s
     gl_Position=p3d_ModelViewProjectionMatrix*gl_Vertex;
+    %(VS_MAIN_CLIP)s
 }
 """
 VS_MAIN_TC="gl_TexCoord[0]=p3d_MultiTexCoord0;\n"
+VS_MAIN_CLIP="PositionW=p3d_ModelMatrix*gl_Vertex;"
 
 #
 #
@@ -145,7 +155,7 @@ VS_MAIN_TC="gl_TexCoord[0]=p3d_MultiTexCoord0;\n"
 # uniforms
 FS_UNIF_0="""#version 120
 %(FS_UNIF_TC)s
-uniform mat4 p3d_ViewMatrix;
+uniform mat4 p3d_ModelViewMatrix;
 uniform struct {
     vec4 ambient;
 } p3d_LightModel;
@@ -193,7 +203,7 @@ FS_VAR_0="""
 varying vec4 Position;
 varying vec3 Normal;
 """
-FS_VAR_CLIP="varying vec4 PlanoAgua;"
+FS_VAR_CLIP="varying vec4 PositionW;"
 # ads
 FS_FUNC_ADS="""
 vec4 amb()
@@ -251,8 +261,7 @@ void main()
 """
 FS_MAIN_TEX_0="color_ads*=tex();"
 FS_MAIN_CLIP_0="""
-    vec4 plano_rec=p3d_ViewMatrix*plano_recorte_agua;
-    if (dot(plano_recorte_agua, Position) < 0) {
+    if (PositionW.x*plano_recorte_agua.x + PositionW.y*plano_recorte_agua.y + PositionW.z*plano_recorte_agua.z - plano_recorte_agua.w <= 0) {
         discard;
     } else {
 """
