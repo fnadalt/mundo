@@ -94,6 +94,8 @@ class GeneradorShader:
             texto_vs+=VS_VAR_POSITIONW
         if self._clase==GeneradorShader.ClaseCielo:
             texto_vs+=VS_VAR_POSITION
+        if self._clase==GeneradorShader.ClaseAgua:
+            texto_vs+=VS_VAR_POSITIONP
         #
         texto_vs+=VS_MAIN_0%{"VS_MAIN_TC":texto_vs_main_tc}
         if self.plano_recorte_agua!=Vec4(0, 0, 0, 0) or self._clase==GeneradorShader.ClaseCielo or self._clase==GeneradorShader.ClaseSol:
@@ -102,17 +104,23 @@ class GeneradorShader:
             texto_vs+=VS_MAIN_TERRENO
         elif self._clase==GeneradorShader.ClaseCielo:
             texto_vs+=VS_MAIN_POSITION
+        elif self._clase==GeneradorShader.ClaseAgua:
+            texto_vs+=VS_MAIN_POSITIONP
         texto_vs+=VS_MAIN_1
         # fs
         texto_fs+="#version 120\n"
-        if self._clase!=GeneradorShader.ClaseCielo and self._clase!=GeneradorShader.ClaseSol:
+        if self._clase!=GeneradorShader.ClaseCielo and self._clase!=GeneradorShader.ClaseSol and self._clase!=GeneradorShader.ClaseAgua:
             texto_fs+=FS_UNIF_0%{"FS_UNIF_TC":texto_fs_unif_tc}
-        if self._clase==GeneradorShader.ClaseSol:
+        if self._clase==GeneradorShader.ClaseSol or self._clase==GeneradorShader.ClaseAgua:
             texto_fs+=texto_fs_unif_tc
         texto_fs+=FS_UNIF_1%{"FS_UNIF_CLIP":texto_fs_unif_clip}
         if self._clase==GeneradorShader.ClaseCielo:
             texto_fs+=FS_UNIF_CIELO
             texto_fs+=FS_CONST_CIELO
+        elif self._clase==GeneradorShader.ClaseAgua:
+            texto_fs+=FS_UNIF_CIELO
+            texto_fs+=FS_UNIF_AGUA
+            texto_fs+=FS_CONST_AGUA
         texto_fs+=FS_VAR_0
         if self._clase==GeneradorShader.ClaseTerreno:
             texto_fs+=FS_VAR_TERRENO
@@ -120,8 +128,10 @@ class GeneradorShader:
             texto_fs+=FS_VAR_POSITIONW
         if self._clase==GeneradorShader.ClaseCielo:
             texto_fs+=FS_VAR_POSITION
+        elif self._clase==GeneradorShader.ClaseAgua:
+            texto_fs+=FS_VAR_POSITIONP
         #
-        if self._clase!=GeneradorShader.ClaseCielo and self._clase!=GeneradorShader.ClaseSol:
+        if self._clase!=GeneradorShader.ClaseCielo and self._clase!=GeneradorShader.ClaseSol and self._clase!=GeneradorShader.ClaseAgua:
             texto_fs+=FS_FUNC_ADS
         if self._clase!=GeneradorShader.ClaseCielo:
             texto_fs+=texto_fs_func_tex_0
@@ -130,6 +140,8 @@ class GeneradorShader:
             texto_fs+=FS_MAIN_0_CIELO%{"FS_MAIN_CLIP_0":texto_fs_main_clip_0, "FS_MAIN_CLIP_1":texto_fs_main_clip_1}
         elif self._clase==GeneradorShader.ClaseSol:
             texto_fs+=FS_MAIN_0_SOL%{"FS_MAIN_CLIP_0":texto_fs_main_clip_0, "FS_MAIN_CLIP_1":texto_fs_main_clip_1}
+        elif self._clase==GeneradorShader.ClaseAgua:
+            texto_fs+=FS_MAIN_0_AGUA
         else:
             texto_fs+=FS_MAIN_0%{"FS_MAIN_LUCES":FS_MAIN_LUCES,"FS_MAIN_TEX_0":texto_fs_main_tex_0, "FS_MAIN_CLIP_0":texto_fs_main_clip_0, "FS_MAIN_CLIP_1":texto_fs_main_clip_1}
         texto_fs+=FS_MAIN_1
@@ -177,6 +189,7 @@ varying float info_tipo;
 varying float info_tipo_factor;
 """
 VS_VAR_POSITIONW="varying vec4 PositionW;\n"
+VS_VAR_POSITIONP="varying vec4 PositionP;\n"
 VS_VAR_POSITION="varying vec4 Position;\n"
 # main
 VS_MAIN_0="""
@@ -191,6 +204,7 @@ VS_MAIN_1="""
 """
 VS_MAIN_TC="gl_TexCoord[0]=p3d_MultiTexCoord0;\n"
 VS_MAIN_POSITIONW="PositionW=p3d_ModelMatrix*p3d_Vertex;\n"
+VS_MAIN_POSITIONP="PositionP=gl_Position;\n"
 VS_MAIN_POSITION="Position=p3d_Vertex;\n"
 VS_MAIN_TERRENO="""
     info_tipo=floor(info_tipo_terreno);
@@ -248,16 +262,22 @@ uniform vec4 color_cielo_base_final;
 uniform vec4 color_halo_sol_inicial;
 uniform vec4 color_halo_sol_final;
 """
+FS_UNIF_AGUA="uniform float move_factor;\n"
 FS_UNIF_CLIP="uniform vec4 plano_recorte_agua;"
 FS_UNIF_TC="uniform sampler2D p3d_Texture%(indice_textura)i;\n"
 # constantes
 FS_CONST_CIELO="const float TamanoHalo=0.85;\n"
+FS_CONST_AGUA="""
+const float shine_damper=20.0;
+const float reflectivity=0.6;
+"""
 # varying
 FS_VAR_0="""
 varying vec4 PositionV;
 varying vec3 Normal;
 """
 FS_VAR_POSITIONW="varying vec4 PositionW;\n"
+FS_VAR_POSITIONP="varying vec4 PositionP;\n"
 FS_VAR_POSITION="varying vec4 Position;\n"
 FS_VAR_TERRENO="""
 varying float info_tipo;
@@ -395,6 +415,56 @@ void main()
         gl_FragColor=color;//*2*(color.a - 0.5);
     %(FS_MAIN_CLIP_1)s
     }
+"""
+FS_MAIN_0_AGUA="""
+void main()
+{
+    vec4 color=vec4(0,0,0,0);
+    //
+    vec2 ndc=(PositionP.xy/PositionP.w)/2.0+0.5;
+    vec2 texcoord_reflejo=vec2(ndc.x,1.0-ndc.y);
+    vec2 texcoord_refraccion=ndc;
+    //
+    vec2 distorted_texcoords=texture2D(p3d_Texture2,vec2(gl_TexCoord[0].s+move_factor, gl_TexCoord[0].t)).rg*0.1;
+    distorted_texcoords=gl_TexCoord[0].st+vec2(distorted_texcoords.x,distorted_texcoords.y+move_factor);
+    vec2 total_distortion=(texture2D(p3d_Texture2,distorted_texcoords).rg*2.0-1.0)*0.01;
+    //
+    texcoord_reflejo+=total_distortion;
+    texcoord_reflejo=clamp(texcoord_reflejo,0.001,0.999);
+    texcoord_refraccion+=total_distortion;
+    texcoord_refraccion=clamp(texcoord_refraccion,0.001,0.999);
+    //
+    vec4 color_reflection=texture2D(p3d_Texture0, texcoord_reflejo);
+    vec4 color_refraction=texture2D(p3d_Texture1, texcoord_refraccion);
+    //
+    vec3 view_vector=normalize(-PositionV.xyz);
+    float refractive_factor=abs(dot(view_vector,vec3(0.0,1.0,0.0))); // abs()? esto era no más, parece
+    refractive_factor=pow(refractive_factor,0.9); // renderiza negro ante ciertos desplazamientos de la superficie de agua, habria que corregir. abs()!
+    //
+    vec4 color_normal=texture2D(p3d_Texture3,distorted_texcoords);
+    vec3 normal=vec3(color_normal.r*2.0-1.0,color_normal.g,color_normal.b*2.0-1.0);
+    normal=normalize(normal);
+    //
+    vec3 reflected_light=reflect(normalize(posicion_sol),normal);
+    float specular=max(dot(reflected_light,view_vector), 0.0);
+    specular=pow(specular,shine_damper);
+    vec4 color_halo=mix(color_halo_sol_inicial,color_halo_sol_final,offset_periodo);
+    vec3 specular_highlights=color_halo.rgb * specular * reflectivity;
+
+    /*vec3 s=p3d_LightSource[iLightSource].position.xyz-(PositionV.xyz*p3d_LightSource[iLightSource].position.w);
+    vec3 l=normalize(s);
+    vec4 diffuse=clamp(p3d_Material.diffuse*p3d_LightSource[iLightSource].diffuse*max(dot(Normal,l),0),0,1);
+    if(p3d_Material.specular!=vec3(0,0,0)){
+        vec3 v=normalize(-PositionV.xyz);
+        vec3 r=normalize(-reflect(s, Normal));
+        diffuse+=vec4(p3d_Material.specular,1.0) * p3d_LightSource[iLightSource].specular * pow(max(dot(r,v),0),p3d_Material.shininess);
+    }*/
+
+    //
+    color=mix(color_reflection,color_refraction,refractive_factor);
+    //color=mix(color, vec4(0.0,0.3,0.5,1.0),0.2) + vec4(specular_highlights,0.0);
+    //
+    gl_FragColor=color;
 """
 FS_MAIN_TEX_0="color*=tex();"
 FS_MAIN_LUCES="""

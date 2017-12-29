@@ -2,6 +2,8 @@ from direct.gui.DirectFrame import DirectFrame
 from direct.gui.DirectLabel import DirectLabel
 from panda3d.core import *
 
+from shader import *
+
 import logging
 log=logging.getLogger(__name__)
 
@@ -27,10 +29,16 @@ class Agua:
         self.configurar_dudv()
         self.configurar_normal()
         self.move_factor=0.0
+        # suprimido para dar lugar a GeneradorShader
         # self.shader?
-        shader=Shader.load(Shader.SL_GLSL, vertex="shaders/agua.v.glsl", fragment="shaders/agua.f.glsl")
-        self.superficie.setShader(shader, 1)
-        self.superficie.setShaderInput("altitud_agua", self.altitud)
+#        shader=Shader.load(Shader.SL_GLSL, vertex="shaders/agua.v.glsl", fragment="shaders/agua.f.glsl")
+#        self.superficie.setShader(shader, 1)
+#        self.superficie.setShaderInput("altitud_agua", self.altitud)
+        self.shader=GeneradorShader(GeneradorShader.ClaseAgua, self.superficie)
+        self.shader.prioridad=2
+        self.shader.cantidad_texturas=4
+        self.shader.activar_recorte_agua(Vec3(0, 0, 1), self.altitud)
+        self.shader.generar_aplicar()
 
     def configurar_reflejo(self):
         # reflejo
@@ -45,8 +53,8 @@ class Agua:
         self.camera2.reparentTo(self.superficie)
         self.camera2.node().getLens().setFov(self.camera.find("+Camera").node().getLens().getFov())
         dummy_reflection=self.base.render.attachNewNode("dummy_reflection")
-        dummy_reflection.setClipPlane(self.reflection_plane_nodeN, priority=2)
-        dummy_reflection.setShaderInput("water_clipping", Vec4(0, 0, 1, self.altitud), priority=4)
+        #dummy_reflection.setClipPlane(self.reflection_plane_nodeN, priority=200)
+        dummy_reflection.setShaderInput("plano_recorte_agua", Vec4(0, 0, 1, self.altitud), priority=4)
         self.camera2.node().setCameraMask(DrawMask(2))
         self.camera2.node().setInitialState(dummy_reflection.getState())
         #
@@ -69,8 +77,8 @@ class Agua:
         self.camera3.reparentTo(self.base.render)
         self.camera3.node().getLens().setFov(self.camera.find("+Camera").node().getLens().getFov())
         dummy_refraction=NodePath("dummy_refraction")
-        dummy_refraction.setClipPlane(self.refraction_plane_plane_nodeN, priority=3)
-        dummy_refraction.setShaderInput("water_clipping", Vec4(0, 0, -1, self.altitud), priority=5)
+        #dummy_refraction.setClipPlane(self.refraction_plane_plane_nodeN, priority=3)
+        dummy_refraction.setShaderInput("plano_recorte_agua", Vec4(0, 0, -1, -self.altitud), priority=5)
         self.camera3.node().setCameraMask(DrawMask(2))
         self.camera3.node().setInitialState(dummy_refraction.getState())
         #
@@ -98,14 +106,16 @@ class Agua:
         #self._posicionar_camaras()
         self._posicionar_camaras_2()
         #
-        ref=self.base.render
+        # suprimido para dar lugar a GeneradorShader
+#        ref=self.base.render
         #
         self.move_factor+=0.03*dt
         self.move_factor%=1
         self.superficie.setShaderInput("move_factor", self.move_factor)
-        self.superficie.setShaderInput("cam_pos", self.camera.getPos(ref)) # self.superficie|self.base.render
-        self.superficie.setShaderInput("light_pos", pos_luz)
-        self.superficie.setShaderInput("light_color", color_luz)
+        # suprimido para dar lugar a GeneradorShader
+#        self.superficie.setShaderInput("cam_pos", self.camera.getPos(ref)) # self.superficie|self.base.render
+#        self.superficie.setShaderInput("light_pos", pos_luz)
+#        self.superficie.setShaderInput("light_color", color_luz)
 
     def obtener_info(self):
         _dot=self.superficie.getPos(self.base.render)-self.camera.getPos(self.base.render)
