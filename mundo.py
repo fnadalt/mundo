@@ -68,10 +68,12 @@ class Mundo(NodePath):
         self.terreno.terminar()
 
     def _establecer_shader(self):
-        self.setShaderOff(0)
-        self.base.render.setShaderInput("sun_wpos", Vec3(0, 0, 0), priority=0)
-        self.base.render.setShaderInput("water_clipping", Vec4(0, 0, 0, 0), priority=0)
-    
+        # suprimido para dar lugar a GeneradorShader
+        #self.setShaderOff(0)
+        #self.base.render.setShaderInput("sun_wpos", Vec3(0, 0, 0), priority=0)
+        #self.base.render.setShaderInput("water_clipping", Vec4(0, 0, 0, 0), priority=0)
+        pass
+        
     def _cargar_obj_voxel(self):
         return
         hm=HeightMap(id=66)
@@ -164,18 +166,18 @@ class Mundo(NodePath):
     
     def _cargar_terreno(self, pos_inicial_foco):
         # dia
-        self.dia=Dia(1800.0, 0.475) #|(1800.0, 0.50)
+        self.dia=Dia(1800.0, 0.5) #|(1800.0, 0.50)
         # terreno
         self.terreno=Terreno(self.base, self.bullet_world)
         self.terreno.iniciar()
         self.terreno.nodo.reparentTo(self)
         self.terreno.update(pos_inicial_foco)
         # cielo
-        self.cielo=Cielo(self.base, self.terreno.altitud_agua+85.0)
+        self.cielo=Cielo(self.base, self.terreno.altitud_agua-20.0)
         self.cielo.nodo.reparentTo(self)
         self.setLight(self.cielo.luz)
         # sol
-        self.sol=Sol(self.base)
+        self.sol=Sol(self.base, self.terreno.altitud_agua-20.0)
         self.sol.pivot.reparentTo(self.cielo.nodo)
         #self.sol.mostrar_camaras()
         self.setLight(self.sol.luz)
@@ -183,7 +185,7 @@ class Mundo(NodePath):
         self.agua=Agua(self.base, self.terreno.altitud_agua)
         self.agua.superficie.reparentTo(self.base.render)
         self.agua.generar()
-        self.agua.mostrar_camaras()
+        #self.agua.mostrar_camaras()
         #
         self.controlador_camara.altitud_agua=self.terreno.altitud_agua
 
@@ -233,6 +235,8 @@ class Mundo(NodePath):
             # gui
             self.lblHora["text"]=self.dia.obtener_hora()
             self.lblTemperatura["text"]="%.0fº"%self.terreno.obtener_temperatura_actual(temperatura_base_pivot_camara, altitud_pivot_camara, self.dia.hora_normalizada)
+        # mundo
+        self.setShaderInput("posicion_sol", self.sol.nodo.getPos(self), 1)
         #
         self._counter+=1
         return task.cont

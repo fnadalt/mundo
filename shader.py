@@ -16,6 +16,8 @@ class GeneradorShader:
     def __init__(self, clase, nodo):
         # referencias:
         self.nodo=nodo
+        # componentes:
+        self.shader=None
         # variables externas:
         self.prioridad_shader=1
         self.cantidad_texturas=0
@@ -27,11 +29,10 @@ class GeneradorShader:
         self._posicion_sol=Vec3(0, 0, 0)
         
     def generar_aplicar(self):
-        # generico
-        if self._clase==GeneradorShader.ClaseGenerico:
-            shader=self._generar_generico()
+        # generar
+        self.shader=self._generar()
         # aplicar shader
-        self.nodo.setShader(shader, priority=self.prioridad_shader)
+        self.nodo.setShader(self.shader, priority=self.prioridad_shader)
         self.nodo.setShaderInput("altitud_agua", self._altitud_agua, priority=self.prioridad_shader)
         self.nodo.setShaderInput("posicion_sol", self._posicion_sol, priority=self.prioridad_shader)
         if self.plano_recorte_agua!=Vec4(0, 0, 0, 0):
@@ -52,7 +53,7 @@ class GeneradorShader:
         self.plano_recorte_agua=self.plano_recorte_agua_inv
         self.plano_recorte_agua_inv=tmp
 
-    def _generar_generico(self):
+    def _generar(self):
         # texto
         texto_vs=""
         texto_fs=""
@@ -70,42 +71,77 @@ class GeneradorShader:
             for i in range(self.cantidad_texturas):
                 texto_fs_unif_tc+=FS_UNIF_TC%{"indice_textura":i}
                 texto_fs_func_tex_1+=FS_FUNC_TEX_1%{"indice_textura":i}
-            texto_fs_func_tex_0=FS_FUNC_TEX_0%{"FS_FUNC_TEX_1":texto_fs_func_tex_1}
+            if self._clase==GeneradorShader.ClaseTerreno:
+                texto_fs_func_tex_0=FS_FUNC_TEX_TERRENO
+            else:
+                texto_fs_func_tex_0=FS_FUNC_TEX_0%{"FS_FUNC_TEX_1":texto_fs_func_tex_1}
         # plano_recorte_agua
-        texto_vs_var_clip=""
-        texto_vs_main_clip=""
         texto_fs_unif_clip=""
-        texto_fs_var_clip=""
         texto_fs_main_clip_0=""
         texto_fs_main_clip_1=""
         if self.plano_recorte_agua!=Vec4(0, 0, 0, 0):
-            texto_vs_var_clip=VS_VAR_CLIP
-            texto_vs_main_clip=VS_MAIN_CLIP
             texto_fs_unif_clip=FS_UNIF_CLIP
-            texto_fs_var_clip=FS_VAR_CLIP
             texto_fs_main_clip_0=FS_MAIN_CLIP_0
             texto_fs_main_clip_1=FS_MAIN_CLIP_1
         # vs
         texto_vs+=VS_ATTR_0%{"VS_ATTR_TC":texto_vs_attrib_tc}
         texto_vs+=VS_UNIF_0
         texto_vs+=VS_VAR_0
-        texto_vs+=texto_vs_var_clip
-        texto_vs+=VS_MAIN_0%{"VS_MAIN_TC":texto_vs_main_tc, "VS_MAIN_CLIP":texto_vs_main_clip}
+        if self._clase==GeneradorShader.ClaseTerreno:
+            texto_vs+=VS_ATTR_TERRENO
+            texto_vs+=VS_VAR_TERRENO
+        if self.plano_recorte_agua!=Vec4(0, 0, 0, 0) or self._clase==GeneradorShader.ClaseCielo:
+            texto_vs+=VS_VAR_POSITIONW
+        if self._clase==GeneradorShader.ClaseCielo:
+            texto_vs+=VS_VAR_POSITION
+        #
+        texto_vs+=VS_MAIN_0%{"VS_MAIN_TC":texto_vs_main_tc}
+        if self.plano_recorte_agua!=Vec4(0, 0, 0, 0) or self._clase==GeneradorShader.ClaseCielo or self._clase==GeneradorShader.ClaseSol:
+            texto_vs+=VS_MAIN_POSITIONW
+        if self._clase==GeneradorShader.ClaseTerreno:
+            texto_vs+=VS_MAIN_TERRENO
+        elif self._clase==GeneradorShader.ClaseCielo:
+            texto_vs+=VS_MAIN_POSITION
+        texto_vs+=VS_MAIN_1
         # fs
-        texto_fs+=FS_UNIF_0%{"FS_UNIF_TC":texto_fs_unif_tc}
+        texto_fs+="#version 120\n"
+        if self._clase!=GeneradorShader.ClaseCielo and self._clase!=GeneradorShader.ClaseSol:
+            texto_fs+=FS_UNIF_0%{"FS_UNIF_TC":texto_fs_unif_tc}
+        if self._clase==GeneradorShader.ClaseSol:
+            texto_fs+=texto_fs_unif_tc
         texto_fs+=FS_UNIF_1%{"FS_UNIF_CLIP":texto_fs_unif_clip}
+        if self._clase==GeneradorShader.ClaseCielo:
+            texto_fs+=FS_UNIF_CIELO
+            texto_fs+=FS_CONST_CIELO
         texto_fs+=FS_VAR_0
-        texto_fs+=texto_fs_var_clip
-        texto_fs+=FS_FUNC_ADS
-        texto_fs+=texto_fs_func_tex_0
-        texto_fs+=FS_MAIN_0%{"FS_MAIN_TEX_0":texto_fs_main_tex_0, "FS_MAIN_CLIP_0":texto_fs_main_clip_0, "FS_MAIN_CLIP_1":texto_fs_main_clip_1}
+        if self._clase==GeneradorShader.ClaseTerreno:
+            texto_fs+=FS_VAR_TERRENO
+        if self.plano_recorte_agua!=Vec4(0, 0, 0, 0) or self._clase==GeneradorShader.ClaseCielo:
+            texto_fs+=FS_VAR_POSITIONW
+        if self._clase==GeneradorShader.ClaseCielo:
+            texto_fs+=FS_VAR_POSITION
+        #
+        if self._clase!=GeneradorShader.ClaseCielo and self._clase!=GeneradorShader.ClaseSol:
+            texto_fs+=FS_FUNC_ADS
+        if self._clase!=GeneradorShader.ClaseCielo:
+            texto_fs+=texto_fs_func_tex_0
+        #
+        if self._clase==GeneradorShader.ClaseCielo:
+            texto_fs+=FS_MAIN_0_CIELO%{"FS_MAIN_CLIP_0":texto_fs_main_clip_0, "FS_MAIN_CLIP_1":texto_fs_main_clip_1}
+        elif self._clase==GeneradorShader.ClaseSol:
+            texto_fs+=FS_MAIN_0_SOL%{"FS_MAIN_CLIP_0":texto_fs_main_clip_0, "FS_MAIN_CLIP_1":texto_fs_main_clip_1}
+        else:
+            texto_fs+=FS_MAIN_0%{"FS_MAIN_LUCES":FS_MAIN_LUCES,"FS_MAIN_TEX_0":texto_fs_main_tex_0, "FS_MAIN_CLIP_0":texto_fs_main_clip_0, "FS_MAIN_CLIP_1":texto_fs_main_clip_1}
+        texto_fs+=FS_MAIN_1
         # archivos
-        with open("shaders/vs.glsl", "w+") as arch_vs:
+        ruta_archivo_vs="shaders/vs.%i.glsl"%self._clase
+        ruta_archivo_fs="shaders/fs.%i.glsl"%self._clase
+        with open(ruta_archivo_vs, "w+") as arch_vs:
             arch_vs.write(texto_vs)
-        with open("shaders/fs.glsl", "w+") as arch_fs:
+        with open(ruta_archivo_fs, "w+") as arch_fs:
             arch_fs.write(texto_fs)
         # shader
-        shader=Shader.load(Shader.SL_GLSL, vertex="shaders/vs.glsl", fragment="shaders/fs.glsl")
+        shader=Shader.load(Shader.SL_GLSL, vertex=ruta_archivo_vs, fragment=ruta_archivo_fs)
         return shader
 
 #
@@ -121,6 +157,9 @@ attribute vec4 p3d_Color;
 %(VS_ATTR_TC)s
 """
 VS_ATTR_TC="attribute vec4 p3d_MultiTexCoord0;"
+VS_ATTR_TERRENO="""
+attribute float info_tipo_terreno;
+"""
 # uniforms
 VS_UNIF_0="""
 uniform mat4 p3d_ModelMatrix;
@@ -130,22 +169,33 @@ uniform mat3 p3d_NormalMatrix;
 """
 # varying
 VS_VAR_0="""
-varying vec4 Position;
+varying vec4 PositionV;
 varying vec3 Normal;
 """
-VS_VAR_CLIP="varying vec4 PositionW;"
+VS_VAR_TERRENO="""
+varying float info_tipo;
+varying float info_tipo_factor;
+"""
+VS_VAR_POSITIONW="varying vec4 PositionW;\n"
+VS_VAR_POSITION="varying vec4 Position;\n"
 # main
 VS_MAIN_0="""
 void main() {
-    Position=p3d_ModelViewMatrix*p3d_Vertex;
+    PositionV=p3d_ModelViewMatrix*p3d_Vertex;
     Normal=normalize(p3d_NormalMatrix*p3d_Normal);
     %(VS_MAIN_TC)s
-    gl_Position=p3d_ModelViewProjectionMatrix*gl_Vertex;
-    %(VS_MAIN_CLIP)s
+    gl_Position=p3d_ModelViewProjectionMatrix*p3d_Vertex;
+"""
+VS_MAIN_1="""
 }
 """
 VS_MAIN_TC="gl_TexCoord[0]=p3d_MultiTexCoord0;\n"
-VS_MAIN_CLIP="PositionW=p3d_ModelMatrix*gl_Vertex;"
+VS_MAIN_POSITIONW="PositionW=p3d_ModelMatrix*p3d_Vertex;\n"
+VS_MAIN_POSITION="Position=p3d_Vertex;\n"
+VS_MAIN_TERRENO="""
+    info_tipo=floor(info_tipo_terreno);
+    info_tipo_factor=fract(info_tipo_terreno);
+"""
 
 #
 #
@@ -153,7 +203,7 @@ VS_MAIN_CLIP="PositionW=p3d_ModelMatrix*gl_Vertex;"
 #
 #
 # uniforms
-FS_UNIF_0="""#version 120
+FS_UNIF_0="""
 %(FS_UNIF_TC)s
 uniform mat4 p3d_ModelViewMatrix;
 uniform struct {
@@ -188,22 +238,31 @@ uniform struct {
 FS_UNIF_1="""
 uniform int periodo;
 uniform float offset_periodo;
-uniform vec4 color_cielo_base_inicial;
-uniform vec4 color_cielo_base_final;
-uniform vec4 color_halo_sol_inicial;
-uniform vec4 color_halo_sol_final;
 uniform float altitud_agua;
 uniform vec3 posicion_sol;
 %(FS_UNIF_CLIP)s
 """
+FS_UNIF_CIELO="""
+uniform vec4 color_cielo_base_inicial;
+uniform vec4 color_cielo_base_final;
+uniform vec4 color_halo_sol_inicial;
+uniform vec4 color_halo_sol_final;
+"""
 FS_UNIF_CLIP="uniform vec4 plano_recorte_agua;"
 FS_UNIF_TC="uniform sampler2D p3d_Texture%(indice_textura)i;\n"
+# constantes
+FS_CONST_CIELO="const float TamanoHalo=0.85;\n"
 # varying
 FS_VAR_0="""
-varying vec4 Position;
+varying vec4 PositionV;
 varying vec3 Normal;
 """
-FS_VAR_CLIP="varying vec4 PositionW;"
+FS_VAR_POSITIONW="varying vec4 PositionW;\n"
+FS_VAR_POSITION="varying vec4 Position;\n"
+FS_VAR_TERRENO="""
+varying float info_tipo;
+varying float info_tipo_factor;
+"""
 # ads
 FS_FUNC_ADS="""
 vec4 amb()
@@ -212,11 +271,11 @@ vec4 amb()
 }
 vec4 ds(int iLightSource)
 {
-    vec3 s=p3d_LightSource[iLightSource].position.xyz-(Position.xyz*p3d_LightSource[iLightSource].position.w);
+    vec3 s=p3d_LightSource[iLightSource].position.xyz-(PositionV.xyz*p3d_LightSource[iLightSource].position.w);
     vec3 l=normalize(s);
     vec4 diffuse=clamp(p3d_Material.diffuse*p3d_LightSource[iLightSource].diffuse*max(dot(Normal,l),0),0,1);
     if(p3d_Material.specular!=vec3(0,0,0)){
-        vec3 v=normalize(-Position.xyz);
+        vec3 v=normalize(-PositionV.xyz);
         vec3 r=normalize(-reflect(s, Normal));
         diffuse+=vec4(p3d_Material.specular,1.0) * p3d_LightSource[iLightSource].specular * pow(max(dot(r,v),0),p3d_Material.shininess);
     }
@@ -241,25 +300,111 @@ vec4 tex(){
 }
 """
 FS_FUNC_TEX_1="color_tex+=texture2D(p3d_Texture%(indice_textura)i, gl_TexCoord[0].st);\n"
+FS_FUNC_TEX_TERRENO="""
+vec4 tex()
+{
+    vec4 _color;
+    vec4 _color0;
+    vec4 _color1;
+    //
+    float tipo0=floor(info_tipo/10);
+    float tipo1=mod(floor(info_tipo),10);
+    //
+    if(tipo0==1){
+        _color0=texture2D(p3d_Texture3, gl_TexCoord[0].st);
+    } else if(tipo0==2){
+        _color0=texture2D(p3d_Texture1, gl_TexCoord[0].st);
+    } else if(tipo0==3){
+        _color0=texture2D(p3d_Texture2, gl_TexCoord[0].st);
+    } else if(tipo0==4){
+        _color0=texture2D(p3d_Texture1, gl_TexCoord[0].st);
+    } else if(tipo0==5){
+        _color0=texture2D(p3d_Texture0, gl_TexCoord[0].st);
+    } else {
+        _color0=vec4(0,0,0,1);
+    }
+    if(tipo1==1){
+        _color1=texture2D(p3d_Texture3, gl_TexCoord[0].st);
+    } else if(tipo1==2){
+        _color1=texture2D(p3d_Texture1, gl_TexCoord[0].st);
+    } else if(tipo1==3){
+        _color1=texture2D(p3d_Texture2, gl_TexCoord[0].st);
+    } else if(tipo1==4){
+        _color1=texture2D(p3d_Texture1, gl_TexCoord[0].st);
+    } else if(tipo1==5){
+        _color1=texture2D(p3d_Texture0, gl_TexCoord[0].st);
+    } else {
+        _color1=vec4(1,1,1,1);
+    }
+    //
+    if(info_tipo_factor==0.0){
+        _color=_color0;
+    } else if(info_tipo_factor==1.0){
+        _color=_color1;
+    } else {
+        _color=info_tipo_factor<0.5?_color0:_color1;
+    }
+    //
+    _color.a=1.0;
+    return _color;
+}
+"""
 # main
 FS_MAIN_0="""
 void main()
 {
     %(FS_MAIN_CLIP_0)s
-        vec4 suma_ds=vec4(0,0,0,0);
+        vec4 color=vec4(0,0,0,0);
+        %(FS_MAIN_LUCES)s
+        %(FS_MAIN_TEX_0)s
+        color.a=1.0;
+        gl_FragColor=color;
+    %(FS_MAIN_CLIP_1)s
+"""
+FS_MAIN_1="""
+}
+"""
+FS_MAIN_0_CIELO="""
+void main()
+{
+    %(FS_MAIN_CLIP_0)s
+        vec4 color_base=mix(color_cielo_base_inicial,color_cielo_base_final,offset_periodo);
+        vec3 v=normalize(Position.xyz+vec3(0,0,100));
+        vec3 l=normalize(posicion_sol);
+        float a=(dot(v,l)+1.0)/2.0;
+        vec4 color;
+        if(abs(a)>TamanoHalo){
+            vec4 color_halo=mix(color_halo_sol_inicial,color_halo_sol_final,offset_periodo);
+            float factor=(abs(a)-TamanoHalo)/(1.0-TamanoHalo);
+            color=mix(color_base,color_halo,factor);
+        } else {
+            color=color_base;
+        }
+        color.a=1.0;
+        gl_FragColor=color;
+    %(FS_MAIN_CLIP_1)s
+"""
+FS_MAIN_0_SOL="""
+void main()
+{
+    if(distance(posicion_sol,PositionW.xyz)>20.0){
+        gl_FragColor=vec4(0,0,0,1);
+    } else {
+    %(FS_MAIN_CLIP_0)s
+        vec4 color=texture2D(p3d_Texture0, gl_TexCoord[0].st);
+        gl_FragColor=color;//*2*(color.a - 0.5);
+    %(FS_MAIN_CLIP_1)s
+    }
+"""
+FS_MAIN_TEX_0="color*=tex();"
+FS_MAIN_LUCES="""
         int cantidad_luces=p3d_LightSource.length();
         for(int i=0; i<cantidad_luces; ++i)
         {
-            suma_ds+=ds(i);
+            color+=ds(i);
         }
-        vec4 color_ads=(amb()+suma_ds);
-        %(FS_MAIN_TEX_0)s
-        color_ads.a=1.0;
-        gl_FragColor=color_ads;
-    %(FS_MAIN_CLIP_1)s
-}
+        color+=amb();
 """
-FS_MAIN_TEX_0="color_ads*=tex();"
 FS_MAIN_CLIP_0="""
     if (PositionW.x*plano_recorte_agua.x + PositionW.y*plano_recorte_agua.y + PositionW.z*plano_recorte_agua.z - plano_recorte_agua.w <= 0) {
         discard;

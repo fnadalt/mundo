@@ -1,6 +1,8 @@
 from direct.gui.DirectGui import *
 from panda3d.core import *
 
+from shader import *
+
 import logging
 log=logging.getLogger(__name__)
 
@@ -12,7 +14,7 @@ class Sol:
     ColorDia=LVector4(1.0, 1.0, 0.85, 1.0)
     ColorAtardecer=LVector4(0.95, 0.65, 0.3, 1.0)
 
-    def __init__(self, base):
+    def __init__(self, base, altitud_agua):
         # referencias:
         self.base=base
         # componentes:
@@ -20,6 +22,7 @@ class Sol:
         self.nodo=None
         self.luz=None
         # variable internas:
+        self._altitud_agua=altitud_agua
         self._periodo_actual=0 # [0,3]; noche,amanecer,dia,atardecer
         self._color_inicial=Sol.ColorNoche
         self._color_final=Sol.ColorNoche
@@ -60,7 +63,7 @@ class Sol:
 
     def update(self, hora_normalizada, periodo, offset_periodo):
         #
-        self.nodo.setShaderInput("sun_wpos", self.nodo.getPos(self.base.render), 2)
+        self.nodo.setShaderInput("posicion_sol", self.nodo.getPos(self.base.render), 2)
         # determinar periodo
         if periodo!=self._periodo_actual:
             self._periodo_actual=periodo
@@ -110,16 +113,23 @@ class Sol:
 
     def _establecer_shaders(self):
         # glow shader
-        glow_shader=Shader.load(Shader.SL_GLSL, vertex="shaders/sol.v.glsl", fragment="shaders/sol.f.glsl")
-        self.nodo.setShaderInput("sun_wpos", self.nodo.getPos(self.base.render), 1)
-        self.nodo.setShader(glow_shader, 2)
+        # suprimido para dar lugar a GeneradorShader
+#        glow_shader=Shader.load(Shader.SL_GLSL, vertex="shaders/sol.v.glsl", fragment="shaders/sol.f.glsl")
+#        self.nodo.setShaderInput("sun_wpos", self.nodo.getPos(self.base.render), 1)
+#        self.nodo.setShader(glow_shader, 2)
+        shader=GeneradorShader(GeneradorShader.ClaseSol, self.nodo)
+        shader.cantidad_texturas=1
+        shader.activar_recorte_agua(Vec3(0, 0, 1), self._altitud_agua)
+        shader.generar_aplicar()
         # glow buffer
         self.glow_buffer = base.win.makeTextureBuffer("escena_glow", 512, 512)
         self.glow_buffer.setSort(-3)
         self.glow_buffer.setClearColor(LVector4(0, 0, 0, 1))
         # glow camera
         tempnode = NodePath(PandaNode("temp_node"))
-        tempnode.setShader(glow_shader, 3)
+        tempnode.setShader(shader.shader, 3)
+        tempnode.setShaderInput("plano_recorte_agua", Vec4(0, 0, 0, 0))
+        tempnode.setShaderInput("posicion_sol", Vec3(0, 0, 0))
         glow_camera = self.base.makeCamera(self.glow_buffer, lens=self.base.cam.node().getLens())
         glow_camera.node().setInitialState(tempnode.getState())
         # blur shaders
@@ -128,7 +138,7 @@ class Sol:
         finalcard = self.blur_y_buffer.getTextureCard()
         finalcard.reparentTo(self.base.render2d)
         finalcard.setAttrib(ColorBlendAttrib.make(ColorBlendAttrib.MAdd))
-        finalcard.hide()
+        #finalcard.hide()
 
     def _generar_buffer_filtro(self, buffer_base, nombre, orden, nombre_base_arch_shader):
         blur_buffer = self.base.win.makeTextureBuffer(nombre, 512, 512)

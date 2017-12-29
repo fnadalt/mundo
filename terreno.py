@@ -1,6 +1,7 @@
 from panda3d.bullet import *
 from panda3d.core import *
 
+from shader import *
 from objetos import *
 
 import math
@@ -391,29 +392,27 @@ class Terreno:
         ts_nieve=TextureStage("ts_nieve") # nieve
         textura_nieve=self.base.loader.loadTexture("texturas/nieve.png")
         self.nodo.setTexture(ts_nieve, textura_nieve)
+        # suprimido para dar lugar a GeneradorShader
         #
         #   altitud_interv_a_t    altitud_tierra            altitud_interv_t_p  0
         #   altitud_pasto           altitud_interv_p_n     altitud_nieve         0
         #   altura_sobre_agua  AlturaMaxima           altitud_agua          0
         #   0                             0                                0                             0
-        data=LMatrix4(0, 0, 0, 0, \
-                      0, 0, 0, 0, \
-                      self.altura_sobre_agua, Terreno.AlturaMaxima, self.altitud_agua, 0, \
-                      0, 0, 0, 0)
-        #
-        shader_nombre_base="terreno" # terreno|debug
-        shader=Shader.load(Shader.SL_GLSL, vertex="shaders/%s.v.glsl"%shader_nombre_base, fragment="shaders/%s.f.glsl"%shader_nombre_base)
-        self.nodo.setShader(shader, 1)
-        self.nodo.setShaderInput("data", data)
-        self.nodo.setShaderInput("water_clipping", Vec4(0, 0, 0, 0), priority=0)
-        self.nodo.setClipPlaneOff(3)
-        #
-        material=Material("mundo")
-        material.setAmbient((0.1, 0.1, 0.1, 1.0))
-        material.setDiffuse((1.0, 1.0, 1.0, 1.0))
-        material.setSpecular((0.0, 0.0, 0.0, 1.0))
-        #material.setShininess(1)
-        self.nodo.setMaterial(material, 3)
+#        data=LMatrix4(0, 0, 0, 0, \
+#                      0, 0, 0, 0, \
+#                      self.altura_sobre_agua, Terreno.AlturaMaxima, self.altitud_agua, 0, \
+#                      0, 0, 0, 0)
+#        #
+#        shader_nombre_base="terreno" # terreno|debug
+#        shader=Shader.load(Shader.SL_GLSL, vertex="shaders/%s.v.glsl"%shader_nombre_base, fragment="shaders/%s.f.glsl"%shader_nombre_base)
+#        self.nodo.setShader(shader, 1)
+#        self.nodo.setShaderInput("data", data)
+#        self.nodo.setShaderInput("water_clipping", Vec4(0, 0, 0, 0), priority=0)
+#        self.nodo.setClipPlaneOff(3)
+        shader=GeneradorShader(GeneradorShader.ClaseTerreno, self.nodo)
+        shader.cantidad_texturas=4
+        shader.activar_recorte_agua(Vec3(0, 0, 1), self.altitud_agua)
+        shader.generar_aplicar()
 
     def _calcular_normal(self, v0, v1, v2):
         U=v1-v0
