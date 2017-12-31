@@ -38,8 +38,6 @@ class Mundo(NodePath):
     
     def iniciar(self):
         log.info("iniciar")
-        #
-        self._establecer_shader()
         # fisica:
         self._configurar_fisica()
         # componentes:
@@ -47,8 +45,6 @@ class Mundo(NodePath):
         self.input_mapper.ligar_eventos()
         self.controlador_camara=ControladorCamara(self.base)
         self.controlador_camara.input_mapper=self.input_mapper
-        # mundo:
-        self._cargar_material()
         #
         self._cargar_terreno(Mundo.PosInicialFoco)
         self._cargar_hombre()
@@ -57,6 +53,9 @@ class Mundo(NodePath):
         # gui:
         self._cargar_debug_info()
         self._cargar_gui()
+        # mundo:
+        self._cargar_material()
+        self._establecer_shader()
         # ShowBase
         self.base.cam.node().setCameraMask(DrawMask(5))
         self.base.render.node().adjustDrawMask(DrawMask(7), DrawMask(0), DrawMask(0))
@@ -72,9 +71,10 @@ class Mundo(NodePath):
         #self.setShaderOff(0)
         #self.base.render.setShaderInput("sun_wpos", Vec3(0, 0, 0), priority=0)
         #self.base.render.setShaderInput("water_clipping", Vec4(0, 0, 0, 0), priority=0)
-        self.setShaderInput("pos_pivot_camara", Vec3(0, 0, 0), priority=2)
-        self.setShaderInput("posicion_sol", Vec3(0, 0, 0), priority=2)
-        pass
+        shader=GeneradorShader(GeneradorShader.ClaseGenerico, self)
+        shader.cantidad_texturas=1
+        shader.activar_recorte_agua(Vec3(0, 0, 1), self.terreno.altitud_agua)
+        shader.generar_aplicar()
         
     def _cargar_obj_voxel(self):
         return
@@ -147,11 +147,6 @@ class Mundo(NodePath):
         self.hombre.construir(self, self.bullet_world)
         self.hombre.cuerpo.setPos(self.terreno.pos_foco)
         self.hombre.cuerpo.setZ(self.terreno.obtener_altitud(self.terreno.pos_foco)+0.5)
-        # shader:
-        shader=GeneradorShader(GeneradorShader.ClaseGenerico, self.hombre.cuerpo)
-        shader.cantidad_texturas=1
-        shader.activar_recorte_agua(Vec3(0, 0, 1), self.terreno.altitud_agua)
-        shader.generar_aplicar()
         #
         self._personajes.append(self.hombre)
         #
@@ -168,7 +163,7 @@ class Mundo(NodePath):
     
     def _cargar_terreno(self, pos_inicial_foco):
         # dia
-        self.dia=Dia(1800.0, 0.53) #|(1800.0, 0.50)
+        self.dia=Dia(1800.0, 0.63) #|(1800.0, 0.50)
         # terreno
         self.terreno=Terreno(self.base, self.bullet_world)
         self.terreno.iniciar()

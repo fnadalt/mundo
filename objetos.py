@@ -4,6 +4,8 @@ import csv
 import os, os.path
 import random
 
+from shader import *
+
 import logging
 log=logging.getLogger(__name__)
 
@@ -251,7 +253,11 @@ class Naturaleza:
         lod0=NodePath(LODNode("%s_lod"%nombre))
         lod0.node().addSwitch(5.0*1.4142*self._tamano, 0.0)
         nodo_central.reparentTo(lod0)
-        nodo_central.setShaderAuto()
+        #
+        shader=GeneradorShader(GeneradorShader.ClaseGenerico, nodo_central)
+        shader.cantidad_texturas=1
+        shader.activar_recorte_agua(Vec3(0, 0, 1), self._altitud_agua)
+        shader.generar_aplicar()
         #
         return lod0
 

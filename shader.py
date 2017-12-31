@@ -1,5 +1,7 @@
 from panda3d.core import *
 
+import os, os.path
+
 import logging
 log=logging.getLogger(__name__)
 
@@ -82,7 +84,9 @@ class GeneradorShader:
         texto_vs+=VS_ATTR_0%{"VS_ATTR_TC":texto_vs_attrib_tc}
         texto_vs+=VS_UNIF_0
         texto_vs+=VS_VAR_0
-        if self._clase==GeneradorShader.ClaseTerreno:
+        if self._clase==GeneradorShader.ClaseGenerico:
+            texto_vs+=VS_VAR_GENERICO
+        elif self._clase==GeneradorShader.ClaseTerreno:
             texto_vs+=VS_ATTR_TERRENO
             texto_vs+=VS_VAR_TERRENO
         if self.plano_recorte_agua!=Vec4(0, 0, 0, 0) or self._clase==GeneradorShader.ClaseCielo or self._clase==GeneradorShader.ClaseSol:
@@ -95,7 +99,9 @@ class GeneradorShader:
         texto_vs+=VS_MAIN_0%{"VS_MAIN_TC":texto_vs_main_tc}
         if self.plano_recorte_agua!=Vec4(0, 0, 0, 0) or self._clase==GeneradorShader.ClaseCielo or self._clase==GeneradorShader.ClaseSol:
             texto_vs+=VS_MAIN_POSITIONW
-        if self._clase==GeneradorShader.ClaseTerreno:
+        if self._clase==GeneradorShader.ClaseGenerico:
+            texto_vs+=VS_MAIN_GENERICO
+        elif self._clase==GeneradorShader.ClaseTerreno:
             texto_vs+=VS_MAIN_TERRENO
         elif self._clase==GeneradorShader.ClaseCielo:
             texto_vs+=VS_MAIN_POSITION
@@ -117,7 +123,9 @@ class GeneradorShader:
             texto_fs+=FS_UNIF_AGUA
             texto_fs+=FS_CONST_AGUA
         texto_fs+=FS_VAR_0
-        if self._clase==GeneradorShader.ClaseTerreno:
+        if self._clase==GeneradorShader.ClaseGenerico:
+            texto_fs+=FS_VAR_GENERICO
+        elif self._clase==GeneradorShader.ClaseTerreno:
             texto_fs+=FS_VAR_TERRENO
         if self.plano_recorte_agua!=Vec4(0, 0, 0, 0) or self._clase==GeneradorShader.ClaseCielo or self._clase==GeneradorShader.ClaseSol:
             texto_fs+=FS_VAR_POSITIONW
@@ -139,10 +147,13 @@ class GeneradorShader:
             texto_fs+=FS_MAIN_0_AGUA
         else:
             texto_fs+=FS_MAIN_0%{"FS_MAIN_LUCES":FS_MAIN_LUCES,"FS_MAIN_TEX_0":texto_fs_main_tex_0, "FS_MAIN_CLIP_0":texto_fs_main_clip_0, "FS_MAIN_CLIP_1":texto_fs_main_clip_1}
+        if self._clase==GeneradorShader.ClaseGenerico:
+            texto_fs+=FS_MAIN_GENERICO
         texto_fs+=FS_MAIN_1
         # archivos
         ruta_archivo_vs="shaders/vs.%i.glsl"%self._clase
         ruta_archivo_fs="shaders/fs.%i.glsl"%self._clase
+        #
         with open(ruta_archivo_vs, "w+") as arch_vs:
             arch_vs.write(texto_vs)
         with open(ruta_archivo_fs, "w+") as arch_fs:
@@ -179,6 +190,9 @@ VS_VAR_0="""
 varying vec4 PositionV;
 varying vec3 Normal;
 """
+VS_VAR_GENERICO="""
+varying vec4 Color;
+"""
 VS_VAR_TERRENO="""
 varying float info_tipo;
 varying float info_tipo_factor;
@@ -197,6 +211,8 @@ void main() {
 VS_MAIN_1="""
 }
 """
+VS_MAIN_GENERICO="""
+    Color=p3d_Color;"""
 VS_MAIN_TC="gl_TexCoord[0]=p3d_MultiTexCoord0;\n"
 VS_MAIN_POSITIONW="PositionW=p3d_ModelMatrix*p3d_Vertex;\n"
 VS_MAIN_POSITIONP="PositionP=gl_Position;\n"
@@ -273,6 +289,8 @@ const float reflectivity=0.6;
 FS_VAR_0="""
 varying vec4 PositionV;
 varying vec3 Normal;
+"""
+FS_VAR_GENERICO="""varying vec4 Color;
 """
 FS_VAR_POSITIONW="varying vec4 PositionW;\n"
 FS_VAR_POSITIONP="varying vec4 PositionP;\n"
@@ -455,6 +473,7 @@ void main()
     gl_FragColor=color;
 """
 FS_MAIN_TEX_0="color*=tex();"
+FS_MAIN_GENERICO="//color+=Color; no no no \n"
 FS_MAIN_LUCES="""
         int cantidad_luces=p3d_LightSource.length();
         for(int i=0; i<cantidad_luces; ++i)
