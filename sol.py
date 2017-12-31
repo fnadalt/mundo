@@ -63,7 +63,8 @@ class Sol:
 
     def update(self, hora_normalizada, periodo, offset_periodo):
         #
-        self.nodo.setShaderInput("posicion_sol", self.nodo.getPos(self.base.render), 2)
+        # suprimido para dar lugar a GeneradorShader
+        #self.nodo.setShaderInput("posicion_sol", self.nodo.getPos(self.base.render), 2)
         # determinar periodo
         if periodo!=self._periodo_actual:
             self._periodo_actual=periodo
@@ -119,7 +120,7 @@ class Sol:
 #        self.nodo.setShader(glow_shader, 2)
         shader=GeneradorShader(GeneradorShader.ClaseSol, self.nodo)
         shader.cantidad_texturas=1
-        shader.activar_recorte_agua(Vec3(0, 0, 1), self._altitud_agua)
+        #shader.activar_recorte_agua(Vec3(0, 0, 1), self._altitud_agua)
         shader.generar_aplicar()
         # glow buffer
         self.glow_buffer = base.win.makeTextureBuffer("escena_glow", 512, 512)

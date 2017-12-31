@@ -18,6 +18,9 @@ varying vec2 texcoords;
 varying vec3 to_cam_vec;
 varying vec3 from_light_vec;
 
+//!
+uniform vec3 cam_pos;
+
 void main()
 {
     //
@@ -41,8 +44,8 @@ void main()
     vec4 color_refraction=texture2D(p3d_Texture1, texcoord_refraccion);
     
     //
-    vec3 view_vector=normalize(to_cam_vec);
-    float refractive_factor=abs(dot(view_vector,vec3(0.0,1.0,0.0))); // abs()? esto era no más, parece
+    vec3 view_vector=normalize(cam_pos); //! to_cam_vec
+    float refractive_factor=abs(dot(view_vector,vec3(0.0,0.0,1.0))); // abs()? esto era no más, parece
     refractive_factor=pow(refractive_factor,0.9); // renderiza negro ante ciertos desplazamientos de la superficie de agua, habria que corregir. abs()!
 
     //
@@ -61,6 +64,6 @@ void main()
     color=mix(color, vec4(0.0,0.3,0.5,1.0),0.2) + vec4(specular_highlights,0.0);
     
     //
-    gl_FragColor=color;
+    gl_FragColor=vec4(specular_highlights,0.0);
     //gl_FragColor=color_refraction;
 }

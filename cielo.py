@@ -42,8 +42,7 @@ class Cielo:
         self._establecer_shader()
         self.nodo.setZ(self.altitud_agua)
     
-    # shader
-    def update(self, posicion_sol, hora_normalizada, periodo, offset_periodo):
+    def update(self, pos_pivot_camara, hora_normalizada, periodo, offset_periodo):
         # determinar periodo
         if periodo!=self._periodo_actual:
             #log.info("update cambio periodo de %i a %i; posicion_sol=[%s]; hora_normalizada=%.2f; offset_periodo=%.2f"%(self._periodo_actual, periodo, ",".join(["%.2f"%n for n in posicion_sol]), hora_normalizada, offset_periodo))
@@ -59,8 +58,10 @@ class Cielo:
                     self._procesar_cambio_periodo(self._periodo_actual, True)
             _offset_corregido*=2
         # shader
-        self.nodo.setShaderInput("posicion_sol", posicion_sol)
+        # suprimido para dar lugar a GeneradorShader
+        #self.nodo.setShaderInput("posicion_sol", posicion_sol, priority=3)
         self.nodo.setShaderInput("offset_periodo", _offset_corregido)
+        self.nodo.setShaderInput("pos_pivot_camara", pos_pivot_camara)
         # luz ambiental
         _color_luz=Vec4(self._color_ambiente_inicial*(1.0-_offset_corregido))+Vec4(self._color_ambiente_final*_offset_corregido)
         self.luz.node().setColor(_color_luz)
@@ -134,5 +135,5 @@ class Cielo:
 #        self.nodo.setClipPlaneOff(4)
         shader=GeneradorShader(GeneradorShader.ClaseCielo, self.nodo)
         shader.cantidad_texturas=0
-        shader.activar_recorte_agua(Vec3(0, 0, 1), self.altitud_agua)
+        #shader.activar_recorte_agua(Vec3(0, 0, 1), self.altitud_agua)
         shader.generar_aplicar()

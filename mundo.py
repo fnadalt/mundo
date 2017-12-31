@@ -166,7 +166,7 @@ class Mundo(NodePath):
     
     def _cargar_terreno(self, pos_inicial_foco):
         # dia
-        self.dia=Dia(1800.0, 0.6) #|(1800.0, 0.50)
+        self.dia=Dia(15.0, 0.48) #|(1800.0, 0.50)
         # terreno
         self.terreno=Terreno(self.base, self.bullet_world)
         self.terreno.iniciar()
@@ -185,7 +185,7 @@ class Mundo(NodePath):
         self.agua=Agua(self.base, self.terreno.altitud_agua)
         self.agua.superficie.reparentTo(self.base.render)
         self.agua.generar()
-        self.agua.mostrar_camaras()
+        #self.agua.mostrar_camaras()
         #
         self.controlador_camara.altitud_agua=self.terreno.altitud_agua
 
@@ -194,7 +194,7 @@ class Mundo(NodePath):
         info+=self.dia.obtener_info()+"\n"
         #info+=self.terreno.obtener_info()+"\n"
         info+=self.hombre.obtener_info()+"\n"
-        #info+=self.agua.obtener_info()+"\n"
+        info+=self.agua.obtener_info()+"\n"
         #info+=self.input_mapper.obtener_info()+"\n"
         #info+=self.cielo.obtener_info()
         #info+=self.sol.obtener_info()+"\n"
@@ -208,15 +208,15 @@ class Mundo(NodePath):
         # controlador cámara
         self.controlador_camara.altitud_suelo=self.terreno.obtener_altitud(self.controlador_camara.pos_camara.getXy())
         self.controlador_camara.update(dt)
-        pos_pivot_camara=self.controlador_camara.pivot.getPos(self).getXy()
-        altitud_pivot_camara=self.terreno.obtener_altitud(pos_pivot_camara)
-        temperatura_base_pivot_camara=self.terreno.obtener_temperatura_base(pos_pivot_camara)
+        pos_pivot_camara=self.controlador_camara.pivot.getPos(self)
+        altitud_pivot_camara=self.terreno.obtener_altitud(pos_pivot_camara.getXy())
+        temperatura_base_pivot_camara=self.terreno.obtener_temperatura_base(pos_pivot_camara.getXy())
         # ciclo dia/noche, cielo, sol
         self.dia.update(dt)
         offset_periodo=self.dia.calcular_offset(self.dia.periodo.actual, self.dia.periodo.posterior)
         self.cielo.nodo.setX(self.controlador_camara.target_node_path.getPos().getX())
         self.cielo.nodo.setY(self.controlador_camara.target_node_path.getPos().getY())
-        self.cielo.update(self.sol.nodo.getPos(self.cielo.nodo), self.dia.hora_normalizada, self.dia.periodo.actual, offset_periodo)
+        self.cielo.update(pos_pivot_camara, self.dia.hora_normalizada, self.dia.periodo.actual, offset_periodo)
         self.sol.update(self.dia.hora_normalizada, self.dia.periodo.actual, offset_periodo)
         # personajes
         for _personaje in self._personajes:
@@ -236,7 +236,7 @@ class Mundo(NodePath):
             self.lblHora["text"]=self.dia.obtener_hora()
             self.lblTemperatura["text"]="%.0fº"%self.terreno.obtener_temperatura_actual(temperatura_base_pivot_camara, altitud_pivot_camara, self.dia.hora_normalizada)
         # mundo
-        self.setShaderInput("posicion_sol", self.sol.nodo.getPos(self), 1)
+        self.setShaderInput("posicion_sol", self.sol.nodo.getPos(self), priority=2)
         #
         self._counter+=1
         return task.cont

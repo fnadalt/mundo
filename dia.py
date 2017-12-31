@@ -8,7 +8,7 @@ class Dia:
     def __init__(self, duracion_segundos, hora_inicial_normalizada):
         # variables externas:
         self.duracion=duracion_segundos
-        self.hora_normalizada=hora_inicial_normalizada # [0.0,1.0); 0.0=>medianoche, 0.5=>mediodia
+        self.hora_normalizada=hora_inicial_normalizada # [0.0,1.0)
         self.periodo=Periodo(Periodo.Noche)
         # variables internas:
         self._tiempo=self.duracion*self.hora_normalizada

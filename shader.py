@@ -37,12 +37,6 @@ class GeneradorShader:
         self.nodo.setShaderInput("posicion_sol", self._posicion_sol, priority=self.prioridad_shader)
         if self.plano_recorte_agua!=Vec4(0, 0, 0, 0):
             self.nodo.setShaderInput("plano_recorte_agua", self.plano_recorte_agua, priority=self.prioridad_shader)
-        self.nodo.setShaderInput("periodo", 0.0, priority=self.prioridad_shader)
-        self.nodo.setShaderInput("offset_periodo", 0.0, priority=self.prioridad_shader)
-        self.nodo.setShaderInput("color_cielo_base_inicial", Vec4(0, 0, 0, 0), priority=self.prioridad_shader)
-        self.nodo.setShaderInput("color_cielo_base_final", Vec4(0, 0, 0, 0), priority=self.prioridad_shader)
-        self.nodo.setShaderInput("color_halo_sol_inicial", Vec4(0, 0, 0, 0), priority=self.prioridad_shader)
-        self.nodo.setShaderInput("color_halo_sol_final", Vec4(0, 0, 0, 0), priority=self.prioridad_shader)
 
     def activar_recorte_agua(self, direccion, altitud_agua):
         self.plano_recorte_agua=Vec4(direccion[0], direccion[1], direccion[2], altitud_agua)
@@ -90,7 +84,7 @@ class GeneradorShader:
         if self._clase==GeneradorShader.ClaseTerreno:
             texto_vs+=VS_ATTR_TERRENO
             texto_vs+=VS_VAR_TERRENO
-        if self.plano_recorte_agua!=Vec4(0, 0, 0, 0) or self._clase==GeneradorShader.ClaseCielo:
+        if self.plano_recorte_agua!=Vec4(0, 0, 0, 0) or self._clase==GeneradorShader.ClaseCielo or self._clase==GeneradorShader.ClaseSol:
             texto_vs+=VS_VAR_POSITIONW
         if self._clase==GeneradorShader.ClaseCielo:
             texto_vs+=VS_VAR_POSITION
@@ -124,7 +118,7 @@ class GeneradorShader:
         texto_fs+=FS_VAR_0
         if self._clase==GeneradorShader.ClaseTerreno:
             texto_fs+=FS_VAR_TERRENO
-        if self.plano_recorte_agua!=Vec4(0, 0, 0, 0) or self._clase==GeneradorShader.ClaseCielo:
+        if self.plano_recorte_agua!=Vec4(0, 0, 0, 0) or self._clase==GeneradorShader.ClaseCielo or self._clase==GeneradorShader.ClaseSol:
             texto_fs+=FS_VAR_POSITIONW
         if self._clase==GeneradorShader.ClaseCielo:
             texto_fs+=FS_VAR_POSITION
@@ -250,13 +244,13 @@ uniform struct {
 } p3d_LightSource[8];
 """
 FS_UNIF_1="""
-uniform int periodo;
-uniform float offset_periodo;
 uniform float altitud_agua;
 uniform vec3 posicion_sol;
 %(FS_UNIF_CLIP)s
 """
 FS_UNIF_CIELO="""
+uniform vec3 pos_pivot_camara;
+uniform float offset_periodo;
 uniform vec4 color_cielo_base_inicial;
 uniform vec4 color_cielo_base_final;
 uniform vec4 color_halo_sol_inicial;
@@ -389,9 +383,9 @@ void main()
 {
     %(FS_MAIN_CLIP_0)s
         vec4 color_base=mix(color_cielo_base_inicial,color_cielo_base_final,offset_periodo);
-        vec3 v=normalize(Position.xyz+vec3(0,0,100));
-        vec3 l=normalize(posicion_sol);
-        float a=(dot(v,l)+1.0)/2.0;
+        vec3 d=normalize(posicion_sol-pos_pivot_camara);
+        vec3 v=normalize(Position.xyz);
+        float a=(dot(v,d)+1.0)/2.0;
         vec4 color;
         if(abs(a)>TamanoHalo){
             vec4 color_halo=mix(color_halo_sol_inicial,color_halo_sol_final,offset_periodo);
@@ -417,6 +411,7 @@ void main()
     }
 """
 FS_MAIN_0_AGUA="""
+uniform mat4 p3d_ModelViewMatrix;
 void main()
 {
     vec4 color=vec4(0,0,0,0);
@@ -427,7 +422,7 @@ void main()
     //
     vec2 distorted_texcoords=texture2D(p3d_Texture2,vec2(gl_TexCoord[0].s+move_factor, gl_TexCoord[0].t)).rg*0.1;
     distorted_texcoords=gl_TexCoord[0].st+vec2(distorted_texcoords.x,distorted_texcoords.y+move_factor);
-    vec2 total_distortion=(texture2D(p3d_Texture2,distorted_texcoords).rg*2.0-1.0)*0.01;
+    vec2 total_distortion=(texture2D(p3d_Texture2,distorted_texcoords).rg*2.0-1.0)*0.005;
     //
     texcoord_reflejo+=total_distortion;
     texcoord_reflejo=clamp(texcoord_reflejo,0.001,0.999);
@@ -437,20 +432,25 @@ void main()
     vec4 color_reflection=texture2D(p3d_Texture0, texcoord_reflejo);
     vec4 color_refraction=texture2D(p3d_Texture1, texcoord_refraccion);
     //
-    vec3 view_vector=normalize(-PositionV.xyz);
-    float refractive_factor=abs(dot(view_vector,vec3(0.0,1.0,0.0))); // abs()? esto era no más, parece
+    vec3 view_vector=normalize(PositionW.xyz);
+    float refractive_factor=abs(dot(view_vector,vec3(0.0,0.0,1.0))); // abs()? esto era no más, parece
     refractive_factor=pow(refractive_factor,0.9); // renderiza negro ante ciertos desplazamientos de la superficie de agua, habria que corregir. abs()!
     //
     vec4 color_normal=texture2D(p3d_Texture3,distorted_texcoords);
     vec3 normal=vec3(color_normal.r*2.0-1.0,color_normal.g,color_normal.b*2.0-1.0);
     normal=normalize(normal);
     //
+    /*
     vec3 reflected_light=reflect(normalize(posicion_sol),normal);
     float specular=max(dot(reflected_light,view_vector), 0.0);
     specular=pow(specular,shine_damper);
-    vec4 color_halo=mix(color_halo_sol_inicial,color_halo_sol_final,offset_periodo);
-    vec3 specular_highlights=color_halo.rgb * specular * reflectivity;
-
+    vec3 specular_highlights=vec4(1,1,1,1).rgb * specular * reflectivity;
+    */
+    vec4 s=(p3d_ModelViewMatrix*vec4(posicion_sol,1.0)) - PositionV;
+    vec3 l=normalize(s.xyz);
+    vec3 v=normalize(-PositionV.xyz);
+    vec3 r=normalize(-reflect(s.xyz,normal));
+    float specular_highlights=pow(max(dot(r,v),0),0.5);
     /*vec3 s=p3d_LightSource[iLightSource].position.xyz-(PositionV.xyz*p3d_LightSource[iLightSource].position.w);
     vec3 l=normalize(s);
     vec4 diffuse=clamp(p3d_Material.diffuse*p3d_LightSource[iLightSource].diffuse*max(dot(Normal,l),0),0,1);
@@ -462,9 +462,10 @@ void main()
 
     //
     color=mix(color_reflection,color_refraction,refractive_factor);
+    color+=vec4(specular_highlights,specular_highlights,specular_highlights,1.0);
     //color=mix(color, vec4(0.0,0.3,0.5,1.0),0.2) + vec4(specular_highlights,0.0);
     //
-    gl_FragColor=color;
+    gl_FragColor=vec4(refractive_factor,refractive_factor,refractive_factor,1.0);
 """
 FS_MAIN_TEX_0="color*=tex();"
 FS_MAIN_LUCES="""

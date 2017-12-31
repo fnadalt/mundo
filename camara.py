@@ -106,7 +106,7 @@ class ControladorCamara:
 
     def _alejar(self):
         distancia_Y=self.camara.getY()
-        distancia_Y+=5.0
+        distancia_Y+=15.0
         if distancia_Y>=1600.0:
             distancia_Y=1600.0
             return
