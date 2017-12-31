@@ -72,6 +72,8 @@ class Mundo(NodePath):
         #self.setShaderOff(0)
         #self.base.render.setShaderInput("sun_wpos", Vec3(0, 0, 0), priority=0)
         #self.base.render.setShaderInput("water_clipping", Vec4(0, 0, 0, 0), priority=0)
+        self.setShaderInput("pos_pivot_camara", Vec3(0, 0, 0), priority=2)
+        self.setShaderInput("posicion_sol", Vec3(0, 0, 0), priority=2)
         pass
         
     def _cargar_obj_voxel(self):
@@ -166,7 +168,7 @@ class Mundo(NodePath):
     
     def _cargar_terreno(self, pos_inicial_foco):
         # dia
-        self.dia=Dia(15.0, 0.48) #|(1800.0, 0.50)
+        self.dia=Dia(1800.0, 0.53) #|(1800.0, 0.50)
         # terreno
         self.terreno=Terreno(self.base, self.bullet_world)
         self.terreno.iniciar()
@@ -194,10 +196,10 @@ class Mundo(NodePath):
         info+=self.dia.obtener_info()+"\n"
         #info+=self.terreno.obtener_info()+"\n"
         info+=self.hombre.obtener_info()+"\n"
-        info+=self.agua.obtener_info()+"\n"
+        #info+=self.agua.obtener_info()+"\n"
         #info+=self.input_mapper.obtener_info()+"\n"
-        #info+=self.cielo.obtener_info()
-        #info+=self.sol.obtener_info()+"\n"
+        info+=self.cielo.obtener_info()
+        info+=self.sol.obtener_info()+"\n"
         self.texto1.setText(info)
         # tiempo
         dt=self.base.taskMgr.globalClock.getDt()
@@ -226,7 +228,7 @@ class Mundo(NodePath):
         # agua
         self.agua.superficie.setX(self.controlador_camara.target_node_path.getPos().getX())
         self.agua.superficie.setY(self.controlador_camara.target_node_path.getPos().getY())
-        self.agua.update(dt, self.sol.luz.getPos(self), self.sol.luz.node().getColor())
+        self.agua.update(dt, self.sol.luz.getPos(self.cielo.nodo), self.sol.luz.node().getColor())
         # contador 1/50
         if self._counter==50:
             # terreno
@@ -236,6 +238,7 @@ class Mundo(NodePath):
             self.lblHora["text"]=self.dia.obtener_hora()
             self.lblTemperatura["text"]="%.0fº"%self.terreno.obtener_temperatura_actual(temperatura_base_pivot_camara, altitud_pivot_camara, self.dia.hora_normalizada)
         # mundo
+        self.setShaderInput("pos_pivot_camara", pos_pivot_camara, priority=2)
         self.setShaderInput("posicion_sol", self.sol.nodo.getPos(self), priority=2)
         #
         self._counter+=1

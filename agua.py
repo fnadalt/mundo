@@ -33,11 +33,11 @@ class Agua:
         self.shader=Shader.load(Shader.SL_GLSL, vertex="shaders/agua.v.glsl", fragment="shaders/agua.f.glsl")
         self.superficie.setShader(self.shader, 1)
         self.superficie.setShaderInput("altitud_agua", self.altitud)
-#        self.shader=GeneradorShader(GeneradorShader.ClaseAgua, self.superficie)
-#        self.shader.prioridad=2
-#        self.shader.cantidad_texturas=4
-#        self.shader.activar_recorte_agua(Vec3(0, 0, 1), self.altitud)
-#        self.shader.generar_aplicar()
+        self.shader=GeneradorShader(GeneradorShader.ClaseAgua, self.superficie)
+        self.shader.prioridad=2
+        self.shader.cantidad_texturas=4
+        self.shader.activar_recorte_agua(Vec3(0, 0, 1), self.altitud)
+        self.shader.generar_aplicar()
 
     def configurar_reflejo(self):
         # reflejo
@@ -109,12 +109,12 @@ class Agua:
         #
         self.move_factor+=0.03*dt
         self.move_factor%=1
-        self.superficie.setShaderInput("move_factor", self.move_factor)
-        # suprimido para dar lugar a GeneradorShader
         ref=self.superficie # self.superficie|self.base.render
+        self.superficie.setShaderInput("move_factor", self.move_factor)
         self.superficie.setShaderInput("cam_pos", self.camera.getPos(ref))
-        self.superficie.setShaderInput("light_pos", pos_luz)
-        self.superficie.setShaderInput("light_color", color_luz)
+        # suprimido para dar lugar a GeneradorShader
+#        self.superficie.setShaderInput("light_pos", pos_luz)
+#        self.superficie.setShaderInput("light_color", color_luz)
 
     def obtener_info(self):
         _dot=self.superficie.getPos(self.base.render)-self.camera.getPos(self.base.render)

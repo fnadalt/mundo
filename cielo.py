@@ -13,7 +13,7 @@ class Cielo:
     ColorDia=Vec4(0.9, 1.0, 1.0, 1.0)
     ColorAtardecer=Vec4(0.95, 0.65, 0.3, 1.0)
     ColorIntermedioDiaNoche=(ColorDia+ColorNoche)/2.0
-    ColorHaloDia=Vec4(1.0, 1.0, 1.0, 1.0)
+    ColorHaloDia=Vec4(1.0, 1.0, 0.93, 1.0)
     
     def __init__(self, base, altitud_agua):
         # referencias:
@@ -34,12 +34,13 @@ class Cielo:
         # variable externas:
         self.altitud_agua=altitud_agua
         # variable internas:
-        self._periodo_actual=0 # [0,3]; noche,amanecer,dia,atardecer
+        self._periodo_actual=0
         self._offset_periodo_anterior=0
         self._color_ambiente_inicial=Cielo.ColorNoche
         self._color_ambiente_final=Cielo.ColorNoche
         # init:
         self._establecer_shader()
+        self._procesar_cambio_periodo(self._periodo_actual, False)
         self.nodo.setZ(self.altitud_agua)
     
     def update(self, pos_pivot_camara, hora_normalizada, periodo, offset_periodo):
@@ -61,7 +62,6 @@ class Cielo:
         # suprimido para dar lugar a GeneradorShader
         #self.nodo.setShaderInput("posicion_sol", posicion_sol, priority=3)
         self.nodo.setShaderInput("offset_periodo", _offset_corregido)
-        self.nodo.setShaderInput("pos_pivot_camara", pos_pivot_camara)
         # luz ambiental
         _color_luz=Vec4(self._color_ambiente_inicial*(1.0-_offset_corregido))+Vec4(self._color_ambiente_final*_offset_corregido)
         self.luz.node().setColor(_color_luz)

@@ -24,9 +24,12 @@ class Dia:
         # determinar periodo
         _hora_anterior=Periodo.HoraInicio[self.periodo.anterior]
         _hora_posterior=Periodo.HoraInicio[self.periodo.posterior]
-        if _hora_posterior==0.0 and self.hora_normalizada>_hora_anterior:
+        _hora_normalizada=self.hora_normalizada
+        if _hora_posterior==0.05:
             _hora_posterior+=1.0
-        if self.hora_normalizada>=_hora_posterior:
+            if _hora_normalizada<_hora_anterior:
+                _hora_normalizada+=1.0
+        if _hora_normalizada>=_hora_posterior:
             self.periodo=Periodo(self.periodo.posterior)
 
     def obtener_info(self):
@@ -37,10 +40,13 @@ class Dia:
     def calcular_offset(self, periodo1, periodo2):
         hora1=Periodo.HoraInicio[periodo1]
         hora2=Periodo.HoraInicio[periodo2]
-        if hora2==0.0:
-            hora2=1.0
-        #log.info("calcular_offset h1=%.2f h2=%.2f hn=%.2f"%(hora1, hora2, self.hora_normalizada))
-        offset=(self.hora_normalizada-hora1)/(hora2-hora1)
+        hn=self.hora_normalizada
+        if hora2==0.05:
+            hora2=1.05
+            if hn<hora1:
+                hn+=1.0
+        offset=(hn-hora1)/(hora2-hora1)
+        #log.info("calcular_offset h1=%.2f h2=%.2f hn=%.2f o=%.2f p=%i"%(hora1, hora2, hn, offset, self.periodo.actual))
         return offset
     
     def obtener_hora(self):
@@ -64,10 +70,10 @@ class Periodo:
     
     # horas inicio
     HoraInicio={
-                Noche:0.1, \
-                Amanecer:0.4,  \
-                Dia:0.5, \
-                Atardecer:0.0
+                Noche:0.05, \
+                Amanecer:0.45,  \
+                Dia:0.55, \
+                Atardecer:0.95
                 }
 
     def __init__(self, periodo_actual):

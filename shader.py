@@ -35,6 +35,7 @@ class GeneradorShader:
         self.nodo.setShader(self.shader, priority=self.prioridad_shader)
         self.nodo.setShaderInput("altitud_agua", self._altitud_agua, priority=self.prioridad_shader)
         self.nodo.setShaderInput("posicion_sol", self._posicion_sol, priority=self.prioridad_shader)
+        self.nodo.setShaderInput("pos_pivot_camara", Vec3(0, 0, 0), priority=self.prioridad_shader)
         if self.plano_recorte_agua!=Vec4(0, 0, 0, 0):
             self.nodo.setShaderInput("plano_recorte_agua", self.plano_recorte_agua, priority=self.prioridad_shader)
 
@@ -256,7 +257,10 @@ uniform vec4 color_cielo_base_final;
 uniform vec4 color_halo_sol_inicial;
 uniform vec4 color_halo_sol_final;
 """
-FS_UNIF_AGUA="uniform float move_factor;\n"
+FS_UNIF_AGUA="""
+uniform vec3 cam_pos;
+uniform float move_factor;
+"""
 FS_UNIF_CLIP="uniform vec4 plano_recorte_agua;"
 FS_UNIF_TC="uniform sampler2D p3d_Texture%(indice_textura)i;\n"
 # constantes
@@ -422,7 +426,7 @@ void main()
     //
     vec2 distorted_texcoords=texture2D(p3d_Texture2,vec2(gl_TexCoord[0].s+move_factor, gl_TexCoord[0].t)).rg*0.1;
     distorted_texcoords=gl_TexCoord[0].st+vec2(distorted_texcoords.x,distorted_texcoords.y+move_factor);
-    vec2 total_distortion=(texture2D(p3d_Texture2,distorted_texcoords).rg*2.0-1.0)*0.005;
+    vec2 total_distortion=(texture2D(p3d_Texture2,distorted_texcoords).rg*2.0-1.0)*0.01;
     //
     texcoord_reflejo+=total_distortion;
     texcoord_reflejo=clamp(texcoord_reflejo,0.001,0.999);
@@ -431,41 +435,24 @@ void main()
     //
     vec4 color_reflection=texture2D(p3d_Texture0, texcoord_reflejo);
     vec4 color_refraction=texture2D(p3d_Texture1, texcoord_refraccion);
-    //
-    vec3 view_vector=normalize(PositionW.xyz);
-    float refractive_factor=abs(dot(view_vector,vec3(0.0,0.0,1.0))); // abs()? esto era no más, parece
+    // ok so far
+    vec3 view_vector=normalize(cam_pos);
+    float refractive_factor=dot(view_vector,vec3(0.0,0.0,1.0)); // abs()? esto era no más, parece
     refractive_factor=pow(refractive_factor,0.9); // renderiza negro ante ciertos desplazamientos de la superficie de agua, habria que corregir. abs()!
     //
-    vec4 color_normal=texture2D(p3d_Texture3,distorted_texcoords);
-    vec3 normal=vec3(color_normal.r*2.0-1.0,color_normal.g,color_normal.b*2.0-1.0);
+    vec4 color_normal=texture2D(p3d_Texture3,distorted_texcoords*1.5);
+    vec3 normal=vec3(color_normal.r*2.0-1.0,color_normal.g*2.0-1.0,color_normal.b);
     normal=normalize(normal);
     //
-    /*
-    vec3 reflected_light=reflect(normalize(posicion_sol),normal);
+    vec3 reflected_light=reflect(normalize(PositionW.xyz-posicion_sol),normal);
     float specular=max(dot(reflected_light,view_vector), 0.0);
     specular=pow(specular,shine_damper);
     vec3 specular_highlights=vec4(1,1,1,1).rgb * specular * reflectivity;
-    */
-    vec4 s=(p3d_ModelViewMatrix*vec4(posicion_sol,1.0)) - PositionV;
-    vec3 l=normalize(s.xyz);
-    vec3 v=normalize(-PositionV.xyz);
-    vec3 r=normalize(-reflect(s.xyz,normal));
-    float specular_highlights=pow(max(dot(r,v),0),0.5);
-    /*vec3 s=p3d_LightSource[iLightSource].position.xyz-(PositionV.xyz*p3d_LightSource[iLightSource].position.w);
-    vec3 l=normalize(s);
-    vec4 diffuse=clamp(p3d_Material.diffuse*p3d_LightSource[iLightSource].diffuse*max(dot(Normal,l),0),0,1);
-    if(p3d_Material.specular!=vec3(0,0,0)){
-        vec3 v=normalize(-PositionV.xyz);
-        vec3 r=normalize(-reflect(s, Normal));
-        diffuse+=vec4(p3d_Material.specular,1.0) * p3d_LightSource[iLightSource].specular * pow(max(dot(r,v),0),p3d_Material.shininess);
-    }*/
-
     //
     color=mix(color_reflection,color_refraction,refractive_factor);
-    color+=vec4(specular_highlights,specular_highlights,specular_highlights,1.0);
-    //color=mix(color, vec4(0.0,0.3,0.5,1.0),0.2) + vec4(specular_highlights,0.0);
+    color=mix(color, vec4(0.0,0.3,0.5,1.0),0.2) + vec4(specular_highlights,0.0);
     //
-    gl_FragColor=vec4(refractive_factor,refractive_factor,refractive_factor,1.0);
+    gl_FragColor=color;
 """
 FS_MAIN_TEX_0="color*=tex();"
 FS_MAIN_LUCES="""

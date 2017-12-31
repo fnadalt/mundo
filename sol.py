@@ -23,7 +23,7 @@ class Sol:
         self.luz=None
         # variable internas:
         self._altitud_agua=altitud_agua
-        self._periodo_actual=0 # [0,3]; noche,amanecer,dia,atardecer
+        self._periodo_actual=0
         self._color_inicial=Sol.ColorNoche
         self._color_final=Sol.ColorNoche
         self._color_actual=Sol.ColorNoche

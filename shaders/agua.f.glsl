@@ -50,7 +50,7 @@ void main()
 
     //
     vec4 color_normal=texture2D(p3d_Texture3,distorted_texcoords);
-    vec3 normal=vec3(color_normal.r*2.0-1.0,color_normal.g,color_normal.b*2.0-1.0);
+    vec3 normal=vec3(color_normal.r*2.0-1.0,color_normal.g*2.0-1.0,color_normal.b);
     normal=normalize(normal);
     
     //
@@ -61,9 +61,9 @@ void main()
     
     //
     vec4 color=mix(color_reflection,color_refraction,refractive_factor);
-    color=mix(color, vec4(0.0,0.3,0.5,1.0),0.2) + vec4(specular_highlights,0.0);
+    color=mix(color, vec4(0.0,0.3,0.5,1.0),0.2) + 0.8*vec4(specular_highlights,0.0);
     
     //
-    gl_FragColor=vec4(specular_highlights,0.0);
+    gl_FragColor=color;
     //gl_FragColor=color_refraction;
 }
