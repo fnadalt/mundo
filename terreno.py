@@ -1,7 +1,7 @@
 from panda3d.bullet import *
 from panda3d.core import *
 
-from shader import *
+from shader import GeneradorShader
 from objetos import *
 
 import math
@@ -14,8 +14,9 @@ log=logging.getLogger(__name__)
 #
 class Terreno:
     
-    # altura maxima
+    # alturas
     AlturaMaxima=300
+    AltitudAgua=AlturaMaxima * 0.5
 
     # tamaño de la parcela
     TamanoParcela=32
@@ -55,8 +56,7 @@ class Terreno:
         self.pos_foco=None
         self.pos_foco_inicial=[0, 0]
         self.idx_pos_parcela_actual=None # (x,y)
-        self.altitud_agua=Terreno.AlturaMaxima * 0.5
-        self.altura_sobre_agua=Terreno.AlturaMaxima-self.altitud_agua
+        self.altura_sobre_agua=Terreno.AlturaMaxima-Terreno.AltitudAgua
         # debug
         self.dibujar_normales=False # cada update
         # variables internas:
@@ -98,9 +98,9 @@ class Terreno:
         altitud/=2
         altitud*=Terreno.AlturaMaxima
         if altitud>self.altura_sobre_agua+0.25:
-            altura_sobre_agua=altitud-self.altitud_agua
+            altura_sobre_agua=altitud-Terreno.AltitudAgua
             altura_sobre_agua_n=altura_sobre_agua/self.altura_sobre_agua
-            altitud=self.altitud_agua
+            altitud=Terreno.AltitudAgua
             altitud+=0.25+altura_sobre_agua*altura_sobre_agua_n*altura_sobre_agua_n
             altitud+=75.0*altura_sobre_agua_n*altura_sobre_agua_n
             if altitud>Terreno.AlturaMaxima:
@@ -118,7 +118,7 @@ class Terreno:
     def obtener_temperatura_actual(self, temperatura_base, altitud, hora_normalizada):
         # f()-> grados_c
         #
-        altura_sobre_agua_n=(altitud-self.altitud_agua)/self.altura_sobre_agua
+        altura_sobre_agua_n=(altitud-Terreno.AltitudAgua)/self.altura_sobre_agua
         #
         amplitud=15.0+25.0*altura_sobre_agua_n
         amplitud*=0.5+0.75*temperatura_base
@@ -138,7 +138,7 @@ class Terreno:
             info="obtener_tipo_terreno_tuple tb=%.2f alt=%.2f "%(temperatura_base, altitud)
         c0=0.3 # ineficiente?
         c1=1.0-c0 # ineficiente?
-        a=(altitud-self.altitud_agua)/self.altura_sobre_agua
+        a=(altitud-Terreno.AltitudAgua)/self.altura_sobre_agua
         #
         offset_medio=2.0*temperatura_base-1.0
         tipo_t=c1+4.5*temperatura_base # 4.5==4+2*c0?
@@ -248,11 +248,7 @@ class Terreno:
         # objetos
         nodo_objetos=self._generar_nodo_objetos(pos, idx_pos, datos_parcela)
         nodo_objetos.reparentTo(parcela_node_path)
-        shader=GeneradorShader(GeneradorShader.ClaseGenerico, nodo_objetos)
-        shader.prioridad=3
-        shader.cantidad_texturas=1
-        shader.activar_recorte_agua(Vec3(0, 0, 1), self.altitud_agua)
-        shader.generar_aplicar()
+        GeneradorShader.aplicar(nodo_objetos, GeneradorShader.ClaseGenerico, 3)
         # debug: normales
         if self.dibujar_normales:
             geom_node_normales=self._generar_lineas_normales("normales_%i_%i"%(int(pos[0]), int(pos[1])), geom_node)
@@ -373,7 +369,7 @@ class Terreno:
     def _generar_nodo_objetos(self, pos, idx_pos, data):
         #
         tamano=Terreno.TamanoParcela+1
-        naturaleza=Naturaleza(self.base, pos, Terreno.AlturaMaxima, tamano, self.altitud_agua)
+        naturaleza=Naturaleza(self.base, pos, Terreno.AlturaMaxima, tamano, Terreno.AltitudAgua)
         naturaleza.iniciar()
         for x in range(tamano):
             for y in range(tamano):
@@ -397,27 +393,8 @@ class Terreno:
         ts_nieve=TextureStage("ts_nieve") # nieve
         textura_nieve=self.base.loader.loadTexture("texturas/nieve.png")
         self.nodo.setTexture(ts_nieve, textura_nieve)
-        # suprimido para dar lugar a GeneradorShader
         #
-        #   altitud_interv_a_t    altitud_tierra            altitud_interv_t_p  0
-        #   altitud_pasto           altitud_interv_p_n     altitud_nieve         0
-        #   altura_sobre_agua  AlturaMaxima           altitud_agua          0
-        #   0                             0                                0                             0
-#        data=LMatrix4(0, 0, 0, 0, \
-#                      0, 0, 0, 0, \
-#                      self.altura_sobre_agua, Terreno.AlturaMaxima, self.altitud_agua, 0, \
-#                      0, 0, 0, 0)
-#        #
-#        shader_nombre_base="terreno" # terreno|debug
-#        shader=Shader.load(Shader.SL_GLSL, vertex="shaders/%s.v.glsl"%shader_nombre_base, fragment="shaders/%s.f.glsl"%shader_nombre_base)
-#        self.nodo.setShader(shader, 1)
-#        self.nodo.setShaderInput("data", data)
-#        self.nodo.setShaderInput("water_clipping", Vec4(0, 0, 0, 0), priority=0)
-#        self.nodo.setClipPlaneOff(3)
-        shader=GeneradorShader(GeneradorShader.ClaseTerreno, self.nodo)
-        shader.cantidad_texturas=4
-        shader.activar_recorte_agua(Vec3(0, 0, 1), self.altitud_agua)
-        shader.generar_aplicar()
+        GeneradorShader.aplicar(self.nodo, GeneradorShader.ClaseTerreno, 2)
 
     def _calcular_normal(self, v0, v1, v2):
         U=v1-v0
@@ -598,7 +575,7 @@ class Tester(ShowBase):
             if self.escribir_archivo:
                 log.info("escribir_archivo")
                 self.terreno.nodo.writeBamFile("terreno.bam")
-            self.plano_agua.setPos(Vec3(pos[0], pos[1], self.terreno.altitud_agua))
+            self.plano_agua.setPos(Vec3(pos[0], pos[1], Terreno.AltitudAgua))
             #
             self.cam_driver.setPos(Vec3(pos[0], pos[1], 100))
             #
@@ -624,7 +601,7 @@ class Tester(ShowBase):
                 _y=self.pos_foco[1]+(y-(tamano/2))*self.zoom_imagen
                 a=self.terreno.obtener_altitud((_x, _y))
                 c=int(255*a/Terreno.AlturaMaxima)
-                if a>self.terreno.altitud_agua:
+                if a>Terreno.AltitudAgua:
                     tb=self.terreno.obtener_temperatura_base((_x, _y))
                     tt=self.terreno.obtener_tipo_terreno_tuple((_x, _y), tb, a)
                     c0=None

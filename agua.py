@@ -2,7 +2,7 @@ from direct.gui.DirectFrame import DirectFrame
 from direct.gui.DirectLabel import DirectLabel
 from panda3d.core import *
 
-from shader import *
+from shader import GeneradorShader
 
 import logging
 log=logging.getLogger(__name__)
@@ -29,22 +29,9 @@ class Agua:
         self.configurar_dudv()
         self.configurar_normal()
         self.move_factor=0.0
-        # suprimido para dar lugar a GeneradorShader
-        self.shader=Shader.load(Shader.SL_GLSL, vertex="shaders/agua.v.glsl", fragment="shaders/agua.f.glsl")
-        self.superficie.setShader(self.shader, 1)
-        self.superficie.setShaderInput("altitud_agua", self.altitud)
-        self.shader=GeneradorShader(GeneradorShader.ClaseAgua, self.superficie)
-        self.shader.prioridad=2
-        self.shader.cantidad_texturas=4
-        self.shader.activar_recorte_agua(Vec3(0, 0, 1), self.altitud)
-        self.shader.generar_aplicar()
+        self.shader=GeneradorShader.aplicar(self.superficie, GeneradorShader.ClaseAgua, 2)
 
     def configurar_reflejo(self):
-        # reflejo
-        reflection_plane=Plane(Vec3(0.0, 0.0, 1.0), Vec3(0.0, 0.0, -0.1)) # self.altitud-0.15
-        reflection_plane_node=PlaneNode("reflection_plane_node")
-        reflection_plane_node.setPlane(reflection_plane)
-        self.reflection_plane_nodeN=self.superficie.attachNewNode(reflection_plane_node)
         #
         self.reflection_buffer=self.base.win.makeTextureBuffer('reflection_buffer', 512, 512)
         self.reflection_buffer.setClearColor(Vec4(0, 0, 0, 1))
@@ -52,9 +39,7 @@ class Agua:
         self.camera2.reparentTo(self.superficie)
         self.camera2.node().getLens().setFov(self.camera.find("+Camera").node().getLens().getFov())
         dummy_reflection=self.base.render.attachNewNode("dummy_reflection")
-        # suprimido para dar lugar a GeneradorShader
-        #dummy_reflection.setClipPlane(self.reflection_plane_nodeN, priority=200)
-        dummy_reflection.setShaderInput("plano_recorte_agua", Vec4(0, 0, 1, self.altitud), priority=4)
+        dummy_reflection.setShaderInput("plano_recorte_agua", Vec4(0, 0, 1, self.altitud), priority=3)
         self.camera2.node().setCameraMask(DrawMask(2))
         self.camera2.node().setInitialState(dummy_reflection.getState())
         #
@@ -65,11 +50,6 @@ class Agua:
         self.superficie.setTexture(ts0, tex0)
         
     def configurar_refraccion(self):
-        # reflejo
-        refraction_plane=Plane(Vec3(0.0, 0.0, -1.0), Vec3(0.0, 0.0, -0.1)) # self.altitud-0.15
-        refraction_plane_node=PlaneNode("reflection_plane_node")
-        refraction_plane_node.setPlane(refraction_plane)
-        self.refraction_plane_plane_nodeN=self.superficie.attachNewNode(refraction_plane_node)
         #
         self.refraction_buffer=self.base.win.makeTextureBuffer('refraction_buffer', 512, 512)
         self.refraction_buffer.setClearColor(Vec4(0, 0, 0, 1))
@@ -77,9 +57,7 @@ class Agua:
         self.camera3.reparentTo(self.base.render)
         self.camera3.node().getLens().setFov(self.camera.find("+Camera").node().getLens().getFov())
         dummy_refraction=NodePath("dummy_refraction")
-        # suprimido para dar lugar a GeneradorShader
-        #dummy_refraction.setClipPlane(self.refraction_plane_plane_nodeN, priority=3)
-        dummy_refraction.setShaderInput("plano_recorte_agua", Vec4(0, 0, -1, -self.altitud), priority=5)
+        dummy_refraction.setShaderInput("plano_recorte_agua", Vec4(0, 0, -1, -self.altitud), priority=4)
         self.camera3.node().setCameraMask(DrawMask(2))
         self.camera3.node().setInitialState(dummy_refraction.getState())
         #
@@ -112,9 +90,6 @@ class Agua:
         ref=self.superficie # self.superficie|self.base.render
         self.superficie.setShaderInput("move_factor", self.move_factor)
         self.superficie.setShaderInput("cam_pos", self.camera.getPos(ref))
-        # suprimido para dar lugar a GeneradorShader
-#        self.superficie.setShaderInput("light_pos", pos_luz)
-#        self.superficie.setShaderInput("light_color", color_luz)
 
     def obtener_info(self):
         _dot=self.superficie.getPos(self.base.render)-self.camera.getPos(self.base.render)

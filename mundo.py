@@ -11,7 +11,7 @@ from agua import Agua
 from personaje import *
 from camara import ControladorCamara
 from input import InputMapper
-from shader import *
+from shader import GeneradorShader
 
 import voxels
 
@@ -40,6 +40,9 @@ class Mundo(NodePath):
         log.info("iniciar")
         # fisica:
         self._configurar_fisica()
+        # mundo:
+        self._establecer_material()
+        self._establecer_shader()
         # componentes:
         self.input_mapper=InputMapper(self.base)
         self.input_mapper.ligar_eventos()
@@ -53,9 +56,6 @@ class Mundo(NodePath):
         # gui:
         self._cargar_debug_info()
         self._cargar_gui()
-        # mundo:
-        self._cargar_material()
-        self._establecer_shader()
         # ShowBase
         self.base.cam.node().setCameraMask(DrawMask(5))
         self.base.render.node().adjustDrawMask(DrawMask(7), DrawMask(0), DrawMask(0))
@@ -66,15 +66,19 @@ class Mundo(NodePath):
         log.info("terminar")
         self.terreno.terminar()
 
+    def _establecer_material(self):
+        log.info("_establecer_material")
+        material=Material("material_mundo")
+        material.setAmbient((0.1, 0.1, 0.1, 1.0))
+        material.setDiffuse((1.0, 1.0, 1.0, 1.0))
+        material.setSpecular((0.0, 0.0, 0.0, 1.0))
+        material.setShininess(0)
+        self.setMaterial(material, 1)
+
     def _establecer_shader(self):
-        # suprimido para dar lugar a GeneradorShader
-        #self.setShaderOff(0)
-        #self.base.render.setShaderInput("sun_wpos", Vec3(0, 0, 0), priority=0)
-        #self.base.render.setShaderInput("water_clipping", Vec4(0, 0, 0, 0), priority=0)
-        shader=GeneradorShader(GeneradorShader.ClaseGenerico, self)
-        shader.cantidad_texturas=1
-        shader.activar_recorte_agua(Vec3(0, 0, 1), self.terreno.altitud_agua)
-        shader.generar_aplicar()
+        log.info("_establecer_shader")
+        GeneradorShader.iniciar(Terreno.AltitudAgua, Vec4(0, 0, 1, Terreno.AltitudAgua))
+        GeneradorShader.aplicar(self, GeneradorShader.ClaseGenerico, 1)
         
     def _cargar_obj_voxel(self):
         return
@@ -126,15 +130,6 @@ class Mundo(NodePath):
         #Blanco=Vec4(1.0, 1.0, 1.0, 1.0)
         self.texto1=OnscreenText(text="info?", pos=(-1.2, 0.9), scale=0.045, align=TextNode.ALeft, fg=Negro, mayChange=True)
 
-    def _cargar_material(self):
-        material=Material("mundo")
-        material.setAmbient((0.1, 0.1, 0.1, 1.0))
-        material.setDiffuse((1.0, 1.0, 1.0, 1.0))
-        material.setSpecular((0.0, 0.0, 0.0, 1.0))
-        material.setShininess(0)
-        self.setMaterialOff(1)
-        self.setMaterial(material, 2)
-
     def _cargar_gui(self):
         self.lblHora=DirectLabel(text="00:00", text_fg=(0.15, 0.15, 0.9, 1.0), text_bg=(1.0, 1.0, 1.0, 1.0), scale=0.1, pos=(1.2, 0.0, -0.8), color=(1, 1, 1, 1))
         self.lblTemperatura=DirectLabel(text="0º", text_fg=(0.15, 0.15, 0.9, 1.0), text_bg=(1.0, 1.0, 1.0, 1.0), scale=0.1, pos=(1.2, 0.0, -0.93), color=(1, 1, 1, 1))
@@ -142,7 +137,7 @@ class Mundo(NodePath):
     def _cargar_hombre(self):
         #
         self.hombre=Personaje()
-        self.hombre.altitud_agua=self.terreno.altitud_agua
+        self.hombre.altitud_agua=Terreno.AltitudAgua
         self.hombre.input_mapper=self.input_mapper
         self.hombre.construir(self, self.bullet_world)
         self.hombre.cuerpo.setPos(self.terreno.pos_foco)
@@ -160,13 +155,6 @@ class Mundo(NodePath):
         self.palo.setPos(0.5,0.75,-0.25)
         self.palo.setR(-85.0)
         self.palo.setScale(10.0)
-        #
-        self.arbol=self.base.loader.loadModel("objetos/arbol.01.egg")
-        self.arbol.reparentTo(self)
-        self.arbol.setPos(608,-55,self.terreno.obtener_altitud((608,-55)))
-        shader=GeneradorShader(GeneradorShader.ClaseGenerico, self.arbol)
-        shader.cantidad_texturas=1
-        shader.generar_aplicar()
     
     def _cargar_terreno(self, pos_inicial_foco):
         # dia
@@ -177,21 +165,21 @@ class Mundo(NodePath):
         self.terreno.nodo.reparentTo(self)
         self.terreno.update(pos_inicial_foco)
         # cielo
-        self.cielo=Cielo(self.base, self.terreno.altitud_agua-20.0)
+        self.cielo=Cielo(self.base, Terreno.AltitudAgua-20.0)
         self.cielo.nodo.reparentTo(self)
         self.setLight(self.cielo.luz)
         # sol
-        self.sol=Sol(self.base, self.terreno.altitud_agua-20.0)
+        self.sol=Sol(self.base, Terreno.AltitudAgua-20.0)
         self.sol.pivot.reparentTo(self.cielo.nodo)
         #self.sol.mostrar_camaras()
         self.setLight(self.sol.luz)
         # agua
-        self.agua=Agua(self.base, self.terreno.altitud_agua)
+        self.agua=Agua(self.base, Terreno.AltitudAgua)
         self.agua.superficie.reparentTo(self.base.render)
         self.agua.generar()
         #self.agua.mostrar_camaras()
         #
-        self.controlador_camara.altitud_agua=self.terreno.altitud_agua
+        self.controlador_camara.altitud_agua=Terreno.AltitudAgua
 
     def _update(self, task):
         info=""

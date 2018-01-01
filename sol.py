@@ -1,7 +1,7 @@
 from direct.gui.DirectGui import *
 from panda3d.core import *
 
-from shader import *
+from shader import GeneradorShader
 
 import logging
 log=logging.getLogger(__name__)
@@ -62,9 +62,6 @@ class Sol:
         DirectFrame(image=self.blur_y_buffer.getTexture(0), scale=0.25, pos=LVector3f(0.85, -0.7))
 
     def update(self, hora_normalizada, periodo, offset_periodo):
-        #
-        # suprimido para dar lugar a GeneradorShader
-        #self.nodo.setShaderInput("posicion_sol", self.nodo.getPos(self.base.render), 2)
         # determinar periodo
         if periodo!=self._periodo_actual:
             self._periodo_actual=periodo
@@ -114,23 +111,16 @@ class Sol:
 
     def _establecer_shaders(self):
         # glow shader
-        # suprimido para dar lugar a GeneradorShader
-#        glow_shader=Shader.load(Shader.SL_GLSL, vertex="shaders/sol.v.glsl", fragment="shaders/sol.f.glsl")
-#        self.nodo.setShaderInput("sun_wpos", self.nodo.getPos(self.base.render), 1)
-#        self.nodo.setShader(glow_shader, 2)
-        shader=GeneradorShader(GeneradorShader.ClaseSol, self.nodo)
-        shader.cantidad_texturas=1
-        #shader.activar_recorte_agua(Vec3(0, 0, 1), self._altitud_agua)
-        shader.generar_aplicar()
+        GeneradorShader.aplicar(self.nodo, GeneradorShader.ClaseSol, 2)
         # glow buffer
         self.glow_buffer = base.win.makeTextureBuffer("escena_glow", 512, 512)
         self.glow_buffer.setSort(-3)
         self.glow_buffer.setClearColor(LVector4(0, 0, 0, 1))
         # glow camera
         tempnode = NodePath(PandaNode("temp_node"))
-        tempnode.setShader(shader.shader, 3)
-        tempnode.setShaderInput("plano_recorte_agua", Vec4(0, 0, 0, 0))
-        tempnode.setShaderInput("posicion_sol", Vec3(0, 0, 0))
+        GeneradorShader.aplicar(tempnode, GeneradorShader.ClaseSol, 3)
+#?        tempnode.setShaderInput("plano_recorte_agua", Vec4(0, 0, 0, 0))
+#?        tempnode.setShaderInput("posicion_sol", Vec3(0, 0, 0))
         glow_camera = self.base.makeCamera(self.glow_buffer, lens=self.base.cam.node().getLens())
         glow_camera.node().setInitialState(tempnode.getState())
         # blur shaders

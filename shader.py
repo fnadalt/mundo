@@ -5,6 +5,12 @@ import os, os.path
 import logging
 log=logging.getLogger(__name__)
 
+# globales
+shaders=dict() # {tipo:shader,...}
+_altitud_agua=None
+_plano_recorte_agua=Vec4(0, 0, 0, 0)
+_plano_recorte_agua_inv=Vec4(0, 0, 0, 0)
+
 class GeneradorShader:
 
     # clases
@@ -14,58 +20,70 @@ class GeneradorShader:
     ClaseAgua=3
     ClaseCielo=4
     ClaseSol=5
+
+    @staticmethod
+    def iniciar(altitud_agua, plano_recorte_agua):
+        global _altitud_agua, _plano_recorte_agua, _plano_recorte_agua_inv
+        if _altitud_agua!=None:
+            log.warning("GeneradorShader ya iniciado")
+            return
+        _altitud_agua=altitud_agua
+        _plano_recorte_agua=plano_recorte_agua
+        _plano_recorte_agua_inv=Vec4(-_plano_recorte_agua[0], -_plano_recorte_agua[1], -_plano_recorte_agua[2], -_altitud_agua)
+
+    @staticmethod
+    def aplicar(nodo, tipo, prioridad):
+        #
+        if _altitud_agua==None:
+            raise Exception("GeneradorShader: no se especifico _altitud_agua")
+        #
+        global shaders
+        shader=None
+        if not tipo in shaders:
+            generador=GeneradorShader(tipo)
+            generador.nodo=nodo
+            generador.prioridad=prioridad
+            shader=generador.generar()
+            shaders[tipo]=shader
+        shader=shaders[tipo]
+        nodo.setShader(shader, prioridad)
+        #
+        nodo.setShader(shader, priority=prioridad)
+        nodo.setShaderInput("altitud_agua", _altitud_agua, priority=prioridad)
+        nodo.setShaderInput("posicion_sol", Vec3(0, 0, 0), priority=prioridad)
+        nodo.setShaderInput("pos_pivot_camara", Vec3(0, 0, 0), priority=prioridad)
+        if _plano_recorte_agua!=Vec4(0, 0, 0, 0):
+            nodo.setShaderInput("plano_recorte_agua", _plano_recorte_agua, priority=prioridad)
     
-    def __init__(self, clase, nodo):
+    def __init__(self, clase):
         # referencias:
-        self.nodo=nodo
-        # componentes:
-        self.shader=None
+        self.nodo=None
         # variables externas:
-        self.prioridad_shader=1
-        self.cantidad_texturas=0
-        self.plano_recorte_agua=Vec4(0, 0, 0, 0)
-        self.plano_recorte_agua_inv=Vec4(0, 0, 0, 0)
+        self.prioridad=0
         # variables internas:
         self._clase=clase
-        self._altitud_agua=0.0
-        self._posicion_sol=Vec3(0, 0, 0)
-        
-    def generar_aplicar(self):
-        # generar
-        self.shader=self._generar()
-        # aplicar shader
-        self.nodo.setShader(self.shader, priority=self.prioridad_shader)
-        self.nodo.setShaderInput("altitud_agua", self._altitud_agua, priority=self.prioridad_shader)
-        self.nodo.setShaderInput("posicion_sol", self._posicion_sol, priority=self.prioridad_shader)
-        self.nodo.setShaderInput("pos_pivot_camara", Vec3(0, 0, 0), priority=self.prioridad_shader)
-        if self.plano_recorte_agua!=Vec4(0, 0, 0, 0):
-            self.nodo.setShaderInput("plano_recorte_agua", self.plano_recorte_agua, priority=self.prioridad_shader)
 
-    def activar_recorte_agua(self, direccion, altitud_agua):
-        self.plano_recorte_agua=Vec4(direccion[0], direccion[1], direccion[2], altitud_agua)
-        self.plano_recorte_agua_inv=Vec4(-direccion[0], -direccion[1], -direccion[2], -altitud_agua)
-
-    def invertir_plano_recorte_agua(self):
-        tmp=self.plano_recorte_agua
-        self.plano_recorte_agua=self.plano_recorte_agua_inv
-        self.plano_recorte_agua_inv=tmp
-
-    def _generar(self):
+    def generar(self):
         # texto
         texto_vs=""
         texto_fs=""
         # texturas
+        cantidad_texturas=0
+        if self._clase==GeneradorShader.ClaseGenerico:
+            cantidad_texturas=1
+        elif self._clase==GeneradorShader.ClaseTerreno or self._clase==GeneradorShader.ClaseAgua:
+            cantidad_texturas=4
         texto_vs_attrib_tc=""
         texto_vs_main_tc=""
         texto_fs_unif_tc=""
         texto_fs_func_tex_0=""
         texto_fs_func_tex_1=""
         texto_fs_main_tex_0=""
-        if self.cantidad_texturas>0:
+        if cantidad_texturas>0:
             texto_vs_attrib_tc=VS_ATTR_TC
             texto_vs_main_tc=VS_MAIN_TC
             texto_fs_main_tex_0=FS_MAIN_TEX_0
-            for i in range(self.cantidad_texturas):
+            for i in range(cantidad_texturas):
                 texto_fs_unif_tc+=FS_UNIF_TC%{"indice_textura":i}
                 texto_fs_func_tex_1+=FS_FUNC_TEX_1%{"indice_textura":i}
             if self._clase==GeneradorShader.ClaseTerreno:
@@ -76,7 +94,7 @@ class GeneradorShader:
         texto_fs_unif_clip=""
         texto_fs_main_clip_0=""
         texto_fs_main_clip_1=""
-        if self.plano_recorte_agua!=Vec4(0, 0, 0, 0):
+        if _plano_recorte_agua!=Vec4(0, 0, 0, 0):
             texto_fs_unif_clip=FS_UNIF_CLIP
             texto_fs_main_clip_0=FS_MAIN_CLIP_0
             texto_fs_main_clip_1=FS_MAIN_CLIP_1
@@ -89,7 +107,7 @@ class GeneradorShader:
         elif self._clase==GeneradorShader.ClaseTerreno:
             texto_vs+=VS_ATTR_TERRENO
             texto_vs+=VS_VAR_TERRENO
-        if self.plano_recorte_agua!=Vec4(0, 0, 0, 0) or self._clase==GeneradorShader.ClaseCielo or self._clase==GeneradorShader.ClaseSol:
+        if _plano_recorte_agua!=Vec4(0, 0, 0, 0) or self._clase==GeneradorShader.ClaseCielo or self._clase==GeneradorShader.ClaseSol:
             texto_vs+=VS_VAR_POSITIONW
         if self._clase==GeneradorShader.ClaseCielo:
             texto_vs+=VS_VAR_POSITION
@@ -97,7 +115,7 @@ class GeneradorShader:
             texto_vs+=VS_VAR_POSITIONP
         #
         texto_vs+=VS_MAIN_0%{"VS_MAIN_TC":texto_vs_main_tc}
-        if self.plano_recorte_agua!=Vec4(0, 0, 0, 0) or self._clase==GeneradorShader.ClaseCielo or self._clase==GeneradorShader.ClaseSol:
+        if _plano_recorte_agua!=Vec4(0, 0, 0, 0) or self._clase==GeneradorShader.ClaseCielo or self._clase==GeneradorShader.ClaseSol:
             texto_vs+=VS_MAIN_POSITIONW
         if self._clase==GeneradorShader.ClaseGenerico:
             texto_vs+=VS_MAIN_GENERICO
@@ -127,7 +145,7 @@ class GeneradorShader:
             texto_fs+=FS_VAR_GENERICO
         elif self._clase==GeneradorShader.ClaseTerreno:
             texto_fs+=FS_VAR_TERRENO
-        if self.plano_recorte_agua!=Vec4(0, 0, 0, 0) or self._clase==GeneradorShader.ClaseCielo or self._clase==GeneradorShader.ClaseSol:
+        if _plano_recorte_agua!=Vec4(0, 0, 0, 0) or self._clase==GeneradorShader.ClaseCielo or self._clase==GeneradorShader.ClaseSol:
             texto_fs+=FS_VAR_POSITIONW
         if self._clase==GeneradorShader.ClaseCielo:
             texto_fs+=FS_VAR_POSITION
