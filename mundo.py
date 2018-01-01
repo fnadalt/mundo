@@ -230,6 +230,7 @@ class Mundo(NodePath):
         # mundo
         self.setShaderInput("pos_pivot_camara", pos_pivot_camara, priority=10)
         self.setShaderInput("posicion_sol", self.sol.nodo.getPos(self), priority=10)
+        self.setShaderInput("color_fog", self.cielo.luz.node().getColor(), priority=10)
         #
         self._counter+=1
         return task.cont

@@ -103,9 +103,7 @@ class GeneradorShader:
         texto_vs+=VS_ATTR_0%{"VS_ATTR_TC":texto_vs_attrib_tc}
         texto_vs+=VS_UNIF_0
         texto_vs+=VS_VAR_0
-        if self._clase==GeneradorShader.ClaseGenerico:
-            texto_vs+=VS_VAR_GENERICO
-        elif self._clase==GeneradorShader.ClaseTerreno:
+        if self._clase==GeneradorShader.ClaseTerreno:
             texto_vs+=VS_ATTR_TERRENO
             texto_vs+=VS_VAR_TERRENO
         if _plano_recorte_agua!=Vec4(0, 0, 0, 0) or self._clase==GeneradorShader.ClaseCielo or self._clase==GeneradorShader.ClaseSol:
@@ -118,9 +116,7 @@ class GeneradorShader:
         texto_vs+=VS_MAIN_0%{"VS_MAIN_TC":texto_vs_main_tc}
         if _plano_recorte_agua!=Vec4(0, 0, 0, 0) or self._clase==GeneradorShader.ClaseCielo or self._clase==GeneradorShader.ClaseSol:
             texto_vs+=VS_MAIN_POSITIONW
-        if self._clase==GeneradorShader.ClaseGenerico:
-            texto_vs+=VS_MAIN_GENERICO
-        elif self._clase==GeneradorShader.ClaseTerreno:
+        if self._clase==GeneradorShader.ClaseTerreno:
             texto_vs+=VS_MAIN_TERRENO
         elif self._clase==GeneradorShader.ClaseCielo:
             texto_vs+=VS_MAIN_POSITION
@@ -134,7 +130,10 @@ class GeneradorShader:
         if self._clase==GeneradorShader.ClaseSol or self._clase==GeneradorShader.ClaseAgua:
             texto_fs+=texto_fs_unif_tc
         texto_fs+=FS_UNIF_1%{"FS_UNIF_CLIP":texto_fs_unif_clip}
-        if self._clase==GeneradorShader.ClaseCielo:
+        if self._clase==GeneradorShader.ClaseGenerico or self._clase==GeneradorShader.ClaseTerreno:
+            texto_fs+=FS_UNIF_FOG
+            texto_fs+=FS_CONST_FOG
+        elif self._clase==GeneradorShader.ClaseCielo:
             texto_fs+=FS_UNIF_CIELO
             texto_fs+=FS_CONST_CIELO
         elif self._clase==GeneradorShader.ClaseAgua:
@@ -142,9 +141,7 @@ class GeneradorShader:
             texto_fs+=FS_UNIF_AGUA
             texto_fs+=FS_CONST_AGUA
         texto_fs+=FS_VAR_0
-        if self._clase==GeneradorShader.ClaseGenerico:
-            texto_fs+=FS_VAR_GENERICO
-        elif self._clase==GeneradorShader.ClaseTerreno:
+        if self._clase==GeneradorShader.ClaseTerreno:
             texto_fs+=FS_VAR_TERRENO
         if _plano_recorte_agua!=Vec4(0, 0, 0, 0) or self._clase==GeneradorShader.ClaseCielo or self._clase==GeneradorShader.ClaseSol:
             texto_fs+=FS_VAR_POSITIONW
@@ -166,8 +163,6 @@ class GeneradorShader:
             texto_fs+=FS_MAIN_0_AGUA
         else:
             texto_fs+=FS_MAIN_0%{"FS_MAIN_LUCES":FS_MAIN_LUCES,"FS_MAIN_TEX_0":texto_fs_main_tex_0, "FS_MAIN_CLIP_0":texto_fs_main_clip_0, "FS_MAIN_CLIP_1":texto_fs_main_clip_1}
-        if self._clase==GeneradorShader.ClaseGenerico:
-            texto_fs+=FS_MAIN_GENERICO
         texto_fs+=FS_MAIN_1
         # archivos
         ruta_archivo_vs="shaders/vs.%i.glsl"%self._clase
@@ -194,7 +189,6 @@ class GeneradorShader:
 VS_ATTR_0="""#version 120
 attribute vec4 p3d_Vertex;
 attribute vec3 p3d_Normal;
-//attribute vec4 p3d_Color;
 %(VS_ATTR_TC)s
 """
 VS_ATTR_TC="attribute vec4 p3d_MultiTexCoord0;"
@@ -212,9 +206,6 @@ uniform mat3 p3d_NormalMatrix;
 VS_VAR_0="""
 varying vec4 PositionV;
 varying vec3 Normal;
-"""
-VS_VAR_GENERICO="""
-//varying vec4 Color;
 """
 VS_VAR_TERRENO="""
 varying float info_tipo;
@@ -234,8 +225,6 @@ void main() {
 VS_MAIN_1="""
 }
 """
-VS_MAIN_GENERICO="""
-    //Color=p3d_Color;"""
 VS_MAIN_TC="gl_TexCoord[0]=p3d_MultiTexCoord0;\n"
 VS_MAIN_POSITIONW="PositionW=p3d_ModelMatrix*p3d_Vertex;\n"
 VS_MAIN_POSITIONP="PositionP=gl_Position;\n"
@@ -288,6 +277,7 @@ uniform float altitud_agua;
 uniform vec3 posicion_sol;
 %(FS_UNIF_CLIP)s
 """
+FS_UNIF_FOG="uniform vec4 color_fog;\n"
 FS_UNIF_CIELO="""
 uniform vec3 pos_pivot_camara;
 uniform float offset_periodo;
@@ -303,7 +293,13 @@ uniform float move_factor;
 FS_UNIF_CLIP="uniform vec4 plano_recorte_agua;"
 FS_UNIF_TC="uniform sampler2D p3d_Texture%(indice_textura)i;\n"
 # constantes
-FS_CONST_CIELO="const float TamanoHalo=0.85;\n"
+FS_CONST_CIELO="""
+const float TamanoHalo=0.85;
+"""
+FS_CONST_FOG="""
+const float FogMin=70.0;
+const float FogMax=120.0;
+"""
 FS_CONST_AGUA="""
 const float shine_damper=20.0;
 const float reflectivity=0.6;
@@ -312,8 +308,6 @@ const float reflectivity=0.6;
 FS_VAR_0="""
 varying vec4 PositionV;
 varying vec3 Normal;
-"""
-FS_VAR_GENERICO="""//varying vec4 Color;
 """
 FS_VAR_POSITIONW="varying vec4 PositionW;\n"
 FS_VAR_POSITIONP="varying vec4 PositionP;\n"
@@ -416,6 +410,10 @@ void main()
         vec4 color=vec4(0,0,0,0);
         %(FS_MAIN_LUCES)s
         %(FS_MAIN_TEX_0)s
+        // fog
+        float fog_factor=clamp((FogMax-abs(PositionV.z))/(FogMax-FogMin),0.0,1.0);
+        color=mix(color_fog,color,fog_factor);
+        //
         color.a=1.0;
         gl_FragColor=color;
     %(FS_MAIN_CLIP_1)s
@@ -495,8 +493,7 @@ void main()
     //
     gl_FragColor=color;
 """
-FS_MAIN_TEX_0="color*=tex();" # !!! *=
-FS_MAIN_GENERICO="//color+=Color; no no no \n"
+FS_MAIN_TEX_0="color*=tex();"
 FS_MAIN_LUCES="""
         int cantidad_luces=p3d_LightSource.length();
         for(int i=0; i<cantidad_luces; ++i)

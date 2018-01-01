@@ -17,7 +17,7 @@ class Agua:
         self.camera2=None
         self.camera3=None
         #
-        self.superficie=self.base.loader.loadModel("objetos/plano_aguaf")
+        self.superficie=self.base.loader.loadModel("objetos/plano_agua")
         self.superficie.setZ(self.altitud)
         self.superficie.node().adjustDrawMask(DrawMask(5), DrawMask(2), DrawMask(0))
         #self.superficie.hide()

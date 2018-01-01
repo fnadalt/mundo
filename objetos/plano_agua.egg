@@ -1,57 +1,48 @@
-<CoordinateSystem> { Z-up } 
-<Material> Material {
-  <Scalar> diffr { 0.447248 }
-  <Scalar> diffg { 0.800000 }
-  <Scalar> diffb { 0.754575 }
-  <Scalar> specr { 0.000000 }
-  <Scalar> specg { 0.000000 }
-  <Scalar> specb { 0.000000 }
-  <Scalar> shininess { 12.5 }
-  <Scalar> ambr { 1.000000 }
-  <Scalar> ambg { 1.000000 }
-  <Scalar> ambb { 1.000000 }
-  <Scalar> emitr { 0.000000 }
-  <Scalar> emitg { 0.000000 }
-  <Scalar> emitb { 0.000000 }
-}
+<CoordinateSystem> { Z-Up }
 
-  <Group> Plane {
-    <Transform> {
-      <Matrix4> {
-        1.0 0.0 0.0 0.0 
-        0.0 1.0 0.0 0.0 
-        0.0 0.0 1.0 0.0 
-        0.0 0.0 0.0 1.0 
-      }
+<Comment> {
+  "egg-trans -F -o /tmp/plano_agua.egg.tmp /home/flaco/panda3d/mundo/objetos/plano_agua.egg"
+}
+<Comment> {
+  "egg-trans -F -o /tmp/plano_agua.egg.tmp /home/flaco/panda3d/mundo/objetos/plano_agua.egg"
+}
+<Material> Material {
+  <Scalar> diffr { 0.447248011827469 }
+  <Scalar> diffg { 0.800000011920929 }
+  <Scalar> diffb { 0.75457501411438 }
+  <Scalar> ambr { 1 }
+  <Scalar> ambg { 1 }
+  <Scalar> ambb { 1 }
+  <Scalar> emitr { 0 }
+  <Scalar> emitg { 0 }
+  <Scalar> emitb { 0 }
+  <Scalar> specr { 0 }
+  <Scalar> specg { 0 }
+  <Scalar> specb { 0 }
+  <Scalar> shininess { 12.5 }
+}
+<Group> Plane {
+  <VertexPool> Plane {
+    <Vertex> 0 {
+      -1280 -1280 0
+      <UV> { 0.0001 0.0001 }
     }
-    
-    <VertexPool> Plane {
-    
-      <Vertex> 0 {-128.000000 -128.000000 0.000000
-        <UV>  {
-          0.000100 0.000100 
-        }
-      }
-      <Vertex> 1 {128.000000 -128.000000 0.000000
-        <UV>  {
-          0.999900 0.000100 
-        }
-      }
-      <Vertex> 2 {128.000000 128.000000 0.000000
-        <UV>  {
-          0.999900 0.999900 
-        }
-      }
-      <Vertex> 3 {-128.000000 128.000000 0.000000
-        <UV>  {
-          0.000100 0.999900 
-        }
-      }}
-    
-    
-    <Polygon> {
-      <MRef> { Material }
-      <Normal> {0.000000 0.000000 1.000000}
-      <VertexRef> { 0 1 2 3 <Ref> { Plane }} 
+    <Vertex> 1 {
+      1280 -1280 0
+      <UV> { 0.9999 0.0001 }
+    }
+    <Vertex> 2 {
+      1280 1280 0
+      <UV> { 0.9999 0.9999 }
+    }
+    <Vertex> 3 {
+      -1280 1280 0
+      <UV> { 0.0001 0.9999 }
     }
   }
+  <Polygon> {
+    <Normal> { 0 0 1 }
+    <MRef> { Material }
+    <VertexRef> { 0 1 2 3 <Ref> { Plane } }
+  }
+}

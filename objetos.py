@@ -249,7 +249,7 @@ class Naturaleza:
         log.info("%s: se colocaron %i objetos"%(nombre, cnt_objetos))
         #
         lod0=NodePath(LODNode("%s_lod"%nombre))
-        lod0.node().addSwitch(7.5*self._tamano, 0.0)
+        lod0.node().addSwitch(7.0*self._tamano, 0.0)
         nodo_central.reparentTo(lod0)
         #
         #GeneradorShader.aplicar(lod0, GeneradorShader.ClaseGenerico, 1)
