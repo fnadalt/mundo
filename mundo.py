@@ -158,7 +158,7 @@ class Mundo(NodePath):
     
     def _cargar_terreno(self, pos_inicial_foco):
         # dia
-        self.dia=Dia(1800.0, 0.63) #|(1800.0, 0.50)
+        self.dia=Dia(1800.0, 0.53) #|(1800.0, 0.50)
         # terreno
         self.terreno=Terreno(self.base, self.bullet_world)
         self.terreno.iniciar()
@@ -228,8 +228,8 @@ class Mundo(NodePath):
             self.lblHora["text"]=self.dia.obtener_hora()
             self.lblTemperatura["text"]="%.0fº"%self.terreno.obtener_temperatura_actual(temperatura_base_pivot_camara, altitud_pivot_camara, self.dia.hora_normalizada)
         # mundo
-        self.setShaderInput("pos_pivot_camara", pos_pivot_camara, priority=2)
-        self.setShaderInput("posicion_sol", self.sol.nodo.getPos(self), priority=2)
+        self.setShaderInput("pos_pivot_camara", pos_pivot_camara, priority=10)
+        self.setShaderInput("posicion_sol", self.sol.nodo.getPos(self), priority=10)
         #
         self._counter+=1
         return task.cont

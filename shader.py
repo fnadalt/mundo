@@ -40,6 +40,7 @@ class GeneradorShader:
         global shaders
         shader=None
         if not tipo in shaders:
+            log.info("cargar shader tipo %i"%tipo)
             generador=GeneradorShader(tipo)
             generador.nodo=nodo
             generador.prioridad=prioridad
@@ -69,7 +70,7 @@ class GeneradorShader:
         texto_fs=""
         # texturas
         cantidad_texturas=0
-        if self._clase==GeneradorShader.ClaseGenerico:
+        if self._clase==GeneradorShader.ClaseGenerico or self._clase==GeneradorShader.ClaseSol:
             cantidad_texturas=1
         elif self._clase==GeneradorShader.ClaseTerreno or self._clase==GeneradorShader.ClaseAgua:
             cantidad_texturas=4

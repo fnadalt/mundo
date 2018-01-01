@@ -47,8 +47,11 @@ class Terreno:
         self.bullet_world=bullet_world
         # componentes:
         self.nodo=self.base.render.attachNewNode("terreno")
+        self.nodo_parcelas=self.nodo.attachNewNode("parcelas")
+        self.nodo_naturaleza=self.nodo.attachNewNode("naturaleza")
         #self.nodo.setRenderModeWireframe()
         self.parcelas={} # {idx_pos:parcela_node_path,...}
+        self.naturaleza={} # {idx_pos:naturaleza_node_path,...}
         self._noise_objs=list() # [PerlinNoise2, ...]
         self._ruido_temperatura=None
         self._ruido_intervalos_tipo_terreno=None
@@ -238,7 +241,7 @@ class Terreno:
         pos=self.obtener_pos_parcela(idx_pos)
         nombre="parcela_%i_%i"%(int(pos[0]), int(pos[1]))
         # nodo
-        parcela_node_path=self.nodo.attachNewNode(nombre)
+        parcela_node_path=self.nodo_parcelas.attachNewNode(nombre)
         parcela_node_path.setPos(pos[0], pos[1], 0.0)
         # geometría
         datos_parcela=self._generar_datos_parcela(idx_pos)
@@ -246,18 +249,24 @@ class Terreno:
         #
         parcela_node_path.attachNewNode(geom_node)
         # objetos
-        nodo_objetos=self._generar_nodo_objetos(pos, idx_pos, datos_parcela)
-        nodo_objetos.reparentTo(parcela_node_path)
-        GeneradorShader.aplicar(nodo_objetos, GeneradorShader.ClaseGenerico, 3)
+        naturaleza_node_path=self._generar_nodo_naturaleza(pos, idx_pos, datos_parcela)
+        naturaleza_node_path.setPos(pos[0], pos[1], 0.0)
+        naturaleza_node_path.reparentTo(self.nodo_naturaleza)
         # debug: normales
         if self.dibujar_normales:
             geom_node_normales=self._generar_lineas_normales("normales_%i_%i"%(int(pos[0]), int(pos[1])), geom_node)
             parcela_node_path.attachNewNode(geom_node_normales)
         # agregar a parcelas
         self.parcelas[idx_pos]=parcela_node_path
+        # agregar a naturaleza
+        self.naturaleza[idx_pos]=naturaleza_node_path
 
     def _descargar_parcela(self, idx_pos):
         log.info("_descargar_parcela %s"%str(idx_pos))
+        #
+        naturaleza=self.naturaleza[idx_pos]
+        naturaleza.removeNode()
+        del self.naturaleza[idx_pos]
         #
         parcela=self.parcelas[idx_pos]
         parcela.removeNode()
@@ -366,7 +375,7 @@ class Terreno:
         geom_node.setBoundsType(BoundingVolume.BT_box)
         return geom_node
     
-    def _generar_nodo_objetos(self, pos, idx_pos, data):
+    def _generar_nodo_naturaleza(self, pos, idx_pos, data):
         #
         tamano=Terreno.TamanoParcela+1
         naturaleza=Naturaleza(self.base, pos, Terreno.AlturaMaxima, tamano, Terreno.AltitudAgua)
@@ -383,18 +392,19 @@ class Terreno:
         # texturas
         ts_arena=TextureStage("ts_arena") # arena
         textura_arena=self.base.loader.loadTexture("texturas/arena.png")
-        self.nodo.setTexture(ts_arena, textura_arena)
+        self.nodo_parcelas.setTexture(ts_arena, textura_arena)
         ts_tierra=TextureStage("ts_tierra") # tierra
         textura_tierra=self.base.loader.loadTexture("texturas/tierra.png")
-        self.nodo.setTexture(ts_tierra, textura_tierra)
+        self.nodo_parcelas.setTexture(ts_tierra, textura_tierra)
         ts_pasto=TextureStage("ts_pasto") # pasto
         textura_pasto=self.base.loader.loadTexture("texturas/pasto.png")
-        self.nodo.setTexture(ts_pasto, textura_pasto)
+        self.nodo_parcelas.setTexture(ts_pasto, textura_pasto)
         ts_nieve=TextureStage("ts_nieve") # nieve
         textura_nieve=self.base.loader.loadTexture("texturas/nieve.png")
-        self.nodo.setTexture(ts_nieve, textura_nieve)
+        self.nodo_parcelas.setTexture(ts_nieve, textura_nieve)
         #
-        GeneradorShader.aplicar(self.nodo, GeneradorShader.ClaseTerreno, 2)
+        GeneradorShader.aplicar(self.nodo_parcelas, GeneradorShader.ClaseTerreno, 2)
+        GeneradorShader.aplicar(self.nodo_naturaleza, GeneradorShader.ClaseGenerico, 2)
 
     def _calcular_normal(self, v0, v1, v2):
         U=v1-v0
