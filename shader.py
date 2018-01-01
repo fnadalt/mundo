@@ -154,10 +154,14 @@ class GeneradorShader:
         ruta_archivo_vs="shaders/vs.%i.glsl"%self._clase
         ruta_archivo_fs="shaders/fs.%i.glsl"%self._clase
         #
-        with open(ruta_archivo_vs, "w+") as arch_vs:
-            arch_vs.write(texto_vs)
-        with open(ruta_archivo_fs, "w+") as arch_fs:
-            arch_fs.write(texto_fs)
+        if not os.path.exists(ruta_archivo_vs):
+            log.info("generando archivo shader %s..."%ruta_archivo_vs)
+            with open(ruta_archivo_vs, "w+") as arch_vs:
+                arch_vs.write(texto_vs)
+        if not os.path.exists(ruta_archivo_fs):
+            log.info("generando archivo shader %s..."%ruta_archivo_fs)
+            with open(ruta_archivo_fs, "w+") as arch_fs:
+                arch_fs.write(texto_fs)
         # shader
         shader=Shader.load(Shader.SL_GLSL, vertex=ruta_archivo_vs, fragment=ruta_archivo_fs)
         return shader
@@ -171,7 +175,7 @@ class GeneradorShader:
 VS_ATTR_0="""#version 120
 attribute vec4 p3d_Vertex;
 attribute vec3 p3d_Normal;
-attribute vec4 p3d_Color;
+//attribute vec4 p3d_Color;
 %(VS_ATTR_TC)s
 """
 VS_ATTR_TC="attribute vec4 p3d_MultiTexCoord0;"
@@ -191,7 +195,7 @@ varying vec4 PositionV;
 varying vec3 Normal;
 """
 VS_VAR_GENERICO="""
-varying vec4 Color;
+//varying vec4 Color;
 """
 VS_VAR_TERRENO="""
 varying float info_tipo;
@@ -212,7 +216,7 @@ VS_MAIN_1="""
 }
 """
 VS_MAIN_GENERICO="""
-    Color=p3d_Color;"""
+    //Color=p3d_Color;"""
 VS_MAIN_TC="gl_TexCoord[0]=p3d_MultiTexCoord0;\n"
 VS_MAIN_POSITIONW="PositionW=p3d_ModelMatrix*p3d_Vertex;\n"
 VS_MAIN_POSITIONP="PositionP=gl_Position;\n"
@@ -290,7 +294,7 @@ FS_VAR_0="""
 varying vec4 PositionV;
 varying vec3 Normal;
 """
-FS_VAR_GENERICO="""varying vec4 Color;
+FS_VAR_GENERICO="""//varying vec4 Color;
 """
 FS_VAR_POSITIONW="varying vec4 PositionW;\n"
 FS_VAR_POSITIONP="varying vec4 PositionP;\n"
@@ -472,7 +476,7 @@ void main()
     //
     gl_FragColor=color;
 """
-FS_MAIN_TEX_0="color*=tex();"
+FS_MAIN_TEX_0="color*=tex();" # !!! *=
 FS_MAIN_GENERICO="//color+=Color; no no no \n"
 FS_MAIN_LUCES="""
         int cantidad_luces=p3d_LightSource.length();

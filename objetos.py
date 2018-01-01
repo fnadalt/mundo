@@ -251,13 +251,15 @@ class Naturaleza:
         log.info("%s: se colocaron %i objetos"%(nombre, cnt_objetos))
         #
         lod0=NodePath(LODNode("%s_lod"%nombre))
-        lod0.node().addSwitch(5.0*1.4142*self._tamano, 0.0)
+        lod0.node().addSwitch(7.5*self._tamano, 0.0)
         nodo_central.reparentTo(lod0)
         #
-        shader=GeneradorShader(GeneradorShader.ClaseGenerico, nodo_central)
-        shader.cantidad_texturas=1
-        shader.activar_recorte_agua(Vec3(0, 0, 1), self._altitud_agua)
-        shader.generar_aplicar()
+        # cargar en terreno
+#        shader=GeneradorShader(GeneradorShader.ClaseGenerico, lod0)
+#        shader.prioridad=3
+#        shader.cantidad_texturas=1
+#        shader.activar_recorte_agua(Vec3(0, 0, 1), self._altitud_agua)
+#        shader.generar_aplicar()
         #
         return lod0
 

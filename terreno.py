@@ -21,7 +21,7 @@ class Terreno:
     TamanoParcela=32
 
     # radio de expansion
-    RadioExpansion=1 #4
+    RadioExpansion=4 #4
 
     # topografia
     SemillaTopografia=4069
@@ -248,6 +248,11 @@ class Terreno:
         # objetos
         nodo_objetos=self._generar_nodo_objetos(pos, idx_pos, datos_parcela)
         nodo_objetos.reparentTo(parcela_node_path)
+        shader=GeneradorShader(GeneradorShader.ClaseGenerico, nodo_objetos)
+        shader.prioridad=3
+        shader.cantidad_texturas=1
+        shader.activar_recorte_agua(Vec3(0, 0, 1), self.altitud_agua)
+        shader.generar_aplicar()
         # debug: normales
         if self.dibujar_normales:
             geom_node_normales=self._generar_lineas_normales("normales_%i_%i"%(int(pos[0]), int(pos[1])), geom_node)

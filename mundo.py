@@ -21,7 +21,7 @@ log=logging.getLogger(__name__)
 
 class Mundo(NodePath):
 
-    PosInicialFoco=Vec3(608, -34, 1) # |(-937,-323,1)
+    PosInicialFoco=Vec3(600, -54, 1) # |(-937,-323,1)
     
     def __init__(self, base):
         NodePath.__init__(self, "mundo")
@@ -160,6 +160,13 @@ class Mundo(NodePath):
         self.palo.setPos(0.5,0.75,-0.25)
         self.palo.setR(-85.0)
         self.palo.setScale(10.0)
+        #
+        self.arbol=self.base.loader.loadModel("objetos/arbol.01.egg")
+        self.arbol.reparentTo(self)
+        self.arbol.setPos(608,-55,self.terreno.obtener_altitud((608,-55)))
+        shader=GeneradorShader(GeneradorShader.ClaseGenerico, self.arbol)
+        shader.cantidad_texturas=1
+        shader.generar_aplicar()
     
     def _cargar_terreno(self, pos_inicial_foco):
         # dia
