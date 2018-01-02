@@ -119,7 +119,7 @@ class Sol:
         # glow camera
         tempnode = NodePath(PandaNode("temp_node"))
         tempnode.setShader(self.nodo.getShader(), 5)
-        tempnode.setShaderInput("plano_recorte_agua", Vec4(0, 0, 0, 0))
+        tempnode.setShaderInput("plano_recorte_agua", Vec4(0, 0, 1, self._altitud_agua))
         tempnode.setShaderInput("posicion_sol", Vec3(0, 0, 0))
         glow_camera = self.base.makeCamera(self.glow_buffer, lens=self.base.cam.node().getLens())
         glow_camera.node().setInitialState(tempnode.getState())

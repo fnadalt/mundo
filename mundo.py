@@ -158,7 +158,7 @@ class Mundo(NodePath):
     
     def _cargar_terreno(self, pos_inicial_foco):
         # dia
-        self.dia=Dia(1800.0, 0.53) #|(1800.0, 0.50)
+        self.dia=Dia(1200.0, 0.53) #|(1800.0, 0.50)
         # terreno
         self.terreno=Terreno(self.base, self.bullet_world)
         self.terreno.iniciar()
@@ -230,7 +230,11 @@ class Mundo(NodePath):
         # mundo
         self.setShaderInput("pos_pivot_camara", pos_pivot_camara, priority=10)
         self.setShaderInput("posicion_sol", self.sol.nodo.getPos(self), priority=10)
-        self.setShaderInput("color_fog", self.cielo.luz.node().getColor(), priority=10)
+        self.setShaderInput("offset_periodo_cielo", self.cielo.offset_periodo, priority=10)
+        self.setShaderInput("color_cielo_base_inicial", self.cielo.color_cielo_base_inicial, priority=10)
+        self.setShaderInput("color_cielo_base_final", self.cielo.color_cielo_base_final, priority=10)
+        self.setShaderInput("color_halo_sol_inicial", self.cielo.color_halo_sol_inicial, priority=10)
+        self.setShaderInput("color_halo_sol_final", self.cielo.color_halo_sol_final, priority=10)
         #
         self._counter+=1
         return task.cont

@@ -40,7 +40,7 @@ class GeneradorShader:
         global shaders
         shader=None
         if not tipo in shaders:
-            log.info("cargar shader tipo %i"%tipo)
+            log.info("cargar shader tipo %s"%tipo)
             generador=GeneradorShader(tipo)
             generador.nodo=nodo
             generador.prioridad=prioridad
@@ -50,7 +50,6 @@ class GeneradorShader:
         nodo.setShader(shader, prioridad)
         #
         nodo.setShader(shader, priority=prioridad)
-        nodo.setShaderInput("altitud_agua", _altitud_agua, priority=prioridad)
         nodo.setShaderInput("posicion_sol", Vec3(0, 0, 0), priority=prioridad)
         nodo.setShaderInput("pos_pivot_camara", Vec3(0, 0, 0), priority=prioridad)
         nodo.setShaderInput("offset_periodo_cielo", 0.0, priority=prioridad)
@@ -59,6 +58,9 @@ class GeneradorShader:
         nodo.setShaderInput("color_halo_sol_inicial", Vec4(0, 0, 0, 0), priority=prioridad)
         nodo.setShaderInput("color_halo_sol_final", Vec4(0, 0, 0, 0), priority=prioridad)
         nodo.setShaderInput("plano_recorte_agua", _plano_recorte_agua, priority=prioridad)
+        nodo.setShaderInput("distancia_fog_minima", 70.0, priority=prioridad)
+        nodo.setShaderInput("distancia_fog_maxima", 120.0, priority=prioridad)
+        nodo.setShaderInput("tinte_fog", Vec4(1, 1, 1, 1), priority=prioridad)
     
     def __init__(self, clase):
         # referencias:
@@ -73,8 +75,88 @@ class GeneradorShader:
         texto_vs="#version 120\n"
         texto_fs="#version 120\n"
         # vs
-        texto_vs+=VS_ATTR_COMUN
+        texto_vs+=VS_COMUN
+        if self._clase!=GeneradorShader.ClaseCielo:
+            texto_vs+=VS_TEX
+            if self._clase!=GeneradorShader.ClaseSol:
+                texto_vs+=VS_POS_VIEW
+            if self._clase==GeneradorShader.ClaseAgua:
+                texto_vs+=VS_POS_PROJ
+            elif self._clase==GeneradorShader.ClaseTerreno:
+                texto_vs+=VS_TIPO_TERRENO
+        if self._clase!=GeneradorShader.ClaseSol:
+            texto_vs+=VS_POS_MODELO
+        texto_vs+=VS_MAIN_INICIO
+        texto_vs+=VS_MAIN_COMUN
+        if self._clase!=GeneradorShader.ClaseCielo:
+            texto_vs+=VS_MAIN_TEX
+            if self._clase!=GeneradorShader.ClaseSol:
+                texto_vs+=VS_MAIN_VIEW
+            if self._clase==GeneradorShader.ClaseTerreno:
+                texto_vs+=VS_MAIN_TIPO_TERRENO
+        texto_vs+=VS_MAIN_POSITION
+        if self._clase==GeneradorShader.ClaseAgua:
+            texto_vs+=VS_MAIN_VERTEX_PROJ
+        if self._clase!=GeneradorShader.ClaseSol:
+            texto_vs+=VS_MAIN_VERTEX
+        texto_vs+=VS_MAIN_FIN
         # fs
+        texto_fs+=FS_COMUN
+        if self._clase!=GeneradorShader.ClaseCielo:
+            texto_fs+=FS_TEX_0
+            texto_fs+=FS_POS_VIEW
+            if self._clase==GeneradorShader.ClaseTerreno:
+                texto_fs+=FS_TEX_123
+                texto_fs+=FS_TERRENO
+            if self._clase==GeneradorShader.ClaseAgua:
+                texto_fs+=FS_TEX_123
+                texto_fs+=FS_POS_PROJ
+                texto_fs+=FS_AGUA
+                texto_fs+=FS_FUNC_AGUA
+            if self._clase==GeneradorShader.ClaseTerreno or self._clase==GeneradorShader.ClaseGenerico:
+                texto_fs+=FS_LUZ
+                texto_fs+=FS_FUNC_LUZ
+                if self._clase==GeneradorShader.ClaseTerreno:
+                    texto_fs+=FS_FUNC_TEX_TERRENO
+                else:
+                    texto_fs+=FS_FUNC_TEX_GENERICO
+            elif self._clase==GeneradorShader.ClaseSol:
+                texto_fs+=FS_FUNC_SOL
+            if self._clase!=GeneradorShader.ClaseSol:
+                texto_fs+=FS_FOG
+        if self._clase!=GeneradorShader.ClaseSol:
+            texto_fs+=FS_POS_MODELO
+            texto_fs+=FS_FUNC_CIELO
+        texto_fs+=FS_MAIN_INICIO
+        if self._clase!=GeneradorShader.ClaseAgua and self._clase!=GeneradorShader.ClaseCielo:
+            texto_fs+=FS_MAIN_CLIP_INICIO
+        if self._clase!=GeneradorShader.ClaseSol:
+            texto_fs+=FS_MAIN_CIELO_FOG
+        if self._clase==GeneradorShader.ClaseCielo:
+            texto_fs+=FS_MAIN_CIELO
+        else:
+            if self._clase==GeneradorShader.ClaseGenerico or self._clase==GeneradorShader.ClaseTerreno:
+                texto_fs+=FS_MAIN_LUZ
+                if self._clase==GeneradorShader.ClaseGenerico:
+                    texto_fs+=FS_MAIN_TEX_GENERICO
+                else: # terreno
+                    texto_fs+=FS_MAIN_TEX_TERRENO
+            elif self._clase==GeneradorShader.ClaseAgua:
+                texto_fs+=FS_MAIN_AGUA
+            elif self._clase==GeneradorShader.ClaseSol:
+                texto_fs+=FS_MAIN_SOL
+            if self._clase!=GeneradorShader.ClaseSol:
+                texto_fs+=FS_MAIN_FOG_FACTOR
+            if self._clase==GeneradorShader.ClaseAgua:
+                texto_fs+=FS_MAIN_ALPHA_AGUA
+            else:
+                if self._clase!=GeneradorShader.ClaseSol:
+                    texto_fs+=FS_MAIN_FOG_COLOR
+                texto_fs+=FS_MAIN_ALPHA
+        texto_fs+=FS_MAIN_COLOR
+        if self._clase!=GeneradorShader.ClaseAgua and self._clase!=GeneradorShader.ClaseCielo:
+            texto_fs+=FS_MAIN_CLIP_FIN
+        texto_fs+=FS_MAIN_FIN
         # archivos
         ruta_archivo_vs="shaders/vs.%s.glsl"%self._clase
         ruta_archivo_fs="shaders/fs.%s.glsl"%self._clase
@@ -98,10 +180,7 @@ class GeneradorShader:
 #
 VS_COMUN="""
 attribute vec4 p3d_Vertex;
-attribute vec3 p3d_Normal;
 uniform mat4 p3d_ModelViewProjectionMatrix;
-uniform mat4 p3d_ModelViewMatrix;
-uniform mat3 p3d_NormalMatrix;
 uniform mat4 p3d_ModelMatrix;
 varying vec4 PositionW; // clip
 """
@@ -109,11 +188,14 @@ VS_TEX="""
 attribute vec4 p3d_MultiTexCoord0; // generico, terreno, agua, sol
 """
 VS_POS_MODELO="""
-varying vec4 Position; // cielo
+varying vec4 Position; // fog y cielo
 """
 VS_POS_VIEW="""
+attribute vec3 p3d_Normal;
 uniform mat4 p3d_ModelViewMatrix;
+uniform mat3 p3d_NormalMatrix;
 varying vec4 PositionV; // luz, fog
+varying vec3 Normal;
 """
 VS_POS_PROJ="""
 varying vec4 PositionP; // agua
@@ -127,8 +209,10 @@ VS_MAIN_INICIO="""
 void main() {
 """
 VS_MAIN_COMUN="""
-    PositionV=p3d_ModelViewMatrix*p3d_Vertex;
     PositionW=p3d_ModelMatrix*p3d_Vertex;
+"""
+VS_MAIN_VIEW="""
+    PositionV=p3d_ModelViewMatrix*p3d_Vertex;
     Normal=normalize(p3d_NormalMatrix*p3d_Normal);
 """
 VS_MAIN_TEX="""
@@ -139,10 +223,13 @@ VS_MAIN_TIPO_TERRENO="""
     info_tipo=floor(info_tipo_terreno);
     info_tipo_factor=fract(info_tipo_terreno);
 """
+VS_MAIN_VERTEX="""
+    Position=p3d_Vertex; // fog y cielo
+"""
 VS_MAIN_POSITION="""
     gl_Position=p3d_ModelViewProjectionMatrix*p3d_Vertex;
 """
-VS_MAIN_VERTEX_MODELO="""
+VS_MAIN_VERTEX_PROJ="""
     PositionP=gl_Position; // agua
 """
 VS_MAIN_FIN="""
@@ -158,7 +245,6 @@ FS_COMUN="""
 const float TamanoHalo=0.85;
 varying vec4 PositionW; // clip
 // comun
-uniform float altitud_agua;
 uniform vec3 posicion_sol;
 uniform vec4 plano_recorte_agua;
 uniform vec3 pos_pivot_camara;
@@ -180,8 +266,8 @@ FS_POS_MODELO="""
 varying vec4 Position; // cielo
 """
 FS_POS_VIEW="""
-uniform mat4 p3d_ModelViewMatrix;
 varying vec4 PositionV; // luz, fog
+varying vec3 Normal;
 """
 FS_POS_PROJ="""
 varying vec4 PositionP; // agua
@@ -221,6 +307,16 @@ uniform struct {
     //mat4 shadowViewMatrix;
 } p3d_LightSource[8];
 """
+FS_AGUA="""
+uniform float move_factor;
+uniform vec3 cam_pos;
+const float shine_damper=20.0;
+const float reflectivity=0.6;
+"""
+FS_TERRENO="""
+varying float info_tipo;
+varying float info_tipo_factor;
+"""
 FS_FUNC_LUZ="""
 // generico y terreno
 vec4 amb()
@@ -251,15 +347,17 @@ vec4 ds(int iLightSource)
 }
 """
 FS_FUNC_TEX_GENERICO="""
-// generico, terreno y agua
+// generico
 vec4 tex_generico(){
     vec4 color_tex=vec4(0,0,0,0);
     color_tex+=texture2D(p3d_Texture0, gl_TexCoord[0].st);
-    color_tex+=texture2D(p3d_Texture1, gl_TexCoord[0].st); // terreno y agua
-    color_tex+=texture2D(p3d_Texture2, gl_TexCoord[0].st); // terreno y agua
-    color_tex+=texture2D(p3d_Texture3, gl_TexCoord[0].st); // terreno y agua
     return color_tex;
 }
+"""
+FS_FUNC_TEX_AGUA="""
+    color_tex+=texture2D(p3d_Texture1, gl_TexCoord[0].st); // agua
+    color_tex+=texture2D(p3d_Texture2, gl_TexCoord[0].st); // agua
+    color_tex+=texture2D(p3d_Texture3, gl_TexCoord[0].st); // agua
 """
 FS_FUNC_TEX_TERRENO="""
 // terreno
@@ -356,13 +454,13 @@ FS_FUNC_CIELO="""
 // cielo y fog
 vec4 cielo()
 {
-    vec4 color_base=mix(color_cielo_base_inicial,color_cielo_base_final,offset_periodo);
+    vec4 color_base=mix(color_cielo_base_inicial,color_cielo_base_final,offset_periodo_cielo);
     vec3 d=normalize(posicion_sol-pos_pivot_camara);
     vec3 v=normalize(Position.xyz);
     float a=(dot(v,d)+1.0)/2.0;
     vec4 color;
     if(abs(a)>TamanoHalo){
-        vec4 color_halo=mix(color_halo_sol_inicial,color_halo_sol_final,offset_periodo);
+        vec4 color_halo=mix(color_halo_sol_inicial,color_halo_sol_final,offset_periodo_cielo);
         float factor=(abs(a)-TamanoHalo)/(1.0-TamanoHalo);
         color=mix(color_base,color_halo,factor);
     } else {
@@ -387,10 +485,12 @@ vec4 sol()
 FS_MAIN_INICIO="""
 void main()
 {
+    vec4 color=vec4(0,0,0,0);
+"""
+FS_MAIN_CLIP_INICIO="""
     if (PositionW.x*plano_recorte_agua.x + PositionW.y*plano_recorte_agua.y + PositionW.z*plano_recorte_agua.z - plano_recorte_agua.w <= 0) {
         discard;
     } else {
-        vec4 color=vec4(0,0,0,0);
 """
 FS_MAIN_LUZ="""
         // luz: generico y terreno
@@ -421,17 +521,28 @@ FS_MAIN_CIELO_FOG="""
         // cielo y fog
         vec4 color_cielo=cielo();
 """
-FS_MAIN_FOG="""
+FS_MAIN_FOG_FACTOR="""
         // fog: generico, terreno y agua
-        float fog_factor=clamp((FogMax-abs(PositionV.z))/(FogMax-FogMin),0.0,1.0);
+        float fog_factor=clamp((distancia_fog_maxima-abs(PositionV.z))/(distancia_fog_maxima-distancia_fog_minima),0.0,1.0);
+"""
+FS_MAIN_FOG_COLOR="""
         color=mix(color_cielo*tinte_fog,color,fog_factor);
 """
 FS_MAIN_CIELO="""
         color=color_cielo;
 """
-FS_MAIN_FIN="""
+FS_MAIN_ALPHA="""
         color.a=1.0;
+"""
+FS_MAIN_ALPHA_AGUA="""
+        color.a=1.0-fog_factor;
+"""
+FS_MAIN_COLOR="""
         gl_FragColor=color;
+"""
+FS_MAIN_CLIP_FIN="""
     }
+"""
+FS_MAIN_FIN="""
 }
 """
