@@ -33,6 +33,7 @@ class Cielo:
         self.luz.node().setColor(Cielo.ColorNoche)
         # variable externas:
         self.altitud_agua=altitud_agua
+        self.offset_periodo=0.0
         # variable internas:
         self._periodo_actual=0
         self._offset_periodo_anterior=0
@@ -61,11 +62,12 @@ class Cielo:
         # shader
         # suprimido para dar lugar a GeneradorShader
         #self.nodo.setShaderInput("posicion_sol", posicion_sol, priority=3)
-        self.nodo.setShaderInput("offset_periodo", _offset_corregido)
+        self.nodo.setShaderInput("offset_periodo_cielo", _offset_corregido)
         # luz ambiental
         _color_luz=Vec4(self._color_ambiente_inicial*(1.0-_offset_corregido))+Vec4(self._color_ambiente_final*_offset_corregido)
         self.luz.node().setColor(_color_luz)
         #
+        self.offset_periodo=_offset_corregido
         self._offset_periodo_anterior=offset_periodo
     
     def obtener_info(self):
