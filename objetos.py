@@ -185,7 +185,7 @@ class Naturaleza:
             for y in range(self._tamano):
                 fila.append([0.0, 0.0, (0.0, 0.0)]) # radios inferior y superior de objeto en esa posicion, (dx,dy) aleatorio; 0.0==vacio
             espacio.append(fila)
-        # normalizar densidad de objetos de mismo grupo
+        # compaginar informacion de objetos
         info_gpos=dict() # {gpo_altitud:{gpo_temp_base:(descripcion_tipo_objeto,factor_densidad,[pos,...]),...},...}
         for x in range(self._tamano):
             for y in range(self._tamano):
@@ -226,9 +226,10 @@ class Naturaleza:
                            (descripcion_tipo_objeto[7]==Naturaleza.AmbienteTerrestre and pos[2]<self._altitud_agua):
                                continue
                         # ruido -> trigger por "densidad"
-                        ruido=(self.ruido_perlin(self._pos_base[0]+pos[0], self._pos_base[1]+pos[1])+1.0)/2.0
-                        trigger=descripcion_tipo_objeto[4]*factor_densidad
-                        if ruido>trigger: # testear colocacion de objeto en una posicion
+                        ruido1=(self.ruido_perlin(self._pos_base[0]+pos[0], self._pos_base[1]+pos[1])+1.0)/2.0
+                        ruido1*=random.random()
+                        trigger=descripcion_tipo_objeto[4]# [*/] factor_densidad
+                        if ruido1>trigger: # testear colocacion de objeto en una posicion
                             #log.debug("colocar objeto %s en posicion %s?"%(str(descripcion_tipo_objeto), str(pos)))
                             radio_inferior=descripcion_tipo_objeto[5]
                             radio_superior=descripcion_tipo_objeto[6]
@@ -236,25 +237,22 @@ class Naturaleza:
                             if self._chequear_espacio(pos, radio_inferior, radio_superior, espacio):
                                 #log.debug("se agregara")
                                 # desplazamiento aleatorio
-                                dpos=[random.random(), random.random()]
+                                dpos=(random.random(), random.random())
                                 # colocar modelo
+                                ruido2=random.random()
                                 modelo=pool[descripcion_tipo_objeto[8]]
                                 dummy=nodo_central.attachNewNode("dummy")
                                 dummy.setPos(self.base.render, Vec3(pos[0]+dpos[0], pos[1]+dpos[1], pos[2]))
+                                dummy.setHpr(90.0*ruido2, 3.5*(ruido2-0.5), 0.0)
                                 modelo.instanceTo(dummy)
                                 # establecer informacion espacial de radios
                                 self._establecer_informacion_espacial(pos, radio_inferior, radio_superior, espacio)
                                 # contador de objetos colocados
                                 cnt_objetos+=1
         log.info("%s: se colocaron %i objetos"%(nombre, cnt_objetos))
+        self._dibujar_espacio(espacio, nombre)
         #
-        lod0=NodePath(LODNode("%s_lod"%nombre))
-        lod0.node().addSwitch(7.0*self._tamano, 0.0)
-        nodo_central.reparentTo(lod0)
-        #
-        #GeneradorShader.aplicar(lod0, GeneradorShader.ClaseGenerico, 1)
-        #
-        return lod0
+        return nodo_central
 
     def _chequear_espacio(self, pos, radio_inferior, radio_superior, espacio):
         #log.debug("_chequear_espacio pos=%s radio_inferior=%.1f radio_superior=%.1f"%(str(pos), radio_inferior, radio_superior))
@@ -309,6 +307,7 @@ class Naturaleza:
         x, y=pos[0], pos[1]
         # establecer alcance radio_inferior
         piso_radio_inferior=int(radio_inferior)
+        espacio[x][y][0]=1.0
         for i in range(piso_radio_inferior):
             d=i+1
             r=1.0
@@ -317,23 +316,39 @@ class Naturaleza:
             espacio[x+d][y][0]=r
             espacio[x][y+d][0]=r
             espacio[x-d][y][0]=r
-            espacio[x][y-1][0]=r
+            espacio[x][y-d][0]=r
             espacio[x+d][y+d][0]=r
             espacio[x-d][y+d][0]=r
             espacio[x+d][y-d][0]=r
             espacio[x-d][y-d][0]=r
         # establecer alcance radio_superior
         piso_radio_superior=int(radio_superior)
+        espacio[x][y][1]=1.0
         for i in range(piso_radio_superior):
             d=i+1
             r=1.0
             if radio_superior>piso_radio_superior and d==piso_radio_superior:
                 r=radio_superior-piso_radio_superior
-            espacio[x+d][y][0]=r
-            espacio[x][y+d][0]=r
-            espacio[x-d][y][0]=r
-            espacio[x][y-1][0]=r
-            espacio[x+d][y+d][0]=r
-            espacio[x-d][y+d][0]=r
-            espacio[x+d][y-d][0]=r
-            espacio[x-d][y-d][0]=r
+            espacio[x+d][y][1]=r
+            espacio[x][y+d][1]=r
+            espacio[x-d][y][1]=r
+            espacio[x][y-d][1]=r
+            espacio[x+d][y+d][1]=r
+            espacio[x-d][y+d][1]=r
+            espacio[x+d][y-d][1]=r
+            espacio[x-d][y-d][1]=r
+    
+    def _dibujar_espacio(self, espacio, nombre):
+        log.info("dibujando espacio (png) %s..."%nombre)
+        #
+        if not os.path.exists("espacios/"):
+            log.info("creando directorio espacios/")
+            os.mkdir("espacios/")
+        #
+        imagen=PNMImage(self._tamano, self._tamano)
+        for i_fila in range(len(espacio)):
+            fila=espacio[i_fila]
+            for i_valor in range(len(fila)):
+                pixel_val=min(int(255*fila[i_valor][0]), 255)
+                imagen.setPixel(self._tamano-i_fila-1, i_valor, PNMImageHeader.PixelSpec(pixel_val, pixel_val, pixel_val, 255))
+        imagen.write("espacios/%s.png"%nombre)

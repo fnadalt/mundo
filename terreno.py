@@ -22,7 +22,7 @@ class Terreno:
     TamanoParcela=32
 
     # radio de expansion
-    RadioExpansion=4 #4
+    RadioExpansion=3 #4
 
     # topografia
     SemillaTopografia=4069
@@ -60,6 +60,7 @@ class Terreno:
         self.pos_foco_inicial=[0, 0]
         self.idx_pos_parcela_actual=None # (x,y)
         self.altura_sobre_agua=Terreno.AlturaMaxima-Terreno.AltitudAgua
+        self.switch_lod_naturaleza=(5.0*Terreno.TamanoParcela, 0.0)
         # debug
         self.dibujar_normales=False # cada update
         # variables internas:
@@ -78,10 +79,12 @@ class Terreno:
         log.info("terminar")
         objetos.terminar()
     
-    def obtener_indice_parcela(self, idx_pos):
-        x=int(idx_pos[0]/Terreno.TamanoParcela)
-        y=int(idx_pos[1]/Terreno.TamanoParcela)
-        return (x, y)
+    def obtener_indice_parcela(self, pos):
+        x=pos[0]/Terreno.TamanoParcela
+        y=pos[1]/Terreno.TamanoParcela
+        if x<0.0: x=math.floor(x)
+        if y<0.0: y=math.floor(y)
+        return (int(x), int(y))
     
     def obtener_indice_parcela_foco(self):
         return self.obtener_indice_parcela(self.pos_foco)
@@ -207,12 +210,14 @@ class Terreno:
         info+="RadioExpansion=%i pos_foco=%s altitud=%.2f temp_base=%s\n"%(Terreno.RadioExpansion, str(self.pos_foco), self.obtener_altitud(self.pos_foco), str(temp))
         return info
 
-    def update(self, pos_foco):
+    def update(self, pos_foco, forzar=False):
         if self.pos_foco!=pos_foco:
+            #log.debug("distinto: %s %s "%(str(self.pos_foco), str(pos_foco)))
             self.pos_foco=pos_foco
         #
         idx_pos=self.obtener_indice_parcela_foco()
-        if idx_pos!=self.idx_pos_parcela_actual:
+        #log.debug("idx_pos=%s"%(str(idx_pos)))
+        if forzar or idx_pos!=self.idx_pos_parcela_actual:
             self.idx_pos_parcela_actual=idx_pos
             #
             idxs_pos_parcelas_obj=[]
@@ -236,10 +241,10 @@ class Terreno:
                 self._generar_parcela(idx_pos)
 
     def _generar_parcela(self, idx_pos):
-        log.info("_generar_parcela %s"%str(idx_pos))
         # posición y nombre
         pos=self.obtener_pos_parcela(idx_pos)
-        nombre="parcela_%i_%i"%(int(pos[0]), int(pos[1]))
+        nombre="parcela_%i_%i"%(int(idx_pos[0]), int(idx_pos[1]))
+        log.info("_generar_parcela idx_pos=%s pos=%s nombre=%s"%(str(idx_pos), str(pos), nombre))
         # nodo
         parcela_node_path=self.nodo_parcelas.attachNewNode(nombre)
         parcela_node_path.setPos(pos[0], pos[1], 0.0)
@@ -385,7 +390,15 @@ class Terreno:
                 _d=data[x+1][y+1]
                 #log.debug(str(_d))
                 naturaleza.cargar_datos(_d.pos, _d.temperatura_base)
-        nodo=naturaleza.generar("nodo_objetos_%i_%i"%(idx_pos[0], idx_pos[1]))
+        #
+        nombre="nodo_naturaleza_%i_%i"%(idx_pos[0], idx_pos[1])
+        #
+        nodo=naturaleza.generar("%s_objetos"%nombre)
+        #
+        lod0=NodePath(LODNode("%s_lod"%nombre))
+        lod0.node().addSwitch(*self.switch_lod_naturaleza)
+        nodo.reparentTo(lod0)
+        #
         return nodo
 
     def _establecer_shader(self):
@@ -477,6 +490,11 @@ from direct.showbase.ShowBase import ShowBase
 from direct.gui.DirectGui import *
 class Tester(ShowBase):
 
+    TipoImagenNulo=0
+    TipoImagenTopo=1
+    TipoImagenTiposTerreno=2
+    TipoImagenEspacios=3
+
     ColoresTipoTerreno={Terreno.TipoNulo:Vec4(0, 0, 0, 255), 
                         Terreno.TipoArena:Vec4(240, 230, 0, 255), 
                         Terreno.TipoTierra1:Vec4(70, 60, 0, 255), 
@@ -497,6 +515,10 @@ class Tester(ShowBase):
         self.cam_pitch=30.0
         self.escribir_archivo=False # cada update
         #
+        GeneradorShader.iniciar(Terreno.AltitudAgua, Vec4(0, 0, 1, Terreno.AltitudAgua))
+        GeneradorShader.aplicar(self.render, GeneradorShader.ClaseGenerico, 1)
+        self.render.setShaderInput("distancia_fog_maxima", 3000.0, 0, 0, 0, priority=3)
+        #
         self.terreno=Terreno(self, bullet_world)
         self.terreno.iniciar()
         #self.terreno.nodo.setRenderModeWireframe()
@@ -506,7 +528,10 @@ class Tester(ShowBase):
         plano.setFrame(-r, r, -r, r)
         plano.setColor((0, 0, 1, 1))
         self.plano_agua=self.render.attachNewNode(plano.generate())
-        self.plano_agua.setP(-90.0)
+        self.plano_agua=self.loader.loadModel("objetos/plano_agua")
+        self.plano_agua.reparentTo(self.render)
+        self.plano_agua.setScale(0.5)
+        #self.plano_agua.setP(-90.0)
         #self.plano_agua.hide()
         #
         self.cam_driver=self.render.attachNewNode("cam_driver")
@@ -514,6 +539,9 @@ class Tester(ShowBase):
         self.camera.setPos(Terreno.TamanoParcela/2, 500, 100)
         self.camera.lookAt(self.cam_driver)
         self.cam_driver.setP(self.cam_pitch)
+        #
+        self.luz_ambiental=self.render.attachNewNode(AmbientLight("luz_ambiental"))
+        self.luz_ambiental.node().setColor(Vec4(1, 1, 1, 1))
         #
         self.sun=self.render.attachNewNode(DirectionalLight("sun"))
         self.sun.node().setColor(Vec4(1, 1, 1, 1))
@@ -524,7 +552,9 @@ class Tester(ShowBase):
         #
         self.texturaImagen=None
         self.imagen=None
-        self.zoom_imagen=16
+        self.zoom_imagen=1
+        #
+        self.tipo_imagen=Tester.TipoImagenTopo
         #
         self.taskMgr.add(self.update, "update")
         self.accept("wheel_up", self.zoom, [1])
@@ -579,24 +609,32 @@ class Tester(ShowBase):
         log.info("analizar_altitudes rango:[%.3f/%.3f] media=%.3f sd=%.3f"%(min, max, media, sd))
 
     def _actualizar_terreno(self, pos):
-            log.info("_actualizar_terreno pos=%s"%(str(pos)))
-            #
-            self.terreno.update(pos)
-            if self.escribir_archivo:
-                log.info("escribir_archivo")
-                self.terreno.nodo.writeBamFile("terreno.bam")
-            self.plano_agua.setPos(Vec3(pos[0], pos[1], Terreno.AltitudAgua))
-            #
-            self.cam_driver.setPos(Vec3(pos[0], pos[1], 100))
-            #
-            self.lblInfo["text"]=self.terreno.obtener_info()
-            #
-            self.pos_foco=pos
-            #
-            self._generar_imagen()
-            #self._generar_imagen_tipos_terreno()
+        log.info("_actualizar_terreno pos=%s"%(str(pos)))
+        #
+        self.terreno.update(pos)
+        if self.escribir_archivo:
+            log.info("escribir_archivo")
+            self.terreno.nodo.writeBamFile("terreno.bam")
+        self.plano_agua.setPos(Vec3(pos[0], pos[1], Terreno.AltitudAgua))
+        #
+        self.cam_driver.setPos(Vec3(pos[0]+Terreno.TamanoParcela/2, pos[1]-Terreno.TamanoParcela, Terreno.AltitudAgua))
+        #
+        self.lblInfo["text"]=self.terreno.obtener_info()
+        #
+        self.pos_foco=pos
+        #
+        self._generar_imagen()
 
     def _generar_imagen(self):
+        log.info("_generar_imagen")
+        if self.tipo_imagen==Tester.TipoImagenTopo:
+            self._generar_imagen_topo()
+        elif self.tipo_imagen==Tester.TipoImagenTiposTerreno:
+            self._generar_imagen_tipos_terreno()
+        elif self.tipo_imagen==Tester.TipoImagenEspacios:
+            self._generar_imagen_espacios()
+
+    def _generar_imagen_topo(self):
         #
         tamano=128
         if not self.imagen:
@@ -605,10 +643,11 @@ class Tester(ShowBase):
             self.frmImagen["image"]=self.texturaImagen
             self.frmImagen["image_scale"]=0.4
         #
+        zoom=self.zoom_imagen*Terreno.TamanoParcela/tamano
         for x in range(tamano+1):
             for y in range(tamano+1):
-                _x=self.pos_foco[0]-(x-(tamano/2))*self.zoom_imagen
-                _y=self.pos_foco[1]+(y-(tamano/2))*self.zoom_imagen
+                _x=self.pos_foco[0]-(x-tamano/2)*zoom
+                _y=self.pos_foco[1]+(y-tamano/2)*zoom
                 a=self.terreno.obtener_altitud((_x, _y))
                 c=int(255*a/Terreno.AlturaMaxima)
                 if a>Terreno.AltitudAgua:
@@ -657,6 +696,9 @@ class Tester(ShowBase):
         #
         self.texturaImagen.load(self.imagen)
 
+    def _generar_imagen_espacios(self):
+        log.info("_generar_imagen_espacios no implementado")
+
     def _ir_a_idx_pos(self):
         log.info("_ir_a_idx_pos")
         try:
@@ -682,23 +724,39 @@ class Tester(ShowBase):
         #
         self.frmImagen=DirectFrame(parent=self.frame, pos=(0.8, 0, 0.2), state=DGG.NORMAL, frameSize=(-0.4, 0.4, -0.4, 0.4))
         self.frmImagen.bind(DGG.B1PRESS, self._click_imagen)
-        DirectButton(parent=self.frame, pos=(0.5, 0, 0.65), scale=0.1, text="acercar", command=self._acercar_zoom_imagen, frameSize=(-1, 1, -0.4, 0.4), text_scale=0.5)
+        DirectButton(parent=self.frame, pos=(0.500, 0, 0.65), scale=0.1, text="acercar", command=self._acercar_zoom_imagen, frameSize=(-1, 1, -0.4, 0.4), text_scale=0.5)
         DirectButton(parent=self.frame, pos=(0.725, 0, 0.65), scale=0.1, text="alejar", command=self._alejar_zoom_imagen, frameSize=(-1, 1, -0.4, 0.4), text_scale=0.5)
+        DirectButton(parent=self.frame, pos=(0.950, 0, 0.65), scale=0.1, text="cambiar", command=self._cambiar_tipo_imagen, frameSize=(-1, 1, -0.4, 0.4), text_scale=0.5)
+
+    def _cambiar_tipo_imagen(self):
+        log.info("_cambiar_tipo_imagen a:")
+        if self.tipo_imagen==Tester.TipoImagenTopo:
+            log.info("TipoImagenTiposTerreno")
+            self.tipo_imagen=Tester.TipoImagenTiposTerreno
+        elif self.tipo_imagen==Tester.TipoImagenTiposTerreno:
+            log.info("TipoImagenEspacios")
+            self.tipo_imagen=Tester.TipoImagenEspacios
+        elif self.tipo_imagen==Tester.TipoImagenEspacios:
+            log.info("TipoImagenTopo")
+            self.tipo_imagen=Tester.TipoImagenTopo
+        self._generar_imagen()
 
     def _click_imagen(self, *args):
         log.info("_click_imagen %s"%str(args))
 
     def _acercar_zoom_imagen(self):
         log.info("_acercar_zoom_imagen")
-        if self.zoom_imagen>1:
-            self.zoom_imagen/=2
-            self._generar_imagen()
+        self.zoom_imagen-=4
+        if self.zoom_imagen<1:
+            self.zoom_imagen=1
+        self._generar_imagen()
 
     def _alejar_zoom_imagen(self):
         log.info("_alejar_zoom_imagen")
-        if self.zoom_imagen<512:
-            self.zoom_imagen*=2
-            self._generar_imagen()
+        self.zoom_imagen+=4
+        if self.zoom_imagen>4096:
+            self.zoom_imagen=4096
+        self._generar_imagen()
 
 def debug_tipos_terreno(terreno):
     log.debug("debug_tipos_terreno")
@@ -730,7 +788,7 @@ if __name__=="__main__":
     PStatClient.connect()
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    Terreno.RadioExpansion=0
+    Terreno.RadioExpansion=2
     tester.escribir_archivo=False
     #debug_tipos_terreno(tester.terreno)
     #debug_temperaturas(tester.terreno)

@@ -49,7 +49,7 @@ class Mundo(NodePath):
         self.controlador_camara=ControladorCamara(self.base)
         self.controlador_camara.input_mapper=self.input_mapper
         #
-        self._cargar_terreno(Mundo.PosInicialFoco)
+        self._cargar_terreno()
         self._cargar_hombre()
         self._cargar_objetos()
         self._cargar_obj_voxel()
@@ -156,7 +156,8 @@ class Mundo(NodePath):
         self.palo.setR(-85.0)
         self.palo.setScale(10.0)
     
-    def _cargar_terreno(self, pos_inicial_foco):
+    def _cargar_terreno(self):
+        pos_inicial_foco=Mundo.PosInicialFoco
         # dia
         self.dia=Dia(1200.0, 0.53) #|(1800.0, 0.50)
         # terreno
@@ -184,12 +185,12 @@ class Mundo(NodePath):
     def _update(self, task):
         info=""
         info+=self.dia.obtener_info()+"\n"
-        #info+=self.terreno.obtener_info()+"\n"
+        info+=self.terreno.obtener_info()+"\n"
         info+=self.hombre.obtener_info()+"\n"
         #info+=self.agua.obtener_info()+"\n"
         #info+=self.input_mapper.obtener_info()+"\n"
-        info+=self.cielo.obtener_info()
-        info+=self.sol.obtener_info()+"\n"
+        #info+=self.cielo.obtener_info()
+        #info+=self.sol.obtener_info()+"\n"
         self.texto1.setText(info)
         # tiempo
         dt=self.base.taskMgr.globalClock.getDt()
