@@ -1,4 +1,4 @@
-CC=g++
+CC=C:\MinGW\bin\g++.exe
 CFLAGS=-shared -fPIC #-g
 HDRS=voxels.h objeto.h
 OBJS=objeto.o
@@ -6,14 +6,14 @@ OBJS=objeto.o
 PYTHON_INCLUDE=-IC:\Panda3D-1.10.0\python\include
 PYTHON_LIB=-LC:\Panda3D-1.10.0\python\libs -lpython3.6m
 
-P3D_INCLUDE=-IC:\Panda3D-1.10.0\include -IC:\Panda3D-1.10.0\include\parser-inc\Eigen
+P3D_INCLUDE=-IC:\Panda3D-1.10.0\include -IC:\eigen\Eigen
 P3D_PARSER_INC=-SC:\Panda3D-1.10.0\include\parser-inc -SC:\Panda3D-1.10.0\include -IC:\Panda3D-1.10.0\include -I.
-P3D_LIB=-LC:\Panda3D-1.10.0\lib -lpanda -lpandaexpress -lp3dtoolconfig -lp3dtool
+P3D_LIB=-L"C:\Panda3D-1.10.0\lib\" -lpanda -lpandaexpress -lp3dtoolconfig -lp3dtool
 PANDA_PY=C:\Panda3D-1.10.0\panda3d
 P3D_BIN=C:\Panda3D-1.10.0\bin
 
-POLYVOX_INCLUDE=-I/usr/include/PolyVoxCore
-POLYVOX_LIB=-L/usr/lib/PolyVoxCore -lPolyVoxCore
+POLYVOX_INCLUDE=-IC:\polyvox-0.2.1\library\PolyVoxCore\include\PolyVoxCore
+POLYVOX_LIB=-LC:\polyvox-0.2.1\build\library\PolyVoxCore -lPolyVoxCore
 
 VOXELS_INCLUDE=-I.
 VOXELS_LIB=-L. -lvoxels
@@ -28,14 +28,14 @@ objeto.o: objeto.cpp objeto.h
 
 libvoxels.in: $(HDRS)
 	echo ">>> python_interrogate: libvoxels.in libvoxels_igate.cxx"
-	$(P3D_BIN)/interrogate $(P3D_PARSER_INC) -Dvolatile -Dmutable -DCPPPARSER -D__STDC__=1 -D__cplusplus -D__inline -D__const=const -D__attribute__\(x\)= -D_LP64 -D__cplusplus=201103L \
+	$(P3D_BIN)/interrogate.exe $(P3D_PARSER_INC) -Dvolatile -Dmutable -DCPPPARSER -D__STDC__=1 -D__cplusplus -D__inline -D__const=const -D__attribute__\(x\)= -D_LP64 -D__cplusplus=201103L \
 			-DEIGEN_MPL2_ONLY= -DEIGEN_NO_DEBUG= \
 			-fnames -string -refcount -assert -noangles \
 			-srcdir=. -oc libvoxels_igate.cxx -od libvoxels.in -python-native -module voxels -library voxels $(HDRS)
 
 voxels_module.cxx: libvoxels.in
 	echo ">>> python_interrogate: voxels_module.cxx"
-	$(P3D_BIN)/interrogate_module -oc voxels_module.cxx -module voxels -library voxels -python-native libvoxels.in
+	$(P3D_BIN)/interrogate_module.exe -oc voxels_module.cxx -module voxels -library voxels -python-native libvoxels.in
 
 python_interrogate: voxels_module.cxx
 	echo ">>> python_interrogate: module"
