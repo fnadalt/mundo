@@ -13,7 +13,7 @@ from camara import ControladorCamara
 from input import InputMapper
 from shader import GeneradorShader
 
-import voxels
+#import voxels
 
 import logging
 log=logging.getLogger(__name__)
@@ -22,7 +22,7 @@ log=logging.getLogger(__name__)
 class Mundo(NodePath):
 
     PosInicialFoco=Vec3(600, -54, 1) # |(-937,-323,1)
-    
+
     def __init__(self, base):
         NodePath.__init__(self, "mundo")
         self.reparentTo(base.render)
@@ -35,7 +35,7 @@ class Mundo(NodePath):
         self._counter=50 # forzar terreno.update antes de hombre.update
         self._personajes=[]
         self._periodo_dia_actual=0
-    
+
     def iniciar(self):
         log.info("iniciar")
         # fisica:
@@ -61,7 +61,7 @@ class Mundo(NodePath):
         self.base.render.node().adjustDrawMask(DrawMask(7), DrawMask(0), DrawMask(0))
         #
         self.base.taskMgr.add(self._update, "mundo_update")
-    
+
     def terminar(self):
         log.info("terminar")
         self.terreno.terminar()
@@ -79,7 +79,7 @@ class Mundo(NodePath):
         log.info("_establecer_shader")
         GeneradorShader.iniciar(Terreno.AltitudAgua, Vec4(0, 0, 1, Terreno.AltitudAgua))
         GeneradorShader.aplicar(self, GeneradorShader.ClaseGenerico, 1)
-        
+
     def _cargar_obj_voxel(self):
         return
         hm=HeightMap(id=66)
@@ -99,7 +99,7 @@ class Mundo(NodePath):
         self.objN.setShaderAuto()
         self.objN.setScale(1)
         self.objN.setPos(-N/2, -N/2, -9.5)
-    
+
     def _configurar_fisica(self):
         self.bullet_world=BulletWorld()
         #
@@ -124,7 +124,7 @@ class Mundo(NodePath):
         _cuerpoN.reparentTo(self)
         caja=self.base.loader.loadModel("box.egg")
         caja.reparentTo(_cuerpoN)
-    
+
     def _cargar_debug_info(self):
         Negro=Vec4(0.0, 0.0, 0.0, 1.0)
         #Blanco=Vec4(1.0, 1.0, 1.0, 1.0)
@@ -147,7 +147,7 @@ class Mundo(NodePath):
         #
         self.controlador_camara.seguir(self.hombre.cuerpo)
         self.terreno.foco=self.hombre.cuerpo
-    
+
     def _cargar_objetos(self):
         #
         self.palo=self.base.loader.loadModel("objetos/palof")
@@ -155,7 +155,7 @@ class Mundo(NodePath):
         self.palo.setPos(0.5,0.75,-0.25)
         self.palo.setR(-85.0)
         self.palo.setScale(10.0)
-    
+
     def _cargar_terreno(self):
         pos_inicial_foco=Mundo.PosInicialFoco
         # dia
@@ -239,7 +239,7 @@ class Mundo(NodePath):
         #
         self._counter+=1
         return task.cont
-    
+
     def _toggle_debug_fisica(self):
         if self.debug_fisicaN.isHidden():
             self.debug_fisicaN.show()

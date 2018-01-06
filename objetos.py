@@ -43,6 +43,10 @@ def iniciar_db():
     #
     log.info("iniciar_db")
     #
+    if os.path.exists(NombreArchivoDB):
+        log.warning("se elimina el archivo de base de datos %s"%NombreArchivoDB)
+        os.remove(NombreArchivoDB)
+    #
     if not os.path.exists(NombreArchivoDB):
         if not os.path.exists(NombreArchivoLlenadoDB):
             raise Exception("no se encuentra el archivo %s"%NombreArchivoLlenadoDB)
@@ -116,15 +120,15 @@ def terminar_pool_modelos():
 #
 #
 class Naturaleza:
-    
+
     # ruido de distribucion de objetos
     ParamsRuido=[16.0, 345]
-    
+
     # ambiente
     AmbienteNulo=0
     AmbienteSubacuatico=1
     AmbienteTerrestre=2
-    
+
     # tipos de objeto
     TipoObjetoNulo=0
     TipoObjetoArbol=1
@@ -134,10 +138,10 @@ class Naturaleza:
     TipoObjetoRocaPequena=5
     TipoObjetoRocaMediana=6
     TipoObjetoRocaGrande=7
-    
+
     # parametros
     RadioMaximo=4.0
-    
+
     def __init__(self, base, pos_base, altura_maxima_terreno, tamano, altitud_agua):
         # referencias:
         self.base=base
@@ -149,12 +153,9 @@ class Naturaleza:
         self._tamano=tamano
         self._altitud_agua=altitud_agua
         self._data=None
-    
+
     def iniciar(self):
         #log.debug("iniciar")
-        if os.path.exists(NombreArchivoDB):
-            log.warning("se elimina el archivo de base de datos %s"%NombreArchivoDB)
-            os.remove(NombreArchivoDB)
         # db
         iniciar_db()
         # pool de modelos
@@ -166,7 +167,7 @@ class Naturaleza:
             for y in range(self._tamano):
                 fila.append((0.0, 0.0))
             self._data.append(fila)
-    
+
     def cargar_datos(self, pos, temperatura_base):
         x=int(pos[0])
         y=int(pos[1])
@@ -337,7 +338,7 @@ class Naturaleza:
             espacio[x-d][y+d][1]=r
             espacio[x+d][y-d][1]=r
             espacio[x-d][y-d][1]=r
-    
+
     def _dibujar_espacio(self, espacio, nombre):
         log.info("dibujando espacio (png) %s..."%nombre)
         #

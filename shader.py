@@ -13,6 +13,8 @@ _plano_recorte_agua_inv=Vec4(0, 0, -1, 0)
 
 class GeneradorShader:
 
+    Version="120"
+
     # clases
     ClaseNulo="nulo"
     ClaseGenerico="generico"
@@ -61,7 +63,7 @@ class GeneradorShader:
         nodo.setShaderInput("distancia_fog_minima", 70.0, priority=prioridad)
         nodo.setShaderInput("distancia_fog_maxima", 120.0, priority=prioridad)
         nodo.setShaderInput("tinte_fog", Vec4(1, 1, 1, 1), priority=prioridad)
-    
+
     def __init__(self, clase):
         # referencias:
         self.nodo=None
@@ -72,8 +74,8 @@ class GeneradorShader:
 
     def generar(self):
         # texto
-        texto_vs="#version 120\n"
-        texto_fs="#version 120\n"
+        texto_vs="#version %s\n"%GeneradorShader.Version
+        texto_fs="#version %s\n"%GeneradorShader.Version
         # vs
         texto_vs+=VS_COMUN
         if self._clase!=GeneradorShader.ClaseCielo:
