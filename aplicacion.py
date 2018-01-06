@@ -1,7 +1,8 @@
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import *
 from mundo import Mundo
-
+from panda3d.core import loadPrcFileData
+ 
 import logging
 logging.basicConfig(level=logging.DEBUG)
 log=logging.getLogger(__name__)
@@ -12,6 +13,8 @@ class Aplicacion(ShowBase):
         #
         ShowBase.__init__(self)
         PStatClient.connect()
+        #
+        #loadPrcFileData('', 'gl-coordinate-system default')
         #
         self.disableMouse()
         self.setFrameRateMeter(True)

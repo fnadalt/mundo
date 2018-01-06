@@ -253,6 +253,7 @@ class Naturaleza:
         log.info("%s: se colocaron %i objetos"%(nombre, cnt_objetos))
         self._dibujar_espacio(espacio, nombre)
         #
+        nodo_central
         return nodo_central
 
     def _chequear_espacio(self, pos, radio_inferior, radio_superior, espacio):

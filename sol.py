@@ -32,10 +32,11 @@ class Sol:
         # pivot de rotacion
         self.pivot=self.base.render.attachNewNode("pivot_sol")
         self.pivot.setP(10.0) # inclinacion "estacional"
+        self.pivot.setZ(self._altitud_agua)
         # esfera solar
         self.nodo=self.base.loader.loadModel("objetos/solf")
         self.nodo.reparentTo(self.pivot)
-        self.nodo.setClipPlaneOff(4)
+        #self.nodo.setClipPlaneOff(4)
         self.nodo.setX(300.0) # |400.0
         self.nodo.setScale(20.0)
         self.nodo.setColor((1.0, 1.0, 0.7, 1.0))
@@ -60,8 +61,11 @@ class Sol:
         #
         DirectLabel(text="blur_y_buffer", pos=LVector3f(1.0, -0.4), scale=0.05)
         DirectFrame(image=self.blur_y_buffer.getTexture(0), scale=0.25, pos=LVector3f(0.85, -0.7))
+        #
+        DirectLabel(text="shadow", pos=LVector3f(0.5, -0.4), scale=0.05)
+        DirectFrame(image=self.buffer_sombra.getTexture(0), scale=0.25, pos=LVector3f(0.30, -0.7))
 
-    def update(self, hora_normalizada, periodo, offset_periodo):
+    def update(self, pos_pivot_camara, hora_normalizada, periodo, offset_periodo):
         # determinar periodo
         if periodo!=self._periodo_actual:
             self._periodo_actual=periodo
@@ -78,10 +82,16 @@ class Sol:
         else:
             if self._colores_post_pico:
                 self._colores_post_pico=False
+            if periodo==2:
+                if self.shadow_camera.getR()==180.0 and offset_periodo>=0.5:
+                    self.shadow_camera.setR(0.0)
+                elif self.shadow_camera.getR()==0.0 and offset_periodo>0.0 and offset_periodo<0.5:
+                    self.shadow_camera.setR(180.0)
         self._color_actual=self._color_inicial+((self._color_final-self._color_inicial)*_offset)
         #log.info("update p=%i _o=%.2f c=%s cpp=%s"%(periodo, _offset, str(self._color_actual), str(self._colores_post_pico)))
         self._color_actual[3]=1.0
         # componentes
+        self.pivot.setPos(pos_pivot_camara)
         self.pivot.setR(360.0 * hora_normalizada)
         self.luz.lookAt(self.pivot)
         self.luz.node().setColor(self._color_actual)
@@ -118,7 +128,7 @@ class Sol:
         self.glow_buffer.setClearColor(LVector4(0, 0, 0, 1))
         # glow camera
         tempnode = NodePath(PandaNode("temp_node"))
-        tempnode.setShader(self.nodo.getShader(), 5)
+        tempnode.setShader(self.nodo.getShader(), priority=3)
         tempnode.setShaderInput("plano_recorte_agua", Vec4(0, 0, 1, self._altitud_agua))
         tempnode.setShaderInput("posicion_sol", Vec3(0, 0, 0))
         glow_camera = self.base.makeCamera(self.glow_buffer, lens=self.base.cam.node().getLens())
@@ -130,6 +140,8 @@ class Sol:
         finalcard.reparentTo(self.base.render2d)
         finalcard.setAttrib(ColorBlendAttrib.make(ColorBlendAttrib.MAdd))
         #finalcard.hide()
+        # sombra
+        self.buffer_sombra=self._generar_buffer_sombra()
 
     def _generar_buffer_filtro(self, buffer_base, nombre, orden, nombre_base_arch_shader):
         blur_buffer = self.base.win.makeTextureBuffer(nombre, 512, 512)
@@ -137,9 +149,27 @@ class Sol:
         blur_buffer.setClearColor(LVector4(0, 0, 0, 1))
         blur_camera = self.base.makeCamera2d(blur_buffer)
         blur_scene = NodePath("escena_filtro_%s"%nombre)
-        blur_camera.node().setScene(blur_scene )
+        blur_camera.node().setScene(blur_scene)
         card = buffer_base.getTextureCard()
         card.reparentTo(blur_scene )
         shader = Shader.load(Shader.SL_GLSL, vertex="shaders/blur.v.glsl", fragment="shaders/%s.f.glsl"%nombre_base_arch_shader)
         card.setShader(shader, 1)
         return blur_buffer
+
+    def _generar_buffer_sombra(self):
+        #
+        shadow_buffer=self.base.win.makeTextureBuffer('shadow_buffer', 512, 512)
+        shadow_buffer.setClearColor(Vec4(0, 0, 0, 1))
+        self.shadow_camera=self.base.makeCamera(shadow_buffer)
+        self.shadow_camera.reparentTo(self.pivot)
+        self.shadow_camera.node().getLens().setFov(self.base.camera.find("+Camera").node().getLens().getFov())
+        self.shadow_camera.node().getLens().setNearFar(20, 100)
+        dummy_sombra=self.base.render.attachNewNode("dummy_sombra")
+        GeneradorShader.aplicar(dummy_sombra, GeneradorShader.ClaseSombra, 3)
+        self.shadow_camera.node().setCameraMask(DrawMask(2))
+        self.shadow_camera.node().setInitialState(dummy_sombra.getState())
+        distancia=self.nodo.getPos() * 0.20
+        self.shadow_camera.setPos(distancia)
+        self.shadow_camera.setHpr(90, 0, 180.0)
+        #
+        return shadow_buffer

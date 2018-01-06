@@ -22,6 +22,7 @@ class GeneradorShader:
     ClaseAgua="agua"
     ClaseCielo="cielo"
     ClaseSol="sol"
+    ClaseSombra="sombra"
 
     @staticmethod
     def iniciar(altitud_agua, plano_recorte_agua):
@@ -80,33 +81,36 @@ class GeneradorShader:
         texto_vs+=VS_COMUN
         if self._clase!=GeneradorShader.ClaseCielo:
             texto_vs+=VS_TEX
-            if self._clase!=GeneradorShader.ClaseSol:
+            if self._clase!=GeneradorShader.ClaseSol and self._clase!=GeneradorShader.ClaseSombra:
                 texto_vs+=VS_POS_VIEW
-            if self._clase==GeneradorShader.ClaseAgua:
+                texto_vs+=VS_SOMBRA
+            if self._clase==GeneradorShader.ClaseAgua or self._clase==GeneradorShader.ClaseSombra:
                 texto_vs+=VS_POS_PROJ
             elif self._clase==GeneradorShader.ClaseTerreno:
                 texto_vs+=VS_TIPO_TERRENO
-        if self._clase!=GeneradorShader.ClaseSol:
+        if self._clase!=GeneradorShader.ClaseSol and self._clase!=GeneradorShader.ClaseSombra:
             texto_vs+=VS_POS_MODELO
         texto_vs+=VS_MAIN_INICIO
         texto_vs+=VS_MAIN_COMUN
         if self._clase!=GeneradorShader.ClaseCielo:
             texto_vs+=VS_MAIN_TEX
-            if self._clase!=GeneradorShader.ClaseSol:
+            if self._clase!=GeneradorShader.ClaseSol and self._clase!=GeneradorShader.ClaseSombra:
                 texto_vs+=VS_MAIN_VIEW
+                texto_vs+=VS_MAIN_SOMBRA
             if self._clase==GeneradorShader.ClaseTerreno:
                 texto_vs+=VS_MAIN_TIPO_TERRENO
         texto_vs+=VS_MAIN_POSITION
-        if self._clase==GeneradorShader.ClaseAgua:
+        if self._clase==GeneradorShader.ClaseAgua or self._clase==GeneradorShader.ClaseSombra:
             texto_vs+=VS_MAIN_VERTEX_PROJ
-        if self._clase!=GeneradorShader.ClaseSol:
+        if self._clase!=GeneradorShader.ClaseSol and self._clase!=GeneradorShader.ClaseSombra:
             texto_vs+=VS_MAIN_VERTEX
         texto_vs+=VS_MAIN_FIN
         # fs
         texto_fs+=FS_COMUN
         if self._clase!=GeneradorShader.ClaseCielo:
-            texto_fs+=FS_TEX_0
-            texto_fs+=FS_POS_VIEW
+            if self._clase!=GeneradorShader.ClaseSombra:
+                texto_fs+=FS_TEX_0
+                texto_fs+=FS_POS_VIEW
             if self._clase==GeneradorShader.ClaseTerreno:
                 texto_fs+=FS_TEX_123
                 texto_fs+=FS_TERRENO
@@ -115,6 +119,8 @@ class GeneradorShader:
                 texto_fs+=FS_POS_PROJ
                 texto_fs+=FS_AGUA
                 texto_fs+=FS_FUNC_AGUA
+            if self._clase==GeneradorShader.ClaseSombra:
+                texto_fs+=FS_POS_PROJ
             if self._clase==GeneradorShader.ClaseTerreno or self._clase==GeneradorShader.ClaseGenerico:
                 texto_fs+=FS_LUZ
                 texto_fs+=FS_FUNC_LUZ
@@ -124,15 +130,17 @@ class GeneradorShader:
                     texto_fs+=FS_FUNC_TEX_GENERICO
             elif self._clase==GeneradorShader.ClaseSol:
                 texto_fs+=FS_FUNC_SOL
-            if self._clase!=GeneradorShader.ClaseSol:
+            elif self._clase==GeneradorShader.ClaseSombra:
+                texto_fs+=FS_FUNC_SOMBRA
+            if self._clase!=GeneradorShader.ClaseSol and self._clase!=GeneradorShader.ClaseSombra:
                 texto_fs+=FS_FOG
-        if self._clase!=GeneradorShader.ClaseSol:
+        if self._clase!=GeneradorShader.ClaseSol and self._clase!=GeneradorShader.ClaseSombra:
             texto_fs+=FS_POS_MODELO
             texto_fs+=FS_FUNC_CIELO
         texto_fs+=FS_MAIN_INICIO
         if self._clase!=GeneradorShader.ClaseAgua and self._clase!=GeneradorShader.ClaseCielo:
             texto_fs+=FS_MAIN_CLIP_INICIO
-        if self._clase!=GeneradorShader.ClaseSol:
+        if self._clase!=GeneradorShader.ClaseSol and self._clase!=GeneradorShader.ClaseSombra:
             texto_fs+=FS_MAIN_CIELO_FOG
         if self._clase==GeneradorShader.ClaseCielo:
             texto_fs+=FS_MAIN_CIELO
@@ -147,12 +155,14 @@ class GeneradorShader:
                 texto_fs+=FS_MAIN_AGUA
             elif self._clase==GeneradorShader.ClaseSol:
                 texto_fs+=FS_MAIN_SOL
-            if self._clase!=GeneradorShader.ClaseSol:
+            elif self._clase==GeneradorShader.ClaseSombra:
+                texto_fs+=FS_MAIN_SOMBRA
+            if self._clase!=GeneradorShader.ClaseSol and self._clase!=GeneradorShader.ClaseSombra:
                 texto_fs+=FS_MAIN_FOG_FACTOR
             if self._clase==GeneradorShader.ClaseAgua:
                 texto_fs+=FS_MAIN_ALPHA_AGUA
             else:
-                if self._clase!=GeneradorShader.ClaseSol:
+                if self._clase!=GeneradorShader.ClaseSol and self._clase!=GeneradorShader.ClaseSombra:
                     texto_fs+=FS_MAIN_FOG_COLOR
                 texto_fs+=FS_MAIN_ALPHA
         texto_fs+=FS_MAIN_COLOR
@@ -199,6 +209,23 @@ uniform mat3 p3d_NormalMatrix;
 varying vec4 PositionV; // luz, fog
 varying vec3 Normal;
 """
+VS_SOMBRA="""
+uniform struct {
+    vec4 color;
+    vec4 ambient;
+    vec4 diffuse;
+    vec4 specular;
+    vec4 position;
+    vec3 spotDirection;
+    float spotExponent;
+    float spotCutoff;
+    float spotCosCutoff;
+    vec3 attenuation;
+    //sampler2DShadow shadowMap;
+    //mat4 shadowViewMatrix;
+} p3d_LightSource[8];
+//varying vec4 sombra[8];
+"""
 VS_POS_PROJ="""
 varying vec4 PositionP; // agua
 """
@@ -216,6 +243,13 @@ VS_MAIN_COMUN="""
 VS_MAIN_VIEW="""
     PositionV=p3d_ModelViewMatrix*p3d_Vertex;
     Normal=normalize(p3d_NormalMatrix*p3d_Normal);
+"""
+VS_MAIN_SOMBRA="""
+    /*
+    for(int i=0;i<p3d_LightSource.length();++i){
+        sombra[i]=p3d_LightSource[i].shadowViewMatrix * p3d_Vertex;
+    }
+    */
 """
 VS_MAIN_TEX="""
     gl_TexCoord[0]=p3d_MultiTexCoord0;
@@ -308,6 +342,7 @@ uniform struct {
     //sampler2DShadow shadowMap;
     //mat4 shadowViewMatrix;
 } p3d_LightSource[8];
+//varying vec4 sombra[8];
 """
 FS_AGUA="""
 uniform float move_factor;
@@ -327,25 +362,31 @@ vec4 amb()
 }
 vec4 ds(int iLightSource)
 {
+    vec4 color;
     vec3 s=p3d_LightSource[iLightSource].position.xyz-(PositionV.xyz*p3d_LightSource[iLightSource].position.w);
     vec3 l=normalize(s);
     vec4 diffuse=clamp(p3d_Material.diffuse*p3d_LightSource[iLightSource].diffuse*max(dot(Normal,l),0),0,1);
+    color=diffuse;
     if(p3d_Material.specular!=vec3(0,0,0)){
         vec3 v=normalize(-PositionV.xyz);
         vec3 r=normalize(-reflect(s, Normal));
-        diffuse+=vec4(p3d_Material.specular,1.0) * p3d_LightSource[iLightSource].specular * pow(max(dot(r,v),0),p3d_Material.shininess);
+        color+=vec4(p3d_Material.specular,1.0) * p3d_LightSource[iLightSource].specular * pow(max(dot(r,v),0),p3d_Material.shininess);
     }
-    if(p3d_LightSource[iLightSource].spotDirection!=vec3(0,0,0)){
+    if(p3d_LightSource[iLightSource].spotCosCutoff>0.0){
         float spotEffect = dot(normalize(p3d_LightSource[iLightSource].spotDirection), -l);
         if(spotEffect>p3d_LightSource[iLightSource].spotCosCutoff){
-            diffuse*=pow(spotEffect, p3d_LightSource[iLightSource].spotExponent);
-            //diffuse*=textureProj(p3d_LightSource[iLightSource].shadowMap, shad[i]);
-            diffuse/=dot(p3d_LightSource[iLightSource].attenuation, vec3(1, length(s), length(s) * length(s)));
+            color*=pow(spotEffect, p3d_LightSource[iLightSource].spotExponent);
         } else {
-            diffuse=vec4(0,0,0,0);
+            color=vec4(0,0,0,0);
         }
     }
-    return diffuse;
+    //color*=shadow2DProj(p3d_LightSource[iLightSource].shadowMap, sombra[iLightSource]);
+    if(p3d_LightSource[iLightSource].position.w!=0.0){
+        float distancia=length(s);
+        float atenuacion=1.0/(p3d_LightSource[iLightSource].attenuation.x+p3d_LightSource[iLightSource].attenuation.y*distancia+p3d_LightSource[iLightSource].attenuation.z*distancia*distancia);
+        color*=atenuacion;
+    }
+    return color;
 }
 """
 FS_FUNC_TEX_GENERICO="""
@@ -484,6 +525,17 @@ vec4 sol()
     }
 }
 """
+FS_FUNC_SOMBRA="""
+// sombra
+vec4 sombra()
+{
+    vec4 color;
+    vec4 posp=normalize(PositionP);
+    float prof=(posp.z/posp.w)*0.5+0.5;
+    color=vec4(prof,prof,prof,1.0);
+    return color;
+}
+"""
 FS_MAIN_INICIO="""
 void main()
 {
@@ -518,6 +570,10 @@ FS_MAIN_AGUA="""
 FS_MAIN_SOL="""
         // sol
         color=sol();
+"""
+FS_MAIN_SOMBRA="""
+        // sombra
+        color=sombra();
 """
 FS_MAIN_CIELO_FOG="""
         // cielo y fog

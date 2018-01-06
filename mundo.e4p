@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-5.1.dtd">
 <!-- eric project file for project mundo -->
-<!-- Saved: 2018-01-02, 14:14:57 -->
+<!-- Saved: 2018-01-06, 17:18:31 -->
 <!-- Copyright (C) 2018 Fernando Nadal Testa, fnt2006@gmail.com -->
 <Project version="5.1">
   <Language>en_US</Language>
@@ -35,6 +35,7 @@
     <Source>shaders/fs.cielo.glsl</Source>
     <Source>shaders/fs.generico.glsl</Source>
     <Source>shaders/fs.sol.glsl</Source>
+    <Source>shaders/fs.sombra.glsl</Source>
     <Source>shaders/fs.terreno.glsl</Source>
     <Source>shaders/proto.f.glsl</Source>
     <Source>shaders/proto.v.glsl</Source>
@@ -42,6 +43,7 @@
     <Source>shaders/vs.cielo.glsl</Source>
     <Source>shaders/vs.generico.glsl</Source>
     <Source>shaders/vs.sol.glsl</Source>
+    <Source>shaders/vs.sombra.glsl</Source>
     <Source>shaders/vs.terreno.glsl</Source>
     <Source>sol.py</Source>
     <Source>terreno.py</Source>

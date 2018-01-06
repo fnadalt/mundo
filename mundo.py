@@ -155,11 +155,38 @@ class Mundo(NodePath):
         self.palo.setPos(0.5,0.75,-0.25)
         self.palo.setR(-85.0)
         self.palo.setScale(10.0)
+        #
+        self.point_light=self.attachNewNode(PointLight("point_light"))
+#        self.point_light.setPos(self.hombre.cuerpo.getPos()+Vec3(0, -3, 5))
+#        self.point_light.node().setColor((1, 0, 0, 1))
+#        self.point_light.node().setAttenuation(Vec3(1, 0, 0.1))
+#        self.setLight(self.point_light)
+        #
+        self.spot_light=self.attachNewNode(Spotlight("spot_light"))
+        self.spot_light.setPos(self.hombre.cuerpo.getPos()+Vec3(0, 0, 4))
+        self.spot_light.node().setColor((0, 0, 1, 1))
+        self.spot_light.node().setAttenuation(Vec3(1, 0, 0))
+        self.spot_light.node().setLens(PerspectiveLens())
+        self.spot_light.lookAt(self.hombre.cuerpo)
+        self.setLight(self.spot_light)
+        #
+        self.nubes=self.base.loader.loadModel("objetos/plano")
+        self.nubes.reparentTo(self)
+        #self.nubes.setTwoSided(True)
+        self.nubes.setPos(self.hombre.cuerpo.getPos()+Vec3(0, -16, 2.5))
+        self.nubes.setP(-90)
+        noise=StackedPerlinNoise2(1, 1, 8, 2, 0.5, 256, 18)
+        ts0=TextureStage("ts_nubes")
+        imagen=PNMImage(512, 512)
+        imagen.perlinNoiseFill(noise)
+        tex0=Texture("tex_nubes")
+        tex0.load(imagen)
+        self.nubes.setTexture(ts0, tex0)
 
     def _cargar_terreno(self):
         pos_inicial_foco=Mundo.PosInicialFoco
         # dia
-        self.dia=Dia(1200.0, 0.53) #|(1800.0, 0.50)
+        self.dia=Dia(900.0, 0.53) #|(1800.0, 0.50)
         # terreno
         self.terreno=Terreno(self.base, self.bullet_world)
         self.terreno.iniciar()
@@ -171,8 +198,8 @@ class Mundo(NodePath):
         self.setLight(self.cielo.luz)
         # sol
         self.sol=Sol(self.base, Terreno.AltitudAgua-20.0)
-        self.sol.pivot.reparentTo(self.cielo.nodo)
-        #self.sol.mostrar_camaras()
+        self.sol.pivot.reparentTo(self) # self.cielo.nodo
+        self.sol.mostrar_camaras()
         self.setLight(self.sol.luz)
         # agua
         self.agua=Agua(self.base, Terreno.AltitudAgua)
@@ -185,12 +212,12 @@ class Mundo(NodePath):
     def _update(self, task):
         info=""
         info+=self.dia.obtener_info()+"\n"
-        info+=self.terreno.obtener_info()+"\n"
-        info+=self.hombre.obtener_info()+"\n"
+        #info+=self.terreno.obtener_info()+"\n"
+        #info+=self.hombre.obtener_info()+"\n"
         #info+=self.agua.obtener_info()+"\n"
         #info+=self.input_mapper.obtener_info()+"\n"
         #info+=self.cielo.obtener_info()
-        #info+=self.sol.obtener_info()+"\n"
+        info+=self.sol.obtener_info()+"\n"
         self.texto1.setText(info)
         # tiempo
         dt=self.base.taskMgr.globalClock.getDt()
@@ -210,7 +237,7 @@ class Mundo(NodePath):
         self.cielo.nodo.setX(self.controlador_camara.target_node_path.getPos().getX())
         self.cielo.nodo.setY(self.controlador_camara.target_node_path.getPos().getY())
         self.cielo.update(pos_pivot_camara, self.dia.hora_normalizada, self.dia.periodo.actual, offset_periodo)
-        self.sol.update(self.dia.hora_normalizada, self.dia.periodo.actual, offset_periodo)
+        self.sol.update(pos_pivot_camara, self.dia.hora_normalizada, self.dia.periodo.actual, offset_periodo)
         # personajes
         for _personaje in self._personajes:
             _altitud_suelo=self.terreno.obtener_altitud(_personaje.cuerpo.getPos())
@@ -229,6 +256,7 @@ class Mundo(NodePath):
             self.lblHora["text"]=self.dia.obtener_hora()
             self.lblTemperatura["text"]="%.0fº"%self.terreno.obtener_temperatura_actual(temperatura_base_pivot_camara, altitud_pivot_camara, self.dia.hora_normalizada)
         # mundo
+        #log.debug("_update posicion_sol %s"%(str(self.sol.nodo.getPos(self))))
         self.setShaderInput("pos_pivot_camara", pos_pivot_camara, priority=10)
         self.setShaderInput("posicion_sol", self.sol.nodo.getPos(self), priority=10)
         self.setShaderInput("offset_periodo_cielo", self.cielo.offset_periodo, priority=10)
@@ -236,6 +264,8 @@ class Mundo(NodePath):
         self.setShaderInput("color_cielo_base_final", self.cielo.color_cielo_base_final, priority=10)
         self.setShaderInput("color_halo_sol_inicial", self.cielo.color_halo_sol_inicial, priority=10)
         self.setShaderInput("color_halo_sol_final", self.cielo.color_halo_sol_final, priority=10)
+        #
+        #self.point_light.setPos(self.point_light, Vec3(0.01, 0, 0))
         #
         self._counter+=1
         return task.cont
