@@ -44,7 +44,7 @@ class Sol:
         # luz direccional
         self.luz=self.nodo.attachNewNode(DirectionalLight("luz_solar"))
         self.luz.node().setColor(Vec4(1.0, 1.0, 0.7, 1.0))
-        self.luz.node().setShadowCaster(True, 512, 512)
+        self.luz.node().setShadowCaster(True, 1024, 1024)
         # init:
         self._establecer_shaders()
     
@@ -63,8 +63,8 @@ class Sol:
         DirectLabel(text="blur_y_buffer", pos=LVector3f(1.0, -0.4), scale=0.05)
         DirectFrame(image=self.blur_y_buffer.getTexture(0), scale=0.25, pos=LVector3f(0.85, -0.7))
         #
-        DirectLabel(text="shadow", pos=LVector3f(0.5, -0.4), scale=0.05)
-        DirectFrame(image=self.buffer_sombra.getTexture(0), scale=0.25, pos=LVector3f(0.30, -0.7))
+        #DirectLabel(text="shadow", pos=LVector3f(0.5, -0.4), scale=0.05)
+        #DirectFrame(image=self.buffer_sombra.getTexture(0), scale=0.25, pos=LVector3f(0.30, -0.7))
 
     def update(self, pos_pivot_camara, hora_normalizada, periodo, offset_periodo):
         # determinar periodo
@@ -83,11 +83,11 @@ class Sol:
         else:
             if self._colores_post_pico:
                 self._colores_post_pico=False
-            if periodo==2:
-                if self.shadow_camera.getR()==180.0 and offset_periodo>=0.5:
-                    self.shadow_camera.setR(0.0)
-                elif self.shadow_camera.getR()==0.0 and offset_periodo>0.0 and offset_periodo<0.5:
-                    self.shadow_camera.setR(180.0)
+            #if periodo==2:
+            #    if self.shadow_camera.getR()==180.0 and offset_periodo>=0.5:
+            #        self.shadow_camera.setR(0.0)
+            #    elif self.shadow_camera.getR()==0.0 and offset_periodo>0.0 and offset_periodo<0.5:
+            #        self.shadow_camera.setR(180.0)
         self._color_actual=self._color_inicial+((self._color_final-self._color_inicial)*_offset)
         #log.info("update p=%i _o=%.2f c=%s cpp=%s"%(periodo, _offset, str(self._color_actual), str(self._colores_post_pico)))
         self._color_actual[3]=1.0
@@ -141,8 +141,6 @@ class Sol:
         finalcard.reparentTo(self.base.render2d)
         finalcard.setAttrib(ColorBlendAttrib.make(ColorBlendAttrib.MAdd))
         #finalcard.hide()
-        # sombra
-        self.buffer_sombra=self._generar_buffer_sombra()
 
     def _generar_buffer_filtro(self, buffer_base, nombre, orden, nombre_base_arch_shader):
         blur_buffer = self.base.win.makeTextureBuffer(nombre, 512, 512)
@@ -157,7 +155,7 @@ class Sol:
         card.setShader(shader, 1)
         return blur_buffer
 
-    def _generar_buffer_sombra(self):
+    def _generar_buffer_sombra(self): # buen experimento
         #
         shadow_buffer=self.base.win.makeTextureBuffer('shadow_buffer', 512, 512)
         shadow_buffer.setClearColor(Vec4(0, 0, 0, 1))

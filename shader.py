@@ -220,10 +220,10 @@ uniform struct {
     float spotCutoff;
     float spotCosCutoff;
     vec3 attenuation;
-    //sampler2DShadow shadowMap;
-    //mat4 shadowViewMatrix;
+    sampler2DShadow shadowMap;
+    mat4 shadowViewMatrix;
 } p3d_LightSource[8];
-//varying vec4 sombra[8];
+varying vec4 sombra[8];
 """
 VS_POS_PROJ="""
 varying vec4 PositionP; // agua
@@ -244,11 +244,9 @@ VS_MAIN_VIEW="""
     Normal=normalize(p3d_NormalMatrix*p3d_Normal);
 """
 VS_MAIN_SOMBRA="""
-    /*
     for(int i=0;i<p3d_LightSource.length();++i){
-        sombra[i]=p3d_LightSource[i].shadowViewMatrix * p3d_Vertex;
+        sombra[i]=p3d_LightSource[i].shadowViewMatrix * PositionV;
     }
-    */
 """
 VS_MAIN_TEX="""
     gl_TexCoord[0]=p3d_MultiTexCoord0;
@@ -338,10 +336,10 @@ uniform struct {
     float spotCutoff;
     float spotCosCutoff;
     vec3 attenuation;
-    //sampler2DShadow shadowMap;
-    //mat4 shadowViewMatrix;
+    sampler2DShadow shadowMap;
+    mat4 shadowViewMatrix;
 } p3d_LightSource[8];
-//varying vec4 sombra[8];
+varying vec4 sombra[8];
 """
 FS_AGUA="""
 uniform float move_factor;
@@ -379,7 +377,7 @@ vec4 ds(int iLightSource)
             color=vec4(0,0,0,0);
         }
     }
-    //color*=shadow2DProj(p3d_LightSource[iLightSource].shadowMap, sombra[iLightSource]);
+    color*=shadow2DProj(p3d_LightSource[iLightSource].shadowMap, sombra[iLightSource]);
     if(p3d_LightSource[iLightSource].position.w!=0.0){
         float distancia=length(s);
         float atenuacion=1.0/(p3d_LightSource[iLightSource].attenuation.x+p3d_LightSource[iLightSource].attenuation.y*distancia+p3d_LightSource[iLightSource].attenuation.z*distancia*distancia);
