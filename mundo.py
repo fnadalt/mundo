@@ -177,16 +177,21 @@ class Mundo(NodePath):
         self.nubes.setP(-90)
         noise=StackedPerlinNoise2(1, 1, 8, 2, 0.5, 256, 18)
         ts0=TextureStage("ts_nubes")
-        imagen=PNMImage(512, 512)
-        imagen.perlinNoiseFill(noise)
-        tex0=Texture("tex_nubes")
-        tex0.load(imagen)
-        self.nubes.setTexture(ts0, tex0)
+        tamano=512
+        imagen=PNMImage(tamano, tamano)
+        #imagen.perlinNoiseFill(noise)
+        for x in range(tamano):
+            for y in range(tamano):
+                v=noise(x, y)*0.5+0.5
+                imagen.setXelA(x, y, 1, 0, 0, 0.5)
+#        tex0=Texture("tex_nubes")
+#        tex0.load(imagen)
+#        self.nubes.setTexture(ts0, tex0)
 
     def _cargar_terreno(self):
         pos_inicial_foco=Mundo.PosInicialFoco
         # dia
-        self.dia=Dia(3600.0, 0.53) #|(1800.0, 0.50)
+        self.dia=Dia(60.0, 0.53) #|(1800.0, 0.50)
         # terreno
         self.terreno=Terreno(self.base, self.bullet_world)
         self.terreno.iniciar()
@@ -216,7 +221,7 @@ class Mundo(NodePath):
         #info+=self.hombre.obtener_info()+"\n"
         #info+=self.agua.obtener_info()+"\n"
         #info+=self.input_mapper.obtener_info()+"\n"
-        #info+=self.cielo.obtener_info()
+        info+=self.cielo.obtener_info()
         info+=self.sol.obtener_info()+"\n"
         self.texto1.setText(info)
         # tiempo

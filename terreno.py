@@ -22,7 +22,7 @@ class Terreno:
     TamanoParcela=32
 
     # radio de expansion
-    RadioExpansion=0 #4
+    RadioExpansion=1 #4
 
     # topografia
     SemillaTopografia=4069
@@ -253,17 +253,16 @@ class Terreno:
         geom_node=self._generar_geometria_parcela(nombre, idx_pos, datos_parcela)
         #
         parcela_node_path.attachNewNode(geom_node)
-        # objetos
-        naturaleza_node_path=self._generar_nodo_naturaleza(pos, idx_pos, datos_parcela)
-        naturaleza_node_path.setPos(pos[0], pos[1], 0.0)
-        naturaleza_node_path.reparentTo(self.nodo_naturaleza)
         # debug: normales
         if self.dibujar_normales:
             geom_node_normales=self._generar_lineas_normales("normales_%i_%i"%(int(pos[0]), int(pos[1])), geom_node)
             parcela_node_path.attachNewNode(geom_node_normales)
         # agregar a parcelas
         self.parcelas[idx_pos]=parcela_node_path
-        # agregar a naturaleza
+        # naturaleza
+        naturaleza_node_path=self._generar_nodo_naturaleza(pos, idx_pos, datos_parcela)
+        naturaleza_node_path.setPos(pos[0], pos[1], 0.0)
+        naturaleza_node_path.reparentTo(self.nodo_naturaleza)
         self.naturaleza[idx_pos]=naturaleza_node_path
 
     def _descargar_parcela(self, idx_pos):
