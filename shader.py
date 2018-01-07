@@ -112,7 +112,6 @@ class GeneradorShader:
                 texto_fs+=FS_TEX_0
                 texto_fs+=FS_POS_VIEW
             if self._clase==GeneradorShader.ClaseTerreno:
-                texto_fs+=FS_TEX_123
                 texto_fs+=FS_TERRENO
             if self._clase==GeneradorShader.ClaseAgua:
                 texto_fs+=FS_TEX_123
@@ -294,9 +293,9 @@ FS_TEX_0="""
 uniform sampler2D p3d_Texture0; // !cielo
 """
 FS_TEX_123="""
-uniform sampler2D p3d_Texture1; // terreno y agua
-uniform sampler2D p3d_Texture2; // terreno y agua
-uniform sampler2D p3d_Texture3; // terreno y agua
+uniform sampler2D p3d_Texture1; // agua
+uniform sampler2D p3d_Texture2; // agua
+uniform sampler2D p3d_Texture3; // agua
 """
 FS_POS_MODELO="""
 varying vec4 Position; // cielo
@@ -414,28 +413,28 @@ vec4 tex_terreno()
     float tipo1=mod(floor(info_tipo),10);
     //
     if(tipo0==1){
-        _color0=texture2D(p3d_Texture3, gl_TexCoord[0].st);
+        _color0=texture2D(p3d_Texture0, gl_TexCoord[0].st/2.0+vec2(0,0.5));
     } else if(tipo0==2){
-        _color0=texture2D(p3d_Texture1, gl_TexCoord[0].st);
+        _color0=texture2D(p3d_Texture0, gl_TexCoord[0].st/2.0+vec2(0.5,0.5));
     } else if(tipo0==3){
-        _color0=texture2D(p3d_Texture2, gl_TexCoord[0].st);
+        _color0=texture2D(p3d_Texture0, gl_TexCoord[0].st/2.0);
     } else if(tipo0==4){
-        _color0=texture2D(p3d_Texture1, gl_TexCoord[0].st);
+        _color0=texture2D(p3d_Texture0, gl_TexCoord[0].st/2.0+vec2(0.5,0.5));
     } else if(tipo0==5){
-        _color0=texture2D(p3d_Texture0, gl_TexCoord[0].st);
+        _color0=texture2D(p3d_Texture0, gl_TexCoord[0].st/2.0+vec2(0.5,0));
     } else {
         _color0=vec4(0,0,0,1);
     }
     if(tipo1==1){
-        _color1=texture2D(p3d_Texture3, gl_TexCoord[0].st);
+        _color1=texture2D(p3d_Texture0, gl_TexCoord[0].st/2.0+vec2(0,0.5));
     } else if(tipo1==2){
-        _color1=texture2D(p3d_Texture1, gl_TexCoord[0].st);
+        _color1=texture2D(p3d_Texture0, gl_TexCoord[0].st/2.0+vec2(0.5,0.5));
     } else if(tipo1==3){
-        _color1=texture2D(p3d_Texture2, gl_TexCoord[0].st);
+        _color1=texture2D(p3d_Texture0, gl_TexCoord[0].st/2.0);
     } else if(tipo1==4){
-        _color1=texture2D(p3d_Texture1, gl_TexCoord[0].st);
+        _color1=texture2D(p3d_Texture0, gl_TexCoord[0].st/2.0+vec2(0.5,0.5));
     } else if(tipo1==5){
-        _color1=texture2D(p3d_Texture0, gl_TexCoord[0].st);
+        _color1=texture2D(p3d_Texture0, gl_TexCoord[0].st/2.0+vec2(0.5,0));
     } else {
         _color1=vec4(1,1,1,1);
     }

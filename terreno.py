@@ -335,11 +335,11 @@ class Terreno:
         wrt_i=GeomVertexWriter(vdata, co_info_tipo_terreno)
         # llenar datos de vertices
         i_vertice=0
-        tc_x, tc_y=1.0, 1.0
+        tc_x, tc_y=0.999, 0.999 # 1.0, 1.0
         for x in range(Terreno.TamanoParcela+1):
-            tc_x=0.0 if tc_x==1.0 else 1.0
+            tc_x=0.001 if tc_x==0.999 else 0.999
             for y in range(Terreno.TamanoParcela+1):
-                tc_y=0.0 if tc_y==1.0 else 1.0
+                tc_y=0.001 if tc_y==0.999 else 0.999
                 # data
                 d=data[x+1][y+1]
                 d.index=i_vertice # aqui se define el indice
@@ -403,18 +403,22 @@ class Terreno:
 
     def _establecer_shader(self):
         # texturas
-        ts_arena=TextureStage("ts_arena") # arena
-        textura_arena=self.base.loader.loadTexture("texturas/arena.png")
-        self.nodo_parcelas.setTexture(ts_arena, textura_arena)
-        ts_tierra=TextureStage("ts_tierra") # tierra
-        textura_tierra=self.base.loader.loadTexture("texturas/tierra.png")
-        self.nodo_parcelas.setTexture(ts_tierra, textura_tierra)
-        ts_pasto=TextureStage("ts_pasto") # pasto
-        textura_pasto=self.base.loader.loadTexture("texturas/pasto.png")
-        self.nodo_parcelas.setTexture(ts_pasto, textura_pasto)
-        ts_nieve=TextureStage("ts_nieve") # nieve
-        textura_nieve=self.base.loader.loadTexture("texturas/nieve.png")
-        self.nodo_parcelas.setTexture(ts_nieve, textura_nieve)
+#        ts_arena=TextureStage("ts_arena") # arena
+#        textura_arena=self.base.loader.loadTexture("texturas/arena.png")
+#        self.nodo_parcelas.setTexture(ts_arena, textura_arena)
+#        ts_tierra=TextureStage("ts_tierra") # tierra
+#        textura_tierra=self.base.loader.loadTexture("texturas/tierra.png")
+#        self.nodo_parcelas.setTexture(ts_tierra, textura_tierra)
+#        ts_pasto=TextureStage("ts_pasto") # pasto
+#        textura_pasto=self.base.loader.loadTexture("texturas/pasto.png")
+#        self.nodo_parcelas.setTexture(ts_pasto, textura_pasto)
+#        ts_nieve=TextureStage("ts_nieve") # nieve
+#        textura_nieve=self.base.loader.loadTexture("texturas/nieve.png")
+#        self.nodo_parcelas.setTexture(ts_nieve, textura_nieve)
+        #
+        ts_terreno=TextureStage("ts_terreno")
+        textura_terreno=self.base.loader.loadTexture("texturas/terreno.png")
+        self.nodo_parcelas.setTexture(ts_terreno, textura_terreno)
         #
         GeneradorShader.aplicar(self.nodo_parcelas, GeneradorShader.ClaseTerreno, 2)
         GeneradorShader.aplicar(self.nodo_naturaleza, GeneradorShader.ClaseGenerico, 2)

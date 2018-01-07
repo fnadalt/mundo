@@ -14,7 +14,8 @@ class Aplicacion(ShowBase):
         ShowBase.__init__(self)
         PStatClient.connect()
         #
-        #loadPrcFileData('', 'gl-coordinate-system default')
+        loadPrcFileData('', 'gl-coordinate-system default') # ? indicado para usar trans_world_to_clip_of_light
+        #loadPrcFileData('', 'notify-level debug')
         #
         self.disableMouse()
         self.setFrameRateMeter(True)
