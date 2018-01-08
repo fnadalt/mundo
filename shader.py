@@ -55,6 +55,7 @@ class GeneradorShader:
         nodo.setShader(shader, priority=prioridad)
         nodo.setShaderInput("posicion_sol", Vec3(0, 0, 0), priority=prioridad)
         nodo.setShaderInput("pos_pivot_camara", Vec3(0, 0, 0), priority=prioridad)
+        nodo.setShaderInput("color_luz_ambiental", Vec4(1, 1, 0.93, 1.0), priority=prioridad)
         nodo.setShaderInput("offset_periodo_cielo", 0.0, priority=prioridad)
         nodo.setShaderInput("color_cielo_base_inicial", Vec4(0, 0, 0, 0), priority=prioridad)
         nodo.setShaderInput("color_cielo_base_final", Vec4(0, 0, 0, 0), priority=prioridad)
