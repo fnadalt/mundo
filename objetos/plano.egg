@@ -1,0 +1,50 @@
+<CoordinateSystem> { Z-Up }
+
+<Comment> {
+  "egg-trans -F -o /tmp/plano.egg.tmp /home/flaco/panda3d/mundo/objetos/plano.egg"
+}
+<Material> Material {
+  <Scalar> diffr { 0.639999985694885 }
+  <Scalar> diffg { 0 }
+  <Scalar> diffb { 0.00566500006243587 }
+  <Scalar> diffa { 0 }
+  <Scalar> ambr { 1 }
+  <Scalar> ambg { 1 }
+  <Scalar> ambb { 1 }
+  <Scalar> emitr { 0 }
+  <Scalar> emitg { 0 }
+  <Scalar> emitb { 0 }
+  <Scalar> specr { 0.5 }
+  <Scalar> specg { 0.5 }
+  <Scalar> specb { 0.5 }
+  <Scalar> shininess { 12.5 }
+}
+<Group> Plane {
+  <VertexPool> Plane {
+    <Vertex> 0 {
+      -3 -3 0
+      <UV> { 0.0001 0.0001 }
+      <UV> ORCO { 0 0 }
+    }
+    <Vertex> 1 {
+      3 -3 0
+      <UV> { 0.9999 0.0001 }
+      <UV> ORCO { 1 0 }
+    }
+    <Vertex> 2 {
+      3 3 0
+      <UV> { 0.9999 0.9999 }
+      <UV> ORCO { 1 1 }
+    }
+    <Vertex> 3 {
+      -3 3 0
+      <UV> { 0.0001 0.9999 }
+      <UV> ORCO { 0 1 }
+    }
+  }
+  <Polygon> {
+    <Normal> { 0 0 1 }
+    <MRef> { Material }
+    <VertexRef> { 0 1 2 3 <Ref> { Plane } }
+  }
+}
