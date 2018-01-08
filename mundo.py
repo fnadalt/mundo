@@ -69,7 +69,8 @@ class Mundo(NodePath):
     def _establecer_material(self):
         log.info("_establecer_material")
         material=Material("material_mundo")
-        material.setAmbient((0.1, 0.1, 0.1, 1.0))
+#        material.setAmbient((0.1, 0.1, 0.1, 1.0))
+        material.setAmbient((1.0, 1.0, 1.0, 1.0))
         material.setDiffuse((1.0, 1.0, 1.0, 1.0))
         material.setSpecular((0.0, 0.0, 0.0, 1.0))
         material.setShininess(0)
@@ -191,7 +192,7 @@ class Mundo(NodePath):
     def _cargar_terreno(self):
         pos_inicial_foco=Mundo.PosInicialFoco
         # dia
-        self.dia=Dia(60.0, 0.53) #|(1800.0, 0.50)
+        self.dia=Dia(60.0, 0.93) #|(1800.0, 0.50)
         # terreno
         self.terreno=Terreno(self.base, self.bullet_world)
         self.terreno.iniciar()
@@ -200,7 +201,7 @@ class Mundo(NodePath):
         # cielo
         self.cielo=Cielo(self.base, Terreno.AltitudAgua-20.0)
         self.cielo.nodo.reparentTo(self)
-        self.setLight(self.cielo.luz)
+#        self.setLight(self.cielo.luz) reemplazado por shader input
         # sol
         self.sol=Sol(self.base, Terreno.AltitudAgua-20.0)
         self.sol.pivot.reparentTo(self) # self.cielo.nodo
@@ -262,6 +263,7 @@ class Mundo(NodePath):
             self.lblTemperatura["text"]="%.0fº"%self.terreno.obtener_temperatura_actual(temperatura_base_pivot_camara, altitud_pivot_camara, self.dia.hora_normalizada)
         # mundo
         #log.debug("_update posicion_sol %s"%(str(self.sol.nodo.getPos(self))))
+        self.setShaderInput("color_luz_ambiental", self.cielo.color_luz_ambiental, priority=10)
         self.setShaderInput("pos_pivot_camara", pos_pivot_camara, priority=10)
         self.setShaderInput("posicion_sol", self.sol.nodo.getPos(self), priority=10)
         self.setShaderInput("offset_periodo_cielo", self.cielo.offset_periodo, priority=10)

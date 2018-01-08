@@ -29,10 +29,11 @@ class Cielo:
         self.modelo.setLightOff(1)
         self.modelo.node().adjustDrawMask(DrawMask(3), DrawMask(4), DrawMask(0))
         # luz
-        self.luz=self.nodo.attachNewNode(AmbientLight("luz_ambiental"))
-        self.luz.node().setColor(Cielo.ColorNoche)
+#        self.luz=self.nodo.attachNewNode(AmbientLight("luz_ambiental"))
+#        self.luz.node().setColor(Cielo.ColorNoche)
         # variable externas:
         self.altitud_agua=altitud_agua
+        self.color_luz_ambiental=Cielo.ColorNoche
         self.offset_periodo=0.0
         self.color_cielo_base_inicial=Vec4(0, 0, 0, 0)
         self.color_cielo_base_final=Vec4(0, 0, 0, 0)
@@ -65,13 +66,14 @@ class Cielo:
             _offset_corregido*=2
         # luz ambiental
         _color_luz=Vec4(self._color_ambiente_inicial*(1.0-_offset_corregido))+Vec4(self._color_ambiente_final*_offset_corregido)
-        self.luz.node().setColor(_color_luz)
+        self.color_luz_ambiental=_color_luz
+#        self.luz.node().setColor(_color_luz)
         #
         self.offset_periodo=_offset_corregido
         self._offset_periodo_anterior=offset_periodo
     
     def obtener_info(self):
-        info="Cielo color_luz=%s\n"%(str(self.luz.node().getColor()))
+        info="Cielo color_luz=%s\n"%(str(self.color_luz_ambiental))
         return info
 
     def _procesar_cambio_periodo(self, periodo, post_pico):

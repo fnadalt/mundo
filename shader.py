@@ -281,6 +281,7 @@ varying vec4 PositionW; // clip
 uniform vec3 posicion_sol;
 uniform vec4 plano_recorte_agua;
 uniform vec3 pos_pivot_camara;
+uniform vec4 color_luz_ambiental;
 uniform float offset_periodo_cielo;
 uniform vec4 color_cielo_base_inicial;
 uniform vec4 color_cielo_base_final;
@@ -311,9 +312,9 @@ uniform float distancia_fog_maxima;
 uniform vec4 tinte_fog;
 """
 FS_LUZ="""
-uniform struct {
+/*uniform struct {
     vec4 ambient;
-} p3d_LightModel;
+} p3d_LightModel;*/
 uniform struct {
     vec4 ambient;
     vec4 diffuse;
@@ -355,7 +356,7 @@ FS_FUNC_LUZ="""
 // generico y terreno
 vec4 amb()
 {
-    return p3d_LightModel.ambient*p3d_Material.ambient;
+    return color_luz_ambiental*p3d_Material.ambient;
 }
 vec4 ds(int iLightSource)
 {
