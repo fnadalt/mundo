@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-5.1.dtd">
 <!-- eric project file for project mundo -->
-<!-- Saved: 2018-01-07, 22:23:29 -->
+<!-- Saved: 2018-01-09, 19:07:37 -->
 <!-- Copyright (C) 2018 Fernando Nadal Testa, fnt2006@gmail.com -->
 <Project version="5.1">
   <Language>en_US</Language>
@@ -44,8 +44,10 @@
     <Source>shaders/vs.sol.glsl</Source>
     <Source>shaders/vs.terreno.glsl</Source>
     <Source>sol.py</Source>
+    <Source>system.py</Source>
     <Source>terreno.py</Source>
     <Source>test_setInitialState.py</Source>
+    <Source>world.py</Source>
   </Sources>
   <Forms/>
   <Translations/>
