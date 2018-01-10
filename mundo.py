@@ -282,3 +282,25 @@ class Mundo(NodePath):
             self.debug_fisicaN.show()
         else:
             self.debug_fisicaN.hide()
+
+#
+#
+# MUNDO2
+#
+#
+class Mundo2:
+    
+    def __init__(self, base):
+        # referencias:
+        self.base=base
+        # componentes:
+        self.sistema
+    
+    def iniciar(self):
+        pass
+    
+    def terminar(self):
+        pass
+    
+    def update(self):
+        pass
