@@ -188,11 +188,15 @@ class Mundo(NodePath):
 #        tex0=Texture("tex_nubes")
 #        tex0.load(imagen)
 #        self.nubes.setTexture(ts0, tex0)
+        #
+        quebracho=self.base.loader.loadModel("objetos/quebracho.egg")
+        quebracho.reparentTo(self)
+        quebracho.setPos(self.hombre.cuerpo.getPos()+Vec3(0, -10, 0))
 
     def _cargar_terreno(self):
         pos_inicial_foco=Mundo.PosInicialFoco
         # dia
-        self.dia=Dia(60.0, 0.93) #|(1800.0, 0.50)
+        self.dia=Dia(1800.0, 0.53) #|(1800.0, 0.50)
         # terreno
         self.terreno=Terreno(self.base, self.bullet_world)
         self.terreno.iniciar()
