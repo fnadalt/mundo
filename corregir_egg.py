@@ -30,10 +30,10 @@ if os.path.exists(ruta_arch_temp):
     log.warning("el archivo temporal existe, se lo eliminará")
     os.remove(ruta_arch_temp)
 
-cmd0="egg-trans -F -o %s %s"%(ruta_arch_temp, ruta_archivo_origen)
+cmd0="egg-trans -F -o '%s' '%s'"%(ruta_arch_temp, ruta_archivo_origen)
 log.info("> "+cmd0)
 os.system(cmd0)
 
-cmd1="mv %s %s"%(ruta_arch_temp, ruta_archivo_origen)
+cmd1="mv '%s' '%s'"%(ruta_arch_temp, ruta_archivo_origen)
 log.info("> "+cmd1)
 os.system(cmd1)

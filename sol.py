@@ -44,7 +44,7 @@ class Sol:
         # luz direccional
         self.luz=self.nodo.attachNewNode(DirectionalLight("luz_solar"))
         self.luz.node().setColor(Vec4(1.0, 1.0, 0.7, 1.0))
-        self.luz.node().setShadowCaster(True, 1024, 1024)
+        #self.luz.node().setShadowCaster(True, 512, 512)
         # init:
         self._establecer_shaders()
     
@@ -95,7 +95,7 @@ class Sol:
         self.pivot.setPos(pos_pivot_camara)
         self.pivot.setR(360.0 * hora_normalizada)
         self.luz.lookAt(self.pivot)
-        self.luz.node().setColor(self._color_actual)
+        self.luz.node().setColor(self._color_actual*1.5)
         
     def _establecer_colores(self, offset_periodo, color_inicial=None):
         if self._periodo_actual==0:

@@ -164,7 +164,10 @@ class GeneradorShader:
             else:
                 if self._clase!=GeneradorShader.ClaseSol and self._clase!=GeneradorShader.ClaseSombra:
                     texto_fs+=FS_MAIN_FOG_COLOR
-                texto_fs+=FS_MAIN_ALPHA
+                if self._clase==GeneradorShader.ClaseGenerico:
+                    texto_fs+=FS_MAIN_ALPHA_TEX_GENERICO
+                else:
+                    texto_fs+=FS_MAIN_ALPHA
         texto_fs+=FS_MAIN_COLOR
         if self._clase!=GeneradorShader.ClaseAgua and self._clase!=GeneradorShader.ClaseCielo:
             texto_fs+=FS_MAIN_CLIP_FIN
@@ -447,7 +450,7 @@ vec4 tex_terreno()
         _color=info_tipo_factor<0.5?_color0:_color1;
     }
     //
-    _color.a=1.0;
+    //_color.a=1.0;
     return _color;
 }
 """
@@ -556,7 +559,8 @@ FS_MAIN_LUZ="""
 """
 FS_MAIN_TEX_GENERICO="""
         // textura: generico
-        color*=tex_generico();
+        vec4 color_tex=tex_generico();
+        color*=color_tex;
 """
 FS_MAIN_TEX_TERRENO="""
         // textura: terreno
@@ -590,6 +594,9 @@ FS_MAIN_CIELO="""
 """
 FS_MAIN_ALPHA="""
         color.a=1.0;
+"""
+FS_MAIN_ALPHA_TEX_GENERICO="""
+        color.a=color_tex.a;
 """
 FS_MAIN_ALPHA_AGUA="""
         color.a=1.0-fog_factor;

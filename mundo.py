@@ -69,9 +69,8 @@ class Mundo(NodePath):
     def _establecer_material(self):
         log.info("_establecer_material")
         material=Material("material_mundo")
-#        material.setAmbient((0.1, 0.1, 0.1, 1.0))
-        material.setAmbient((1.0, 1.0, 1.0, 1.0))
-        material.setDiffuse((1.0, 1.0, 1.0, 1.0))
+        material.setAmbient((0.2, 0.2, 0.2, 1.0))
+        material.setDiffuse((0.2, 0.2, 0.2, 1.0))
         material.setSpecular((0.0, 0.0, 0.0, 1.0))
         material.setShininess(0)
         self.setMaterial(material, 1)
@@ -190,8 +189,11 @@ class Mundo(NodePath):
 #        self.nubes.setTexture(ts0, tex0)
         #
         quebracho=self.base.loader.loadModel("objetos/quebracho.egg")
+        quebracho.setScale(0.666)
         quebracho.reparentTo(self)
         quebracho.setPos(self.hombre.cuerpo.getPos()+Vec3(0, -10, 0))
+        quebracho.setTwoSided(True)
+        #GeneradorShader.aplicar(quebracho, GeneradorShader.ClaseGenerico, 6)
 
     def _cargar_terreno(self):
         pos_inicial_foco=Mundo.PosInicialFoco

@@ -66,7 +66,7 @@ class Cielo:
             _offset_corregido*=2
         # luz ambiental
         _color_luz=Vec4(self._color_ambiente_inicial*(1.0-_offset_corregido))+Vec4(self._color_ambiente_final*_offset_corregido)
-        self.color_luz_ambiental=_color_luz
+        self.color_luz_ambiental=_color_luz*1.5
 #        self.luz.node().setColor(_color_luz)
         #
         self.offset_periodo=_offset_corregido
