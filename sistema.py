@@ -28,7 +28,9 @@ class Sistema:
     TerrenoTipoArena=0
     TerrenoTipoTierra=1
     TerrenoTipoYuyo=2
-    TerrenoTipoNieve=3
+    TerrenoTipoPedregoso=3
+    TerrenoTipoBarro=4
+    TerrenoTipoNieve=5
     # altitud
     AltitudNivelSubacuatico=0.0
     AltitudNivelLlano=TopoAltitudOceano+(1/4*TopoAlturaSobreOceano)
@@ -71,7 +73,7 @@ class Sistema:
     PrecipitacionIntensidadModerada=2
     PrecipitacionIntensidadTormenta=3
     # biomas
-    BiomaNull=0
+    BiomaNulo=0
     BiomaDesiertoPolar=1
     BiomaTundra=2
     BiomaTaiga=3
@@ -86,7 +88,6 @@ class Sistema:
     VegetacionTipoPlanta=2
     VegetacionTipoArbusto=3
     VegetacionTipoArbol=4
-    VegetacionTipoCactus=5
     VegetacionPerlinNoiseParams=(64.0, 9106) # (escala, semilla)
     
     def __init__(self):
@@ -200,6 +201,12 @@ class Sistema:
         # a implementar para terrenos 3D, con cuevas, etc...
         return 5.0*Sistema.TopoAltura
 
+    def obtener_altitud_suelo_supra_oceanica_norm(self, posicion):
+        altitud=self.obtener_altitud_suelo(posicion)
+        altitud-=TopoAltitudOceano
+        altitud/=TopoAlturaSobreOceano
+        return altitud
+
     def obtener_nivel_altitud(self, posicion):
         altitud=posicion.z
         if altitud<Sistema.AltitudNivelSubacuatico:
@@ -268,9 +275,11 @@ class Sistema:
         return amplitud
 
     def obtener_temperatura_anual_media(self, posicion):
+        altitud_normalizada=self.obtener_altitud_suelo_supra_oceanica_norm(posicion)
         latitud=self.obtener_latitud(posicion)
         temperatura=self.ruido_temperatura(posicion[0], posicion[1])*0.5+0.5
         temperatura-=abs(latitud)*0.2
+        temperatura-=abs(altitud_normalizada)*0.2
         return temperatura
 
     def obtener_precipitacion_frecuencia(self, posicion):
@@ -294,12 +303,12 @@ class Sistema:
         precipitacion_frecuencia=self.obtener_precipitacion_frecuencia(posicion)
         #
         if latitud==Sistema.LatitudPolar and transicion_latitud>0.0:
-            return Sistema.BiomaDesiertoPolar
-        if precipitacion_frecuencia<0.05:
-            return Sistema.BiomaDesierto
+            return (Sistema.BiomaDesiertoPolar, Sistema.BiomaNulo, 0.0)
+        if precipitacion_frecuencia<0.1:
+            return (Sistema.BiomaDesierto, Sistema.BiomaNulo, 0.0)
 
     def obtener_tipo_terreno(self, posicion):
-        pass
+        return (TerrenoTipoArena, TerrenoTipoTierra, 0.5)
 
     def obtener_descriptor_vegetacion(self, posicion, solo_existencia=False):
         pass
@@ -313,15 +322,15 @@ class TopoDescriptorLocacion:
     
     def __init__(self, posicion):
         # 3d
-        self.posicion=None
+        self.posicion=None # (latitud,transicion)
         self.altitud_tope=None # cuevas
         self.ambiente=None
         # 2d
         self.latitud=None
-        self.bioma=None
+        self.bioma=None # (bioma1,bioma2,factor_transicion)
         self.temperatura_amplitud_dianoche=None
-        self.temperatura_anual_media=None
-        self.precipitacion_frecuencia=None
+        self.temperatura_anual_media=None # smooth noise
+        self.precipitacion_frecuencia=None # smooth noise
         self.inclinacion_solar_anual_media=None
 
 #

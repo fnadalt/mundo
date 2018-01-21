@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-5.1.dtd">
 <!-- eric project file for project mundo -->
-<!-- Saved: 2018-01-10, 19:47:52 -->
+<!-- Saved: 2018-01-21, 12:13:09 -->
 <!-- Copyright (C) 2018 Fernando Nadal Testa, fnt2006@gmail.com -->
 <Project version="5.1">
   <Language>en_US</Language>
@@ -16,6 +16,7 @@
     <Source>__init__.py</Source>
     <Source>agua.py</Source>
     <Source>aplicacion.py</Source>
+    <Source>biomas.txt</Source>
     <Source>camara.py</Source>
     <Source>cielo.py</Source>
     <Source>corregir_egg.py</Source>
@@ -53,6 +54,7 @@
   <Resources/>
   <Interfaces/>
   <Others>
+    <Other>biomas.txt</Other>
     <Other>objetos.csv</Other>
     <Other>shaders/blur_x.f.glsl</Other>
     <Other>shaders/blur_y.f.glsl</Other>
