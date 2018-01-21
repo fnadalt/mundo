@@ -1,4 +1,5 @@
 tabla,gpo_altitud,gpo_temp_base,tipo,densidad,radio_inferior,radio_superior,ambiente,nombre_archivo
+naturaleza,4,2,1,0.56,1.0,3.5,2,quebracho
 naturaleza,4,2,1,0.56,1.0,3.5,2,arbol.01
 naturaleza,4,2,1,0.65,1.0,3.5,2,arbol.02
 naturaleza,4,2,1,0.65,1.0,3.5,2,arbol.04

@@ -60,7 +60,7 @@ class Terreno:
         self.pos_foco_inicial=[0, 0]
         self.idx_pos_parcela_actual=None # (x,y)
         self.altura_sobre_agua=Terreno.AlturaMaxima-Terreno.AltitudAgua
-        self.switch_lod_naturaleza=(5.0*Terreno.TamanoParcela, 0.0)
+        self.switch_lod_naturaleza=(6.0*Terreno.TamanoParcela, 0.0)
         # debug
         self.dibujar_normales=False # cada update
         # variables internas:
@@ -398,7 +398,7 @@ class Terreno:
         lod0.node().addSwitch(*self.switch_lod_naturaleza)
         nodo.reparentTo(lod0)
         #
-        return nodo
+        return lod0
 
     def _establecer_shader(self):
         # texturas

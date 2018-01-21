@@ -189,7 +189,7 @@ class Mundo(NodePath):
 #        self.nubes.setTexture(ts0, tex0)
         #
         quebracho=self.base.loader.loadModel("objetos/quebracho.egg")
-        quebracho.setScale(0.666)
+        quebracho.setScale(0.5)
         quebracho.reparentTo(self)
         quebracho.setPos(self.hombre.cuerpo.getPos()+Vec3(0, -10, 0))
         quebracho.setTwoSided(True)
@@ -223,14 +223,14 @@ class Mundo(NodePath):
 
     def _update(self, task):
         info=""
-        info+=self.dia.obtener_info()+"\n"
+        #info+=self.dia.obtener_info()+"\n"
         #info+=self.terreno.obtener_info()+"\n"
         #info+=self.hombre.obtener_info()+"\n"
         #info+=self.agua.obtener_info()+"\n"
         #info+=self.input_mapper.obtener_info()+"\n"
-        info+=self.cielo.obtener_info()
-        info+=self.sol.obtener_info()+"\n"
-        self.texto1.setText(info)
+        #info+=self.cielo.obtener_info()
+        #info+=self.sol.obtener_info()+"\n"
+        #self.texto1.setText(info)
         # tiempo
         dt=self.base.taskMgr.globalClock.getDt()
         # input
