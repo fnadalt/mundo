@@ -1,8 +1,11 @@
 #
-BiomaNull=0
+BiomaNulo=0
 
 #
 BiomaDesiertoPolar=1
+# latitud
+# temperatura:
+# precipitacion:
 #
 Yuyos:
 Plantas:
@@ -11,61 +14,77 @@ Arboles:
 
 #
 BiomaTundra=2
+# latitud: LatitudPolar verano<10ºC
+# temperatura: <0.33
+# precipitacion: <0.3
 #
 Yuyos:
-Plantas:
-Arbustos:
-Arboles:
+Plantas: herbáceas
+Arbustos: no
+Arboles: no
 
 #
 BiomaTaiga=3
+# latitud: LatitudFria
+# temperatura: <0.33 <10ºC (frío,templado) [0,10]ºC
+# precipitacion: 0.2<p<0.5
 #
 Yuyos:
 Plantas:
 Arbustos:
-Arboles:
+Arboles: coníferas; alerces, piceas, abetos, pinos, araucacia, arrayán, ciprés, alerce
 
 #
 BiomaBosqueMediterraneo=4
+# latitud: LatitudSubtropical,LatitudFria
+# temperatura: 0.33<t<0.66
+# precipitacion: <0.5
 #
 Yuyos:
 Plantas:
 Arbustos:
-Arboles:
+Arboles: alcornoque, roble quejigo, [palo borracho, urunday, algarrobos]->bosque_chaqueño,?
 
 #
 BiomaBosqueCaducifolio=5
+# latitud: LatitudSubtropical,LatitudFria
+# temperatura: 0.33<t<0.66 10<t<18ºC (subtropical) invierno,<18
+# precipitacion: >0.5
 #
 Yuyos:
 Plantas:
 Arbustos:
-Arboles:
+Arboles: hayas, robles, avellanos, olmos, castaños
 
 #
 BiomaDesierto=6
+# latitud: LatitudTropical, LatitudSubtropical, LatitudFria
+# temperatura:
+# precipitacion: <0.2
 #
 Yuyos:
 Plantas:
-Arbustos:
+Arbustos: cardón, queñoa
 Arboles:
 
 #
 BiomaSavanah=7
 # latitud: LatitudTropical
-# temperatura:
-# precipitacion: <0.75
+# temperatura: >0.5 >20ºC (cálido) invierno,18
+# precipitacion: <0.4
+#
 Yuyos:
-Plantas:
-Arbustos:
-Arboles:
+Plantas: herbáceas
+Arbustos: escasos; cactus?, jarilla
+Arboles: escasos; sauce, algarrobo, remato, chañar
 
 #
 BiomaSelvaTropical=8
 # latitud: LatitudTropical
-# temperatura: >0.65
+# temperatura: >0.65 >20ºC (cálido) invierno,18
 # precipitacion: >0.75
 #
 Yuyos:
-Plantas:
+Plantas: helechos, orquídeas, begonias
 Arbustos:
 Arboles: quebracho, tipa, laurel, lapacho, nispero, palta, mango, tarco
