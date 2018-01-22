@@ -1,0 +1,71 @@
+#
+BiomaNull=0
+
+#
+BiomaDesiertoPolar=1
+#
+Yuyos:
+Plantas:
+Arbustos:
+Arboles:
+
+#
+BiomaTundra=2
+#
+Yuyos:
+Plantas:
+Arbustos:
+Arboles:
+
+#
+BiomaTaiga=3
+#
+Yuyos:
+Plantas:
+Arbustos:
+Arboles:
+
+#
+BiomaBosqueMediterraneo=4
+#
+Yuyos:
+Plantas:
+Arbustos:
+Arboles:
+
+#
+BiomaBosqueCaducifolio=5
+#
+Yuyos:
+Plantas:
+Arbustos:
+Arboles:
+
+#
+BiomaDesierto=6
+#
+Yuyos:
+Plantas:
+Arbustos:
+Arboles:
+
+#
+BiomaSavanah=7
+# latitud: LatitudTropical
+# temperatura:
+# precipitacion: <0.75
+Yuyos:
+Plantas:
+Arbustos:
+Arboles:
+
+#
+BiomaSelvaTropical=8
+# latitud: LatitudTropical
+# temperatura: >0.65
+# precipitacion: >0.75
+#
+Yuyos:
+Plantas:
+Arbustos:
+Arboles: quebracho, tipa, laurel, lapacho, nispero, palta, mango, tarco
