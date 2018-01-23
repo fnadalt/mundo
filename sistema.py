@@ -11,9 +11,9 @@ log=logging.getLogger(__name__)
 # altitud(TopoPerlinNoiseParams,TopoAltura)
 # latitud(posicion_cursor.y)
 # temperatura(TemperaturaPerlinNoiseParams,altitud,latitud)
-# precipitacion(RainPerlinNoiseParams,altitud,latitud)
+# precipitacion_frecuencia(RainPerlinNoiseParams,altitud,latitud)
 # bioma(temperatura_anual_media,precipitacion_frecuencia,latitud,altitud)
-# vegetacion(bioma,?)
+# vegetacion(temperatura_anual_media,precipitacion_frecuencia) ?
 class Sistema:
     
     # topografia
@@ -198,7 +198,7 @@ class Sistema:
         return altitud
 
     def obtener_altitud_tope(self, posicion):
-        # a implementar para terrenos 3D, con cuevas, etc...
+        # a implementar para grillas 3D, con cuevas, etc...
         return 5.0*Sistema.TopoAltura
 
     def obtener_altitud_suelo_supra_oceanica_norm(self, posicion):
