@@ -26,6 +26,7 @@ class Sistema:
     TopoPerlinNoiseParams=[(256.0, 1.0), (64.0, 0.2), (32.0, 0.075), (16.0, 0.005), (8.0, 0.001)] # [(escala, amplitud), ...]
     TopoPerlinNoiseEscalaGlobal=1.0
     # terrenos; alpha para splatting
+    TerrenoPerlinNoiseParams=(64.0, 1199) # (escala, semilla)
     TerrenoTipoNulo=0
     TerrenoTipoNieve=1 # alpha=1.0 (tope)
     TerrenoTipoTundra=2 # alpha=0.0 (fondo)
@@ -100,12 +101,15 @@ class Sistema:
     def __init__(self):
         # componentes:
         self.ruido_topo=None
+        self.ruido_terreno=None
         self.ruido_temperatura=None
         self.ruido_precipitacion=None
         self.ruido_vegetacion=None
         # cursor:
         self.posicion_cursor=None
-        # variables:
+        # parametros:
+        self.duracion_dia_segundos=1800
+        # variables externas:
         self.ano=0
         self.dia=0
         self.periodo_dia=Sistema.DiaPeriodoAmanecer
@@ -115,6 +119,7 @@ class Sistema:
         self.precipitacion_actual_intensidad=Sistema.PrecipitacionIntensidadNula
         self.precipitacion_actual_duracion=0.0
         self.precipitacion_actual_t=0.0
+        # variables internas:
 
     def cargar_parametros_iniciales(self, defecto=True):
         if defecto:
@@ -143,9 +148,9 @@ class Sistema:
         pass
     
     def update(self, dt):
-        self._establecer_fecha_hora_estacion()
-        self._establecer_temperatura_actual()
-        self._establecer_precipitacion()
+        self._establecer_fecha_hora_estacion(dt)
+        self._establecer_temperatura_actual(dt)
+        self._establecer_precipitacion(dt)
 
     def obtener_descriptor_locacion(self, posicion):
         desc=TopoDescriptorLocacion(posicion)
@@ -337,8 +342,15 @@ class Sistema:
         #
         return (bioma1, bioma2, factor_transicion)
 
-    def obtener_tipo_terreno(self, posicion):
-        return (TerrenoTipoArena, TerrenoTipoTierra, 0.5)
+    def obtener_tipo_terreno(self, posicion): # f()->(terreno_base,terreno_superficie,factor_transicion)
+        bioma1, bioma2, factor_transicion=self.obtener_bioma_transicion(posicion)
+        ruido_terreno=self.ruido_terreno(posicion[0], posicion[1])*0.5+0.5
+        bioma_terreno_base, bioma_terreno_superficie=self._obtener_terreno_bioma(bioma1)
+        if factor_transicion>0.0 and ruido_terreno>0.5:
+            bioma_terreno_base, bioma_terreno_superficie=self._obtener_terreno_bioma(bioma2)
+            ruido_terreno-=0.5
+            ruido_terreno*=2.0
+        return (bioma_terreno_base, bioma_terreno_superficie, ruido_terreno)
 
     def obtener_descriptor_vegetacion(self, posicion, solo_existencia=False):
         pass
@@ -356,6 +368,10 @@ class Sistema:
             _escala=escala*Sistema.TopoPerlinNoiseEscalaGlobal
             _ruido=PerlinNoise2(_escala, _escala, 256, Sistema.TopoPerlinNoiseSeed)
             self.ruido_topo.addLevel(_ruido, _amp)
+        # terreno
+        _escala=Sistema.TerrenoPerlinNoiseParams[0]
+        _semilla=Sistema.TerrenoPerlinNoiseParams[1]
+        self.ruido_terreno=PerlinNoise2(_escala, _escala, 256, _semilla)
         # temperatura
         _escala=Sistema.TemperaturaPerlinNoiseParams[0]
         _semilla=Sistema.TemperaturaPerlinNoiseParams[1]
@@ -416,13 +432,31 @@ class Sistema:
                 delta=-1 if offset_pos_columna<0.0 else 1
                 return ((delta, 0), factor)
 
-    def _establecer_fecha_hora_estacion(self):
+    def _obtener_terreno_bioma(self, bioma): # f()->(tipo_terreno_base,tipo_terreno_superficie)
+        if bioma==Sistema.BiomaDesiertoPolar:
+            tipo_terreno_base=Sistema.TerrenoTipoTundra
+            tipo_terreno_superficie=Sistema.TerrenoTipoNieve
+        elif bioma==Sistema.BiomaTundra:
+            tipo_terreno_base=Sistema.TerrenoTipoTundra
+            tipo_terreno_superficie=Sistema.TerrenoTipoTundra
+        elif bioma==Sistema.BiomaBosqueMediterraneo or bioma==Sistema.BiomaSavannah:
+            tipo_terreno_base=Sistema.TerrenoTipoTierraSeca
+            tipo_terreno_superficie=Sistema.TerrenoTipoPastoSeco
+        elif bioma==Sistema.BiomaTaiga or bioma==Sistema.BiomaBosqueCaducifolio or bioma==Sistema.BiomaSelva:
+            tipo_terreno_base=Sistema.TerrenoTipoTierraHumeda
+            tipo_terreno_superficie=Sistema.TerrenoTipoPastoHumedo
+        elif bioma==Sistema.BiomaDesierto:
+            tipo_terreno_base=Sistema.TerrenoTipoArenaSeca
+            tipo_terreno_superficie=Sistema.TerrenoTipoArenaSeca
+        return (tipo_terreno_base, tipo_terreno_superficie)
+
+    def _establecer_fecha_hora_estacion(self, dt):
         pass
 
-    def _establecer_temperatura_actual(self):
+    def _establecer_temperatura_actual(self, dt):
         pass
     
-    def _establecer_precipitacion(self):
+    def _establecer_precipitacion(self, dt):
         pass
 
 #
