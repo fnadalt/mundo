@@ -1,3 +1,12 @@
+# tabla
+#
+#               temperatura anual media
+#             # [-30.0,-15.0) # [-15.0,+00.0) # [+00.0,+15.0] # [+15.0,+30.0]
+# precipitac  #
+# [0.00,0.33) # DesiertoPolar # Tundra        # Desierto      # Desierto
+# [0.33,0.66) # DesiertoPolar # Taiga         # BosqueMeditrr # Savannah
+# [0.66,1.00] # DesiertoPolar # Taiga         # BosqueCaducif # Selva
+
 #
 BiomaNulo=0
 
