@@ -1,4 +1,5 @@
 from panda3d.core import *
+import math
 
 import logging
 log=logging.getLogger(__name__)
@@ -20,6 +21,7 @@ class Sistema:
     
     # topografia
     TopoExtension=8*1024 # +/-TopoExtension; ecuador=0
+    TopoExtensionTransicion=TopoExtension+1024
     TopoAltura=300.0
     TopoAltitudOceano=TopoAltura/2.0
     TopoAlturaSobreOceano=TopoAltura-TopoAltitudOceano
@@ -69,10 +71,10 @@ class Sistema:
     DiaPeriodoAtardecer=3
     DiaPeriodosHorariosN=(0.05, 0.45, 0.55, 0.95)
     # temperatura; [0,1]->[-50,50]; media: [0.2,0.8]->[-30,30]
-    TemperaturaPerlinNoiseParams=(8*1024.0, 196) # (escala, semilla)
+    TemperaturaPerlinNoiseParams=(2*1024.0, 196) # (escala, semilla)
     TemperaturaAmplitudTermicaMaxima=0.4
     # precipitaciones; [0.0,1.0): 0.0=nula, 1.0=maxima
-    PrecipitacionFrecuenciaPerlinNoiseParams=(2*1024.0, 9016) # (escala, semilla)
+    PrecipitacionFrecuenciaPerlinNoiseParams=(1*1024.0, 9016) # (escala, semilla)
     PrecipitacionNubosidadPerlinNoiseParams=(1024.0, 9016) # (escala, semilla)
     PrecipitacionNubosidadGatillo=0.75
     PrecipitacionTipoAgua=0
@@ -183,6 +185,14 @@ class Sistema:
                 log.warning("obtener_altitud_suelo altitud>Sistema.TopoAltura, recortando...")
                 altitud=Sistema.TopoAltura
         #
+        if abs(posicion[0])>Sistema.TopoExtension or abs(posicion[1])>Sistema.TopoExtension:
+            factor_transicion=0.0
+            if abs(posicion[0])>Sistema.TopoExtension:
+                factor_transicion+=(abs(posicion[0])-Sistema.TopoExtension)/(Sistema.TopoExtensionTransicion-Sistema.TopoExtension)
+            if abs(posicion[1])>Sistema.TopoExtension:
+                factor_transicion+=(abs(posicion[1])-Sistema.TopoExtension)/(Sistema.TopoExtensionTransicion-Sistema.TopoExtension)
+            altitud=min(Sistema.TopoAltura, altitud+Sistema.TopoAltura*factor_transicion)
+        #
         return altitud
 
     def obtener_altitud_tope(self, posicion):
@@ -266,14 +276,14 @@ class Sistema:
         return amplitud
 
     def obtener_temperatura_anual_media_norm(self, posicion):
-        print("obtener_temperatura_anual_media_norm (%.2f,%.2f)"%(posicion[0], posicion[1]))
+        #print("obtener_temperatura_anual_media_norm (%.2f,%.2f)"%(posicion[0], posicion[1]))
         altitud_normalizada=self.obtener_altitud_suelo_supra_oceanica_norm(posicion)
         latitud=self.obtener_latitud_norm(posicion)
         temperatura=self.ruido_temperatura(posicion[0], posicion[1])*0.5+0.5
-        temperatura-=abs(latitud)*0.25
-        temperatura-=abs(altitud_normalizada)*0.25
+        temperatura-=abs(latitud)*0.05
+        temperatura-=abs(altitud_normalizada)*0.05
         temperatura=0.2+max(temperatura,0.0)*0.6 # ajustar a rango de temperatura_media [0.2,0.8]
-        print("temperatura_anual_media %.3f"%temperatura)
+        #print("temperatura_anual_media %.3f"%temperatura)
         return temperatura
 
     def obtener_temperatura_grados(self, temperatura_normalizada):
@@ -282,10 +292,10 @@ class Sistema:
         return temperatura_grados
 
     def obtener_precipitacion_frecuencia_anual(self, posicion):
-        print("obtener_precipitacion_frecuencia_anual (%.2f,%.2f)"%(posicion[0], posicion[1]))
+        #print("obtener_precipitacion_frecuencia_anual (%.2f,%.2f)"%(posicion[0], posicion[1]))
         #
         frecuencia=self.ruido_precipitacion(posicion[0], posicion[1])*0.5+0.5
-        print("frecuencia %.3f"%frecuencia)
+        #print("frecuencia %.3f"%frecuencia)
         return frecuencia
 
     def obtener_inclinacion_solar_anual_media(self, posicion):
@@ -307,6 +317,7 @@ class Sistema:
         #
         temperatura_anual_media=self.obtener_temperatura_anual_media_norm(posicion)
         precipitacion_frecuencia=self.obtener_precipitacion_frecuencia_anual(posicion)
+        #log.debug("obtener_bioma pos=%s tam=%.3f prec_f=%.3f"%(posicion, temperatura_anual_media, precipitacion_frecuencia))
         #
         if temperatura_anual_media<0.35:
             return Sistema.BiomaDesiertoPolar
@@ -322,13 +333,16 @@ class Sistema:
                 return Sistema.BiomaBosqueMediterraneo
             elif precipitacion_frecuencia>=0.66:
                 return Sistema.BiomaBosqueCaducifolio
-        elif temperatura_anual_media>=0.80:
+        elif temperatura_anual_media>=0.65:
             if precipitacion_frecuencia<0.33:
                 return Sistema.BiomaDesierto
             elif precipitacion_frecuencia>=0.33 and precipitacion_frecuencia<0.66:
                 return Sistema.BiomaSavannah
             elif precipitacion_frecuencia>=0.66:
                 return Sistema.BiomaSelva
+        else:
+            log.error("caso no contemplado: tam=%.3f p_frec=%.3f"%(temperatura_anual_media, precipitacion_frecuencia))
+            return Sistema.BiomaNulo
 
     def obtener_bioma_transicion(self, posicion):
         #
@@ -580,12 +594,32 @@ from direct.showbase.ShowBase import ShowBase
 from direct.gui.DirectGui import *
 class Tester(ShowBase):
 
-    ColoresTipoTerreno={Terreno.TipoNulo:Vec4(0, 0, 0, 255), 
-                        Terreno.TipoArena:Vec4(240, 230, 0, 255), 
-                        Terreno.TipoTierra1:Vec4(70, 60, 0, 255), 
-                        Terreno.TipoPasto:Vec4(0, 190, 10, 255), 
-                        Terreno.TipoTierra2:Vec4(70, 60, 0, 255), 
-                        Terreno.TipoNieve:Vec4(250, 250, 250, 255)
+    TipoImagenTopo=0
+    TipoImagenTemperaturaAM=1
+    TipoImagenTemperaturaPrecip=2
+    TipoImagenBioma=3
+    TipoImagenTerreno=4
+    
+    ColoresTipoTerreno={Sistema.TerrenoTipoNulo:Vec4(0, 0, 0, 255), 
+                        Sistema.TerrenoTipoNieve:Vec4(248, 248, 248, 255), 
+                        Sistema.TerrenoTipoTundra:Vec4(107, 107, 139, 255), 
+                        Sistema.TerrenoTipoTierraSeca:Vec4(255, 251, 115, 255), 
+                        Sistema.TerrenoTipoTierraHumeda:Vec4(102, 87, 40, 255), 
+                        Sistema.TerrenoTipoPastoSeco:Vec4(171, 229, 155, 255), 
+                        Sistema.TerrenoTipoPastoHumedo:Vec4(31, 138, 35, 255), 
+                        Sistema.TerrenoTipoArenaSeca:Vec4(255, 213, 2, 255), 
+                        Sistema.TerrenoTipoArenaHumeda:Vec4(68, 255, 255, 255)
+                        }
+
+    ColoresBioma={Sistema.BiomaNulo:Vec4(0, 0, 0, 255), 
+                        Sistema.BiomaDesiertoPolar:Vec4(248, 248, 248, 255), 
+                        Sistema.BiomaTundra:Vec4(68, 255, 255, 255), 
+                        Sistema.BiomaTaiga:Vec4(36, 73, 239, 255), 
+                        Sistema.BiomaBosqueCaducifolio:Vec4(195, 92, 7, 255), 
+                        Sistema.BiomaBosqueMediterraneo:Vec4(255, 170, 0, 255), 
+                        Sistema.BiomaSavannah:Vec4(184, 255, 70, 255), 
+                        Sistema.BiomaSelva:Vec4(64, 141, 70, 255), 
+                        Sistema.BiomaDesierto:Vec4(255, 250, 174, 255)
                         }
 
     def __init__(self):
@@ -594,241 +628,117 @@ class Tester(ShowBase):
         self.disableMouse()
         self.win.setClearColor(Vec4(0.95, 1.0, 1.0, 1.0))
         #
-        bullet_world=BulletWorld()
-        #
         self.pos_foco=None
-        self.cam_pitch=30.0
-        self.escribir_archivo=False # cada update
-        #
-        GeneradorShader.iniciar(Terreno.AltitudAgua, Vec4(0, 0, 1, Terreno.AltitudAgua))
-        GeneradorShader.aplicar(self.render, GeneradorShader.ClaseGenerico, 1)
-        self.render.setShaderInput("distancia_fog_maxima", 3000.0, 0, 0, 0, priority=3)
-        #
-        self.terreno=Terreno(self, bullet_world)
-        self.terreno.iniciar()
-        #self.terreno.nodo.setRenderModeWireframe()
         #
         plano=CardMaker("plano_agua")
-        r=Terreno.TamanoParcela*6
+        r=0.0 # !!!
         plano.setFrame(-r, r, -r, r)
         plano.setColor((0, 0, 1, 1))
-        self.plano_agua=self.render.attachNewNode(plano.generate())
-        self.plano_agua=self.loader.loadModel("objetos/plano_agua")
-        self.plano_agua.reparentTo(self.render)
-        self.plano_agua.setScale(0.5)
-        #self.plano_agua.setP(-90.0)
-        #self.plano_agua.hide()
-        #
-        self.cam_driver=self.render.attachNewNode("cam_driver")
-        self.camera.reparentTo(self.cam_driver)
-        self.camera.setPos(Terreno.TamanoParcela/2, 500, 100)
-        self.camera.lookAt(self.cam_driver)
-        self.cam_driver.setP(self.cam_pitch)
-        #
-        self.luz_ambiental=self.render.attachNewNode(AmbientLight("luz_ambiental"))
-        self.luz_ambiental.node().setColor(Vec4(1, 1, 1, 1))
-        #
-        self.sun=self.render.attachNewNode(DirectionalLight("sun"))
-        self.sun.node().setColor(Vec4(1, 1, 1, 1))
-        self.sun.setPos(self.terreno.nodo, 100, 100, 100)
-        self.sun.lookAt(self.terreno.nodo)
-        #
-        self.render.setLight(self.sun)
-        #
-        self.texturaImagen=None
-        self.imagen=None
-        self.zoom_imagen=1
+        self.plano=self.render.attachNewNode(plano.generate())
         #
         self.tipo_imagen=Tester.TipoImagenTopo
         #
-        self.taskMgr.add(self.update, "update")
-        self.accept("wheel_up", self.zoom, [1])
-        self.accept("wheel_down", self.zoom, [-1])
+        self.texturaImagen=None
+        self.imagen=None
+        self.zoom_imagen=8
+        #
+        #self.accept("wheel_up", self.zoom, [1])
+        #
+        self.sistema=Sistema()
+        self.sistema.iniciar()
         #
         self._cargar_ui()
+        self._ir_a_pos()
         
-    def update(self, task):
-        nueva_pos_foco=self.pos_foco[:] if self.pos_foco else self.terreno.pos_foco_inicial
-        #
-        mwn=self.mouseWatcherNode
-        if mwn.isButtonDown(KeyboardButton.up()):
-            nueva_pos_foco[1]-=32
-        elif mwn.isButtonDown(KeyboardButton.down()):
-            nueva_pos_foco[1]+=32
-        elif mwn.isButtonDown(KeyboardButton.left()):
-            nueva_pos_foco[0]+=32
-        elif mwn.isButtonDown(KeyboardButton.right()):
-            nueva_pos_foco[0]-=32
-        #
-        if nueva_pos_foco!=self.pos_foco:
-            log.info("update pos_foco=%s"%str(nueva_pos_foco))
-            self.pos_foco=nueva_pos_foco
-            self._actualizar_terreno(self.pos_foco)
-        return task.cont
-    
-    def zoom(self, dir):
-        dy=25*dir
-        self.camera.setY(self.camera, dy)
-
-    def analizar_altitudes(self, pos_foco, tamano=1024):
-        log.info("analizar_altitudes en %ix%i"%(tamano, tamano))
-        i=0
-        media=0
-        vals=list()
-        min=999999
-        max=-999999
-        for x in range(tamano):
-            for y in range(tamano):
-                a=self.terreno.obtener_altitud((pos_foco[0]+x, pos_foco[1]+y))
-                vals.append(a)
-                if a>max:
-                    max=a
-                if a<min:
-                    min=a
-                media=((media*i)+a)/(i+1)
-                i+=1
-        sd=0
-        for val in vals:  sd+=((val-media)*(val-media))
-        sd/=(tamano*tamano)
-        sd=math.sqrt(sd)
-        log.info("analizar_altitudes rango:[%.3f/%.3f] media=%.3f sd=%.3f"%(min, max, media, sd))
-
-    def _actualizar_terreno(self, pos):
-        log.info("_actualizar_terreno pos=%s"%(str(pos)))
-        #
-        self.terreno.update(pos)
-        if self.escribir_archivo:
-            log.info("escribir_archivo")
-            self.terreno.nodo.writeBamFile("terreno.bam")
-        self.plano_agua.setPos(Vec3(pos[0], pos[1], Terreno.AltitudAgua))
-        #
-        self.cam_driver.setPos(Vec3(pos[0]+Terreno.TamanoParcela/2, pos[1]-Terreno.TamanoParcela, Terreno.AltitudAgua))
-        #
-        self.lblInfo["text"]=self.terreno.obtener_info()
-        #
-        self.pos_foco=pos
-        #
-        self._generar_imagen()
-
     def _generar_imagen(self):
         log.info("_generar_imagen")
-        if self.tipo_imagen==Tester.TipoImagenTopo:
-            self._generar_imagen_topo()
-        elif self.tipo_imagen==Tester.TipoImagenTiposTerreno:
-            self._generar_imagen_tipos_terreno()
-        elif self.tipo_imagen==Tester.TipoImagenEspacios:
-            self._generar_imagen_espacios()
-
-    def _generar_imagen_topo(self):
-        log.info("_generar_imagen_topo")
         #
         tamano=128
         if not self.imagen:
             self.imagen=PNMImage(tamano+1, tamano+1)
             self.texturaImagen=Texture()
             self.frmImagen["image"]=self.texturaImagen
-            self.frmImagen["image_scale"]=0.4
+            self.frmImagen["image_scale"]=0.75
         #
-        zoom=self.zoom_imagen*Terreno.TamanoParcela/tamano
-        log.info("zoom: %.2f"%(zoom))
+        zoom=self.zoom_imagen
         for x in range(tamano+1):
             for y in range(tamano+1):
-                _x=tamano-self.pos_foco[0]+x
-                _y=tamano-self.pos_foco[1]+y
-                a=self.terreno.obtener_altitud((_x, _y))
-                c=int(255*a/Terreno.AlturaMaxima)
-                if x==tamano/2 or y==tamano/2:
-                    c=255
-                else:
-                    if a>Terreno.AltitudAgua:
-                        tb=self.terreno.obtener_temperatura_base((_x, _y))
-                        tt=self.terreno.obtener_tipo_terreno_tuple((_x, _y), tb, a)
-                        c0=None
-                        c1=None
-                        if tt[2]==0.0:
-                            c=Tester.ColoresTipoTerreno[tt[0]]
-                        elif tt[2]==1.0:
-                            c=Tester.ColoresTipoTerreno[tt[1]]
-                        else:
-                            c0=Tester.ColoresTipoTerreno[tt[0]]
-                            c1=Tester.ColoresTipoTerreno[tt[1]]
-                            c=(c0*(1-tt[2]))+(c1*tt[2])
-                        #log.debug("_generar_imagen tt=%s c0=%s c1=%s c=%s"%(str(tt), str(c0), str(c1), str(c)))
+                _x=self.pos_foco[0]+(x-tamano/2)*zoom
+                _y=self.pos_foco[1]+(y-tamano/2)*zoom
+                if self.tipo_imagen==Tester.TipoImagenTopo:
+                    a=self.sistema.obtener_altitud_suelo((_x, _y))
+                    c=3*[int(255*a/Sistema.TopoAltura)]
+                    if a>Sistema.TopoAltitudOceano:
                         self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(int(c[0]), int(c[1]), int(c[2]), 255))
                     else:
-                        self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(0, 0, c, 255))
+                        self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(0, 0, c[0], 255))
+                elif self.tipo_imagen==Tester.TipoImagenTerreno:
+                    a=self.sistema.obtener_altitud_suelo((_x, _y))
+                    terreno_base, terreno_superficie, factor_transicion=self.sistema.obtener_tipo_terreno((_x, _y))
+                    color_base=Tester.ColoresTipoTerreno[terreno_base]
+                    color_superficie=Tester.ColoresTipoTerreno[terreno_superficie]
+                    c=(color_base*(1.0-factor_transicion))+(color_superficie*factor_transicion)
+                    c[3]=1.0
+                    if a>Sistema.TopoAltitudOceano:
+                        self.imagen.setXelA(x, y, c/255)
+                    else:
+                        self.imagen.setXel(x, y, 0.0)
+                elif self.tipo_imagen==Tester.TipoImagenTemperaturaAM:
+                    c=self.sistema.obtener_temperatura_anual_media_norm((_x, _y))
+                    self.imagen.setXel(x, y, c)
+                elif self.tipo_imagen==Tester.TipoImagenTemperaturaPrecip:
+                    c=self.sistema.obtener_precipitacion_frecuencia_anual((_x, _y))
+                    self.imagen.setXel(x, y, c)
+                elif self.tipo_imagen==Tester.TipoImagenBioma:
+                    a=self.sistema.obtener_altitud_suelo((_x, _y))
+                    if a>Sistema.TopoAltitudOceano:
+                        c=self.sistema.obtener_bioma((_x, _y))
+                        #log.debug("bioma=%i"%c)
+                        _c=Tester.ColoresBioma[c]
+                        self.imagen.setXelA(x, y, _c/256)
+                    else:
+                        self.imagen.setXel(x, y, 0.0)
         #
         self.texturaImagen.load(self.imagen)
 
-    def _generar_imagen_tipos_terreno(self):
-        #
-        tamano=128
-        if not self.imagen:
-            self.imagen=PNMImage(tamano+1, tamano+1)
-            self.texturaImagen=Texture()
-            self.frmImagen["image"]=self.texturaImagen
-            self.frmImagen["image_scale"]=0.4
-        #
-        for x in range(tamano+1):
-            for y in range(tamano+1):
-                t=x/(tamano+1)
-                a=(y/(tamano+1))*Terreno.AlturaMaxima
-                tt=self.terreno.obtener_tipo_terreno_tuple((0, 0), t, a)
-                c0=Tester.ColoresTipoTerreno[tt[0]]
-                c1=Tester.ColoresTipoTerreno[tt[1]]
-                color=None
-                if tt[2]>0.0:
-                    color=(c0*(1.0-tt[2]))+(c1*tt[2])
-                else:
-                    color=c0
-                color=(int(color[0]), int(color[1]), int(color[2]), 255)
-                self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(color[0], color[1], color[2], 255))
-        #
-        self.texturaImagen.load(self.imagen)
-
-    def _generar_imagen_espacios(self):
-        log.info("_generar_imagen_espacios no implementado")
-
-    def _ir_a_idx_pos(self):
-        log.info("_ir_a_idx_pos")
+    def _ir_a_pos(self):
+        txt_x=self.entry_x.get()
+        txt_y=self.entry_y.get()
+        if txt_x=="":
+            txt_x="0"
+        if txt_y=="":
+            txt_y="0"
+        x, y=0, 0
         try:
-            idx_x=int(self.entry_x.get())
-            idx_y=int(self.entry_y.get())
-            pos=self.terreno.obtener_pos_parcela((idx_x, idx_y))
-            log.info("idx_pos:(%i,%i); pos:%s"%(idx_x, idx_y, str(pos)))
-            self._actualizar_terreno(list(pos))
+            x=int(txt_x)
+            y=int(txt_y)
         except Exception as e:
             log.exception(str(e))
+        log.info("_ir_a_pos (%.3f,%.3f)"%(x, y))
+        self.pos_foco=(x, y)
+        self._generar_imagen()
 
     def _cargar_ui(self):
-        # frame
-        self.frame=DirectFrame(parent=self.aspect2d, pos=(0, 0, -0.85), frameSize=(-1, 1, -0.15, 0.25), frameColor=(1, 1, 1, 0.5))
+        # frame root
+        self.frame=DirectFrame(parent=self.aspect2d, pos=(0, 0, 0), frameSize=(-1, 1, -1, 1), frameColor=(1, 1, 1, 0.5))
+        # frame imagen
+        self.frmImagen=DirectFrame(parent=self.frame, pos=(0.0, 0.0, 0.25), frameSize=(-0.75, 0.75, -0.75, 0.75))
+        # frame controles
+        self.frmControles=DirectFrame(parent=self.frame, pos=(0.0, 0.0, -0.75), frameSize=(-1, 1, -0.225, 0.225), frameColor=(1, 1, 1, 0.5))
         # info
-        self.lblInfo=DirectLabel(parent=self.frame, pos=(-1, 0, 0.15), scale=0.05, text="info terreno?", frameColor=(1, 1, 1, 0.2), frameSize=(0, 40, -2, 2), text_align=TextNode.ALeft, text_pos=(0, 1, 1))
+        self.lblInfo=DirectLabel(parent=self.frmControles, pos=(-1, 0, 0.125), scale=0.05, text="info terreno?", frameColor=(0.5, 1, 1, 0.2), frameSize=(0, 40, -2, 2), text_align=TextNode.ALeft, text_pos=(0, 1, 0))
         # idx_pos
-        DirectLabel(parent=self.frame, pos=(-1, 0, 0), scale=0.05, text="idx_pos_x", frameColor=(1, 1, 1, 0), frameSize=(0, 2, -1, 1), text_align=TextNode.ALeft)
-        DirectLabel(parent=self.frame, pos=(-1, 0, -0.1), scale=0.05, text="idx_pos_y", frameColor=(1, 1, 1, 0), frameSize=(0, 2, -1, 1), text_align=TextNode.ALeft)
-        self.entry_x=DirectEntry(parent=self.frame, pos=(-0.7, 0, 0), scale=0.05)
-        self.entry_y=DirectEntry(parent=self.frame, pos=(-0.7, 0, -0.1), scale=0.05)
-        DirectButton(parent=self.frame, pos=(0, 0, -0.1), scale=0.075, text="actualizar", command=self._ir_a_idx_pos)
-        #
-        self.frmImagen=DirectFrame(parent=self.frame, pos=(0.8, 0, 0.2), state=DGG.NORMAL, frameSize=(-0.4, 0.4, -0.4, 0.4))
-        self.frmImagen.bind(DGG.B1PRESS, self._click_imagen)
-        DirectButton(parent=self.frame, pos=(0.500, 0, 0.65), scale=0.1, text="acercar", command=self._acercar_zoom_imagen, frameSize=(-1, 1, -0.4, 0.4), text_scale=0.5)
-        DirectButton(parent=self.frame, pos=(0.725, 0, 0.65), scale=0.1, text="alejar", command=self._alejar_zoom_imagen, frameSize=(-1, 1, -0.4, 0.4), text_scale=0.5)
-        DirectButton(parent=self.frame, pos=(0.950, 0, 0.65), scale=0.1, text="cambiar", command=self._cambiar_tipo_imagen, frameSize=(-1, 1, -0.4, 0.4), text_scale=0.5)
+        DirectLabel(parent=self.frmControles, pos=(-1, 0, -0.05), scale=0.05, text="idx_pos_x", frameColor=(1, 1, 1, 0), frameSize=(0, 2, -1, 1), text_align=TextNode.ALeft)
+        DirectLabel(parent=self.frmControles, pos=(-1, 0, -0.15), scale=0.05, text="idx_pos_y", frameColor=(1, 1, 1, 0), frameSize=(0, 2, -1, 1), text_align=TextNode.ALeft)
+        self.entry_x=DirectEntry(parent=self.frmControles, pos=(-0.7, 0, -0.05), scale=0.05)
+        self.entry_y=DirectEntry(parent=self.frmControles, pos=(-0.7, 0, -0.15), scale=0.05)
+        DirectButton(parent=self.frmControles, pos=(0, 0, -0.05), scale=0.075, text="actualizar", command=self._ir_a_pos)
+        DirectButton(parent=self.frmControles, pos=(-0.05, 0, -0.15), scale=0.075, text="acercar", command=self._acercar_zoom_imagen, frameSize=(-1.5, 1.5, -0.60, 0.60), text_scale=0.75)
+        DirectButton(parent=self.frmControles, pos=(0.2, 0, -0.15), scale=0.075, text="alejar", command=self._alejar_zoom_imagen, frameSize=(-1.5, 1.5, -0.60, 0.60), text_scale=0.75)
+        DirectButton(parent=self.frmControles, pos=(0.45, 0, -0.15), scale=0.075, text="cambiar", command=self._cambiar_tipo_imagen, frameSize=(-1.5, 1.5, -0.60, 0.60), text_scale=0.75)
 
     def _cambiar_tipo_imagen(self):
-        log.info("_cambiar_tipo_imagen a:")
-        if self.tipo_imagen==Tester.TipoImagenTopo:
-            log.info("TipoImagenTiposTerreno")
-            self.tipo_imagen=Tester.TipoImagenTiposTerreno
-        elif self.tipo_imagen==Tester.TipoImagenTiposTerreno:
-            log.info("TipoImagenEspacios")
-            self.tipo_imagen=Tester.TipoImagenEspacios
-        elif self.tipo_imagen==Tester.TipoImagenEspacios:
-            log.info("TipoImagenTopo")
-            self.tipo_imagen=Tester.TipoImagenTopo
+        self.tipo_imagen=(self.tipo_imagen+1)%5
         self._generar_imagen()
 
     def _click_imagen(self, *args):
@@ -836,14 +746,14 @@ class Tester(ShowBase):
 
     def _acercar_zoom_imagen(self):
         log.info("_acercar_zoom_imagen")
-        self.zoom_imagen-=4
+        self.zoom_imagen-=8
         if self.zoom_imagen<1:
             self.zoom_imagen=1
         self._generar_imagen()
 
     def _alejar_zoom_imagen(self):
         log.info("_alejar_zoom_imagen")
-        self.zoom_imagen+=4
+        self.zoom_imagen+=8
         if self.zoom_imagen>4096:
             self.zoom_imagen=4096
         self._generar_imagen()
@@ -851,10 +761,8 @@ class Tester(ShowBase):
 
 #
 if __name__=="__main__":
+    logging.basicConfig(level=logging.DEBUG)
+    PStatClient.connect()
     tester=Tester()
-    #
-    posiciones=[(0, 0), (34.69,1287.00)]
-    for posicion in posiciones:
-        log.info("Tester")
-        print("# obtener_bioma_transicion posicion=%s"%str(posicion))
-        print("biomas: "+str(tester.sistema.obtener_bioma_transicion(posicion)))
+    tester.run()
+
