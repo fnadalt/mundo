@@ -4,13 +4,34 @@ import math
 import logging
 log=logging.getLogger(__name__)
 
+instancia=None
+def establecer_instancia(sistema):
+    global instancia
+    log.info("establecer_instancia")
+    if instancia:
+        raise Exception("instancia de sistema ya definida")
+    instancia=sistema
+
+def obtener_instancia():
+    if not instancia:
+        raise Exception("instancia de sistema no iniciada.")
+    return instancia
+
+def remover_instancia():
+    global instancia
+    log.info("remover_instancia")
+    if not instancia:
+        raise Exception("instancia de sistema no iniciada.")
+    instancia.terminar()
+    instancia=None
+
 #
 #
 # Sistema Mundo
 #
 #
-# altitud(TopoPerlinNoiseParams,TopoAltura)
-# latitud(posicion_cursor.y)
+# altitud(TopoPerlinNoiseParams,TopoAltura,latitud)
+# latitud(posicion_cursor.xy)==ditancia_desde_centro (Manhattan)
 # temperatura_media(TemperaturaPerlinNoiseParams,altitud,latitud)
 # temperatura_actual(temperatura_media,estacion_normalizada,hora_normalizada,altitud)
 # precipitacion_frecuencia(PrecipitacionFrecuenciaPerlinNoiseParams)
@@ -27,6 +48,7 @@ class Sistema:
     TopoAlturaSobreOceano=TopoAltura-TopoAltitudOceano
     TopoPerlinNoiseSeed=9601
     TopoPerlinNoiseParams=[(256.0, 1.0), (64.0, 0.2), (32.0, 0.075), (16.0, 0.005), (8.0, 0.001)] # [(escala, amplitud), ...]
+    TopoIslasPerlinNoiseParams=(8.0*1024.0, 1199) # (escala, semilla)
     TopoPerlinNoiseEscalaGlobal=1.0
     # terrenos; alpha para splatting
     TerrenoPerlinNoiseParams=(64.0, 1199) # (escala, semilla)
@@ -71,10 +93,10 @@ class Sistema:
     DiaPeriodoAtardecer=3
     DiaPeriodosHorariosN=(0.05, 0.45, 0.55, 0.95)
     # temperatura; [0,1]->[-50,50]; media: [0.2,0.8]->[-30,30]
-    TemperaturaPerlinNoiseParams=(2*1024.0, 196) # (escala, semilla)
+    TemperaturaPerlinNoiseParams=(4*1024.0, 196) # (escala, semilla)
     TemperaturaAmplitudTermicaMaxima=0.4
     # precipitaciones; [0.0,1.0): 0.0=nula, 1.0=maxima
-    PrecipitacionFrecuenciaPerlinNoiseParams=(1*1024.0, 9016) # (escala, semilla)
+    PrecipitacionFrecuenciaPerlinNoiseParams=(2*1024.0, 2*9016) # (escala, semilla)
     PrecipitacionNubosidadPerlinNoiseParams=(1024.0, 9016) # (escala, semilla)
     PrecipitacionNubosidadGatillo=0.75
     PrecipitacionTipoAgua=0
@@ -93,9 +115,9 @@ class Sistema:
     BiomaSavannah=6 # calido arido
     BiomaSelva=7 # calido humedo
     BiomaDesierto=8 # desierto calido
-    BiomaTabla=[[BiomaDesiertoPolar, BiomaTaiga,  BiomaBosqueCaducifolio,  BiomaSelva],  \
-                [BiomaDesiertoPolar, BiomaTaiga,  BiomaBosqueMediterraneo, BiomaSavannah],  \
-                [BiomaDesiertoPolar, BiomaTundra, BiomaDesierto,           BiomaDesierto],  \
+    BiomaTabla=[[BiomaDesiertoPolar, BiomaTundra, BiomaDesierto,           BiomaDesierto],  \
+                [BiomaDesiertoPolar, BiomaTundra, BiomaBosqueMediterraneo, BiomaSavannah],  \
+                [BiomaDesiertoPolar, BiomaTaiga,  BiomaBosqueCaducifolio,  BiomaSelva],  \
                 ] # tabla(temperatura_anual_media,precipitacion_frecuencia)
     # vegetacion
     VegetacionTipoNulo=0
@@ -108,6 +130,7 @@ class Sistema:
     def __init__(self):
         # componentes:
         self.ruido_topo=None
+        self.ruido_islas=None
         self.ruido_terreno=None
         self.ruido_temperatura=None
         self.ruido_precipitacion=None
@@ -174,6 +197,9 @@ class Sistema:
         altitud=0
         # perlin noise object
         altitud=self.ruido_topo(posicion[0], posicion[1])*0.5+0.5
+        #
+        #altitud+=-0.5*abs(self.ruido_islas.noise(posicion[0], posicion[1]))
+        #
         altitud*=Sistema.TopoAltura
         if altitud>Sistema.TopoAltitudOceano+0.25:
             altura_sobre_agua=altitud-Sistema.TopoAltitudOceano
@@ -185,12 +211,9 @@ class Sistema:
                 log.warning("obtener_altitud_suelo altitud>Sistema.TopoAltura, recortando...")
                 altitud=Sistema.TopoAltura
         #
-        if abs(posicion[0])>Sistema.TopoExtension or abs(posicion[1])>Sistema.TopoExtension:
-            factor_transicion=0.0
-            if abs(posicion[0])>Sistema.TopoExtension:
-                factor_transicion+=(abs(posicion[0])-Sistema.TopoExtension)/(Sistema.TopoExtensionTransicion-Sistema.TopoExtension)
-            if abs(posicion[1])>Sistema.TopoExtension:
-                factor_transicion+=(abs(posicion[1])-Sistema.TopoExtension)/(Sistema.TopoExtensionTransicion-Sistema.TopoExtension)
+        latitud=self.obtener_latitud(posicion)
+        if latitud>Sistema.TopoExtension:
+            factor_transicion=(latitud-Sistema.TopoExtension)/(Sistema.TopoExtensionTransicion-Sistema.TopoExtension)
             altitud=min(Sistema.TopoAltura, altitud+Sistema.TopoAltura*factor_transicion)
         #
         return altitud
@@ -206,7 +229,7 @@ class Sistema:
         return altitud
 
     def obtener_nivel_altitud(self, posicion):
-        altitud=posicion.z
+        altitud=posicion[2]
         if altitud<Sistema.AltitudNivelSubacuatico:
             return Sistema.AltitudNivelSubacuatico
         elif altitud<Sistema.AltitudNivelLlano:
@@ -218,11 +241,15 @@ class Sistema:
         else:
             return Sistema.AltitudNivelAlpina
     
+    def obtener_latitud(self, posicion):
+        return math.sqrt(posicion[0]**2+posicion[1]**2)
+        #return abs(posicion[0])+abs(posicion[1])
+    
     def obtener_latitud_norm(self, posicion):
-        return abs(posicion[1]/Sistema.TopoExtension)
+        return self.obtener_latitud(posicion)/Sistema.TopoExtension
     
     def obtener_nivel_latitud(self, posicion):
-        latitud=abs(posicion[1])
+        latitud=self.obtener_latitud(posicion)
         if latitud<Sistema.LatitudTropical:
             return Sistema.LatitudTropical
         elif latitud<Sistema.LatitudSubTropical:
@@ -233,7 +260,7 @@ class Sistema:
             return Sistema.LatitudPolar
 
     def obtener_nivel_latitud_transicion(self, posicion): # util?
-        latitud=abs(posicion[1])
+        latitud=self.obtener_latitud(posicion)
         transicion=0.0
         if latitud<Sistema.LatitudTropical:
             latitud_normalizada=latitud/Sistema.LatitudTropical
@@ -278,10 +305,15 @@ class Sistema:
     def obtener_temperatura_anual_media_norm(self, posicion):
         #print("obtener_temperatura_anual_media_norm (%.2f,%.2f)"%(posicion[0], posicion[1]))
         altitud_normalizada=self.obtener_altitud_suelo_supra_oceanica_norm(posicion)
-        latitud=self.obtener_latitud_norm(posicion)
-        temperatura=self.ruido_temperatura(posicion[0], posicion[1])*0.5+0.5
-        temperatura-=abs(latitud)*0.05
-        temperatura-=abs(altitud_normalizada)*0.05
+        latitud_normalizada=self.obtener_latitud_norm(posicion)
+        temperatura=1.0-(0.925*latitud_normalizada**2)
+        temperatura+=0.5*self.ruido_temperatura(posicion[0], posicion[1])
+        temperatura-=abs(altitud_normalizada)*0.2
+        if latitud_normalizada>=1.0:
+            latitud=abs(self.obtener_latitud(posicion))
+            factor_transicion=(latitud-Sistema.TopoExtension)/(Sistema.TopoExtensionTransicion-Sistema.TopoExtension)
+            factor_transicion=max(0.0, min(1.0, factor_transicion))
+            temperatura-=(temperatura*factor_transicion)
         temperatura=0.2+max(temperatura,0.0)*0.6 # ajustar a rango de temperatura_media [0.2,0.8]
         #print("temperatura_anual_media %.3f"%temperatura)
         return temperatura
@@ -299,7 +331,7 @@ class Sistema:
         return frecuencia
 
     def obtener_inclinacion_solar_anual_media(self, posicion):
-        latitud=posicion[1]
+        latitud=self.obtener_latitud(posicion)
         if latitud>Sistema.TopoExtension:
             latitud=Sistema.TopoExtension
         elif latitud<-Sistema.TopoExtension:
@@ -351,8 +383,8 @@ class Sistema:
         #
         tabla_cantidad_filas=len(Sistema.BiomaTabla)
         tabla_cantidad_columnas=len(Sistema.BiomaTabla[0])
-        pos_fila=temperatura_anual_media*len(Sistema.BiomaTabla)
-        pos_columna=precipitacion_frecuencia*len(Sistema.BiomaTabla[0])
+        pos_fila=precipitacion_frecuencia*tabla_cantidad_filas
+        pos_columna=temperatura_anual_media*tabla_cantidad_columnas
         fila=int(pos_fila)
         columna=int(pos_columna)
         if fila==tabla_cantidad_filas:
@@ -360,7 +392,7 @@ class Sistema:
         if columna==tabla_cantidad_columnas:
             columna-=1
         bioma1=Sistema.BiomaTabla[fila][columna]
-        #print("obtener_bioma_transicion bioma1 fila=%i columna=%i %s"%(fila, columna, str(bioma1)))
+        #print("obtener_bioma_transicion bioma1 tam=%.2f prec_f=%.2f fila=%i columna=%i %s"%(temperatura_anual_media, precipitacion_frecuencia, fila, columna, str(bioma1)))
         delta_idx_tabla, factor_transicion=self._calcular_transicion_tabla(pos_columna, pos_fila, tabla_cantidad_columnas, tabla_cantidad_filas)
         fila_delta=fila+delta_idx_tabla[1]
         columna_delta=columna+delta_idx_tabla[0]
@@ -403,6 +435,10 @@ class Sistema:
             _escala=escala*Sistema.TopoPerlinNoiseEscalaGlobal
             _ruido=PerlinNoise2(_escala, _escala, 256, Sistema.TopoPerlinNoiseSeed)
             self.ruido_topo.addLevel(_ruido, _amp)
+        # islas
+        _escala=Sistema.TopoIslasPerlinNoiseParams[0]
+        _semilla=Sistema.TopoIslasPerlinNoiseParams[1]
+        self.ruido_islas=PerlinNoise2(_escala, _escala, 256, _semilla)
         # terreno
         _escala=Sistema.TerrenoPerlinNoiseParams[0]
         _semilla=Sistema.TerrenoPerlinNoiseParams[1]
@@ -692,9 +728,9 @@ class Tester(ShowBase):
                 elif self.tipo_imagen==Tester.TipoImagenBioma:
                     a=self.sistema.obtener_altitud_suelo((_x, _y))
                     if a>Sistema.TopoAltitudOceano:
-                        c=self.sistema.obtener_bioma((_x, _y))
+                        c1, c2, factor_transicion=self.sistema.obtener_bioma_transicion((_x, _y))
                         #log.debug("bioma=%i"%c)
-                        _c=Tester.ColoresBioma[c]
+                        _c=(Tester.ColoresBioma[c1]*(1.0-factor_transicion))+(Tester.ColoresBioma[c2]*factor_transicion)
                         self.imagen.setXelA(x, y, _c/256)
                     else:
                         self.imagen.setXel(x, y, 0.0)
@@ -746,14 +782,14 @@ class Tester(ShowBase):
 
     def _acercar_zoom_imagen(self):
         log.info("_acercar_zoom_imagen")
-        self.zoom_imagen-=8
+        self.zoom_imagen-=64
         if self.zoom_imagen<1:
             self.zoom_imagen=1
         self._generar_imagen()
 
     def _alejar_zoom_imagen(self):
         log.info("_alejar_zoom_imagen")
-        self.zoom_imagen+=8
+        self.zoom_imagen+=64
         if self.zoom_imagen>4096:
             self.zoom_imagen=4096
         self._generar_imagen()

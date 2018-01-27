@@ -3,6 +3,7 @@ from panda3d.core import *
 
 from shader import GeneradorShader
 from objetos import *
+import sistema
 
 import math
 
@@ -45,6 +46,7 @@ class Terreno:
         # referencias:
         self.base=base
         self.bullet_world=bullet_world
+        self.sistema=None
         # componentes:
         self.nodo=self.base.render.attachNewNode("terreno")
         self.nodo_parcelas=self.nodo.attachNewNode("parcelas")
@@ -70,6 +72,8 @@ class Terreno:
     def iniciar(self):
         log.info("iniciar")
         #
+        self.sistema=sistema.obtener_instancia()
+        #
         self._generar_noise_objs()
         self._establecer_shader()
         #
@@ -78,6 +82,7 @@ class Terreno:
     def terminar(self):
         log.info("terminar")
         objetos.terminar()
+        self.sistema=None
     
     def obtener_indice_parcela(self, pos):
         x=pos[0]/Terreno.TamanoParcela
@@ -95,6 +100,7 @@ class Terreno:
         return (x, y)
 
     def obtener_altitud(self, pos):
+        return self.sistema.obtener_altitud_suelo(pos)
         #
         altitud=0
         # perlin noise object

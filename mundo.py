@@ -3,6 +3,8 @@ from direct.gui.DirectGui import *
 from panda3d.bullet import *
 from panda3d.core import *
 
+import sistema
+#
 from dia import Dia
 from cielo import Cielo
 from sol import Sol
@@ -28,6 +30,7 @@ class Mundo(NodePath):
         self.reparentTo(base.render)
         # referencias:
         self.base=base
+        self.sistema=None
         # componentes:
         self.input_mapper=None
         self.controlador_camara=None
@@ -38,6 +41,10 @@ class Mundo(NodePath):
 
     def iniciar(self):
         log.info("iniciar")
+        # sistema:
+        self.sistema=sistema.Sistema()
+        self.sistema.iniciar()
+        sistema.establecer_instancia(self.sistema)
         # fisica:
         self._configurar_fisica()
         # mundo:
@@ -64,7 +71,11 @@ class Mundo(NodePath):
 
     def terminar(self):
         log.info("terminar")
+        #
         self.terreno.terminar()
+        #
+        self.sistema=None
+        sistema.remover_instancia()
 
     def _establecer_material(self):
         log.info("_establecer_material")
