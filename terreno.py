@@ -15,35 +15,11 @@ log=logging.getLogger(__name__)
 #
 class Terreno:
     
-    # obsoleto
-#    # alturas
-#    AlturaMaxima=300
-#    AltitudAgua=AlturaMaxima * 0.5
-
     # tamaño de la parcela
     TamanoParcela=32
 
     # radio de expansion
-    RadioExpansion=3 #4
-
-    # obsoleto
-#    # topografia
-#    SemillaTopografia=4069
-#    NoiseObjsScales=[1024.0, 64.0, 32.0, 16.0, 8.0]
-#    NoiseObjsWeights=[1.0, 0.2, 0.075, 0.005, 0.001] # scale_0>scale_1>scale_n
-
-    # obsoleto
-#    # biomasa:
-#    # temperatura; 0->1 => calor->frio
-#    ParamsRuidoTemperatura=[8*1024.0, 5643] # [scale, seed]
-#    # tipo de terreno
-#    ParamsRuidoIntervalo=[8.0, 1133] # [scale, seed]
-#    TipoNulo=0
-#    TipoNieve=1
-#    TipoTierra1=2
-#    TipoPasto=3
-#    TipoTierra2=4
-#    TipoArena=5
+    RadioExpansion=1 #4
 
     def __init__(self, base, bullet_world):
         # referencias:
@@ -57,27 +33,17 @@ class Terreno:
         #self.nodo.setRenderModeWireframe()
         self.parcelas={} # {idx_pos:parcela_node_path,...}
         self.naturaleza={} # {idx_pos:naturaleza_node_path,...}
-        #self._noise_objs=list() # [PerlinNoise2, ...] # obsoleto
-        #self._ruido_temperatura=None # obsoleto
-        #self._ruido_intervalos_tipo_terreno=None # obsoleto
         # variables externas:
-        #self.pos_foco=None # obsoleto
-        #self.pos_foco_inicial=[0, 0] # obsoleto
         self.idx_pos_parcela_actual=None # (x,y)
-        #self.altura_sobre_agua=Terreno.AlturaMaxima-Sistema.TopoAltitudOceano # obsoleto
         self.switch_lod_naturaleza=(6.0*Terreno.TamanoParcela, 0.0)
         # debug
         self.dibujar_normales=False # cada update
-        # variables internas:
-        self._noise_scaled_weights=list() # normalizado # obsoleto
-        self._intervalos_tipo_terreno_escalados=[] # valores de altitud # obsoleto
 
     def iniciar(self):
         log.info("iniciar")
         #
         self.sistema=obtener_instancia_sistema()
         #
-        #self._generar_noise_objs() # obsoleto
         self._establecer_shader()
         #
         log.info("altitud (%s)=%.3f"%(str((0, 0)), self.sistema.obtener_altitud_suelo((0, 0))))
@@ -94,109 +60,10 @@ class Terreno:
         if y<0.0: y=math.floor(y)
         return (int(x), int(y))
     
-    def X_obtener_indice_parcela_foco(self): # obsoleto
-        return self.obtener_indice_parcela(self.pos_foco)
-    
     def obtener_pos_parcela(self, idx_pos):
         x=idx_pos[0]*Terreno.TamanoParcela
         y=idx_pos[1]*Terreno.TamanoParcela
         return (x, y)
-
-    def X_obtener_altitud(self, pos): # obsoleto
-        return self.sistema.obtener_altitud_suelo(pos)
-        #
-        altitud=0
-        # perlin noise object
-        for _i_noise_obj in range(len(self._noise_objs)):
-            altitud+=(self._noise_objs[_i_noise_obj].noise(pos[0], pos[1]) * self._noise_scaled_weights[_i_noise_obj])
-        altitud+=1
-        altitud/=2
-        altitud*=Terreno.AlturaMaxima
-        if altitud>self.altura_sobre_agua+0.25:
-            altura_sobre_agua=altitud-Sistema.TopoAltitudOceano
-            altura_sobre_agua_n=altura_sobre_agua/self.altura_sobre_agua
-            altitud=Sistema.TopoAltitudOceano
-            altitud+=0.25+altura_sobre_agua*altura_sobre_agua_n*altura_sobre_agua_n
-            altitud+=75.0*altura_sobre_agua_n*altura_sobre_agua_n
-            if altitud>Terreno.AlturaMaxima:
-                log.warning("obtener_altitud altitud>Terreno.AlturaMaxima, recortando...")
-                altitud=Terreno.AlturaMaxima
-        #
-        return altitud
-
-    def X_obtener_temperatura_base(self, pos): # obsoleto
-        temperatura=self._ruido_temperatura.noise(*pos)
-        temperatura+=1.0
-        temperatura/=2.0
-        return temperatura
-
-    def X_obtener_temperatura_actual(self, temperatura_base, altitud, hora_normalizada): # obsoleto
-        # f()-> grados_c
-        #
-        altura_sobre_agua_n=(altitud-Sistema.TopoAltitudOceano)/self.altura_sobre_agua
-        #
-        amplitud=15.0+25.0*altura_sobre_agua_n
-        amplitud*=0.5+0.75*temperatura_base
-        #
-        factor_horario=0.5+math.sin(2.0*(hora_normalizada-0.5)*math.pi)/2.0
-        #
-        temperatura_base_c=-5.0+(40.0*temperatura_base)
-        temperatura=temperatura_base_c-(amplitud/2.0)+(amplitud*factor_horario)
-        #
-        #log.debug("obtener_temperatura_actual tb=%.2f hn=%.2f tbc=%.2f asa=%.2f ampl=%.2f fh=%.2f t=%.2f"%(temperatura_base, hora_normalizada, temperatura_base_c, altura_sobre_agua_n, amplitud, factor_horario, temperatura))
-        #
-        return temperatura
-
-    def X_obtener_tipo_terreno_tuple(self, pos, temperatura_base, altitud, debug=False): # obsoleto
-        # f()->(tipo1,tipo2,factor_mix); factor_mix: [0,1)
-        if debug: # ineficiente
-            info="obtener_tipo_terreno_tuple tb=%.2f alt=%.2f "%(temperatura_base, altitud)
-        c0=0.3 # ineficiente?
-        c1=1.0-c0 # ineficiente?
-        a=(altitud-Sistema.TopoAltitudOceano)/self.altura_sobre_agua
-        #
-        offset_medio=2.0*temperatura_base-1.0
-        tipo_t=c1+4.5*temperatura_base # 4.5==4+2*c0?
-        if debug: # ineficiente
-            info+="a=%.2f of_m=%.2f tipo_t=%.2f "%(a, offset_medio, tipo_t)
-        tipo_t+=-0.35+1.5*a*a*offset_medio
-        if debug: # ineficiente
-            info+="tipo_t_=%.2f "%tipo_t
-        if tipo_t<Terreno.TipoNieve: # ineficiente?
-            tipo_t=Terreno.TipoNieve
-        if tipo_t>Terreno.TipoArena: # ineficiente?
-            tipo_t=Terreno.TipoArena
-        #
-        fract, tipo_0=math.modf(tipo_t)
-        tipo_1=Terreno.TipoNulo
-        if fract>c0:
-            if fract>c1:
-                tipo_0=math.floor(tipo_t)+1
-                fract=0.0
-            else:
-                tipo_1=math.floor(tipo_t)+1
-                # no perlin
-                #fract-=c0
-                #fract/=c1-c0
-                # perlin
-                fract=self._ruido_intervalos_tipo_terreno(*pos)
-                fract+=1.0
-                fract/=2.0
-                fract+=fract*fract
-                fract/=2.0
-        else:
-            fract=0.0
-        #
-        tipo=(int(tipo_0), int(tipo_1), fract)
-        if debug: # ineficiente
-            info+="tipo=%s"%str(tipo)
-            log.debug(info)
-        return tipo
-
-    def X_obtener_tipo_terreno_float(self, pos, temperatura_base, altitud, debug=False): # obsoleto
-        # f()->tipo1*10 + tipo2 + factor_mix; factor_mix: [0,1)
-        tipo=self.obtener_tipo_terreno_tuple(pos, temperatura_base, altitud, debug)
-        return 10.0*tipo[0]+tipo[1]+tipo[2]
 
     def obtener_info(self):
         pos_parcela_actual=None
@@ -212,10 +79,6 @@ class Terreno:
         return info
 
     def update(self, forzar=False):
-        # obsoleto
-#        if self.pos_foco!=pos_foco:
-#            #log.debug("distinto: %s %s "%(str(self.pos_foco), str(pos_foco)))
-#            self.pos_foco=pos_foco
         #
         idx_pos=self.obtener_indice_parcela(self.sistema.posicion_cursor)
         #log.debug("idx_pos=%s"%(str(idx_pos)))
@@ -292,9 +155,9 @@ class Terreno:
                 _pos=(pos[0]+x-1, pos[1]+y-1)
                 temperatura_base=self.sistema.obtener_temperatura_anual_media_norm(_pos)
                 d.pos=Vec3(x-1, y-1, self.sistema.obtener_altitud_suelo(_pos))
-                d.tipo=10.0 # implementar sistema en shader #self.obtener_tipo_terreno_float(_pos, temperatura_base, d.pos[2], False)
+                d.tipo=self.sistema.obtener_tipo_terreno_float(_pos)
                 d.temperatura_base=temperatura_base
-                #log.debug(str(d.tipo))
+                log.debug("_generar_datos_parcela pos=%s tipo_terreno=%s"%(str(_pos), str(d.tipo)))
                 data[x].append(d)
         # calcular normales
         for x in range(Terreno.TamanoParcela+1):
@@ -405,22 +268,9 @@ class Terreno:
         return lod0
 
     def _establecer_shader(self):
-        # texturas
-#        ts_arena=TextureStage("ts_arena") # arena
-#        textura_arena=self.base.loader.loadTexture("texturas/arena.png")
-#        self.nodo_parcelas.setTexture(ts_arena, textura_arena)
-#        ts_tierra=TextureStage("ts_tierra") # tierra
-#        textura_tierra=self.base.loader.loadTexture("texturas/tierra.png")
-#        self.nodo_parcelas.setTexture(ts_tierra, textura_tierra)
-#        ts_pasto=TextureStage("ts_pasto") # pasto
-#        textura_pasto=self.base.loader.loadTexture("texturas/pasto.png")
-#        self.nodo_parcelas.setTexture(ts_pasto, textura_pasto)
-#        ts_nieve=TextureStage("ts_nieve") # nieve
-#        textura_nieve=self.base.loader.loadTexture("texturas/nieve.png")
-#        self.nodo_parcelas.setTexture(ts_nieve, textura_nieve)
         #
         ts_terreno=TextureStage("ts_terreno")
-        textura_terreno=self.base.loader.loadTexture("texturas/terreno.png")
+        textura_terreno=self.base.loader.loadTexture("texturas/terreno2.png")
         self.nodo_parcelas.setTexture(ts_terreno, textura_terreno)
         #
         GeneradorShader.aplicar(self.nodo_parcelas, GeneradorShader.ClaseTerreno, 2)
@@ -448,31 +298,6 @@ class Terreno:
             geom.drawTo(vertex+normal1)
         #
         return geom.create()
-
-    def X_generar_noise_objs(self):
-        # topografia:
-        # normalizar coeficientes
-        suma_coefs=0
-        for k in Terreno.NoiseObjsWeights:
-            suma_coefs+=k
-        for k in Terreno.NoiseObjsWeights:
-            self._noise_scaled_weights.append(k/suma_coefs)
-        # noise objects
-        escala_general=1.0
-        escalas=list()
-        for scale in Terreno.NoiseObjsScales:
-            escalas.append(scale*escala_general)
-        # lista
-        self._noise_objs.append(PerlinNoise2(escalas[0], escalas[0], 256, Terreno.SemillaTopografia))
-        self._noise_objs.append(PerlinNoise2(escalas[1], escalas[1], 256, Terreno.SemillaTopografia+(128*1)))
-        self._noise_objs.append(PerlinNoise2(escalas[2], escalas[2], 256, Terreno.SemillaTopografia+(128*2)))
-        self._noise_objs.append(PerlinNoise2(escalas[3], escalas[3], 256, Terreno.SemillaTopografia+(128*3)))
-        self._noise_objs.append(PerlinNoise2(escalas[4], escalas[4], 256, Terreno.SemillaTopografia+(128*4)))
-        # biomasa:
-        # temperatura
-        self._ruido_temperatura=PerlinNoise2(Terreno.ParamsRuidoTemperatura[0], Terreno.ParamsRuidoTemperatura[0], 256, Terreno.ParamsRuidoTemperatura[1])
-        # intervalos de tipos de terreno
-        self._ruido_intervalos_tipo_terreno=PerlinNoise2(Terreno.ParamsRuidoIntervalo[0], Terreno.ParamsRuidoIntervalo[0], 256, Terreno.ParamsRuidoIntervalo[1])
 
 #
 # DATOS LOCALES TERRENO
@@ -519,13 +344,12 @@ class Tester(ShowBase):
         #
         bullet_world=BulletWorld()
         #
-        self.pos_foco=None
         self.cam_pitch=30.0
         self.escribir_archivo=False # cada update
         #
         self.sistema=Sistema()
         self.sistema.iniciar()
-        sistema.establecer_instancia_sistema(self.sistema)
+        establecer_instancia_sistema(self.sistema)
         #
         GeneradorShader.iniciar(Sistema.TopoAltitudOceano, Vec4(0, 0, 1, Sistema.TopoAltitudOceano))
         GeneradorShader.aplicar(self.render, GeneradorShader.ClaseGenerico, 1)
@@ -575,7 +399,7 @@ class Tester(ShowBase):
         self._cargar_ui()
         
     def update(self, task):
-        nueva_pos_foco=self.pos_foco[:] if self.pos_foco else [0, 0]
+        nueva_pos_foco=self.sistema.posicion_cursor
         #
         mwn=self.mouseWatcherNode
         if mwn.isButtonDown(KeyboardButton.up()):
@@ -587,10 +411,9 @@ class Tester(ShowBase):
         elif mwn.isButtonDown(KeyboardButton.right()):
             nueva_pos_foco[0]-=32
         #
-        if nueva_pos_foco!=self.pos_foco:
+        if nueva_pos_foco!=self.sistema.posicion_cursor:
             log.info("update pos_foco=%s"%str(nueva_pos_foco))
-            self.pos_foco=nueva_pos_foco
-            self._actualizar_terreno(self.pos_foco)
+            self._actualizar_terreno()
         return task.cont
     
     def zoom(self, dir):
@@ -623,7 +446,7 @@ class Tester(ShowBase):
     def _actualizar_terreno(self, pos):
         log.info("_actualizar_terreno pos=%s"%(str(pos)))
         #
-        self.terreno.update(pos)
+        self.terreno.update()
         if self.escribir_archivo:
             log.info("escribir_archivo")
             self.terreno.nodo.writeBamFile("terreno.bam")
@@ -632,8 +455,6 @@ class Tester(ShowBase):
         self.cam_driver.setPos(Vec3(pos[0]+Terreno.TamanoParcela/2, pos[1]-Terreno.TamanoParcela, Sistema.TopoAltitudOceano))
         #
         self.lblInfo["text"]=self.terreno.obtener_info()
-        #
-        self.pos_foco=pos
         #
         self._generar_imagen()
 
@@ -660,8 +481,8 @@ class Tester(ShowBase):
         log.info("zoom: %.2f"%(zoom))
         for x in range(tamano+1):
             for y in range(tamano+1):
-                _x=tamano-self.pos_foco[0]+x
-                _y=tamano-self.pos_foco[1]+y
+                _x=tamano-self.sistema.posicion_cursor[0]+x
+                _y=tamano-self.sistema.posicion_cursor[1]+y
                 a=self.terreno.sistema.obtener_altitud_suelo((_x, _y))
                 c=int(255*a/Sistema.TopoAltura)
                 if x==tamano/2 or y==tamano/2:

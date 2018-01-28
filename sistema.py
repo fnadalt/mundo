@@ -422,15 +422,25 @@ class Sistema:
             print("biomas=%s"%(str(transicion)))
         return transicion
 
-    def obtener_tipo_terreno(self, posicion): # f()->(terreno_base,terreno_superficie,factor_transicion)
+    def obtener_tipo_terreno(self, posicion): # f()->(tipo_terreno_base,tipo_terreno_superficie,factor_transicion)
         bioma1, bioma2, factor_transicion=self.obtener_bioma_transicion(posicion)
-        ruido_terreno=self.ruido_terreno(posicion[0], posicion[1])*0.5+0.5
-        bioma_terreno_base, bioma_terreno_superficie=self._obtener_terreno_bioma(bioma1)
-        if factor_transicion>0.0 and ruido_terreno>0.5:
-            bioma_terreno_base, bioma_terreno_superficie=self._obtener_terreno_bioma(bioma2)
-            ruido_terreno-=0.5
-            ruido_terreno*=2.0
-        return (bioma_terreno_base, bioma_terreno_superficie, ruido_terreno)
+        tipo_terreno_base1, tipo_terreno_superficie1=self._obtener_terreno_bioma(bioma1)
+        tipo_terreno_base2, tipo_terreno_superficie2=self._obtener_terreno_bioma(bioma2)
+        if factor_transicion<=0.33:
+            tipo_terreno_base2=tipo_terreno_base1
+            factor_transicion=0.0
+        elif factor_transicion>=0.66:
+            tipo_terreno_base1=tipo_terreno_base2
+            factor_transicion=0.0
+        else:
+            factor_transicion-=0.33
+            factor_transicion/=0.33
+        return (tipo_terreno_base1, tipo_terreno_base2, factor_transicion)
+
+    def obtener_tipo_terreno_float(self, posicion):
+        tipo_terreno_base, tipo_terreno_superficie, factor_transicion=self.obtener_tipo_terreno(posicion)
+        tipo_terreno=tipo_terreno_base*10+tipo_terreno_superficie+factor_transicion
+        return tipo_terreno
 
     def obtener_descriptor_vegetacion(self, posicion, solo_existencia=False):
         pass
@@ -526,7 +536,7 @@ class Sistema:
 
     def _obtener_terreno_bioma(self, bioma): # f()->(tipo_terreno_base,tipo_terreno_superficie)
         if bioma==Sistema.BiomaDesiertoPolar:
-            tipo_terreno_base=Sistema.TerrenoTipoTundra
+            tipo_terreno_base=Sistema.TerrenoTipoNieve # TerrenoTipoTundra
             tipo_terreno_superficie=Sistema.TerrenoTipoNieve
         elif bioma==Sistema.BiomaTundra:
             tipo_terreno_base=Sistema.TerrenoTipoTundra

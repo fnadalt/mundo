@@ -405,7 +405,7 @@ FS_FUNC_TEX_AGUA="""
     color_tex+=texture2D(p3d_Texture2, texcoord.st); // agua
     color_tex+=texture2D(p3d_Texture3, texcoord.st); // agua
 """
-FS_FUNC_TEX_TERRENO="""
+FS_FUNC_TEX_TERRENO_VIEJO="""
 // terreno
 vec4 tex_terreno()
 {
@@ -444,6 +444,57 @@ vec4 tex_terreno()
     }
     //
     float info_tipo_factor=0.0;
+    if(info_tipo_factor==0.0){
+        _color=_color0;
+    } else if(info_tipo_factor==1.0){
+        _color=_color1;
+    } else {
+        _color=info_tipo_factor<0.5?_color0:_color1;
+    }
+    //
+    //_color.a=1.0;
+    return _color;
+}
+"""
+FS_FUNC_TEX_TERRENO="""
+// terreno
+vec4 tex_terreno()
+{
+    vec4 _color;
+    vec4 _color0;
+    vec4 _color1;
+    //
+    float info_tipo_factor=fract(info_tipo);
+    float tipo0=floor(info_tipo/10);
+    float tipo1=mod(floor(info_tipo),10);
+    //
+    if(tipo0==1){ // nieve
+        _color0=texture2D(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.75));
+    } else if(tipo0==2){ // tundra
+        _color0=texture2D(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.50));
+    } else if(tipo0==3){ // tierra seca
+        _color0=texture2D(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.25));
+    } else if(tipo0==4){ // tierra humeda
+        _color0=texture2D(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.00));
+    } else if(tipo0==7){ // arena seca
+        _color0=texture2D(p3d_Texture0, texcoord.st/4.0+vec2(0.50,0.25));
+    } else {
+        _color0=vec4(0,0,0,1);
+    }
+    if(tipo1==1){
+        _color1=texture2D(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.75));
+    } else if(tipo1==2){
+        _color1=texture2D(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.50));
+    } else if(tipo1==3){
+        _color1=texture2D(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.25));
+    } else if(tipo1==4){
+        _color1=texture2D(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.00));
+    } else if(tipo1==7){
+        _color1=texture2D(p3d_Texture0, texcoord.st/4.0+vec2(0.50,0.25));
+    } else {
+        _color1=vec4(1,1,1,1);
+    }
+    //
     if(info_tipo_factor==0.0){
         _color=_color0;
     } else if(info_tipo_factor==1.0){
