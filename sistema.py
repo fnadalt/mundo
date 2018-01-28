@@ -5,21 +5,21 @@ import logging
 log=logging.getLogger(__name__)
 
 instancia=None
-def establecer_instancia(sistema):
+def establecer_instancia_sistema(sistema):
     global instancia
-    log.info("establecer_instancia")
+    log.info("establecer_instancia_sistema")
     if instancia:
         raise Exception("instancia de sistema ya definida")
     instancia=sistema
 
-def obtener_instancia():
+def obtener_instancia_sistema():
     if not instancia:
         raise Exception("instancia de sistema no iniciada.")
     return instancia
 
-def remover_instancia():
+def remover_instancia_sistema():
     global instancia
-    log.info("remover_instancia")
+    log.info("remover_instancia_sistema")
     if not instancia:
         raise Exception("instancia de sistema no iniciada.")
     instancia.terminar()
@@ -33,7 +33,7 @@ def remover_instancia():
 # altitud(TopoPerlinNoiseParams,TopoAltura,latitud)
 # latitud(posicion_cursor.xy)==ditancia_desde_centro (Manhattan)
 # temperatura_media(TemperaturaPerlinNoiseParams,altitud,latitud)
-# temperatura_actual(temperatura_media,estacion_normalizada,hora_normalizada,altitud)
+# temperatura_actual_norm(temperatura_media,estacion_normalizada,hora_normalizada,altitud)
 # precipitacion_frecuencia(PrecipitacionFrecuenciaPerlinNoiseParams)
 # nubosidad(PrecipitacionNubosidadPerlinNoiseParams)
 # bioma(temperatura_anual_media,precipitacion_frecuencia)
@@ -137,7 +137,7 @@ class Sistema:
         self.ruido_nubosidad=None
         self.ruido_vegetacion=None
         # cursor:
-        self.posicion_cursor=None
+        self.posicion_cursor=Vec3(0, 0, 0)
         # parametros:
         self.duracion_dia_segundos=1800
         # variables externas:
@@ -146,9 +146,9 @@ class Sistema:
         self.dia=0
         self.periodo_dia_actual=Sistema.DiaPeriodoAtardecer
         self.periodo_dia_anterior=Sistema.DiaPeriodoDia
-        self.periodo_dia_siguiente=Sistema.DiaPeriodoNoche
+        self.periodo_dia_posterior=Sistema.DiaPeriodoNoche
         self.hora_normalizada=0.0
-        self.temperatura_actual=None
+        self.temperatura_actual_norm=None
         self.nubosidad=0.0
         self.precipitacion_actual_tipo=Sistema.PrecipitacionTipoAgua
         self.precipitacion_actual_intensidad=Sistema.PrecipitacionIntensidadNula
@@ -164,7 +164,7 @@ class Sistema:
             self.dia=0
             self.periodo_dia=WorldSystem.DayPeriodDawn
             self.hora_normalizada=0.0
-            self._establecer_temperatura_actual()
+            self._establecer_temperatura_actual_norm()
             self._establecer_precipitacion()
         else:
             # leer de archivo
@@ -183,9 +183,10 @@ class Sistema:
         log.info("terminar")
         pass
     
-    def update(self, dt):
+    def update(self, dt, posicion_cursor):
+        self.posicion_cursor=posicion_cursor
         self._establecer_fecha_hora_estacion(dt)
-        self._establecer_temperatura_actual(dt)
+        self._establecer_temperatura_actual_norm(dt)
         self._establecer_precipitacion(dt)
 
     def obtener_descriptor_locacion(self, posicion):
@@ -218,6 +219,9 @@ class Sistema:
         #
         return altitud
 
+    def obtener_altitud_suelo_cursor(self):
+        return self.obtener_altitud_suelo(self.posicion_cursor)
+        
     def obtener_altitud_tope(self, posicion):
         # a implementar para grillas 3D, con cuevas, etc...
         return 5.0*Sistema.TopoAltura
@@ -323,6 +327,9 @@ class Sistema:
         temperatura_grados=(temperatura_normalizada-0.5)*2.0*50.0
         return temperatura_grados
 
+    def obtener_temperatura_actual_grados(self):
+        return self.obtener_temperatura_grados(self.temperatura_actual_norm)
+
     def obtener_precipitacion_frecuencia_anual(self, posicion):
         #print("obtener_precipitacion_frecuencia_anual (%.2f,%.2f)"%(posicion[0], posicion[1]))
         #
@@ -376,7 +383,7 @@ class Sistema:
             log.error("caso no contemplado: tam=%.3f p_frec=%.3f"%(temperatura_anual_media, precipitacion_frecuencia))
             return Sistema.BiomaNulo
 
-    def obtener_bioma_transicion(self, posicion):
+    def obtener_bioma_transicion(self, posicion, loguear=False):
         #
         temperatura_anual_media=self.obtener_temperatura_anual_media_norm(posicion)
         precipitacion_frecuencia=self.obtener_precipitacion_frecuencia_anual(posicion)
@@ -392,7 +399,8 @@ class Sistema:
         if columna==tabla_cantidad_columnas:
             columna-=1
         bioma1=Sistema.BiomaTabla[fila][columna]
-        #print("obtener_bioma_transicion bioma1 tam=%.2f prec_f=%.2f fila=%i columna=%i %s"%(temperatura_anual_media, precipitacion_frecuencia, fila, columna, str(bioma1)))
+        if loguear:
+            print("obtener_bioma_transicion bioma1 tam=%.2f prec_f=%.2f fila=%i columna=%i %s"%(temperatura_anual_media, precipitacion_frecuencia, fila, columna, str(bioma1)))
         delta_idx_tabla, factor_transicion=self._calcular_transicion_tabla(pos_columna, pos_fila, tabla_cantidad_columnas, tabla_cantidad_filas)
         fila_delta=fila+delta_idx_tabla[1]
         columna_delta=columna+delta_idx_tabla[0]
@@ -401,9 +409,18 @@ class Sistema:
         if columna_delta>=0 and columna_delta<tabla_cantidad_columnas:
             columna=columna_delta
         bioma2=Sistema.BiomaTabla[fila][columna]
-        #print("bioma2 delta_idx_tabla=%s factor_transicion=%.3f fila=%i columna=%i %s"%(str(delta_idx_tabla), factor_transicion, fila, columna, str(bioma2)))
+        if loguear:
+            print("bioma2 delta_idx_tabla=%s factor_transicion=%.3f fila=%i columna=%i %s"%(str(delta_idx_tabla), factor_transicion, fila, columna, str(bioma2)))
         #
-        return (bioma1, bioma2, factor_transicion)
+        if bioma2<bioma1:
+            bioma0=bioma1
+            bioma1=bioma2
+            bioma2=bioma0
+        #
+        transicion=(bioma1, bioma2, factor_transicion)
+        if loguear:
+            print("biomas=%s"%(str(transicion)))
+        return transicion
 
     def obtener_tipo_terreno(self, posicion): # f()->(terreno_base,terreno_superficie,factor_transicion)
         bioma1, bioma2, factor_transicion=self.obtener_bioma_transicion(posicion)
@@ -525,6 +542,28 @@ class Sistema:
             tipo_terreno_superficie=Sistema.TerrenoTipoArenaSeca
         return (tipo_terreno_base, tipo_terreno_superficie)
 
+    def calcular_offset_periodo_dia(self):
+        hora1=Sistema.DiaPeriodosHorariosN[self.periodo_dia_actual]
+        hora2=Sistema.DiaPeriodosHorariosN[self.periodo_dia_posterior]
+        hn=self.hora_normalizada
+        if hora2==Sistema.DiaPeriodosHorariosN[Sistema.DiaPeriodoNoche]:
+            hora2+=1.0
+            if hn<hora1:
+                hn+=1.0
+        offset=(hn-hora1)/(hora2-hora1)
+        return offset
+
+    def obtener_hora(self):
+        _hn=self.hora_normalizada
+        _hn-=0.2
+        if _hn<0.0:
+            _hn+=1.0
+        _hn*=24.0
+        _m, _h=math.modf(_hn)
+        _hora_f="%i:%s"%(int(_h), str("0%i"%int(_m*60.0))[-2:])
+        #log.info("obtener_hora hn=%.2f _h=%.1f _m=%.2f _texto=%s"%(self.hora_normalizada, _h, _m, _hora_f))
+        return _hora_f
+
     def _establecer_fecha_hora_estacion(self, dt):
         # tiempo transcurrido en segundos
         self._segundos_transcurridos_dia+=dt
@@ -554,7 +593,7 @@ class Sistema:
                 # establecer estacion
                 self.estacion=(self.dia/Sistema.DiasDelAno)*4.0
 
-    def _establecer_temperatura_actual(self, dt):
+    def _establecer_temperatura_actual_norm(self, dt):
         #
         temperatura_anual_media=self.obtener_temperatura_anual_media_norm(self.posicion_cursor)
         altitud_normalizada=self.obtener_altitud_suelo_supra_oceanica_norm(self.posicion_cursor)
@@ -562,15 +601,15 @@ class Sistema:
         periodo_dia_termico=abs(0.5-((self.hora_normalizada+0.25)%1)) # [0.0,0.5]->(frio,calor)
         #
         factor_termico=(periodo_dia_termico+estacion_termica+(1.0-altitud_normalizada))/2.0 # [0.0,1.0]
-        self.temperatura_actual=temperatura_anual_media-(Sistema.TemperaturaAmplitudTermicaMaxima/2.0)+(factor_termico*Sistema.TemperaturaAmplitudTermicaMaxima)
+        self.temperatura_actual_norm=temperatura_anual_media-(Sistema.TemperaturaAmplitudTermicaMaxima/2.0)+(factor_termico*Sistema.TemperaturaAmplitudTermicaMaxima)
     
     def _establecer_precipitacion(self, dt):
         if self.precipitacion_actual_intensidad==Sistema.PrecipitacionIntensidadNula:
-            momento_era=self.ano*Sistema.DiasDelAno+self.dias+self.hora_normalizada
+            momento_era=self.ano*Sistema.DiasDelAno+self.dia+self.hora_normalizada
             precipitacion_frecuencia=self.obtener_precipitacion_frecuencia_anual(self.posicion_cursor)
             self.nubosidad=max(0.0, self.ruido_nubosidad(0.0, momento_era)-(1.0-precipitacion_frecuencia))
             if self.nubosidad>Sistema.PrecipitacionNubosidadGatillo:
-                if self.temperatura_actual<=0.0:
+                if self.temperatura_actual_norm<=0.0:
                     self.precipitacion_actual_tipo=Sistema.PrecipitacionTipoNieve
                 else:
                     self.precipitacion_actual_tipo=Sistema.PrecipitacionTipoAgua
@@ -630,32 +669,35 @@ from direct.showbase.ShowBase import ShowBase
 from direct.gui.DirectGui import *
 class Tester(ShowBase):
 
+    TamanoImagen=128
+    PasoDesplazamiento=TamanoImagen/3.0
+
     TipoImagenTopo=0
     TipoImagenTemperaturaAM=1
     TipoImagenTemperaturaPrecip=2
     TipoImagenBioma=3
     TipoImagenTerreno=4
     
-    ColoresTipoTerreno={Sistema.TerrenoTipoNulo:Vec4(0, 0, 0, 255), 
-                        Sistema.TerrenoTipoNieve:Vec4(248, 248, 248, 255), 
-                        Sistema.TerrenoTipoTundra:Vec4(107, 107, 139, 255), 
-                        Sistema.TerrenoTipoTierraSeca:Vec4(255, 251, 115, 255), 
-                        Sistema.TerrenoTipoTierraHumeda:Vec4(102, 87, 40, 255), 
-                        Sistema.TerrenoTipoPastoSeco:Vec4(171, 229, 155, 255), 
-                        Sistema.TerrenoTipoPastoHumedo:Vec4(31, 138, 35, 255), 
-                        Sistema.TerrenoTipoArenaSeca:Vec4(255, 213, 2, 255), 
-                        Sistema.TerrenoTipoArenaHumeda:Vec4(68, 255, 255, 255)
+    ColoresTipoTerreno={Sistema.TerrenoTipoNulo:Vec4(0, 0, 0, 255), # negro
+                        Sistema.TerrenoTipoNieve:Vec4(255, 255, 255, 255), # blanco
+                        Sistema.TerrenoTipoTundra:Vec4(128, 128, 128, 255),  # gris
+                        Sistema.TerrenoTipoTierraSeca:Vec4(255, 0, 255, 255), # fucsia 
+                        Sistema.TerrenoTipoTierraHumeda:Vec4(255, 0, 0, 255), # rojo
+                        Sistema.TerrenoTipoPastoSeco:Vec4(255, 255, 0, 255), # amarillo
+                        Sistema.TerrenoTipoPastoHumedo:Vec4(0, 255, 0, 255), # verde
+                        Sistema.TerrenoTipoArenaSeca:Vec4(0, 255, 255, 255), # celeste
+                        Sistema.TerrenoTipoArenaHumeda:Vec4(0, 0, 255, 255), # azul
                         }
 
-    ColoresBioma={Sistema.BiomaNulo:Vec4(0, 0, 0, 255), 
-                        Sistema.BiomaDesiertoPolar:Vec4(248, 248, 248, 255), 
-                        Sistema.BiomaTundra:Vec4(68, 255, 255, 255), 
-                        Sistema.BiomaTaiga:Vec4(36, 73, 239, 255), 
-                        Sistema.BiomaBosqueCaducifolio:Vec4(195, 92, 7, 255), 
-                        Sistema.BiomaBosqueMediterraneo:Vec4(255, 170, 0, 255), 
-                        Sistema.BiomaSavannah:Vec4(184, 255, 70, 255), 
-                        Sistema.BiomaSelva:Vec4(64, 141, 70, 255), 
-                        Sistema.BiomaDesierto:Vec4(255, 250, 174, 255)
+    ColoresBioma={Sistema.BiomaNulo:Vec4(0, 0, 0, 255), # negro
+                        Sistema.BiomaDesiertoPolar:Vec4(255, 255, 255, 255), # blanco
+                        Sistema.BiomaTundra:Vec4(0, 255, 255, 255), # celeste
+                        Sistema.BiomaTaiga:Vec4(0, 0, 255, 255), # azul
+                        Sistema.BiomaBosqueCaducifolio:Vec4(255, 0, 255, 255), # fucsia 
+                        Sistema.BiomaBosqueMediterraneo:Vec4(255, 0, 0, 255), # rojo
+                        Sistema.BiomaSavannah:Vec4(255, 255, 0, 255), # amarillo
+                        Sistema.BiomaSelva:Vec4(0, 255, 0, 255), # verde
+                        Sistema.BiomaDesierto:Vec4(128, 128, 128, 255) # gris
                         }
 
     def __init__(self):
@@ -678,7 +720,10 @@ class Tester(ShowBase):
         self.imagen=None
         self.zoom_imagen=8
         #
-        #self.accept("wheel_up", self.zoom, [1])
+        self.accept("arrow_up", self.mover, [(0, -1)])
+        self.accept("arrow_down", self.mover, [(0, 1)])
+        self.accept("arrow_left", self.mover, [(-1, 0)])
+        self.accept("arrow_right", self.mover, [(1, 0)])
         #
         self.sistema=Sistema()
         self.sistema.iniciar()
@@ -686,10 +731,20 @@ class Tester(ShowBase):
         self._cargar_ui()
         self._ir_a_pos()
         
+    def mover(self, delta_pos):
+        paso=Tester.PasoDesplazamiento
+        nueva_pos=(int(self.pos_foco[0]+delta_pos[0]*paso), int(self.pos_foco[1]+delta_pos[1]*paso))
+        self.pos_foco=nueva_pos
+        self.sistema.obtener_bioma_transicion(self.pos_foco, loguear=True)
+        self._generar_imagen()
+
     def _generar_imagen(self):
         log.info("_generar_imagen")
         #
-        tamano=128
+        info="pos_foco=%s"%(str(self.pos_foco))
+        self.lblInfo["text"]=info
+        #
+        tamano=Tester.TamanoImagen
         if not self.imagen:
             self.imagen=PNMImage(tamano+1, tamano+1)
             self.texturaImagen=Texture()
@@ -701,39 +756,42 @@ class Tester(ShowBase):
             for y in range(tamano+1):
                 _x=self.pos_foco[0]+(x-tamano/2)*zoom
                 _y=self.pos_foco[1]+(y-tamano/2)*zoom
-                if self.tipo_imagen==Tester.TipoImagenTopo:
-                    a=self.sistema.obtener_altitud_suelo((_x, _y))
-                    c=3*[int(255*a/Sistema.TopoAltura)]
-                    if a>Sistema.TopoAltitudOceano:
-                        self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(int(c[0]), int(c[1]), int(c[2]), 255))
-                    else:
-                        self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(0, 0, c[0], 255))
-                elif self.tipo_imagen==Tester.TipoImagenTerreno:
-                    a=self.sistema.obtener_altitud_suelo((_x, _y))
-                    terreno_base, terreno_superficie, factor_transicion=self.sistema.obtener_tipo_terreno((_x, _y))
-                    color_base=Tester.ColoresTipoTerreno[terreno_base]
-                    color_superficie=Tester.ColoresTipoTerreno[terreno_superficie]
-                    c=(color_base*(1.0-factor_transicion))+(color_superficie*factor_transicion)
-                    c[3]=1.0
-                    if a>Sistema.TopoAltitudOceano:
-                        self.imagen.setXelA(x, y, c/255)
-                    else:
-                        self.imagen.setXel(x, y, 0.0)
-                elif self.tipo_imagen==Tester.TipoImagenTemperaturaAM:
-                    c=self.sistema.obtener_temperatura_anual_media_norm((_x, _y))
-                    self.imagen.setXel(x, y, c)
-                elif self.tipo_imagen==Tester.TipoImagenTemperaturaPrecip:
-                    c=self.sistema.obtener_precipitacion_frecuencia_anual((_x, _y))
-                    self.imagen.setXel(x, y, c)
-                elif self.tipo_imagen==Tester.TipoImagenBioma:
-                    a=self.sistema.obtener_altitud_suelo((_x, _y))
-                    if a>Sistema.TopoAltitudOceano:
-                        c1, c2, factor_transicion=self.sistema.obtener_bioma_transicion((_x, _y))
-                        #log.debug("bioma=%i"%c)
-                        _c=(Tester.ColoresBioma[c1]*(1.0-factor_transicion))+(Tester.ColoresBioma[c2]*factor_transicion)
-                        self.imagen.setXelA(x, y, _c/256)
-                    else:
-                        self.imagen.setXel(x, y, 0.0)
+                if x==(tamano/2.0) or y==(tamano/2.0):
+                    self.imagen.setXel(x, y, 0)
+                else:
+                    if self.tipo_imagen==Tester.TipoImagenTopo:
+                        a=self.sistema.obtener_altitud_suelo((_x, _y))
+                        c=3*[int(255*a/Sistema.TopoAltura)]
+                        if a>Sistema.TopoAltitudOceano:
+                            self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(int(c[0]), int(c[1]), int(c[2]), 255))
+                        else:
+                            self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(0, 0, c[0], 255))
+                    elif self.tipo_imagen==Tester.TipoImagenTerreno:
+                        a=self.sistema.obtener_altitud_suelo((_x, _y))
+                        terreno_base, terreno_superficie, factor_transicion=self.sistema.obtener_tipo_terreno((_x, _y))
+                        color_base=Tester.ColoresTipoTerreno[terreno_base]
+                        color_superficie=Tester.ColoresTipoTerreno[terreno_superficie]
+                        c=(color_base*(1.0-factor_transicion))+(color_superficie*factor_transicion)
+                        c[3]=1.0
+                        if a>Sistema.TopoAltitudOceano:
+                            self.imagen.setXelA(x, y, c/255)
+                        else:
+                            self.imagen.setXel(x, y, 0.0)
+                    elif self.tipo_imagen==Tester.TipoImagenTemperaturaAM:
+                        c=self.sistema.obtener_temperatura_anual_media_norm((_x, _y))
+                        self.imagen.setXel(x, y, c)
+                    elif self.tipo_imagen==Tester.TipoImagenTemperaturaPrecip:
+                        c=self.sistema.obtener_precipitacion_frecuencia_anual((_x, _y))
+                        self.imagen.setXel(x, y, c)
+                    elif self.tipo_imagen==Tester.TipoImagenBioma:
+                        a=self.sistema.obtener_altitud_suelo((_x, _y))
+                        if a>Sistema.TopoAltitudOceano:
+                            c1, c2, factor_transicion=self.sistema.obtener_bioma_transicion((_x, _y))
+                            #log.debug("bioma=%i"%c)
+                            _c=(Tester.ColoresBioma[c1]*(1.0-factor_transicion))+(Tester.ColoresBioma[c2]*factor_transicion)
+                            self.imagen.setXelA(x, y, _c/256)
+                        else:
+                            self.imagen.setXel(x, y, 0.0)
         #
         self.texturaImagen.load(self.imagen)
 
@@ -751,6 +809,7 @@ class Tester(ShowBase):
         except Exception as e:
             log.exception(str(e))
         log.info("_ir_a_pos (%.3f,%.3f)"%(x, y))
+        self.sistema.obtener_bioma_transicion((x, y), loguear=True)
         self.pos_foco=(x, y)
         self._generar_imagen()
 
@@ -770,8 +829,9 @@ class Tester(ShowBase):
         self.entry_y=DirectEntry(parent=self.frmControles, pos=(-0.7, 0, -0.15), scale=0.05)
         DirectButton(parent=self.frmControles, pos=(0, 0, -0.05), scale=0.075, text="actualizar", command=self._ir_a_pos)
         DirectButton(parent=self.frmControles, pos=(-0.05, 0, -0.15), scale=0.075, text="acercar", command=self._acercar_zoom_imagen, frameSize=(-1.5, 1.5, -0.60, 0.60), text_scale=0.75)
-        DirectButton(parent=self.frmControles, pos=(0.2, 0, -0.15), scale=0.075, text="alejar", command=self._alejar_zoom_imagen, frameSize=(-1.5, 1.5, -0.60, 0.60), text_scale=0.75)
-        DirectButton(parent=self.frmControles, pos=(0.45, 0, -0.15), scale=0.075, text="cambiar", command=self._cambiar_tipo_imagen, frameSize=(-1.5, 1.5, -0.60, 0.60), text_scale=0.75)
+        DirectButton(parent=self.frmControles, pos=(0.20, 0, -0.15), scale=0.075, text="alejar", command=self._alejar_zoom_imagen, frameSize=(-1.5, 1.5, -0.60, 0.60), text_scale=0.75)
+        DirectButton(parent=self.frmControles, pos=(0.475, 0, -0.15), scale=0.075, text="alejar max", command=self._alejar_zoom_imagen_max, frameSize=(-2.0, 2.0, -0.60, 0.60), text_scale=0.75)
+        DirectButton(parent=self.frmControles, pos=(0.75, 0, -0.15), scale=0.075, text="cambiar", command=self._cambiar_tipo_imagen, frameSize=(-1.5, 1.5, -0.60, 0.60), text_scale=0.75)
 
     def _cambiar_tipo_imagen(self):
         self.tipo_imagen=(self.tipo_imagen+1)%5
@@ -782,18 +842,22 @@ class Tester(ShowBase):
 
     def _acercar_zoom_imagen(self):
         log.info("_acercar_zoom_imagen")
-        self.zoom_imagen-=64
+        self.zoom_imagen-=4
         if self.zoom_imagen<1:
             self.zoom_imagen=1
         self._generar_imagen()
 
     def _alejar_zoom_imagen(self):
         log.info("_alejar_zoom_imagen")
-        self.zoom_imagen+=64
-        if self.zoom_imagen>4096:
-            self.zoom_imagen=4096
+        self.zoom_imagen+=4
+        if self.zoom_imagen>512:
+            self.zoom_imagen=512
         self._generar_imagen()
 
+    def _alejar_zoom_imagen_max(self):
+        log.info("_alejar_zoom_imagen_max")
+        self.zoom_imagen=128+32
+        self._generar_imagen()
 
 #
 if __name__=="__main__":

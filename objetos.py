@@ -4,6 +4,8 @@ import csv
 import os, os.path
 import random
 
+from sistema import *
+
 import logging
 log=logging.getLogger(__name__)
 
@@ -142,16 +144,17 @@ class Naturaleza:
     # parametros
     RadioMaximo=4.0
 
-    def __init__(self, base, pos_base, altura_maxima_terreno, tamano, altitud_agua):
+    def __init__(self, base, pos_base, tamano):
         # referencias:
         self.base=base
+        self.sistema=None
         # componentes:
         self.ruido_perlin=PerlinNoise2(Naturaleza.ParamsRuido[0], Naturaleza.ParamsRuido[0], 256, Naturaleza.ParamsRuido[1])
         # variables internas:
         self._pos_base=pos_base
-        self._altura_maxima_terreno=altura_maxima_terreno
+        self._altura_maxima_terreno=Sistema.TopoAltura
         self._tamano=tamano
-        self._altitud_agua=altitud_agua
+        self._altitud_agua=Sistema.TopoAltitudOceano
         self._data=None
 
     def iniciar(self):
@@ -167,6 +170,11 @@ class Naturaleza:
             for y in range(self._tamano):
                 fila.append((0.0, 0.0))
             self._data.append(fila)
+        # sistema
+        self.sistema=obtener_instancia_sistema()
+
+    def terminar(self):
+        self.sistema=None
 
     def cargar_datos(self, pos, temperatura_base):
         x=int(pos[0])
@@ -251,7 +259,7 @@ class Naturaleza:
                                 # contador de objetos colocados
                                 cnt_objetos+=1
         log.info("%s: se colocaron %i objetos"%(nombre, cnt_objetos))
-        self._dibujar_espacio(espacio, nombre)
+        #self._dibujar_espacio(espacio, nombre)
         #
         nodo_central
         return nodo_central

@@ -3,9 +3,8 @@ from direct.gui.DirectGui import *
 from panda3d.bullet import *
 from panda3d.core import *
 
-import sistema
+from sistema import *
 #
-from dia import Dia
 from cielo import Cielo
 from sol import Sol
 from terreno import Terreno
@@ -42,9 +41,9 @@ class Mundo(NodePath):
     def iniciar(self):
         log.info("iniciar")
         # sistema:
-        self.sistema=sistema.Sistema()
+        self.sistema=Sistema()
         self.sistema.iniciar()
-        sistema.establecer_instancia(self.sistema)
+        establecer_instancia_sistema(self.sistema)
         # fisica:
         self._configurar_fisica()
         # mundo:
@@ -75,7 +74,7 @@ class Mundo(NodePath):
         self.terreno.terminar()
         #
         self.sistema=None
-        sistema.remover_instancia()
+        sistema.remover_instancia_sistema()
 
     def _establecer_material(self):
         log.info("_establecer_material")
@@ -88,7 +87,7 @@ class Mundo(NodePath):
 
     def _establecer_shader(self):
         log.info("_establecer_shader")
-        GeneradorShader.iniciar(Terreno.AltitudAgua, Vec4(0, 0, 1, Terreno.AltitudAgua))
+        GeneradorShader.iniciar(Sistema.TopoAltitudOceano, Vec4(0, 0, 1, Sistema.TopoAltitudOceano))
         GeneradorShader.aplicar(self, GeneradorShader.ClaseGenerico, 1)
 
     def _cargar_obj_voxel(self):
@@ -148,16 +147,15 @@ class Mundo(NodePath):
     def _cargar_hombre(self):
         #
         self.hombre=Personaje()
-        self.hombre.altitud_agua=Terreno.AltitudAgua
+        self.hombre.altitud_agua=Sistema.TopoAltitudOceano
         self.hombre.input_mapper=self.input_mapper
         self.hombre.construir(self, self.bullet_world)
-        self.hombre.cuerpo.setPos(self.terreno.pos_foco)
-        self.hombre.cuerpo.setZ(self.terreno.obtener_altitud(self.terreno.pos_foco)+0.5)
+        self.hombre.cuerpo.setPos(self.sistema.posicion_cursor)
+        self.hombre.cuerpo.setZ(self.sistema.obtener_altitud_suelo_cursor()+0.5)
         #
         self._personajes.append(self.hombre)
         #
         self.controlador_camara.seguir(self.hombre.cuerpo)
-        self.terreno.foco=self.hombre.cuerpo
 
     def _cargar_objetos(self):
         #
@@ -186,14 +184,14 @@ class Mundo(NodePath):
         #self.nubes.setTwoSided(True)
         self.nubes.setPos(self.hombre.cuerpo.getPos()+Vec3(0, -16, 2.5))
         self.nubes.setP(-90)
-        noise=StackedPerlinNoise2(1, 1, 8, 2, 0.5, 256, 18)
-        ts0=TextureStage("ts_nubes")
+        #noise=StackedPerlinNoise2(1, 1, 8, 2, 0.5, 256, 18)
+        #ts0=TextureStage("ts_nubes")
         tamano=512
         imagen=PNMImage(tamano, tamano)
         #imagen.perlinNoiseFill(noise)
         for x in range(tamano):
             for y in range(tamano):
-                v=noise(x, y)*0.5+0.5
+                #v=noise(x, y)*0.5+0.5
                 imagen.setXelA(x, y, 1, 0, 0, 0.5)
 #        tex0=Texture("tex_nubes")
 #        tex0.load(imagen)
@@ -207,34 +205,30 @@ class Mundo(NodePath):
         #GeneradorShader.aplicar(quebracho, GeneradorShader.ClaseGenerico, 6)
 
     def _cargar_terreno(self):
-        pos_inicial_foco=Mundo.PosInicialFoco
-        # dia
-        self.dia=Dia(1800.0, 0.53) #|(1800.0, 0.50)
         # terreno
         self.terreno=Terreno(self.base, self.bullet_world)
         self.terreno.iniciar()
         self.terreno.nodo.reparentTo(self)
-        self.terreno.update(pos_inicial_foco)
+        self.terreno.update()
         # cielo
-        self.cielo=Cielo(self.base, Terreno.AltitudAgua-20.0)
+        self.cielo=Cielo(self.base, Sistema.TopoAltitudOceano-20.0)
         self.cielo.nodo.reparentTo(self)
 #        self.setLight(self.cielo.luz) reemplazado por shader input
         # sol
-        self.sol=Sol(self.base, Terreno.AltitudAgua-20.0)
+        self.sol=Sol(self.base, Sistema.TopoAltitudOceano-20.0)
         self.sol.pivot.reparentTo(self) # self.cielo.nodo
         #self.sol.mostrar_camaras()
         self.setLight(self.sol.luz)
         # agua
-        self.agua=Agua(self.base, Terreno.AltitudAgua)
+        self.agua=Agua(self.base, Sistema.TopoAltitudOceano)
         self.agua.superficie.reparentTo(self.base.render)
         self.agua.generar()
         #self.agua.mostrar_camaras()
         #
-        self.controlador_camara.altitud_agua=Terreno.AltitudAgua
+        self.controlador_camara.altitud_agua=Sistema.TopoAltitudOceano
 
     def _update(self, task):
-        info=""
-        #info+=self.dia.obtener_info()+"\n"
+        #info=""
         #info+=self.terreno.obtener_info()+"\n"
         #info+=self.hombre.obtener_info()+"\n"
         #info+=self.agua.obtener_info()+"\n"
@@ -249,21 +243,21 @@ class Mundo(NodePath):
         # fisica
         self.bullet_world.doPhysics(dt)
         # controlador cámara
-        self.controlador_camara.altitud_suelo=self.terreno.obtener_altitud(self.controlador_camara.pos_camara.getXy())
+        self.controlador_camara.altitud_suelo=self.sistema.obtener_altitud_suelo(self.controlador_camara.pos_camara.getXy())
         self.controlador_camara.update(dt)
         pos_pivot_camara=self.controlador_camara.pivot.getPos(self)
-        altitud_pivot_camara=self.terreno.obtener_altitud(pos_pivot_camara.getXy())
-        temperatura_base_pivot_camara=self.terreno.obtener_temperatura_base(pos_pivot_camara.getXy())
+        # sistema
+        self.sistema.update(dt, pos_pivot_camara)
         # ciclo dia/noche, cielo, sol
-        self.dia.update(dt)
-        offset_periodo=self.dia.calcular_offset(self.dia.periodo.actual, self.dia.periodo.posterior)
+        #self.dia.update(dt) # obsoleto
+        offset_periodo=self.sistema.calcular_offset_periodo_dia()
         self.cielo.nodo.setX(self.controlador_camara.target_node_path.getPos().getX())
         self.cielo.nodo.setY(self.controlador_camara.target_node_path.getPos().getY())
-        self.cielo.update(pos_pivot_camara, self.dia.hora_normalizada, self.dia.periodo.actual, offset_periodo)
-        self.sol.update(pos_pivot_camara, self.dia.hora_normalizada, self.dia.periodo.actual, offset_periodo)
+        self.cielo.update(pos_pivot_camara, self.sistema.hora_normalizada, self.sistema.periodo_dia_actual, offset_periodo)
+        self.sol.update(pos_pivot_camara, self.sistema.hora_normalizada, self.sistema.periodo_dia_actual, offset_periodo)
         # personajes
         for _personaje in self._personajes:
-            _altitud_suelo=self.terreno.obtener_altitud(_personaje.cuerpo.getPos())
+            _altitud_suelo=self.sistema.obtener_altitud_suelo(_personaje.cuerpo.getPos())
             _personaje.altitud_suelo=_altitud_suelo
             _personaje.update(dt)
         # agua
@@ -276,8 +270,8 @@ class Mundo(NodePath):
             self._counter=0
             self.terreno.update(self.controlador_camara.target_node_path.getPos())
             # gui
-            self.lblHora["text"]=self.dia.obtener_hora()
-            self.lblTemperatura["text"]="%.0fº"%self.terreno.obtener_temperatura_actual(temperatura_base_pivot_camara, altitud_pivot_camara, self.dia.hora_normalizada)
+            self.lblHora["text"]=self.sistema.obtener_hora()
+            self.lblTemperatura["text"]="%.0fº"%self.sistema.obtener_temperatura_actual_grados()
         # mundo
         #log.debug("_update posicion_sol %s"%(str(self.sol.nodo.getPos(self))))
         self.setShaderInput("color_luz_ambiental", self.cielo.color_luz_ambiental, priority=10)

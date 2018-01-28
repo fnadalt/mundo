@@ -3,7 +3,7 @@ from panda3d.core import *
 
 from shader import GeneradorShader
 from objetos import *
-import sistema
+from sistema import *
 
 import math
 
@@ -15,9 +15,10 @@ log=logging.getLogger(__name__)
 #
 class Terreno:
     
-    # alturas
-    AlturaMaxima=300
-    AltitudAgua=AlturaMaxima * 0.5
+    # obsoleto
+#    # alturas
+#    AlturaMaxima=300
+#    AltitudAgua=AlturaMaxima * 0.5
 
     # tamaño de la parcela
     TamanoParcela=32
@@ -25,22 +26,24 @@ class Terreno:
     # radio de expansion
     RadioExpansion=3 #4
 
-    # topografia
-    SemillaTopografia=4069
-    NoiseObjsScales=[1024.0, 64.0, 32.0, 16.0, 8.0]
-    NoiseObjsWeights=[1.0, 0.2, 0.075, 0.005, 0.001] # scale_0>scale_1>scale_n
+    # obsoleto
+#    # topografia
+#    SemillaTopografia=4069
+#    NoiseObjsScales=[1024.0, 64.0, 32.0, 16.0, 8.0]
+#    NoiseObjsWeights=[1.0, 0.2, 0.075, 0.005, 0.001] # scale_0>scale_1>scale_n
 
-    # biomasa:
-    # temperatura; 0->1 => calor->frio
-    ParamsRuidoTemperatura=[8*1024.0, 5643] # [scale, seed]
-    # tipo de terreno
-    ParamsRuidoIntervalo=[8.0, 1133] # [scale, seed]
-    TipoNulo=0
-    TipoNieve=1
-    TipoTierra1=2
-    TipoPasto=3
-    TipoTierra2=4
-    TipoArena=5
+    # obsoleto
+#    # biomasa:
+#    # temperatura; 0->1 => calor->frio
+#    ParamsRuidoTemperatura=[8*1024.0, 5643] # [scale, seed]
+#    # tipo de terreno
+#    ParamsRuidoIntervalo=[8.0, 1133] # [scale, seed]
+#    TipoNulo=0
+#    TipoNieve=1
+#    TipoTierra1=2
+#    TipoPasto=3
+#    TipoTierra2=4
+#    TipoArena=5
 
     def __init__(self, base, bullet_world):
         # referencias:
@@ -54,30 +57,30 @@ class Terreno:
         #self.nodo.setRenderModeWireframe()
         self.parcelas={} # {idx_pos:parcela_node_path,...}
         self.naturaleza={} # {idx_pos:naturaleza_node_path,...}
-        self._noise_objs=list() # [PerlinNoise2, ...]
-        self._ruido_temperatura=None
-        self._ruido_intervalos_tipo_terreno=None
+        #self._noise_objs=list() # [PerlinNoise2, ...] # obsoleto
+        #self._ruido_temperatura=None # obsoleto
+        #self._ruido_intervalos_tipo_terreno=None # obsoleto
         # variables externas:
-        self.pos_foco=None
-        self.pos_foco_inicial=[0, 0]
+        #self.pos_foco=None # obsoleto
+        #self.pos_foco_inicial=[0, 0] # obsoleto
         self.idx_pos_parcela_actual=None # (x,y)
-        self.altura_sobre_agua=Terreno.AlturaMaxima-Terreno.AltitudAgua
+        #self.altura_sobre_agua=Terreno.AlturaMaxima-Sistema.TopoAltitudOceano # obsoleto
         self.switch_lod_naturaleza=(6.0*Terreno.TamanoParcela, 0.0)
         # debug
         self.dibujar_normales=False # cada update
         # variables internas:
-        self._noise_scaled_weights=list() # normalizado
-        self._intervalos_tipo_terreno_escalados=[] # valores de altitud
+        self._noise_scaled_weights=list() # normalizado # obsoleto
+        self._intervalos_tipo_terreno_escalados=[] # valores de altitud # obsoleto
 
     def iniciar(self):
         log.info("iniciar")
         #
-        self.sistema=sistema.obtener_instancia()
+        self.sistema=obtener_instancia_sistema()
         #
-        self._generar_noise_objs()
+        #self._generar_noise_objs() # obsoleto
         self._establecer_shader()
         #
-        log.info("altitud (%s)=%.3f"%(str((0, 0)), self.obtener_altitud((0, 0))))
+        log.info("altitud (%s)=%.3f"%(str((0, 0)), self.sistema.obtener_altitud_suelo((0, 0))))
     
     def terminar(self):
         log.info("terminar")
@@ -91,7 +94,7 @@ class Terreno:
         if y<0.0: y=math.floor(y)
         return (int(x), int(y))
     
-    def obtener_indice_parcela_foco(self):
+    def X_obtener_indice_parcela_foco(self): # obsoleto
         return self.obtener_indice_parcela(self.pos_foco)
     
     def obtener_pos_parcela(self, idx_pos):
@@ -99,7 +102,7 @@ class Terreno:
         y=idx_pos[1]*Terreno.TamanoParcela
         return (x, y)
 
-    def obtener_altitud(self, pos):
+    def X_obtener_altitud(self, pos): # obsoleto
         return self.sistema.obtener_altitud_suelo(pos)
         #
         altitud=0
@@ -110,9 +113,9 @@ class Terreno:
         altitud/=2
         altitud*=Terreno.AlturaMaxima
         if altitud>self.altura_sobre_agua+0.25:
-            altura_sobre_agua=altitud-Terreno.AltitudAgua
+            altura_sobre_agua=altitud-Sistema.TopoAltitudOceano
             altura_sobre_agua_n=altura_sobre_agua/self.altura_sobre_agua
-            altitud=Terreno.AltitudAgua
+            altitud=Sistema.TopoAltitudOceano
             altitud+=0.25+altura_sobre_agua*altura_sobre_agua_n*altura_sobre_agua_n
             altitud+=75.0*altura_sobre_agua_n*altura_sobre_agua_n
             if altitud>Terreno.AlturaMaxima:
@@ -121,16 +124,16 @@ class Terreno:
         #
         return altitud
 
-    def obtener_temperatura_base(self, pos):
+    def X_obtener_temperatura_base(self, pos): # obsoleto
         temperatura=self._ruido_temperatura.noise(*pos)
         temperatura+=1.0
         temperatura/=2.0
         return temperatura
 
-    def obtener_temperatura_actual(self, temperatura_base, altitud, hora_normalizada):
+    def X_obtener_temperatura_actual(self, temperatura_base, altitud, hora_normalizada): # obsoleto
         # f()-> grados_c
         #
-        altura_sobre_agua_n=(altitud-Terreno.AltitudAgua)/self.altura_sobre_agua
+        altura_sobre_agua_n=(altitud-Sistema.TopoAltitudOceano)/self.altura_sobre_agua
         #
         amplitud=15.0+25.0*altura_sobre_agua_n
         amplitud*=0.5+0.75*temperatura_base
@@ -144,13 +147,13 @@ class Terreno:
         #
         return temperatura
 
-    def obtener_tipo_terreno_tuple(self, pos, temperatura_base, altitud, debug=False):
+    def X_obtener_tipo_terreno_tuple(self, pos, temperatura_base, altitud, debug=False): # obsoleto
         # f()->(tipo1,tipo2,factor_mix); factor_mix: [0,1)
         if debug: # ineficiente
             info="obtener_tipo_terreno_tuple tb=%.2f alt=%.2f "%(temperatura_base, altitud)
         c0=0.3 # ineficiente?
         c1=1.0-c0 # ineficiente?
-        a=(altitud-Terreno.AltitudAgua)/self.altura_sobre_agua
+        a=(altitud-Sistema.TopoAltitudOceano)/self.altura_sobre_agua
         #
         offset_medio=2.0*temperatura_base-1.0
         tipo_t=c1+4.5*temperatura_base # 4.5==4+2*c0?
@@ -190,18 +193,10 @@ class Terreno:
             log.debug(info)
         return tipo
 
-    def obtener_tipo_terreno_float(self, pos, temperatura_base, altitud, debug=False):
+    def X_obtener_tipo_terreno_float(self, pos, temperatura_base, altitud, debug=False): # obsoleto
         # f()->tipo1*10 + tipo2 + factor_mix; factor_mix: [0,1)
         tipo=self.obtener_tipo_terreno_tuple(pos, temperatura_base, altitud, debug)
         return 10.0*tipo[0]+tipo[1]+tipo[2]
-
-    def dentro_radio(self, pos_1, pos_2, radio):
-        dx=pos_2[0]-pos_1[0]
-        dy=pos_2[1]-pos_1[1]
-        if math.sqrt((dx**2)+(dy**2))<=radio:
-            return True
-        else:
-            return False
 
     def obtener_info(self):
         pos_parcela_actual=None
@@ -209,19 +204,20 @@ class Terreno:
         if len(self.parcelas)>0:
             parcela_actual=self.parcelas[self.idx_pos_parcela_actual]
             pos_parcela_actual=parcela_actual.getPos() 
-            temp=self.obtener_temperatura_base(pos_parcela_actual.getXy())
+            temp=self.sistema.obtener_temperatura_anual_media_norm(pos_parcela_actual.getXy())
         #
         info="Terreno\n"
         info+="idx_pos_parcela_actual=%s pos=%s\n"%(str(self.idx_pos_parcela_actual), str(pos_parcela_actual))
-        info+="RadioExpansion=%i pos_foco=%s altitud=%.2f temp_base=%s\n"%(Terreno.RadioExpansion, str(self.pos_foco), self.obtener_altitud(self.pos_foco), str(temp))
+        info+="RadioExpansion=%i altitud=%.2f temp_base=%s\n"%(Terreno.RadioExpansion, self.sistema.obtener_altitud_suelo_cursor(), str(temp))
         return info
 
-    def update(self, pos_foco, forzar=False):
-        if self.pos_foco!=pos_foco:
-            #log.debug("distinto: %s %s "%(str(self.pos_foco), str(pos_foco)))
-            self.pos_foco=pos_foco
+    def update(self, forzar=False):
+        # obsoleto
+#        if self.pos_foco!=pos_foco:
+#            #log.debug("distinto: %s %s "%(str(self.pos_foco), str(pos_foco)))
+#            self.pos_foco=pos_foco
         #
-        idx_pos=self.obtener_indice_parcela_foco()
+        idx_pos=self.obtener_indice_parcela(self.sistema.posicion_cursor)
         #log.debug("idx_pos=%s"%(str(idx_pos)))
         if forzar or idx_pos!=self.idx_pos_parcela_actual:
             self.idx_pos_parcela_actual=idx_pos
@@ -256,7 +252,7 @@ class Terreno:
         parcela_node_path.setPos(pos[0], pos[1], 0.0)
         # geometría
         datos_parcela=self._generar_datos_parcela(idx_pos)
-        geom_node=self._generar_geometria_parcela(nombre, idx_pos, datos_parcela)
+        geom_node=self._generar_nodo_parcela(nombre, idx_pos, datos_parcela)
         #
         parcela_node_path.attachNewNode(geom_node)
         # debug: normales
@@ -266,7 +262,7 @@ class Terreno:
         # agregar a parcelas
         self.parcelas[idx_pos]=parcela_node_path
         # naturaleza
-        naturaleza_node_path=self._generar_nodo_naturaleza(pos, idx_pos, datos_parcela)
+        naturaleza_node_path=self._generar_nodo_naturaleza(pos, idx_pos, datos_parcela) # datos_parcela es obsoleto
         naturaleza_node_path.setPos(pos[0], pos[1], 0.0)
         naturaleza_node_path.reparentTo(self.nodo_naturaleza)
         self.naturaleza[idx_pos]=naturaleza_node_path
@@ -294,9 +290,9 @@ class Terreno:
                 d=DatosLocalesTerreno()
                 #data.index=None # no establecer en esta instancia
                 _pos=(pos[0]+x-1, pos[1]+y-1)
-                temperatura_base=self.obtener_temperatura_base(_pos)
-                d.pos=Vec3(x-1, y-1, self.obtener_altitud(_pos))
-                d.tipo=self.obtener_tipo_terreno_float(_pos, temperatura_base, d.pos[2], False)
+                temperatura_base=self.sistema.obtener_temperatura_anual_media_norm(_pos)
+                d.pos=Vec3(x-1, y-1, self.sistema.obtener_altitud_suelo(_pos))
+                d.tipo=10.0 # implementar sistema en shader #self.obtener_tipo_terreno_float(_pos, temperatura_base, d.pos[2], False)
                 d.temperatura_base=temperatura_base
                 #log.debug(str(d.tipo))
                 data[x].append(d)
@@ -319,7 +315,7 @@ class Terreno:
         #
         return data
 
-    def _generar_geometria_parcela(self, nombre, idx_pos, data):
+    def _generar_nodo_parcela(self, nombre, idx_pos, data):
         # formato
         co_info_tipo_terreno=InternalName.make("info_tipo_terreno") # int()->tipo; fract()->intervalo
         format_array=GeomVertexArrayFormat()
@@ -388,7 +384,7 @@ class Terreno:
     def _generar_nodo_naturaleza(self, pos, idx_pos, data):
         #
         tamano=Terreno.TamanoParcela+1
-        naturaleza=Naturaleza(self.base, pos, Terreno.AlturaMaxima, tamano, Terreno.AltitudAgua)
+        naturaleza=Naturaleza(self.base, pos, tamano)
         naturaleza.iniciar()
         for x in range(tamano):
             for y in range(tamano):
@@ -399,6 +395,8 @@ class Terreno:
         nombre="nodo_naturaleza_%i_%i"%(idx_pos[0], idx_pos[1])
         #
         nodo=naturaleza.generar("%s_objetos"%nombre)
+        #
+        naturaleza.terminar()
         #
         lod0=NodePath(LODNode("%s_lod"%nombre))
         lod0.node().addSwitch(*self.switch_lod_naturaleza)
@@ -451,7 +449,7 @@ class Terreno:
         #
         return geom.create()
 
-    def _generar_noise_objs(self):
+    def X_generar_noise_objs(self):
         # topografia:
         # normalizar coeficientes
         suma_coefs=0
@@ -486,8 +484,8 @@ class DatosLocalesTerreno:
         self.index=None # vertex array index
         self.pos=None
         self.normal=None
-        self.tipo=0.0
-        self.temperatura_base=0.0
+        self.tipo=0.0 # obsoleto?
+        self.temperatura_base=0.0 # obsoleto?
     
     def __str__(self):
         return "DatosLocalesTerreno: i=%s; pos=%s; normal=%s; tipo=%.3f; temp_b=%.3f"%(str(self.index), str(self.pos), str(self.normal), self.tipo, self.temperatura_base)
@@ -504,13 +502,14 @@ class Tester(ShowBase):
     TipoImagenTiposTerreno=2
     TipoImagenEspacios=3
 
-    ColoresTipoTerreno={Terreno.TipoNulo:Vec4(0, 0, 0, 255), 
-                        Terreno.TipoArena:Vec4(240, 230, 0, 255), 
-                        Terreno.TipoTierra1:Vec4(70, 60, 0, 255), 
-                        Terreno.TipoPasto:Vec4(0, 190, 10, 255), 
-                        Terreno.TipoTierra2:Vec4(70, 60, 0, 255), 
-                        Terreno.TipoNieve:Vec4(250, 250, 250, 255)
-                        }
+    # obsoleto
+#    ColoresTipoTerreno={Terreno.TipoNulo:Vec4(0, 0, 0, 255), 
+#                        Terreno.TipoArena:Vec4(240, 230, 0, 255), 
+#                        Terreno.TipoTierra1:Vec4(70, 60, 0, 255), 
+#                        Terreno.TipoPasto:Vec4(0, 190, 10, 255), 
+#                        Terreno.TipoTierra2:Vec4(70, 60, 0, 255), 
+#                        Terreno.TipoNieve:Vec4(250, 250, 250, 255)
+#                        }
 
     def __init__(self):
         #
@@ -524,7 +523,11 @@ class Tester(ShowBase):
         self.cam_pitch=30.0
         self.escribir_archivo=False # cada update
         #
-        GeneradorShader.iniciar(Terreno.AltitudAgua, Vec4(0, 0, 1, Terreno.AltitudAgua))
+        self.sistema=Sistema()
+        self.sistema.iniciar()
+        sistema.establecer_instancia_sistema(self.sistema)
+        #
+        GeneradorShader.iniciar(Sistema.TopoAltitudOceano, Vec4(0, 0, 1, Sistema.TopoAltitudOceano))
         GeneradorShader.aplicar(self.render, GeneradorShader.ClaseGenerico, 1)
         self.render.setShaderInput("distancia_fog_maxima", 3000.0, 0, 0, 0, priority=3)
         #
@@ -572,7 +575,7 @@ class Tester(ShowBase):
         self._cargar_ui()
         
     def update(self, task):
-        nueva_pos_foco=self.pos_foco[:] if self.pos_foco else self.terreno.pos_foco_inicial
+        nueva_pos_foco=self.pos_foco[:] if self.pos_foco else [0, 0]
         #
         mwn=self.mouseWatcherNode
         if mwn.isButtonDown(KeyboardButton.up()):
@@ -603,7 +606,7 @@ class Tester(ShowBase):
         max=-999999
         for x in range(tamano):
             for y in range(tamano):
-                a=self.terreno.obtener_altitud((pos_foco[0]+x, pos_foco[1]+y))
+                a=self.terreno.sistema.obtener_altitud_suelo((pos_foco[0]+x, pos_foco[1]+y))
                 vals.append(a)
                 if a>max:
                     max=a
@@ -624,9 +627,9 @@ class Tester(ShowBase):
         if self.escribir_archivo:
             log.info("escribir_archivo")
             self.terreno.nodo.writeBamFile("terreno.bam")
-        self.plano_agua.setPos(Vec3(pos[0], pos[1], Terreno.AltitudAgua))
+        self.plano_agua.setPos(Vec3(pos[0], pos[1], Sistema.TopoAltitudOceano))
         #
-        self.cam_driver.setPos(Vec3(pos[0]+Terreno.TamanoParcela/2, pos[1]-Terreno.TamanoParcela, Terreno.AltitudAgua))
+        self.cam_driver.setPos(Vec3(pos[0]+Terreno.TamanoParcela/2, pos[1]-Terreno.TamanoParcela, Sistema.TopoAltitudOceano))
         #
         self.lblInfo["text"]=self.terreno.obtener_info()
         #
@@ -659,25 +662,26 @@ class Tester(ShowBase):
             for y in range(tamano+1):
                 _x=tamano-self.pos_foco[0]+x
                 _y=tamano-self.pos_foco[1]+y
-                a=self.terreno.obtener_altitud((_x, _y))
-                c=int(255*a/Terreno.AlturaMaxima)
+                a=self.terreno.sistema.obtener_altitud_suelo((_x, _y))
+                c=int(255*a/Sistema.TopoAltura)
                 if x==tamano/2 or y==tamano/2:
                     c=255
                 else:
-                    if a>Terreno.AltitudAgua:
-                        tb=self.terreno.obtener_temperatura_base((_x, _y))
-                        tt=self.terreno.obtener_tipo_terreno_tuple((_x, _y), tb, a)
-                        c0=None
-                        c1=None
-                        if tt[2]==0.0:
-                            c=Tester.ColoresTipoTerreno[tt[0]]
-                        elif tt[2]==1.0:
-                            c=Tester.ColoresTipoTerreno[tt[1]]
-                        else:
-                            c0=Tester.ColoresTipoTerreno[tt[0]]
-                            c1=Tester.ColoresTipoTerreno[tt[1]]
-                            c=(c0*(1-tt[2]))+(c1*tt[2])
-                        #log.debug("_generar_imagen tt=%s c0=%s c1=%s c=%s"%(str(tt), str(c0), str(c1), str(c)))
+                    if a>Sistema.TopoAltitudOceano:
+                        #tb=self.sistema.obtener_temperatura_anual_media_norm((_x, _y))
+#                        tt=(1, 0, 0.0) # implementar sistema en shader #self.terreno.obtener_tipo_terreno_tuple((_x, _y), tb, a)
+#                        c0=None
+#                        c1=None
+#                        if tt[2]==0.0:
+#                            c=Tester.ColoresTipoTerreno[tt[0]]
+#                        elif tt[2]==1.0:
+#                            c=Tester.ColoresTipoTerreno[tt[1]]
+#                        else:
+#                            c0=Tester.ColoresTipoTerreno[tt[0]]
+#                            c1=Tester.ColoresTipoTerreno[tt[1]]
+#                            c=(c0*(1-tt[2]))+(c1*tt[2])
+#                        #log.debug("_generar_imagen tt=%s c0=%s c1=%s c=%s"%(str(tt), str(c0), str(c1), str(c)))
+                        c=Vec4(240, 230, 0, 255)
                         self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(int(c[0]), int(c[1]), int(c[2]), 255))
                     else:
                         self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(0, 0, c, 255))
@@ -695,17 +699,18 @@ class Tester(ShowBase):
         #
         for x in range(tamano+1):
             for y in range(tamano+1):
-                t=x/(tamano+1)
-                a=(y/(tamano+1))*Terreno.AlturaMaxima
-                tt=self.terreno.obtener_tipo_terreno_tuple((0, 0), t, a)
-                c0=Tester.ColoresTipoTerreno[tt[0]]
-                c1=Tester.ColoresTipoTerreno[tt[1]]
-                color=None
-                if tt[2]>0.0:
-                    color=(c0*(1.0-tt[2]))+(c1*tt[2])
-                else:
-                    color=c0
-                color=(int(color[0]), int(color[1]), int(color[2]), 255)
+#                t=x/(tamano+1)
+#                a=(y/(tamano+1))*Terreno.AlturaMaxima
+#                tt=(1, 0, 0.0) # implementar sistema en shader #self.terreno.obtener_tipo_terreno_tuple((0, 0), t, a)
+#                c0=Tester.ColoresTipoTerreno[tt[0]]
+#                c1=Tester.ColoresTipoTerreno[tt[1]]
+#                color=None
+#                if tt[2]>0.0:
+#                    color=(c0*(1.0-tt[2]))+(c1*tt[2])
+#                else:
+#                    color=c0
+#                color=(int(color[0]), int(color[1]), int(color[2]), 255)
+                color=Vec4(240, 230, 0, 255)
                 self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(color[0], color[1], color[2], 255))
         #
         self.texturaImagen.load(self.imagen)
@@ -772,38 +777,11 @@ class Tester(ShowBase):
             self.zoom_imagen=4096
         self._generar_imagen()
 
-def debug_tipos_terreno(terreno):
-    log.debug("debug_tipos_terreno")
-    tamano=10
-    for t in range(tamano):
-        for a in range(tamano):
-            terreno.obtener_tipo_terreno_tuple((0, 0), t/tamano, a*Terreno.AlturaMaxima/tamano, True)
-
-def debug_temperaturas(terreno):
-    log.debug("debug_temperaturas")
-    log.debug("frio:")
-    terreno.obtener_temperatura_actual(0.0, 150, 0.25)
-    terreno.obtener_temperatura_actual(0.0, 150, 0.75)
-    terreno.obtener_temperatura_actual(0.0, 300, 0.25)
-    terreno.obtener_temperatura_actual(0.0, 300, 0.75)
-    log.debug("templado:")
-    terreno.obtener_temperatura_actual(0.5, 150, 0.25)
-    terreno.obtener_temperatura_actual(0.5, 150, 0.75)
-    terreno.obtener_temperatura_actual(0.5, 300, 0.25)
-    terreno.obtener_temperatura_actual(0.5, 300, 0.75)
-    log.debug("caluroso:")
-    terreno.obtener_temperatura_actual(1.0, 150, 0.25)
-    terreno.obtener_temperatura_actual(1.0, 150, 0.75)
-    terreno.obtener_temperatura_actual(1.0, 300, 0.25)
-    terreno.obtener_temperatura_actual(1.0, 300, 0.75)
-
 if __name__=="__main__":
     logging.basicConfig(level=logging.DEBUG)
     PStatClient.connect()
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    Terreno.RadioExpansion=1
+    Terreno.RadioExpansion=2
     tester.escribir_archivo=False
-    #debug_tipos_terreno(tester.terreno)
-    #debug_temperaturas(tester.terreno)
     tester.run()
