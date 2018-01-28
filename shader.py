@@ -13,7 +13,7 @@ _plano_recorte_agua_inv=Vec4(0, 0, -1, 0)
 
 class GeneradorShader:
 
-    Version="120"
+    Version="130"
 
     # clases
     ClaseNulo="nulo"
@@ -194,23 +194,24 @@ class GeneradorShader:
 #
 #
 VS_COMUN="""
-attribute vec4 p3d_Vertex;
+in vec4 p3d_Vertex;
 uniform mat4 p3d_ModelViewProjectionMatrix;
 uniform mat4 p3d_ModelMatrix;
-varying vec4 PositionW; // clip
+out vec4 PositionW; // clip
 """
 VS_TEX="""
-attribute vec4 p3d_MultiTexCoord0; // generico, terreno, agua, sol
+in vec4 p3d_MultiTexCoord0; // generico, terreno, agua, sol
+out vec4 texcoord; // generico, terreno, agua, sol
 """
 VS_POS_MODELO="""
-varying vec4 Position; // fog y cielo
+out vec4 Position; // fog y cielo
 """
 VS_POS_VIEW="""
-attribute vec3 p3d_Normal;
+in vec3 p3d_Normal;
 uniform mat4 p3d_ModelViewMatrix;
 uniform mat3 p3d_NormalMatrix;
-varying vec4 PositionV; // luz, fog
-varying vec3 Normal;
+out vec4 PositionV; // luz, fog
+out vec3 Normal;
 """
 VS_SOMBRA="""
 uniform struct {
@@ -227,15 +228,15 @@ uniform struct {
     sampler2DShadow shadowMap;
     mat4 shadowViewMatrix;
 } p3d_LightSource[8];
-varying vec4 sombra[8];
+out vec4 sombra[8];
 """
 VS_POS_PROJ="""
-varying vec4 PositionP; // agua
+out vec4 PositionP; // agua
 """
 VS_TIPO_TERRENO="""
-attribute float info_tipo_terreno;
-varying float info_tipo;
-varying float info_tipo_factor;
+in float info_tipo_terreno;
+out float info_tipo;
+invariant info_tipo;
 """
 VS_MAIN_INICIO="""
 void main() {
@@ -253,12 +254,11 @@ VS_MAIN_SOMBRA="""
     }
 """
 VS_MAIN_TEX="""
-    gl_TexCoord[0]=p3d_MultiTexCoord0;
+    texcoord=p3d_MultiTexCoord0;
 """
 VS_MAIN_TIPO_TERRENO="""
     // terreno
-    info_tipo=floor(info_tipo_terreno);
-    info_tipo_factor=fract(info_tipo_terreno);
+    info_tipo=info_tipo_terreno;
 """
 VS_MAIN_VERTEX="""
     Position=p3d_Vertex; // fog y cielo
@@ -280,7 +280,7 @@ VS_MAIN_FIN="""
 #
 FS_COMUN="""
 const float TamanoHalo=0.85;
-varying vec4 PositionW; // clip
+in vec4 PositionW; // clip
 // comun
 uniform vec3 posicion_sol;
 uniform vec4 plano_recorte_agua;
@@ -294,6 +294,7 @@ uniform vec4 color_halo_sol_final;
 """
 FS_TEX_0="""
 uniform sampler2D p3d_Texture0; // !cielo
+in vec4 texcoord;
 """
 FS_TEX_123="""
 uniform sampler2D p3d_Texture1; // agua
@@ -301,14 +302,14 @@ uniform sampler2D p3d_Texture2; // agua
 uniform sampler2D p3d_Texture3; // agua
 """
 FS_POS_MODELO="""
-varying vec4 Position; // cielo
+in vec4 Position; // cielo
 """
 FS_POS_VIEW="""
-varying vec4 PositionV; // luz, fog
-varying vec3 Normal;
+in vec4 PositionV; // luz, fog
+in vec3 Normal;
 """
 FS_POS_PROJ="""
-varying vec4 PositionP; // agua
+in vec4 PositionP; // agua
 """
 FS_FOG="""
 uniform float distancia_fog_minima;
@@ -344,7 +345,7 @@ uniform struct {
     sampler2DShadow shadowMap;
     mat4 shadowViewMatrix;
 } p3d_LightSource[8];
-varying vec4 sombra[8];
+in vec4 sombra[8];
 """
 FS_AGUA="""
 uniform float move_factor;
@@ -353,8 +354,8 @@ const float shine_damper=20.0;
 const float reflectivity=0.6;
 """
 FS_TERRENO="""
-varying float info_tipo;
-varying float info_tipo_factor;
+in float info_tipo;
+invariant info_tipo;
 """
 FS_FUNC_LUZ="""
 // generico y terreno
@@ -395,14 +396,14 @@ FS_FUNC_TEX_GENERICO="""
 // generico
 vec4 tex_generico(){
     vec4 color_tex=vec4(0,0,0,0);
-    color_tex+=texture2D(p3d_Texture0, gl_TexCoord[0].st);
+    color_tex+=texture2D(p3d_Texture0, texcoord.st);
     return color_tex;
 }
 """
 FS_FUNC_TEX_AGUA="""
-    color_tex+=texture2D(p3d_Texture1, gl_TexCoord[0].st); // agua
-    color_tex+=texture2D(p3d_Texture2, gl_TexCoord[0].st); // agua
-    color_tex+=texture2D(p3d_Texture3, gl_TexCoord[0].st); // agua
+    color_tex+=texture2D(p3d_Texture1, texcoord.st); // agua
+    color_tex+=texture2D(p3d_Texture2, texcoord.st); // agua
+    color_tex+=texture2D(p3d_Texture3, texcoord.st); // agua
 """
 FS_FUNC_TEX_TERRENO="""
 // terreno
@@ -416,32 +417,33 @@ vec4 tex_terreno()
     float tipo1=mod(floor(info_tipo),10);
     //
     if(tipo0==1){
-        _color0=texture2D(p3d_Texture0, gl_TexCoord[0].st/2.0+vec2(0,0.5));
+        _color0=texture2D(p3d_Texture0, texcoord.st/2.0+vec2(0,0.5));
     } else if(tipo0==2){
-        _color0=texture2D(p3d_Texture0, gl_TexCoord[0].st/2.0+vec2(0.5,0.5));
+        _color0=texture2D(p3d_Texture0, texcoord.st/2.0+vec2(0.5,0.5));
     } else if(tipo0==3){
-        _color0=texture2D(p3d_Texture0, gl_TexCoord[0].st/2.0);
+        _color0=texture2D(p3d_Texture0, texcoord.st/2.0);
     } else if(tipo0==4){
-        _color0=texture2D(p3d_Texture0, gl_TexCoord[0].st/2.0+vec2(0.5,0.5));
+        _color0=texture2D(p3d_Texture0, texcoord.st/2.0+vec2(0.5,0.5));
     } else if(tipo0==5){
-        _color0=texture2D(p3d_Texture0, gl_TexCoord[0].st/2.0+vec2(0.5,0));
+        _color0=texture2D(p3d_Texture0, texcoord.st/2.0+vec2(0.5,0));
     } else {
         _color0=vec4(0,0,0,1);
     }
     if(tipo1==1){
-        _color1=texture2D(p3d_Texture0, gl_TexCoord[0].st/2.0+vec2(0,0.5));
+        _color1=texture2D(p3d_Texture0, texcoord.st/2.0+vec2(0,0.5));
     } else if(tipo1==2){
-        _color1=texture2D(p3d_Texture0, gl_TexCoord[0].st/2.0+vec2(0.5,0.5));
+        _color1=texture2D(p3d_Texture0, texcoord.st/2.0+vec2(0.5,0.5));
     } else if(tipo1==3){
-        _color1=texture2D(p3d_Texture0, gl_TexCoord[0].st/2.0);
+        _color1=texture2D(p3d_Texture0, texcoord.st/2.0);
     } else if(tipo1==4){
-        _color1=texture2D(p3d_Texture0, gl_TexCoord[0].st/2.0+vec2(0.5,0.5));
+        _color1=texture2D(p3d_Texture0, texcoord.st/2.0+vec2(0.5,0.5));
     } else if(tipo1==5){
-        _color1=texture2D(p3d_Texture0, gl_TexCoord[0].st/2.0+vec2(0.5,0));
+        _color1=texture2D(p3d_Texture0, texcoord.st/2.0+vec2(0.5,0));
     } else {
         _color1=vec4(1,1,1,1);
     }
     //
+    float info_tipo_factor=0.0;
     if(info_tipo_factor==0.0){
         _color=_color0;
     } else if(info_tipo_factor==1.0){
@@ -464,8 +466,8 @@ vec4 agua()
     vec2 texcoord_reflejo=vec2(ndc.x,1.0-ndc.y);
     vec2 texcoord_refraccion=ndc;
     //
-    vec2 distorted_texcoords=texture2D(p3d_Texture2,vec2(gl_TexCoord[0].s+move_factor, gl_TexCoord[0].t)).rg*0.1;
-    distorted_texcoords=gl_TexCoord[0].st+vec2(distorted_texcoords.x,distorted_texcoords.y+move_factor);
+    vec2 distorted_texcoords=texture2D(p3d_Texture2,vec2(texcoord.s+move_factor, texcoord.t)).rg*0.1;
+    distorted_texcoords=texcoord.st+vec2(distorted_texcoords.x,distorted_texcoords.y+move_factor);
     vec2 total_distortion=(texture2D(p3d_Texture2,distorted_texcoords).rg*2.0-1.0)*0.01;
     //
     texcoord_reflejo+=total_distortion;
@@ -522,7 +524,7 @@ vec4 sol()
     if(distance(posicion_sol,PositionW.xyz)>20.0){
         return vec4(0,0,0,1);
     } else {
-        vec4 color=texture2D(p3d_Texture0, gl_TexCoord[0].st);
+        vec4 color=texture2D(p3d_Texture0, texcoord.st);
         return color;//*2*(color.a - 0.5);
     }
 }
