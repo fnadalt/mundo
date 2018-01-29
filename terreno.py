@@ -157,7 +157,7 @@ class Terreno:
                 d.pos=Vec3(x-1, y-1, self.sistema.obtener_altitud_suelo(_pos))
                 d.tipo=self.sistema.obtener_tipo_terreno_float(_pos)
                 d.temperatura_base=temperatura_base
-                log.debug("_generar_datos_parcela pos=%s tipo_terreno=%s"%(str(_pos), str(d.tipo)))
+                #log.debug("_generar_datos_parcela pos=%s tipo_terreno=%s"%(str(_pos), str(d.tipo)))
                 data[x].append(d)
         # calcular normales
         for x in range(Terreno.TamanoParcela+1):
@@ -351,7 +351,7 @@ class Tester(ShowBase):
         self.sistema.iniciar()
         establecer_instancia_sistema(self.sistema)
         #
-        GeneradorShader.iniciar(Sistema.TopoAltitudOceano, Vec4(0, 0, 1, Sistema.TopoAltitudOceano))
+        GeneradorShader.iniciar(self, Sistema.TopoAltitudOceano, Vec4(0, 0, 1, Sistema.TopoAltitudOceano))
         GeneradorShader.aplicar(self.render, GeneradorShader.ClaseGenerico, 1)
         self.render.setShaderInput("distancia_fog_maxima", 3000.0, 0, 0, 0, priority=3)
         #

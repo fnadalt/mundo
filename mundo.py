@@ -87,7 +87,7 @@ class Mundo(NodePath):
 
     def _establecer_shader(self):
         log.info("_establecer_shader")
-        GeneradorShader.iniciar(Sistema.TopoAltitudOceano, Vec4(0, 0, 1, Sistema.TopoAltitudOceano))
+        GeneradorShader.iniciar(self.base, Sistema.TopoAltitudOceano, Vec4(0, 0, 1, Sistema.TopoAltitudOceano))
         GeneradorShader.aplicar(self, GeneradorShader.ClaseGenerico, 1)
 
     def _cargar_obj_voxel(self):
