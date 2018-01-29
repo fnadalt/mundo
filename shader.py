@@ -22,7 +22,7 @@ class GeneradorShader:
     ClaseDebug="debug"
     ClaseGenerico=ClaseDebug#"generico"
     ClaseTerreno=ClaseDebug#"terreno"
-    ClaseAgua=ClaseDebug#"agua"
+    ClaseAgua="agua"
     ClaseCielo="cielo"
     ClaseSol="sol"
     ClaseSombra=ClaseDebug#"sombra"
@@ -30,6 +30,7 @@ class GeneradorShader:
     @staticmethod
     def iniciar(base, altitud_agua, plano_recorte_agua):
         global _glsl_version, _altitud_agua, _plano_recorte_agua, _plano_recorte_agua_inv
+        #
         if base:
             glsl_mj=base.win.getGsg().getDriverShaderVersionMajor()
             glsl_mn=base.win.getGsg().getDriverShaderVersionMinor()
@@ -37,12 +38,14 @@ class GeneradorShader:
             log.info("opengl glsl version %i"%_glsl_version)
             if _glsl_version<120:
                 raise Exception("version de glsl no soportada")
+        #
         if _altitud_agua!=None:
             log.warning("GeneradorShader ya iniciado")
             return
         _altitud_agua=altitud_agua
         _plano_recorte_agua=plano_recorte_agua
         _plano_recorte_agua_inv=Vec4(-_plano_recorte_agua[0], -_plano_recorte_agua[1], -_plano_recorte_agua[2], -_altitud_agua)
+        #
 
     @staticmethod
     def aplicar(nodo, tipo, prioridad):

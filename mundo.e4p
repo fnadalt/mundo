@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-5.1.dtd">
 <!-- eric project file for project mundo -->
-<!-- Saved: 2018-01-29, 15:58:08 -->
+<!-- Saved: 2018-01-29, 19:04:13 -->
 <!-- Copyright (C) 2018 Fernando Nadal Testa, fnt2006@gmail.com -->
 <Project version="5.1">
   <Language>en_US</Language>
@@ -19,6 +19,7 @@
     <Source>biomas.txt</Source>
     <Source>camara.py</Source>
     <Source>cielo.py</Source>
+    <Source>config.py</Source>
     <Source>corregir_egg.py</Source>
     <Source>dia.py</Source>
     <Source>glsl120.py</Source>
@@ -26,6 +27,7 @@
     <Source>hombre.py</Source>
     <Source>input.py</Source>
     <Source>main.py</Source>
+    <Source>mundo.ini</Source>
     <Source>mundo.py</Source>
     <Source>objetos.csv</Source>
     <Source>objetos.py</Source>
@@ -59,10 +61,10 @@
   <Interfaces/>
   <Others>
     <Other>biomas.txt</Other>
+    <Other>mundo.ini</Other>
     <Other>objetos.csv</Other>
     <Other>shaders/blur_x.f.glsl</Other>
     <Other>shaders/blur_y.f.glsl</Other>
-    <Other>shaders/debug.fs</Other>
     <Other>shaders/proto.f.glsl</Other>
     <Other>shaders/proto.v.glsl</Other>
   </Others>

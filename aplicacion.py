@@ -1,8 +1,10 @@
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import *
-from mundo import Mundo
 from panda3d.core import loadPrcFileData
- 
+
+from mundo import Mundo
+import config
+
 import logging
 logging.basicConfig(level=logging.DEBUG)
 log=logging.getLogger(__name__)
@@ -22,9 +24,10 @@ class Aplicacion(ShowBase):
         self.setFrameRateMeter(True)
         #
         self.mundo=Mundo(self)
-        self.mundo.iniciar()
         
     def iniciar(self):
+        config.iniciar()
+        self.mundo.iniciar()
         self.run()
 
     def step(self):

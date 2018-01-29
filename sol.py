@@ -2,6 +2,7 @@ from direct.gui.DirectGui import *
 from panda3d.core import *
 
 from shader import GeneradorShader
+import config
 
 import logging
 log=logging.getLogger(__name__)
@@ -44,7 +45,12 @@ class Sol:
         # luz direccional
         self.luz=self.nodo.attachNewNode(DirectionalLight("luz_solar"))
         self.luz.node().setColor(Vec4(1.0, 1.0, 0.7, 1.0))
-        self.luz.node().setShadowCaster(True, 512, 512)
+        #
+        if config.valbool("shader.sombras"):
+            log.info("sombras activadas")
+            self.luz.node().setShadowCaster(True, 512, 512)
+        else:
+            log.info("sombras desactivadas")
         # init:
         self._establecer_shaders()
     
