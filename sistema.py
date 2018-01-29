@@ -147,7 +147,7 @@ class Sistema:
         self.periodo_dia_actual=Sistema.DiaPeriodoAtardecer
         self.periodo_dia_anterior=Sistema.DiaPeriodoDia
         self.periodo_dia_posterior=Sistema.DiaPeriodoNoche
-        self.hora_normalizada=0.0
+        self.hora_normalizada=0.53
         self.temperatura_actual_norm=None
         self.nubosidad=0.0
         self.precipitacion_actual_tipo=Sistema.PrecipitacionTipoAgua

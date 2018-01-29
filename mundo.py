@@ -249,7 +249,6 @@ class Mundo(NodePath):
         # sistema
         self.sistema.update(dt, pos_pivot_camara)
         # ciclo dia/noche, cielo, sol
-        #self.dia.update(dt) # obsoleto
         offset_periodo=self.sistema.calcular_offset_periodo_dia()
         self.cielo.nodo.setX(self.controlador_camara.target_node_path.getPos().getX())
         self.cielo.nodo.setY(self.controlador_camara.target_node_path.getPos().getY())
@@ -293,25 +292,3 @@ class Mundo(NodePath):
             self.debug_fisicaN.show()
         else:
             self.debug_fisicaN.hide()
-
-#
-#
-# MUNDO2
-#
-#
-class Mundo2:
-    
-    def __init__(self, base):
-        # referencias:
-        self.base=base
-        # componentes:
-        self.sistema
-    
-    def iniciar(self):
-        pass
-    
-    def terminar(self):
-        pass
-    
-    def update(self):
-        pass
