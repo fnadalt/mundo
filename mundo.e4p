@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-5.1.dtd">
 <!-- eric project file for project mundo -->
-<!-- Saved: 2018-01-29, 11:19:46 -->
+<!-- Saved: 2018-01-29, 15:58:08 -->
 <!-- Copyright (C) 2018 Fernando Nadal Testa, fnt2006@gmail.com -->
 <Project version="5.1">
   <Language>en_US</Language>
@@ -34,6 +34,8 @@
     <Source>shaders/blur.v.glsl</Source>
     <Source>shaders/blur_x.f.glsl</Source>
     <Source>shaders/blur_y.f.glsl</Source>
+    <Source>shaders/debug.f.glsl</Source>
+    <Source>shaders/debug.v.glsl</Source>
     <Source>shaders/fs.agua.glsl</Source>
     <Source>shaders/fs.cielo.glsl</Source>
     <Source>shaders/fs.generico.glsl</Source>
@@ -60,6 +62,7 @@
     <Other>objetos.csv</Other>
     <Other>shaders/blur_x.f.glsl</Other>
     <Other>shaders/blur_y.f.glsl</Other>
+    <Other>shaders/debug.fs</Other>
     <Other>shaders/proto.f.glsl</Other>
     <Other>shaders/proto.v.glsl</Other>
   </Others>
@@ -87,4 +90,7 @@
     <FiletypeAssociation pattern="README" type="OTHERS"/>
     <FiletypeAssociation pattern="README.*" type="OTHERS"/>
   </FiletypeAssociations>
+  <LexerAssociations>
+    <LexerAssociation pattern="*.glsl" lexer="C++"/>
+  </LexerAssociations>
 </Project>

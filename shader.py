@@ -19,12 +19,13 @@ class GeneradorShader:
 
     # clases
     ClaseNulo="nulo"
-    ClaseGenerico="generico"
-    ClaseTerreno="terreno"
-    ClaseAgua="agua"
+    ClaseDebug="debug"
+    ClaseGenerico=ClaseDebug#"generico"
+    ClaseTerreno=ClaseDebug#"terreno"
+    ClaseAgua=ClaseDebug#"agua"
     ClaseCielo="cielo"
     ClaseSol="sol"
-    ClaseSombra="sombra"
+    ClaseSombra=ClaseDebug#"sombra"
 
     @staticmethod
     def iniciar(base, altitud_agua, plano_recorte_agua):
@@ -84,6 +85,9 @@ class GeneradorShader:
         self._clase=clase
 
     def generar(self):
+        if self._clase==GeneradorShader.ClaseDebug:
+            shader=Shader.load(Shader.SL_GLSL, vertex="shaders/debug.v.glsl", fragment="shaders/debug.f.glsl")
+            return shader
         #
         glsl=None
         if _glsl_version>=130:

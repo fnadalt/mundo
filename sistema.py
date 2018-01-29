@@ -147,7 +147,7 @@ class Sistema:
         self.periodo_dia_actual=Sistema.DiaPeriodoAtardecer
         self.periodo_dia_anterior=Sistema.DiaPeriodoDia
         self.periodo_dia_posterior=Sistema.DiaPeriodoNoche
-        self.hora_normalizada=0.53
+        self.hora_normalizada=0.0
         self.temperatura_actual_norm=None
         self.nubosidad=0.0
         self.precipitacion_actual_tipo=Sistema.PrecipitacionTipoAgua
@@ -162,8 +162,10 @@ class Sistema:
             self.posicion_cursor=Vec3(0, 0, 0)
             self.ano=0
             self.dia=0
-            self.periodo_dia=WorldSystem.DayPeriodDawn
+            self.periodo_dia=Sistema.DiaPeriodoAtardecer
             self.hora_normalizada=0.0
+            self._segundos_transcurridos_dia=0.5/self.duracion_dia_segundos
+            self._establecer_fecha_hora_estacion()
             self._establecer_temperatura_actual_norm()
             self._establecer_precipitacion()
         else:
