@@ -447,10 +447,10 @@ class Sistema:
         if loguear:
             print("bioma2 delta_idx_tabla=%s factor_transicion=%.3f fila=%i columna=%i %s"%(str(delta_idx_tabla), factor_transicion, fila, columna, str(bioma2)))
         #
-        if bioma2<bioma1:
-            bioma0=bioma1
-            bioma1=bioma2
-            bioma2=bioma0
+        #if bioma2<bioma1:
+        #    bioma0=bioma1
+        #    bioma1=bioma2
+        #    bioma2=bioma0
         #
         transicion=(bioma1, bioma2, factor_transicion)
         if loguear:
@@ -541,10 +541,10 @@ class Sistema:
         #
         fila_actual=int(y)
         if fila_actual==tabla_cantidad_filas:
-            fila_actual-=1
+            fila_actual=tabla_cantidad_filas-1
         columna_actual=int(x)
         if columna_actual==tabla_cantidad_columnas:
-            columna_actual-=1
+            columna_actual=tabla_cantidad_columnas-1
         #print("f_actual=%.2f[%i] c_actual=%.2f[%i]"%(y, fila_actual, x, columna_actual))
         #
         fila_actual_punto_medio=fila_actual+longitud_rango_fila/2.0
