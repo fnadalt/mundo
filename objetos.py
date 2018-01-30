@@ -14,7 +14,7 @@ log=logging.getLogger(__name__)
 # GLOBAL
 #
 #
-def terminar():
+def terminar_objetos():
     log.info("terminar")
     terminar_pool_modelos()
     cerrar_db()
@@ -113,7 +113,7 @@ def terminar_pool_modelos():
     global pool
     for id, modelo in pool.items():
         modelo.removeNode()
-    for id in pool.keys():
+    for id in [id for id in pool.keys()]:
         del pool[id]
 
 #

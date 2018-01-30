@@ -50,7 +50,7 @@ class Terreno:
     
     def terminar(self):
         log.info("terminar")
-        objetos.terminar()
+        terminar_objetos()
         self.sistema=None
     
     def obtener_indice_parcela(self, pos):

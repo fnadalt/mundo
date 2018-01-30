@@ -2,6 +2,7 @@ from panda3d.core import *
 
 import os, os.path
 
+import config
 import glsl120
 import glsl130
 
@@ -20,12 +21,12 @@ class GeneradorShader:
     # clases
     ClaseNulo="nulo"
     ClaseDebug="debug"
-    ClaseGenerico=ClaseDebug#"generico"
-    ClaseTerreno=ClaseDebug#"terreno"
+    ClaseGenerico="generico"
+    ClaseTerreno="terreno"
     ClaseAgua="agua"
     ClaseCielo="cielo"
     ClaseSol="sol"
-    ClaseSombra=ClaseDebug#"sombra"
+    ClaseSombra="sombra"
 
     @staticmethod
     def iniciar(base, altitud_agua, plano_recorte_agua):
@@ -106,7 +107,8 @@ class GeneradorShader:
             texto_vs+=glsl.VS_TEX
             if self._clase!=GeneradorShader.ClaseSol and self._clase!=GeneradorShader.ClaseSombra:
                 texto_vs+=glsl.VS_POS_VIEW
-                texto_vs+=glsl.VS_SOMBRA
+                if config.valbool("shader.sombras"):
+                    texto_vs+=glsl.VS_SOMBRA
             if self._clase==GeneradorShader.ClaseAgua or self._clase==GeneradorShader.ClaseSombra:
                 texto_vs+=glsl.VS_POS_PROJ
             elif self._clase==GeneradorShader.ClaseTerreno:
@@ -119,7 +121,8 @@ class GeneradorShader:
             texto_vs+=glsl.VS_MAIN_TEX
             if self._clase!=GeneradorShader.ClaseSol and self._clase!=GeneradorShader.ClaseSombra:
                 texto_vs+=glsl.VS_MAIN_VIEW
-                texto_vs+=glsl.VS_MAIN_SOMBRA
+                if config.valbool("shader.sombras"):
+                    texto_vs+=glsl.VS_MAIN_SOMBRA
             if self._clase==GeneradorShader.ClaseTerreno:
                 texto_vs+=glsl.VS_MAIN_TIPO_TERRENO
         texto_vs+=glsl.VS_MAIN_POSITION
@@ -145,7 +148,10 @@ class GeneradorShader:
                 texto_fs+=glsl.FS_POS_PROJ
             if self._clase==GeneradorShader.ClaseTerreno or self._clase==GeneradorShader.ClaseGenerico:
                 texto_fs+=glsl.FS_LUZ
-                texto_fs+=glsl.FS_FUNC_LUZ
+                fs_func_luz_sombra=""
+                if config.valbool("shader.sombras"):
+                    fs_func_luz_sombra=glsl.FS_FUNC_LUZ_SOMBRA
+                texto_fs+=glsl.FS_FUNC_LUZ%{"FS_FUNC_LUZ_SOMBRA":fs_func_luz_sombra}
                 if self._clase==GeneradorShader.ClaseTerreno:
                     texto_fs+=glsl.FS_FUNC_TEX_TERRENO
                 else:

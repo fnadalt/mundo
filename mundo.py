@@ -43,6 +43,7 @@ class Mundo(NodePath):
         # sistema:
         self.sistema=Sistema()
         self.sistema.iniciar()
+        self.sistema.cargar_parametros_iniciales()
         establecer_instancia_sistema(self.sistema)
         # fisica:
         self._configurar_fisica()
@@ -74,7 +75,7 @@ class Mundo(NodePath):
         self.terreno.terminar()
         #
         self.sistema=None
-        sistema.remover_instancia_sistema()
+        remover_instancia_sistema()
 
     def _establecer_material(self):
         log.info("_establecer_material")

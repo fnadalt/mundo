@@ -165,9 +165,9 @@ class Sistema:
             self.periodo_dia=Sistema.DiaPeriodoAtardecer
             self.hora_normalizada=0.0
             self._segundos_transcurridos_dia=0.5/self.duracion_dia_segundos
-            self._establecer_fecha_hora_estacion()
-            self._establecer_temperatura_actual_norm()
-            self._establecer_precipitacion()
+            self._establecer_fecha_hora_estacion(0.0)
+            self._establecer_temperatura_actual_norm(0.0)
+            self._establecer_precipitacion(0.0)
         else:
             # leer de archivo
             pass
