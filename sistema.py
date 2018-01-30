@@ -136,14 +136,13 @@ class Sistema:
         self.ruido_precipitacion=None
         self.ruido_nubosidad=None
         self.ruido_vegetacion=None
-        # cursor:
-        self.posicion_cursor=Vec3(0, 0, 0)
         # parametros:
-        self.duracion_dia_segundos=1800
-        # variables externas:
+        self.posicion_cursor=Vec3(0, 0, 0)
+        self.duracion_dia_segundos=0.0
         self.ano=0
-        self.estacion=Sistema.EstacionVerano
         self.dia=0
+        # variables externas:
+        self.estacion=Sistema.EstacionVerano
         self.periodo_dia_actual=Sistema.DiaPeriodoAtardecer
         self.periodo_dia_anterior=Sistema.DiaPeriodoDia
         self.periodo_dia_posterior=Sistema.DiaPeriodoNoche
@@ -156,30 +155,64 @@ class Sistema:
         self.precipitacion_actual_t=0.0
         # variables internas:
         self._segundos_transcurridos_dia=0.0
+        #
+        self.cargar_parametros_iniciales(defecto=True)
+
+    def obtener_info(self):
+        tam=self.obtener_temperatura_anual_media_norm(self.posicion_cursor)
+        prec_f=self.obtener_precipitacion_frecuencia_anual(self.posicion_cursor)
+        bioma=self.obtener_bioma_transicion(self.posicion_cursor)
+        tipo_terreno=self.obtener_tipo_terreno(self.posicion_cursor)
+        info="Sistema posicion_cursor=(%.3f,%.3f,%.3f)\n"%(self.posicion_cursor[0], self.posicion_cursor[1], self.posicion_cursor[2])
+        info+="geo: tam=%.3f prec_f=%3.f bioma=(%s) tipo_terreno=(%s)\n"%(tam, prec_f, bioma, tipo_terreno)
+        info+="era: año=%i estacion=%i dia=%i hora=%.2f(%.2f/%i) periodo_dia_actual=%i\n"%(self.ano, self.estacion, self.dia, self.hora_normalizada, self._segundos_transcurridos_dia, self.duracion_dia_segundos, self.periodo_dia_actual)
+        info+="temp=%.2f nubosidad=%.2f precipitacion=[tipo=%i intens=%i t=(%.2f/%2.f)]\n"%(self.temperatura_actual_norm, self.nubosidad, self.precipitacion_actual_tipo, self.precipitacion_actual_intensidad, self.precipitacion_actual_t, self.precipitacion_actual_duracion)
+        return info
 
     def cargar_parametros_iniciales(self, defecto=True):
+        #
         if defecto:
+            log.info("cargar_parametros_iniciales por defecto")
             self.posicion_cursor=Vec3(0, 0, 0)
+            self.duracion_dia_segundos=1800
             self.ano=0
             self.dia=0
-            self.periodo_dia=Sistema.DiaPeriodoAtardecer
-            self.hora_normalizada=0.0
-            self._segundos_transcurridos_dia=0.5/self.duracion_dia_segundos
-            self._establecer_fecha_hora_estacion(0.0)
-            self._establecer_temperatura_actual_norm(0.0)
-            self._establecer_precipitacion(0.0)
+            self._segundos_transcurridos_dia=0.5*self.duracion_dia_segundos
         else:
+            log.info("cargar_parametros_iniciales desde configuracion")
             # leer de archivo
             pass
     
     def guardar_parametros_actuales(self):
+        log.info("guardar_parametros_actuales")
         # escribir archivo
         pass
     
     def iniciar(self):
         log.info("iniciar")
+        #
+        self.hora_normalizada=self._segundos_transcurridos_dia/self.duracion_dia_segundos
+        if self.hora_normalizada>Sistema.DiaPeriodoAtardecer and self.hora_normalizada<Sistema.DiaPeriodoNoche:
+            self.periodo_dia_actual=Sistema.DiaPeriodoAtardecer
+            self.periodo_dia_anterior=Sistema.DiaPeriodoDia
+            self.periodo_dia_posterior=Sistema.DiaPeriodoNoche
+        elif self.hora_normalizada>Sistema.DiaPeriodoNoche and self.hora_normalizada<Sistema.DiaPeriodoAmanecer:
+            self.periodo_dia_actual=Sistema.DiaPeriodoNoche
+            self.periodo_dia_anterior=Sistema.DiaPeriodoAtardecer
+            self.periodo_dia_posterior=Sistema.DiaPeriodoAmanecer
+        elif self.hora_normalizada>Sistema.DiaPeriodoAmanecer and self.hora_normalizada<Sistema.DiaPeriodoDia:
+            self.periodo_dia_actual=Sistema.DiaPeriodoAmanecer
+            self.periodo_dia_anterior=Sistema.DiaPeriodoNoche
+            self.periodo_dia_posterior=Sistema.DiaPeriodoDia
+        elif self.hora_normalizada>Sistema.DiaPeriodoDia and self.hora_normalizada<Sistema.DiaPeriodoAtardecer:
+            self.periodo_dia_actual=Sistema.DiaPeriodoDia
+            self.periodo_dia_anterior=Sistema.DiaPeriodoAmanecer
+            self.periodo_dia_posterior=Sistema.DiaPeriodoAtardecer
+        self.estacion=self._determinar_estacion()
         # ruido
         self._configurar_objetos_ruido()
+        #
+        self.update(0.0, self.posicion_cursor)
         
     def terminar(self):
         log.info("terminar")
@@ -603,7 +636,10 @@ class Sistema:
                     self.ano+=1
                     self.dia=0
                 # establecer estacion
-                self.estacion=(self.dia/Sistema.DiasDelAno)*4.0
+                self.estacion=self._determinar_estacion()
+
+    def _determinar_estacion(self):
+        return min(3, int((self.dia/Sistema.DiasDelAno)*4))
 
     def _establecer_temperatura_actual_norm(self, dt):
         #

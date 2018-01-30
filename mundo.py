@@ -229,14 +229,15 @@ class Mundo(NodePath):
         self.controlador_camara.altitud_agua=Sistema.TopoAltitudOceano
 
     def _update(self, task):
-        #info=""
+        info=""
+        info+=self.sistema.obtener_info()+"\n"
         #info+=self.terreno.obtener_info()+"\n"
         #info+=self.hombre.obtener_info()+"\n"
         #info+=self.agua.obtener_info()+"\n"
         #info+=self.input_mapper.obtener_info()+"\n"
         #info+=self.cielo.obtener_info()
         #info+=self.sol.obtener_info()+"\n"
-        #self.texto1.setText(info)
+        self.texto1.setText(info)
         # tiempo
         dt=self.base.taskMgr.globalClock.getDt()
         # input
