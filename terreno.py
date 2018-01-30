@@ -4,6 +4,7 @@ from panda3d.core import *
 from shader import GeneradorShader
 from objetos import *
 from sistema import *
+import config
 
 import math
 
@@ -347,6 +348,7 @@ class Tester(ShowBase):
         self.cam_pitch=30.0
         self.escribir_archivo=False # cada update
         #
+        config.iniciar()
         self.sistema=Sistema()
         self.sistema.iniciar()
         establecer_instancia_sistema(self.sistema)
@@ -397,9 +399,10 @@ class Tester(ShowBase):
         self.accept("wheel_down", self.zoom, [-1])
         #
         self._cargar_ui()
+        self._actualizar_terreno()
         
     def update(self, task):
-        nueva_pos_foco=self.sistema.posicion_cursor
+        nueva_pos_foco=Vec3(self.sistema.posicion_cursor)
         #
         mwn=self.mouseWatcherNode
         if mwn.isButtonDown(KeyboardButton.up()):
@@ -413,6 +416,7 @@ class Tester(ShowBase):
         #
         if nueva_pos_foco!=self.sistema.posicion_cursor:
             log.info("update pos_foco=%s"%str(nueva_pos_foco))
+            self.sistema.posicion_cursor=nueva_pos_foco
             self._actualizar_terreno()
         return task.cont
     
@@ -443,16 +447,16 @@ class Tester(ShowBase):
         sd=math.sqrt(sd)
         log.info("analizar_altitudes rango:[%.3f/%.3f] media=%.3f sd=%.3f"%(min, max, media, sd))
 
-    def _actualizar_terreno(self, pos):
-        log.info("_actualizar_terreno pos=%s"%(str(pos)))
+    def _actualizar_terreno(self):
+        log.info("_actualizar_terreno pos=%s"%(str(self.sistema.posicion_cursor)))
         #
         self.terreno.update()
         if self.escribir_archivo:
             log.info("escribir_archivo")
             self.terreno.nodo.writeBamFile("terreno.bam")
-        self.plano_agua.setPos(Vec3(pos[0], pos[1], Sistema.TopoAltitudOceano))
+        self.plano_agua.setPos(Vec3(self.sistema.posicion_cursor[0], self.sistema.posicion_cursor[1], Sistema.TopoAltitudOceano))
         #
-        self.cam_driver.setPos(Vec3(pos[0]+Terreno.TamanoParcela/2, pos[1]-Terreno.TamanoParcela, Sistema.TopoAltitudOceano))
+        self.cam_driver.setPos(Vec3(self.sistema.posicion_cursor[0]+Terreno.TamanoParcela/2, self.sistema.posicion_cursor[1]-Terreno.TamanoParcela, Sistema.TopoAltitudOceano))
         #
         self.lblInfo["text"]=self.terreno.obtener_info()
         #
@@ -460,12 +464,7 @@ class Tester(ShowBase):
 
     def _generar_imagen(self):
         log.info("_generar_imagen")
-        if self.tipo_imagen==Tester.TipoImagenTopo:
-            self._generar_imagen_topo()
-        elif self.tipo_imagen==Tester.TipoImagenTiposTerreno:
-            self._generar_imagen_tipos_terreno()
-        elif self.tipo_imagen==Tester.TipoImagenEspacios:
-            self._generar_imagen_espacios()
+        self._generar_imagen_topo()
 
     def _generar_imagen_topo(self):
         log.info("_generar_imagen_topo")
@@ -477,67 +476,23 @@ class Tester(ShowBase):
             self.frmImagen["image"]=self.texturaImagen
             self.frmImagen["image_scale"]=0.4
         #
-        zoom=self.zoom_imagen*Terreno.TamanoParcela/tamano
+        zoom=self.zoom_imagen
         log.info("zoom: %.2f"%(zoom))
         for x in range(tamano+1):
             for y in range(tamano+1):
-                _x=tamano-self.sistema.posicion_cursor[0]+x
-                _y=tamano-self.sistema.posicion_cursor[1]+y
+                _x=self.sistema.posicion_cursor[0]+zoom*(tamano/2.0)-zoom*x
+                _y=self.sistema.posicion_cursor[1]-zoom*(tamano/2.0)+zoom*y
                 a=self.terreno.sistema.obtener_altitud_suelo((_x, _y))
-                c=int(255*a/Sistema.TopoAltura)
+                #c=int(255*a/Sistema.TopoAltura)
                 if x==tamano/2 or y==tamano/2:
-                    c=255
+                    self.imagen.setXel(x, y, 1.0)
                 else:
                     if a>Sistema.TopoAltitudOceano:
-                        #tb=self.sistema.obtener_temperatura_anual_media_norm((_x, _y))
-#                        tt=(1, 0, 0.0) # implementar sistema en shader #self.terreno.obtener_tipo_terreno_tuple((_x, _y), tb, a)
-#                        c0=None
-#                        c1=None
-#                        if tt[2]==0.0:
-#                            c=Tester.ColoresTipoTerreno[tt[0]]
-#                        elif tt[2]==1.0:
-#                            c=Tester.ColoresTipoTerreno[tt[1]]
-#                        else:
-#                            c0=Tester.ColoresTipoTerreno[tt[0]]
-#                            c1=Tester.ColoresTipoTerreno[tt[1]]
-#                            c=(c0*(1-tt[2]))+(c1*tt[2])
-#                        #log.debug("_generar_imagen tt=%s c0=%s c1=%s c=%s"%(str(tt), str(c0), str(c1), str(c)))
-                        c=Vec4(240, 230, 0, 255)
-                        self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(int(c[0]), int(c[1]), int(c[2]), 255))
+                        self.imagen.setXel(x, y, 1.0, 0.8, 0.0)
                     else:
-                        self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(0, 0, c, 255))
+                        self.imagen.setXel(x, y, 0.0, 0.0, 1.0)
         #
         self.texturaImagen.load(self.imagen)
-
-    def _generar_imagen_tipos_terreno(self):
-        #
-        tamano=128
-        if not self.imagen:
-            self.imagen=PNMImage(tamano+1, tamano+1)
-            self.texturaImagen=Texture()
-            self.frmImagen["image"]=self.texturaImagen
-            self.frmImagen["image_scale"]=0.4
-        #
-        for x in range(tamano+1):
-            for y in range(tamano+1):
-#                t=x/(tamano+1)
-#                a=(y/(tamano+1))*Terreno.AlturaMaxima
-#                tt=(1, 0, 0.0) # implementar sistema en shader #self.terreno.obtener_tipo_terreno_tuple((0, 0), t, a)
-#                c0=Tester.ColoresTipoTerreno[tt[0]]
-#                c1=Tester.ColoresTipoTerreno[tt[1]]
-#                color=None
-#                if tt[2]>0.0:
-#                    color=(c0*(1.0-tt[2]))+(c1*tt[2])
-#                else:
-#                    color=c0
-#                color=(int(color[0]), int(color[1]), int(color[2]), 255)
-                color=Vec4(240, 230, 0, 255)
-                self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(color[0], color[1], color[2], 255))
-        #
-        self.texturaImagen.load(self.imagen)
-
-    def _generar_imagen_espacios(self):
-        log.info("_generar_imagen_espacios no implementado")
 
     def _ir_a_idx_pos(self):
         log.info("_ir_a_idx_pos")
@@ -586,14 +541,14 @@ class Tester(ShowBase):
 
     def _acercar_zoom_imagen(self):
         log.info("_acercar_zoom_imagen")
-        self.zoom_imagen-=4
+        self.zoom_imagen-=1
         if self.zoom_imagen<1:
             self.zoom_imagen=1
         self._generar_imagen()
 
     def _alejar_zoom_imagen(self):
         log.info("_alejar_zoom_imagen")
-        self.zoom_imagen+=4
+        self.zoom_imagen+=1
         if self.zoom_imagen>4096:
             self.zoom_imagen=4096
         self._generar_imagen()
@@ -603,6 +558,6 @@ if __name__=="__main__":
     PStatClient.connect()
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    Terreno.RadioExpansion=2
+    Terreno.RadioExpansion=3
     tester.escribir_archivo=False
     tester.run()

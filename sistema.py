@@ -177,7 +177,7 @@ class Sistema:
             self.duracion_dia_segundos=1800
             self.ano=0
             self.dia=0
-            self._segundos_transcurridos_dia=0.5*self.duracion_dia_segundos
+            self._segundos_transcurridos_dia=0.55*self.duracion_dia_segundos
         else:
             log.info("cargar_parametros_iniciales desde configuracion")
             # leer de archivo
