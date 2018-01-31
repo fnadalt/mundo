@@ -325,6 +325,7 @@ class DatosLocalesTerreno:
 from direct.showbase.ShowBase import ShowBase
 from direct.gui.DirectGui import *
 import random
+import os, os.path
 class Tester(ShowBase):
 
     TipoImagenNulo=0
@@ -466,33 +467,29 @@ class Tester(ShowBase):
         #
         self._generar_imagen()
 
-    def _noise2(self, vec2):
-        x=random.random()
-        y=random.random()
-        return (x+y)/2.0
-    def _ruido(self, position):
-        octaves=1
+    def _ruido(self, position, imagen_ruido, tamano_imagen_ruido):
+        position_wrap=512
+        octaves=4
         persistance=0.5
-        value=Vec2(0.0,0.0)
+        value=0.0
         amplitude=1.0
         total_amplitude=0.0
         for i_octave in range(octaves):
             amplitude*=persistance
             total_amplitude+=amplitude
-            period=1<<(i_octave+1)
-            pos=(int(position[0]),int(position[1]))
-            sample0=(int(pos[0]/period)*period,int(pos[1]/period)*period)
-            sample1=(sample0[0]+period, sample0[1]+period)
-            blend=((pos[0]-sample0[0])/period, (pos[1]-sample0[1])/period)
-            n00=self._noise2((sample0[0],sample0[1]))
-            n10=self._noise2((sample1[0],sample0[1]))
-            n01=self._noise2((sample0[0],sample1[1]))
-            n11=self._noise2((sample1[0],sample1[1]))
-            x1=(n00*(1.0-blend[0]))+(n10*blend[0])
-            x2=(n01*(1.0-blend[0]))+(n11*blend[0])
-            value+=(x1*(1.0-blend[1]))+(x2*blend[1])
+            period=1<<(i_octave)
+            offset_periodo_x, periodo_x0=math.modf(position[0]/period) # no
+            offset_periodo_y, periodo_y0=math.modf(position[1]/period)
+            periodo_x1=0
+            periodo_y1=0
+            offset_x=0
+            offset_y=0
+            interp_y=0
+            info="_ruido\tposition=%s tamano_imagen_ruido=%i i_octave=%i periodo=%i offset_periodo=%s\n"%(str(position), tamano_imagen_ruido, i_octave, period, str((offset_periodo_x, offset_periodo_y)))
+            info+="\tpx0=%.1f px1=%.1f offset_x=%.2f py0=%.1f py1=%.1f offset_y=%.2f interp_y=%.3f"%(periodo_x0, periodo_x1, offset_x, periodo_y0, periodo_y1, offset_y, interp_y)
+            print(info)
         value/=total_amplitude
-        return value[0] #(value[0]+value[1])/2.0
+        return value
 
     def _limpiar_imagen(self):
         if self.imagen:
@@ -510,19 +507,28 @@ class Tester(ShowBase):
     def _generar_imagen_ruido(self):
         log.info("_generar_imagen_ruido")
         #
-        tamano=512
+        tamano=128
+        #
+        ruta_tex_ruido="texturas/white_noise.png"
+        if not os.path.exists(ruta_tex_ruido):
+            imagen_ruido=PNMImage(tamano+1, tamano+1)
+            for x in range(tamano+1):
+                for y in range(tamano+1):
+                    a=random.random()
+                    imagen_ruido.setXel(x, y, a, a, a)
+            imagen_ruido.write(ruta_tex_ruido)
+        #
         if not self.imagen:
             self.imagen=PNMImage(tamano+1, tamano+1)
             self.texturaImagen=Texture()
             self.frmImagen["image"]=self.texturaImagen
             self.frmImagen["image_scale"]=0.4
         #
+        imagen_ruido=PNMImage(ruta_tex_ruido)
         for x in range(tamano+1):
             for y in range(tamano+1):
-                a=random.random() #self._ruido((x, y))
-                self.imagen.setXel(x, y, a, a, a)
-        #
-        self.imagen.write("texturas/white_noise.png")
+                a=self._ruido((x, y), imagen_ruido, imagen_ruido.getReadXSize())
+                self.imagen.setXel(x, y, a)
         #
         self.texturaImagen.load(self.imagen)
 
