@@ -3,8 +3,7 @@ from panda3d.core import *
 
 from shader import GeneradorShader
 from objetos import *
-from sistema import *
-import config
+import sistema, config
 
 import math
 
@@ -43,7 +42,7 @@ class Terreno:
     def iniciar(self):
         log.info("iniciar")
         #
-        self.sistema=obtener_instancia_sistema()
+        self.sistema=sistema.obtener_instancia()
         #
         self._establecer_shader()
         #
@@ -274,6 +273,10 @@ class Terreno:
         textura_terreno=self.base.loader.loadTexture("texturas/terreno2.png")
         self.nodo_parcelas.setTexture(ts_terreno, textura_terreno)
         #
+        ts_ruido=TextureStage("ts_ruido")
+        textura_ruido=self.base.loader.loadTexture("texturas/white_noise.png")
+        self.nodo_parcelas.setTexture(ts_ruido, textura_ruido)
+        #
         GeneradorShader.aplicar(self.nodo_parcelas, GeneradorShader.ClaseTerreno, 2)
         GeneradorShader.aplicar(self.nodo_naturaleza, GeneradorShader.ClaseGenerico, 2)
 
@@ -321,12 +324,12 @@ class DatosLocalesTerreno:
 #
 from direct.showbase.ShowBase import ShowBase
 from direct.gui.DirectGui import *
+import random
 class Tester(ShowBase):
 
     TipoImagenNulo=0
     TipoImagenTopo=1
-    TipoImagenTiposTerreno=2
-    TipoImagenEspacios=3
+    TipoImagenRuido=2
 
     # obsoleto
 #    ColoresTipoTerreno={Terreno.TipoNulo:Vec4(0, 0, 0, 255), 
@@ -349,11 +352,11 @@ class Tester(ShowBase):
         self.escribir_archivo=False # cada update
         #
         config.iniciar()
-        self.sistema=Sistema()
+        self.sistema=sistema.Sistema()
         self.sistema.iniciar()
-        establecer_instancia_sistema(self.sistema)
+        sistema.establecer_instancia(self.sistema)
         #
-        GeneradorShader.iniciar(self, Sistema.TopoAltitudOceano, Vec4(0, 0, 1, Sistema.TopoAltitudOceano))
+        GeneradorShader.iniciar(self, sistema.Sistema.TopoAltitudOceano, Vec4(0, 0, 1, sistema.Sistema.TopoAltitudOceano))
         GeneradorShader.aplicar(self.render, GeneradorShader.ClaseGenerico, 1)
         self.render.setShaderInput("distancia_fog_maxima", 3000.0, 0, 0, 0, priority=3)
         #
@@ -379,14 +382,15 @@ class Tester(ShowBase):
         self.cam_driver.setP(self.cam_pitch)
         #
         self.luz_ambiental=self.render.attachNewNode(AmbientLight("luz_ambiental"))
-        self.luz_ambiental.node().setColor(Vec4(1, 1, 1, 1))
+        self.luz_ambiental.node().setColor(Vec4(0, 1, 1, 1))
         #
         self.sun=self.render.attachNewNode(DirectionalLight("sun"))
         self.sun.node().setColor(Vec4(1, 1, 1, 1))
         self.sun.setPos(self.terreno.nodo, 100, 100, 100)
         self.sun.lookAt(self.terreno.nodo)
         #
-        self.render.setLight(self.sun)
+        self.render.setLight(self.luz_ambiental)
+        #self.render.setLight(self.sun)
         #
         self.texturaImagen=None
         self.imagen=None
@@ -462,9 +466,65 @@ class Tester(ShowBase):
         #
         self._generar_imagen()
 
+    def _noise2(self, vec2):
+        x=random.random()
+        y=random.random()
+        return (x+y)/2.0
+    def _ruido(self, position):
+        octaves=1
+        persistance=0.5
+        value=Vec2(0.0,0.0)
+        amplitude=1.0
+        total_amplitude=0.0
+        for i_octave in range(octaves):
+            amplitude*=persistance
+            total_amplitude+=amplitude
+            period=1<<(i_octave+1)
+            pos=(int(position[0]),int(position[1]))
+            sample0=(int(pos[0]/period)*period,int(pos[1]/period)*period)
+            sample1=(sample0[0]+period, sample0[1]+period)
+            blend=((pos[0]-sample0[0])/period, (pos[1]-sample0[1])/period)
+            n00=self._noise2((sample0[0],sample0[1]))
+            n10=self._noise2((sample1[0],sample0[1]))
+            n01=self._noise2((sample0[0],sample1[1]))
+            n11=self._noise2((sample1[0],sample1[1]))
+            x1=(n00*(1.0-blend[0]))+(n10*blend[0])
+            x2=(n01*(1.0-blend[0]))+(n11*blend[0])
+            value+=(x1*(1.0-blend[1]))+(x2*blend[1])
+        value/=total_amplitude
+        return value[0] #(value[0]+value[1])/2.0
+
+    def _limpiar_imagen(self):
+        if self.imagen:
+            self.imagen.clear()
+            self.imagen=None
+
     def _generar_imagen(self):
         log.info("_generar_imagen")
-        self._generar_imagen_topo()
+        self._limpiar_imagen()
+        if self.tipo_imagen==Tester.TipoImagenTopo:
+            self._generar_imagen_topo()
+        elif self.tipo_imagen==Tester.TipoImagenRuido:
+            self._generar_imagen_ruido()
+
+    def _generar_imagen_ruido(self):
+        log.info("_generar_imagen_ruido")
+        #
+        tamano=512
+        if not self.imagen:
+            self.imagen=PNMImage(tamano+1, tamano+1)
+            self.texturaImagen=Texture()
+            self.frmImagen["image"]=self.texturaImagen
+            self.frmImagen["image_scale"]=0.4
+        #
+        for x in range(tamano+1):
+            for y in range(tamano+1):
+                a=random.random() #self._ruido((x, y))
+                self.imagen.setXel(x, y, a, a, a)
+        #
+        self.imagen.write("texturas/white_noise.png")
+        #
+        self.texturaImagen.load(self.imagen)
 
     def _generar_imagen_topo(self):
         log.info("_generar_imagen_topo")
@@ -482,15 +542,14 @@ class Tester(ShowBase):
             for y in range(tamano+1):
                 _x=self.sistema.posicion_cursor[0]+zoom*(tamano/2.0)-zoom*x
                 _y=self.sistema.posicion_cursor[1]-zoom*(tamano/2.0)+zoom*y
-                a=self.terreno.sistema.obtener_altitud_suelo((_x, _y))
-                #c=int(255*a/Sistema.TopoAltura)
+                a=self.terreno.sistema.obtener_altitud_suelo((_x, _y))/Sistema.TopoAltura
                 if x==tamano/2 or y==tamano/2:
                     self.imagen.setXel(x, y, 1.0)
                 else:
-                    if a>Sistema.TopoAltitudOceano:
-                        self.imagen.setXel(x, y, 1.0, 0.8, 0.0)
+                    if a>(Sistema.TopoAltitudOceano/Sistema.TopoAltura):
+                        self.imagen.setXel(x, y, a, a, 0.0)
                     else:
-                        self.imagen.setXel(x, y, 0.0, 0.0, 1.0)
+                        self.imagen.setXel(x, y, 0.0, 0.0, a)
         #
         self.texturaImagen.load(self.imagen)
 
@@ -526,12 +585,9 @@ class Tester(ShowBase):
     def _cambiar_tipo_imagen(self):
         log.info("_cambiar_tipo_imagen a:")
         if self.tipo_imagen==Tester.TipoImagenTopo:
-            log.info("TipoImagenTiposTerreno")
-            self.tipo_imagen=Tester.TipoImagenTiposTerreno
-        elif self.tipo_imagen==Tester.TipoImagenTiposTerreno:
-            log.info("TipoImagenEspacios")
-            self.tipo_imagen=Tester.TipoImagenEspacios
-        elif self.tipo_imagen==Tester.TipoImagenEspacios:
+            log.info("TipoImagenRuido")
+            self.tipo_imagen=Tester.TipoImagenRuido
+        elif self.tipo_imagen==Tester.TipoImagenRuido:
             log.info("TipoImagenTopo")
             self.tipo_imagen=Tester.TipoImagenTopo
         self._generar_imagen()
@@ -558,6 +614,6 @@ if __name__=="__main__":
     PStatClient.connect()
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    Terreno.RadioExpansion=3
+    Terreno.RadioExpansion=4
     tester.escribir_archivo=False
     tester.run()

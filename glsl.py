@@ -43,8 +43,10 @@ VS_MAIN_FIN="""
 # FRAGMENT SHADER
 #
 #
-FS_TEX_123="""
-uniform sampler2D p3d_Texture1; // agua
+FS_TEX_1="""
+uniform sampler2D p3d_Texture1; // terreno y agua
+"""
+FS_TEX_23="""
 uniform sampler2D p3d_Texture2; // agua
 uniform sampler2D p3d_Texture3; // agua
 """
@@ -108,58 +110,41 @@ FS_FUNC_TEX_AGUA="""
     color_tex+=texture2D(p3d_Texture2, texcoord.st); // agua
     color_tex+=texture2D(p3d_Texture3, texcoord.st); // agua
 """
-FS_FUNC_TEX_TERRENO_VIEJO="""
-// terreno
-vec4 tex_terreno()
-{
-    vec4 _color;
-    vec4 _color0;
-    vec4 _color1;
-    //
-    float tipo0=floor(info_tipo/10);
-    float tipo1=mod(floor(info_tipo),10);
-    //
-    if(tipo0==1){
-        _color0=texture2D(p3d_Texture0, texcoord.st/2.0+vec2(0,0.5));
-    } else if(tipo0==2){
-        _color0=texture2D(p3d_Texture0, texcoord.st/2.0+vec2(0.5,0.5));
-    } else if(tipo0==3){
-        _color0=texture2D(p3d_Texture0, texcoord.st/2.0);
-    } else if(tipo0==4){
-        _color0=texture2D(p3d_Texture0, texcoord.st/2.0+vec2(0.5,0.5));
-    } else if(tipo0==5){
-        _color0=texture2D(p3d_Texture0, texcoord.st/2.0+vec2(0.5,0));
-    } else {
-        _color0=vec4(0,0,0,1);
-    }
-    if(tipo1==1){
-        _color1=texture2D(p3d_Texture0, texcoord.st/2.0+vec2(0,0.5));
-    } else if(tipo1==2){
-        _color1=texture2D(p3d_Texture0, texcoord.st/2.0+vec2(0.5,0.5));
-    } else if(tipo1==3){
-        _color1=texture2D(p3d_Texture0, texcoord.st/2.0);
-    } else if(tipo1==4){
-        _color1=texture2D(p3d_Texture0, texcoord.st/2.0+vec2(0.5,0.5));
-    } else if(tipo1==5){
-        _color1=texture2D(p3d_Texture0, texcoord.st/2.0+vec2(0.5,0));
-    } else {
-        _color1=vec4(1,1,1,1);
-    }
-    //
-    float info_tipo_factor=0.0;
-    if(info_tipo_factor==0.0){
-        _color=_color0;
-    } else if(info_tipo_factor==1.0){
-        _color=_color1;
-    } else {
-        _color=info_tipo_factor<0.5?_color0:_color1;
-    }
-    //
-    //_color.a=1.0;
-    return _color;
-}
-"""
 FS_FUNC_TEX_TERRENO="""
+// noise http://devmag.org.za/2009/04/25/perlin-noise/
+const int octaves=1;
+const int wrap_size=1<<(octaves+2);
+const float persistance=0.5;
+float _noise(vec2 position)
+{
+    float value=0.0;
+    float amplitude=1.0;
+    float total_amplitude=0.0;
+    for(int i_octave=1;i_octave<=octaves;++i_octave)
+    {
+        amplitude*=persistance;
+        total_amplitude+=amplitude;
+        int period=1<<i_octave;
+        float pos_x=fract(abs(position.x)/period)*period;
+        float pos_y=fract(abs(position.y)/period)*period;
+        int sample_x0=int(abs(position.x)/period)*period;
+        int sample_x1=(sample_x0+period)%wrap_size;
+        float offset_x=(pos_x-sample_x0)/period;
+        int sample_y0=int(abs(position.y)/period)*period;
+        int sample_y1=(sample_y0+period)%wrap_size;
+        float offset_y=(pos_y-sample_y0)/period;
+        vec2 tc00=vec2(sample_x0,sample_y0)/wrap_size;
+        vec2 tc10=vec2(sample_x1,sample_y0)/wrap_size;
+        vec2 tc01=vec2(sample_x0,sample_y1)/wrap_size;
+        vec2 tc11=vec2(sample_x1,sample_y1)/wrap_size;
+        float c00=texture2D(p3d_Texture1,tc00).r;
+        float c10=texture2D(p3d_Texture1,tc10).r;
+        float c01=texture2D(p3d_Texture1,tc01).r;
+        float c11=texture2D(p3d_Texture1,tc11).r;
+        value+=mix(mix(c00,c10,offset_x),mix(c01,c11,offset_x),offset_y);
+    }
+    return value/total_amplitude;
+}
 // terreno
 vec4 tex_terreno()
 {
@@ -198,13 +183,9 @@ vec4 tex_terreno()
         _color1=vec4(1,1,1,1);
     }
     //
-    if(info_tipo_factor==0.0){
-        _color=_color0;
-    } else if(info_tipo_factor==1.0){
-        _color=_color1;
-    } else {
-        _color=info_tipo_factor<0.5?_color0:_color1;
-    }
+    float _ruido=_noise(PositionW.xy);
+    _color=mix(_color0,_color1,_ruido);
+    _color=vec4(0,0,_ruido,1.0);
     //
     //_color.a=1.0;
     return _color;

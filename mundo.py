@@ -3,7 +3,7 @@ from direct.gui.DirectGui import *
 from panda3d.bullet import *
 from panda3d.core import *
 
-from sistema import *
+import sistema
 #
 from cielo import Cielo
 from sol import Sol
@@ -41,10 +41,10 @@ class Mundo(NodePath):
     def iniciar(self):
         log.info("iniciar")
         # sistema:
-        self.sistema=Sistema()
+        self.sistema=sistema.Sistema()
         self.sistema.iniciar()
         self.sistema.cargar_parametros_iniciales()
-        establecer_instancia_sistema(self.sistema)
+        sistema.establecer_instancia(self.sistema)
         # fisica:
         self._configurar_fisica()
         # mundo:
@@ -75,7 +75,7 @@ class Mundo(NodePath):
         self.terreno.terminar()
         #
         self.sistema=None
-        remover_instancia_sistema()
+        sistema.remover_instancia()
 
     def _establecer_material(self):
         log.info("_establecer_material")
@@ -88,7 +88,7 @@ class Mundo(NodePath):
 
     def _establecer_shader(self):
         log.info("_establecer_shader")
-        GeneradorShader.iniciar(self.base, Sistema.TopoAltitudOceano, Vec4(0, 0, 1, Sistema.TopoAltitudOceano))
+        GeneradorShader.iniciar(self.base, sistema.Sistema.TopoAltitudOceano, Vec4(0, 0, 1, sistema.Sistema.TopoAltitudOceano))
         GeneradorShader.aplicar(self, GeneradorShader.ClaseGenerico, 1)
 
     def _cargar_obj_voxel(self):
@@ -148,7 +148,7 @@ class Mundo(NodePath):
     def _cargar_hombre(self):
         #
         self.hombre=Personaje()
-        self.hombre.altitud_agua=Sistema.TopoAltitudOceano
+        self.hombre.altitud_agua=sistema.Sistema.TopoAltitudOceano
         self.hombre.input_mapper=self.input_mapper
         self.hombre.construir(self, self.bullet_world)
         self.hombre.cuerpo.setPos(self.sistema.posicion_cursor)
@@ -212,21 +212,21 @@ class Mundo(NodePath):
         self.terreno.nodo.reparentTo(self)
         self.terreno.update()
         # cielo
-        self.cielo=Cielo(self.base, Sistema.TopoAltitudOceano-20.0)
+        self.cielo=Cielo(self.base, sistema.Sistema.TopoAltitudOceano-20.0)
         self.cielo.nodo.reparentTo(self)
 #        self.setLight(self.cielo.luz) reemplazado por shader input
         # sol
-        self.sol=Sol(self.base, Sistema.TopoAltitudOceano-20.0)
+        self.sol=Sol(self.base, sistema.Sistema.TopoAltitudOceano-20.0)
         self.sol.pivot.reparentTo(self) # self.cielo.nodo
         #self.sol.mostrar_camaras()
         self.setLight(self.sol.luz)
         # agua
-        self.agua=Agua(self.base, Sistema.TopoAltitudOceano)
+        self.agua=Agua(self.base, sistema.Sistema.TopoAltitudOceano)
         self.agua.superficie.reparentTo(self.base.render)
         self.agua.generar()
         #self.agua.mostrar_camaras()
         #
-        self.controlador_camara.altitud_agua=Sistema.TopoAltitudOceano
+        self.controlador_camara.altitud_agua=sistema.Sistema.TopoAltitudOceano
 
     def _update(self, task):
         info=""

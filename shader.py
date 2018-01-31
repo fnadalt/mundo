@@ -139,8 +139,10 @@ class GeneradorShader:
                 texto_fs+=glsl.FS_POS_VIEW
             if self._clase==GeneradorShader.ClaseTerreno:
                 texto_fs+=glsl.FS_TERRENO
+                texto_fs+=glsl.FS_TEX_1
             if self._clase==GeneradorShader.ClaseAgua:
-                texto_fs+=glsl.FS_TEX_123
+                texto_fs+=glsl.FS_TEX_1
+                texto_fs+=glsl.FS_TEX_23
                 texto_fs+=glsl.FS_POS_PROJ
                 texto_fs+=glsl.FS_AGUA
                 texto_fs+=glsl.FS_FUNC_AGUA

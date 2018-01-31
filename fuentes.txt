@@ -1,2 +1,6 @@
 Biomas y clima:
 https://www.caracteristicas.co/clima/
+
+Noise:
+http://devmag.org.za/2009/04/25/perlin-noise/
+

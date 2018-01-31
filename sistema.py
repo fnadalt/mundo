@@ -5,21 +5,21 @@ import logging
 log=logging.getLogger(__name__)
 
 instancia=None
-def establecer_instancia_sistema(sistema):
+def establecer_instancia(sistema):
     global instancia
-    log.info("establecer_instancia_sistema")
+    log.info("establecer_instancia")
     if instancia:
         raise Exception("instancia de sistema ya definida")
     instancia=sistema
 
-def obtener_instancia_sistema():
+def obtener_instancia():
     if not instancia:
         raise Exception("instancia de sistema no iniciada.")
     return instancia
 
-def remover_instancia_sistema():
+def remover_instancia():
     global instancia
-    log.info("remover_instancia_sistema")
+    log.info("remover_instancia")
     if not instancia:
         raise Exception("instancia de sistema no iniciada.")
     instancia.terminar()
@@ -252,6 +252,7 @@ class Sistema:
             factor_transicion=(latitud-Sistema.TopoExtension)/(Sistema.TopoExtensionTransicion-Sistema.TopoExtension)
             altitud=min(Sistema.TopoAltura, altitud+Sistema.TopoAltura*factor_transicion)
         #
+        altitud=min(Sistema.TopoAltitudOceano+1, altitud) # !!!
         return altitud
 
     def obtener_altitud_suelo_cursor(self):

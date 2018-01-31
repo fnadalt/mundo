@@ -171,7 +171,7 @@ class Naturaleza:
                 fila.append((0.0, 0.0))
             self._data.append(fila)
         # sistema
-        self.sistema=obtener_instancia_sistema()
+        self.sistema=obtener_instancia()
 
     def terminar(self):
         self.sistema=None

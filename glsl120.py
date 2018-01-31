@@ -119,3 +119,10 @@ FS_TERRENO="""
 varying float info_tipo;
 invariant info_tipo;
 """
+
+#
+#
+# OTRO
+#
+#
+FUNC_TEX_LOOK_UP="texture2D"
