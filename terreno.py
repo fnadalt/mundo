@@ -269,12 +269,21 @@ class Terreno:
 
     def _establecer_shader(self):
         #
+        ruta_tex_ruido="texturas/white_noise.png"
+        if not os.path.exists(ruta_tex_ruido):
+            imagen_ruido=PNMImage(tamano+1, tamano+1)
+            for x in range(tamano+1):
+                for y in range(tamano+1):
+                    a=random.random()
+                    imagen_ruido.setXel(x, y, a, a, a)
+            imagen_ruido.write(ruta_tex_ruido)
+        #
         ts_terreno=TextureStage("ts_terreno")
         textura_terreno=self.base.loader.loadTexture("texturas/terreno2.png")
         self.nodo_parcelas.setTexture(ts_terreno, textura_terreno)
         #
         ts_ruido=TextureStage("ts_ruido")
-        textura_ruido=self.base.loader.loadTexture("texturas/white_noise.png")
+        textura_ruido=self.base.loader.loadTexture(ruta_tex_ruido)
         self.nodo_parcelas.setTexture(ts_ruido, textura_ruido)
         #
         GeneradorShader.aplicar(self.nodo_parcelas, GeneradorShader.ClaseTerreno, 2)
@@ -397,14 +406,15 @@ class Tester(ShowBase):
         self.imagen=None
         self.zoom_imagen=1
         #
-        self.tipo_imagen=Tester.TipoImagenTopo
+        self.tipo_imagen=Tester.TipoImagenRuido
         #
         self.taskMgr.add(self.update, "update")
         self.accept("wheel_up", self.zoom, [1])
         self.accept("wheel_down", self.zoom, [-1])
         #
         self._cargar_ui()
-        self._actualizar_terreno()
+        #self._actualizar_terreno()
+        self._generar_imagen()
         
     def update(self, task):
         nueva_pos_foco=Vec3(self.sistema.posicion_cursor)
@@ -468,27 +478,35 @@ class Tester(ShowBase):
         self._generar_imagen()
 
     def _ruido(self, position, imagen_ruido, tamano_imagen_ruido):
-        position_wrap=512
-        octaves=4
-        persistance=0.5
+        octaves=8
+        persistance=0.55
         value=0.0
         amplitude=1.0
         total_amplitude=0.0
         for i_octave in range(octaves):
             amplitude*=persistance
             total_amplitude+=amplitude
-            period=1<<(i_octave)
-            offset_periodo_x, periodo_x0=math.modf(position[0]/period) # no
-            offset_periodo_y, periodo_y0=math.modf(position[1]/period)
-            periodo_x1=0
-            periodo_y1=0
-            offset_x=0
-            offset_y=0
-            interp_y=0
-            info="_ruido\tposition=%s tamano_imagen_ruido=%i i_octave=%i periodo=%i offset_periodo=%s\n"%(str(position), tamano_imagen_ruido, i_octave, period, str((offset_periodo_x, offset_periodo_y)))
-            info+="\tpx0=%.1f px1=%.1f offset_x=%.2f py0=%.1f py1=%.1f offset_y=%.2f interp_y=%.3f"%(periodo_x0, periodo_x1, offset_x, periodo_y0, periodo_y1, offset_y, interp_y)
-            print(info)
-        value/=total_amplitude
+            period=1<<(octaves-i_octave)
+            offset_periodo_x, cant_periodos_x=math.modf(position[0]/period)
+            offset_periodo_y, cant_periodos_y=math.modf(position[1]/period)
+            periodo_x0=(cant_periodos_x*period)%tamano_imagen_ruido
+            periodo_y0=(cant_periodos_y*period)%tamano_imagen_ruido
+            periodo_x1=(periodo_x0+period)%tamano_imagen_ruido
+            periodo_y1=(periodo_y0+period)%tamano_imagen_ruido
+            c00=imagen_ruido.getGray(int(periodo_x0), int(periodo_y0))
+            c10=imagen_ruido.getGray(int(periodo_x1), int(periodo_y0))
+            c01=imagen_ruido.getGray(int(periodo_x0), int(periodo_y1))
+            c11=imagen_ruido.getGray(int(periodo_x1), int(periodo_y1))
+            interp_x0=(c00*(1.0-offset_periodo_x))+(c10*offset_periodo_x)
+            interp_x1=(c01*(1.0-offset_periodo_x))+(c11*offset_periodo_x)
+            interp_y=(interp_x0*(1.0-offset_periodo_y))+(interp_x1*offset_periodo_y)
+            value+=interp_y*amplitude
+            #info="_ruido\tposition=%s tamano_imagen_ruido=%i i_octave=%i periodo=%i offset_periodo=%s\n"%(str(position), tamano_imagen_ruido, i_octave, period, str((offset_periodo_x, offset_periodo_y)))
+            #info+="\tpx0=%.1f px1=%.1f offset_x=%.2f py0=%.1f py1=%.1f offset_y=%.2f interp_y=%.3f"%(periodo_x0, periodo_x1, offset_x, periodo_y0, periodo_y1, offset_y, interp_y)
+            #print(info)
+            #print("cxx=%s a=%.4f p=%i v=%.4f"%(str((c00, c10, c01, c11)), amplitude, period, value))
+        if total_amplitude>1.0:
+            value/=total_amplitude
         return value
 
     def _limpiar_imagen(self):
@@ -509,26 +527,47 @@ class Tester(ShowBase):
         #
         tamano=128
         #
-        ruta_tex_ruido="texturas/white_noise.png"
-        if not os.path.exists(ruta_tex_ruido):
-            imagen_ruido=PNMImage(tamano+1, tamano+1)
-            for x in range(tamano+1):
-                for y in range(tamano+1):
-                    a=random.random()
-                    imagen_ruido.setXel(x, y, a, a, a)
-            imagen_ruido.write(ruta_tex_ruido)
-        #
         if not self.imagen:
             self.imagen=PNMImage(tamano+1, tamano+1)
             self.texturaImagen=Texture()
             self.frmImagen["image"]=self.texturaImagen
             self.frmImagen["image_scale"]=0.4
         #
-        imagen_ruido=PNMImage(ruta_tex_ruido)
-        for x in range(tamano+1):
-            for y in range(tamano+1):
-                a=self._ruido((x, y), imagen_ruido, imagen_ruido.getReadXSize())
-                self.imagen.setXel(x, y, a)
+        imagen_ruido=PNMImage("texturas/white_noise.png")
+        n=0
+        vals=list()
+        tamano_imagen_ruido=imagen_ruido.getReadXSize()
+        dpos=self.sistema.posicion_cursor
+        for x in range(tamano_imagen_ruido):
+            vals.append(list())
+            for y in range(tamano_imagen_ruido):
+                a=self._ruido((x+dpos[0], y+dpos[1]), imagen_ruido, tamano_imagen_ruido)
+                vals[x].append(a)
+                n+=1
+        media=0.0
+        sd=0.0
+        for fila in vals:
+            for val in fila:
+                media+=val
+        media/=n
+        for fila in vals:
+            for val in fila:
+                sd+=(val-media)**2
+        sd=math.sqrt(sd/(n-1))
+        vals2=list()
+        k=7
+        for x in range(tamano_imagen_ruido):
+            vals2.append(list())
+            for y in range(tamano_imagen_ruido):
+                val=vals[x][y]
+                val-=(media-0.5)
+                val+=(0.5-val)*(-(1.0+(2**k)*sd))
+                val2=min(1.0, max(0.0, val))
+                vals2[x].append(val2)
+        for x in range(tamano_imagen_ruido):
+            for y in range(tamano_imagen_ruido):
+                self.imagen.setXel(x, y, vals2[x][y])
+        print("_generar_imagen_ruido media=%.4f sd=%.4f"%(media, sd))
         #
         self.texturaImagen.load(self.imagen)
 
@@ -620,6 +659,6 @@ if __name__=="__main__":
     PStatClient.connect()
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    Terreno.RadioExpansion=4
+    Terreno.RadioExpansion=0
     tester.escribir_archivo=False
     tester.run()
