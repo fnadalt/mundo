@@ -150,11 +150,7 @@ vec4 tex_terreno()
     }
     //
     float _ruido=texture2D(p3d_Texture1,texcoord.st).r;
-    _color=mix(_color0,_color1,_ruido);
-    //float c=_ruido<0.5?0.0:1.0;
-    float c=info_tipo_factor<0.5?0.0:1.0;
-    //_color=vec4(c,c,c,1.0);
-    _color=vec4(c,c,c,1.0);
+    _color=mix(_color0,_color1,_ruido>0.5?0.0:1.0);
     //
     //_color.a=1.0;
     return _color;

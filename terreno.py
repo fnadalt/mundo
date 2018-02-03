@@ -665,7 +665,8 @@ class Tester(ShowBase):
             idx_y=int(self.entry_y.get())
             pos=self.terreno.obtener_pos_parcela((idx_x, idx_y))
             log.info("idx_pos:(%i,%i); pos:%s"%(idx_x, idx_y, str(pos)))
-            self._actualizar_terreno(list(pos))
+            self.sistema.posicion_cursor=Vec3(pos[0], pos[1], 0.0)
+            self._actualizar_terreno()
         except Exception as e:
             log.exception(str(e))
 
@@ -677,8 +678,8 @@ class Tester(ShowBase):
         # idx_pos
         DirectLabel(parent=self.frame, pos=(-1, 0, 0), scale=0.05, text="idx_pos_x", frameColor=(1, 1, 1, 0), frameSize=(0, 2, -1, 1), text_align=TextNode.ALeft)
         DirectLabel(parent=self.frame, pos=(-1, 0, -0.1), scale=0.05, text="idx_pos_y", frameColor=(1, 1, 1, 0), frameSize=(0, 2, -1, 1), text_align=TextNode.ALeft)
-        self.entry_x=DirectEntry(parent=self.frame, pos=(-0.7, 0, 0), scale=0.05)
-        self.entry_y=DirectEntry(parent=self.frame, pos=(-0.7, 0, -0.1), scale=0.05)
+        self.entry_x=DirectEntry(parent=self.frame, pos=(-0.7, 0, 0), scale=0.05, initialText="0")
+        self.entry_y=DirectEntry(parent=self.frame, pos=(-0.7, 0, -0.1), scale=0.05, initialText="0")
         DirectButton(parent=self.frame, pos=(0, 0, -0.1), scale=0.075, text="actualizar", command=self._ir_a_idx_pos)
         #
         self.frmImagen=DirectFrame(parent=self.frame, pos=(0.8, 0, 0.2), state=DGG.NORMAL, frameSize=(-0.4, 0.4, -0.4, 0.4))

@@ -76,9 +76,10 @@ class GeneradorShader:
         nodo.setShaderInput("color_halo_sol_inicial", Vec4(0, 0, 0, 0), priority=prioridad)
         nodo.setShaderInput("color_halo_sol_final", Vec4(0, 0, 0, 0), priority=prioridad)
         nodo.setShaderInput("plano_recorte_agua", _plano_recorte_agua, priority=prioridad)
-        nodo.setShaderInput("distancia_fog_minima", 70.0, priority=prioridad)
-        nodo.setShaderInput("distancia_fog_maxima", 120.0, priority=prioridad)
-        nodo.setShaderInput("tinte_fog", Vec4(1, 1, 1, 1), priority=prioridad)
+        if config.valbool("shader.fog"):
+            nodo.setShaderInput("distancia_fog_minima", 70.0, priority=prioridad)
+            nodo.setShaderInput("distancia_fog_maxima", 120.0, priority=prioridad)
+            nodo.setShaderInput("tinte_fog", Vec4(1, 1, 1, 1), priority=prioridad)
 
     def __init__(self, clase):
         # referencias:
@@ -163,7 +164,8 @@ class GeneradorShader:
             elif self._clase==GeneradorShader.ClaseSombra:
                 texto_fs+=glsl.FS_FUNC_SOMBRA
             if self._clase!=GeneradorShader.ClaseSol and self._clase!=GeneradorShader.ClaseSombra:
-                texto_fs+=glsl.FS_FOG
+                if config.valbool("shader.fog"):
+                    texto_fs+=glsl.FS_FOG
         if self._clase!=GeneradorShader.ClaseSol and self._clase!=GeneradorShader.ClaseSombra:
             texto_fs+=glsl.FS_POS_MODELO
             texto_fs+=glsl.FS_FUNC_CIELO
@@ -188,12 +190,14 @@ class GeneradorShader:
             elif self._clase==GeneradorShader.ClaseSombra:
                 texto_fs+=glsl.FS_MAIN_SOMBRA
             if self._clase!=GeneradorShader.ClaseSol and self._clase!=GeneradorShader.ClaseSombra:
-                texto_fs+=glsl.FS_MAIN_FOG_FACTOR
-            if self._clase==GeneradorShader.ClaseAgua:
+                if config.valbool("shader.fog"):
+                    texto_fs+=glsl.FS_MAIN_FOG_FACTOR
+            if self._clase==GeneradorShader.ClaseAgua and config.valbool("shader.fog"):
                 texto_fs+=glsl.FS_MAIN_ALPHA_AGUA
             else:
                 if self._clase!=GeneradorShader.ClaseSol and self._clase!=GeneradorShader.ClaseSombra:
-                    texto_fs+=glsl.FS_MAIN_FOG_COLOR
+                    if config.valbool("shader.fog"):
+                        texto_fs+=glsl.FS_MAIN_FOG_COLOR
                 if self._clase==GeneradorShader.ClaseGenerico:
                     texto_fs+=glsl.FS_MAIN_ALPHA_TEX_GENERICO
                 else:
@@ -205,6 +209,15 @@ class GeneradorShader:
         # archivos
         ruta_archivo_vs="shaders/vs.%s.glsl"%self._clase
         ruta_archivo_fs="shaders/fs.%s.glsl"%self._clase
+        #
+        if config.archivo_modificado():
+            log.info("archivo de inicio modificado...")
+            if os.path.exists(ruta_archivo_vs):
+                log.info("eliminando archivo shader %s..."%ruta_archivo_vs)
+                os.remove(ruta_archivo_vs)
+            if os.path.exists(ruta_archivo_fs):
+                log.info("eliminando archivo shader %s..."%ruta_archivo_fs)
+                os.remove(ruta_archivo_fs)
         #
         if not os.path.exists(ruta_archivo_vs):
             log.info("generando archivo shader %s..."%ruta_archivo_vs)
