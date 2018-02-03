@@ -47,8 +47,7 @@ out vec4 PositionP; // agua
 """
 VS_TIPO_TERRENO="""
 in float info_tipo_terreno;
-out float info_tipo;
-invariant info_tipo;
+flat out float info_tipo;
 """
 
 #
@@ -116,8 +115,7 @@ uniform struct {
 in vec4 sombra[8];
 """
 FS_TERRENO="""
-in float info_tipo;
-invariant info_tipo;
+flat in float info_tipo;
 """
 
 #

@@ -149,8 +149,12 @@ vec4 tex_terreno()
         _color1=vec4(1,1,1,1);
     }
     //
-    float _ruido=texture2D(p3d_Texture1,texcoord.st).r;
-    _color=mix(_color0,_color1,_ruido>0.5?0.0:1.0);
+    if(info_tipo_factor==0.0){
+        _color=_color0;
+    } else {
+        float _ruido=texture2D(p3d_Texture1,texcoord.st).r;
+        _color=mix(_color0,_color1,_ruido>0.5?1.0:0.0);
+    }
     //
     //_color.a=1.0;
     return _color;

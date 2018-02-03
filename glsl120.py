@@ -48,7 +48,6 @@ varying vec4 PositionP; // agua
 VS_TIPO_TERRENO="""
 attribute float info_tipo_terreno;
 varying float info_tipo;
-invariant info_tipo;
 """
 
 #
@@ -117,7 +116,6 @@ varying vec4 sombra[8];
 """
 FS_TERRENO="""
 varying float info_tipo;
-invariant info_tipo;
 """
 
 #
