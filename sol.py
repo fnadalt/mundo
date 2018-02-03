@@ -47,10 +47,7 @@ class Sol:
         self.luz.node().setColor(Vec4(1.0, 1.0, 0.7, 1.0))
         #
         if config.valbool("shader.sombras"):
-            log.info("sombras activadas")
             self.luz.node().setShadowCaster(True, 512, 512)
-        else:
-            log.info("sombras desactivadas")
         # init:
         self._establecer_shaders()
     

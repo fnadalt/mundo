@@ -4,14 +4,27 @@ import os, os.path
 import logging
 log=logging.getLogger(__name__)
 
+nombre_archivo="mundo.ini"
+nombre_archivo_mtime="mundo.ini.mtime"
+configuracion=None
+
+_sucio=False
 _default_config={
-        "shader":   {
-                    "sombras":False
-                    }
+        "shader":       {
+                        "sombras":False, 
+                        "fog":False
+                        }
         }
 
-nombre_archivo="mundo.ini"
-configuracion=None
+def archivo_modificado():
+    if os.path.exists(nombre_archivo):
+        fecha_arch=str(os.path.getmtime(nombre_archivo))
+        if os.path.exists(nombre_archivo_mtime):
+            with open(nombre_archivo_mtime) as archivo:
+                fecha_arch_mtime=archivo.read()
+                if fecha_arch==fecha_arch_mtime:
+                    return False
+    return True
 
 def valbool(variable):
     valor=val(variable).lower()
@@ -34,6 +47,7 @@ def val(variable):
     return valor
 
 def establecer(variable, valor):
+    global _sucio
     if configuracion==None:
         raise Exception("sistema de configuraciones no iniciado")
     partes=variable.split(".")
@@ -44,6 +58,7 @@ def establecer(variable, valor):
     nombre_variable=partes[1]
     try:
         configuracion.set(seccion, nombre_variable, str(valor))
+        _sucio=True
     except configparser.NosectionError:
         log.exception("la seccion especificada no existe '%s'"%variable)
     except Exception as e:
@@ -64,9 +79,17 @@ def iniciar():
     configuracion.read(nombre_archivo)
 
 def escribir_archivo():
-    log.info("escribir_archivo '%s'"%nombre_archivo)
-    if not configuracion:
-        log.error("sistema de configuracion no iniciado")
-        return
-    with open(nombre_archivo, "w") as archivo:
-        configuracion.write(archivo)
+    global configuracion
+    #
+    if _sucio:
+        log.info("escribir_archivo '%s'"%nombre_archivo)
+        if not configuracion:
+            log.error("sistema de configuracion no iniciado")
+            return
+        with open(nombre_archivo, "w") as archivo:
+            configuracion.write(archivo)
+    #
+    if archivo_modificado():
+        log.info("escribir_archivo '%s'"%nombre_archivo_mtime)
+        with open(nombre_archivo_mtime, "w") as archivo:
+            archivo.write(str(os.path.getmtime(nombre_archivo)))

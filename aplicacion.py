@@ -41,6 +41,7 @@ class Aplicacion(ShowBase):
 
     def cerrar_aplicacion(self):
         log.info("cerrar_aplicacion")
+        config.escribir_archivo()
         self.mundo.terminar()
         self.finalizeExit()
 
