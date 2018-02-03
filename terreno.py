@@ -531,7 +531,7 @@ class Tester(ShowBase):
         tamano=128
         #
         perlin_noise_scale=64
-        perlin=StackedPerlinNoise2(perlin_noise_scale, perlin_noise_scale, 8, 1.15, 0.8, 256, 123)
+        perlin=StackedPerlinNoise2(perlin_noise_scale, perlin_noise_scale, 8, 1.0, 0.5, 256, 123)
         #
         #
         if not self.imagen:
