@@ -15,7 +15,7 @@ log=logging.getLogger(__name__)
 #
 class Terreno:
     
-    # tamaño de la parcela
+    # tamano de la parcela
     TamanoParcela=32
 
     # radio de expansion
@@ -407,7 +407,7 @@ class Tester(ShowBase):
         self.imagen=None
         self.zoom_imagen=1
         #
-        self.tipo_imagen=Tester.TipoImagenRuidoContinuo
+        self.tipo_imagen=Tester.TipoImagenTopo
         #
         self.taskMgr.add(self.update, "update")
         self.accept("wheel_up", self.zoom, [1])
@@ -528,31 +528,59 @@ class Tester(ShowBase):
     def _generar_imagen_ruido_continuo(self):
         log.info("_generar_imagen_ruido_continuo")
         #
-        tamano=128
+        tamano=512
         #
-        perlin_noise_scale=64
-        perlin=StackedPerlinNoise2(perlin_noise_scale, perlin_noise_scale, 8, 1.0, 0.5, 256, 123)
+        perlin_noise_scale=512
+        perlin=StackedPerlinNoise2(perlin_noise_scale, perlin_noise_scale, 4, 2.5, 0.75, 256, 1069)
         #
         #
         if not self.imagen:
-            self.imagen=PNMImage(tamano+1, tamano+1)
+            self.imagen=PNMImage(tamano, tamano)
             self.texturaImagen=Texture()
             self.frmImagen["image"]=self.texturaImagen
             self.frmImagen["image_scale"]=0.4
         #
         zoom=self.zoom_imagen
         log.info("zoom: %.2f"%(zoom))
+        range_x, range_y=tamano, tamano
+        factor_x, factor_y=range_x/tamano, range_y/tamano
         for x in range(tamano):
             for y in range(tamano):
-                _x=self.sistema.posicion_cursor[0]+zoom*(tamano/2.0)-zoom*x
-                _y=self.sistema.posicion_cursor[1]-zoom*(tamano/2.0)+zoom*y
-                self.imagen.setXel(x, y, perlin(_x, _y)*0.5+0.5)
+                _x=x*factor_x
+                _y=y*factor_y
+                c00=perlin(_x,                  _y                  )
+                c10=perlin((_x+range_x)        ,_y                  )
+                c01=perlin(_x,                  (_y+range_y)        )
+                c11=perlin((_x+range_x)        ,(_y+range_y)        )
+                mix_x, mix_y=1.0-_x/range_x, 1.0-_y/range_y
+                if mix_x<0.0 or mix_y<0.0 or mix_x>1.0 or mix_y>1.0:
+                    print("error mix_x,mix_y")
+                interp_x0=(c00*(1.0-mix_x))+(c10*mix_x)
+                interp_x1=(c01*(1.0-mix_x))+(c11*mix_x)
+                interp_y=(interp_x0*(1.0-mix_y))+(interp_x1*mix_y)
+                interp_y=interp_y*0.5+0.5
+                interp_y=interp_y if interp_y<1.0 else 1.0
+                interp_y=interp_y if interp_y>0.0 else 0.0
+                c=interp_y
+                if c<0.0 or c>1.0:
+                    print("error c")
+                self.imagen.setXel(x, y, c)
         #
+        self.imagen.write("texturas/white_noise.png")
+        image_tiled=PNMImage(2*tamano, 2*tamano)
+        image_tiled.copySubImage(self.imagen, 0,      0,      0, 0, tamano, tamano)
+        image_tiled.copySubImage(self.imagen, tamano, 0,      0, 0, tamano, tamano)
+        image_tiled.copySubImage(self.imagen, 0,      tamano, 0, 0, tamano, tamano)
+        image_tiled.copySubImage(self.imagen, tamano, tamano, 0, 0, tamano, tamano)
+        self.imagen.clear()
+        self.imagen=None
+        self.imagen=image_tiled
         self.texturaImagen.load(self.imagen)
 
     def _generar_imagen_ruido(self):
         # http://devmag.org.za/2009/04/25/perlin-noise/
         log.info("_generar_imagen_ruido")
+        return
         #
         tamano=128
         #
@@ -694,6 +722,6 @@ if __name__=="__main__":
     PStatClient.connect()
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    Terreno.RadioExpansion=0
+    Terreno.RadioExpansion=3
     tester.escribir_archivo=False
     tester.run()

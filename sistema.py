@@ -164,7 +164,7 @@ class Sistema:
         bioma=self.obtener_bioma_transicion(self.posicion_cursor)
         tipo_terreno=self.obtener_tipo_terreno(self.posicion_cursor)
         info="Sistema posicion_cursor=(%.3f,%.3f,%.3f)\n"%(self.posicion_cursor[0], self.posicion_cursor[1], self.posicion_cursor[2])
-        info+="geo: tam=%.3f prec_f=%3.f bioma=(%s) tipo_terreno=(%s)\n"%(tam, prec_f, bioma, tipo_terreno)
+        info+="geo: tam=%.3f prec_f=%.3f bioma=(%s) tipo_terreno=(%s)\n"%(tam, prec_f, bioma, tipo_terreno)
         info+="era: año=%i estacion=%i dia=%i hora=%.2f(%.2f/%i) periodo_dia_actual=%i\n"%(self.ano, self.estacion, self.dia, self.hora_normalizada, self._segundos_transcurridos_dia, self.duracion_dia_segundos, self.periodo_dia_actual)
         info+="temp=%.2f nubosidad=%.2f precipitacion=[tipo=%i intens=%i t=(%.2f/%2.f)]\n"%(self.temperatura_actual_norm, self.nubosidad, self.precipitacion_actual_tipo, self.precipitacion_actual_intensidad, self.precipitacion_actual_t, self.precipitacion_actual_duracion)
         return info
@@ -252,7 +252,7 @@ class Sistema:
             factor_transicion=(latitud-Sistema.TopoExtension)/(Sistema.TopoExtensionTransicion-Sistema.TopoExtension)
             altitud=min(Sistema.TopoAltura, altitud+Sistema.TopoAltura*factor_transicion)
         #
-        altitud=min(Sistema.TopoAltitudOceano+1, altitud) # !!!
+        #altitud=min(Sistema.TopoAltitudOceano+1, altitud) # !!! terreno plano sobre el oceano
         return altitud
 
     def obtener_altitud_suelo_cursor(self):
@@ -437,7 +437,7 @@ class Sistema:
         bioma1=Sistema.BiomaTabla[fila][columna]
         if loguear:
             print("obtener_bioma_transicion bioma1 tam=%.2f prec_f=%.2f fila=%i columna=%i %s"%(temperatura_anual_media, precipitacion_frecuencia, fila, columna, str(bioma1)))
-        delta_idx_tabla, factor_transicion=self._calcular_transicion_tabla(pos_columna, pos_fila, tabla_cantidad_columnas, tabla_cantidad_filas)
+        delta_idx_tabla, factor_transicion=self._calcular_transicion_tabla(pos_columna, pos_fila, tabla_cantidad_columnas, tabla_cantidad_filas, 0.5, loguear)
         fila_delta=fila+delta_idx_tabla[1]
         columna_delta=columna+delta_idx_tabla[0]
         if fila_delta>=0 and fila_delta<tabla_cantidad_filas:
@@ -445,13 +445,9 @@ class Sistema:
         if columna_delta>=0 and columna_delta<tabla_cantidad_columnas:
             columna=columna_delta
         bioma2=Sistema.BiomaTabla[fila][columna]
+        #
         if loguear:
             print("bioma2 delta_idx_tabla=%s factor_transicion=%.3f fila=%i columna=%i %s"%(str(delta_idx_tabla), factor_transicion, fila, columna, str(bioma2)))
-        #
-        #if bioma2<bioma1:
-        #    bioma0=bioma1
-        #    bioma1=bioma2
-        #    bioma2=bioma0
         #
         transicion=(bioma1, bioma2, factor_transicion)
         if loguear:
@@ -523,7 +519,7 @@ class Sistema:
         _semilla=Sistema.VegetacionPerlinNoiseParams[1]
         self.ruido_vegetacion=PerlinNoise2(_escala, _escala, 256, _semilla)
 
-    def _calcular_transicion_tabla(self, x, y, tabla_cantidad_columnas, tabla_cantidad_filas, rango_pureza=0.75): # f()->(delta_idx_tabla,factor)
+    def _calcular_transicion_tabla(self, x, y, tabla_cantidad_columnas, tabla_cantidad_filas, rango_pureza=0.50, loguear=False): # f()->(delta_idx_tabla,factor)
         # Surge como necesidad para calcular transicion de biomas, utilizando BiomaTabla.
         # Segun tamperatura media y precipitacion, se ubica un punto en la tabla.
         # El bioma es "puro", si el punto se encuentra dentro del 75% del rango de bioma tanto
@@ -538,7 +534,8 @@ class Sistema:
         longitud_rango_columna=1.0
         longitud_rango_fila_puro=longitud_rango_fila*rango_pureza
         longitud_rango_columna_puro=longitud_rango_columna*rango_pureza
-        #print("_calcular_transicion_tabla(col=%.2f,fila=%.2f):\n dim=(%i,%i) long_rango=(%.2f,%.2f) long_rango_puro=(%.2f,%.2f)"%(x, y, tabla_cantidad_filas, tabla_cantidad_columnas, longitud_rango_fila, longitud_rango_columna, longitud_rango_fila_puro, longitud_rango_columna_puro))
+        if loguear:
+            print("_calcular_transicion_tabla(col=%.2f,fila=%.2f):\n dim=(%i,%i) long_rango=(%.2f,%.2f) long_rango_puro=(%.2f,%.2f)"%(x, y, tabla_cantidad_filas, tabla_cantidad_columnas, longitud_rango_fila, longitud_rango_columna, longitud_rango_fila_puro, longitud_rango_columna_puro))
         #
         fila_actual=int(y)
         if fila_actual==tabla_cantidad_filas:
@@ -546,29 +543,35 @@ class Sistema:
         columna_actual=int(x)
         if columna_actual==tabla_cantidad_columnas:
             columna_actual=tabla_cantidad_columnas-1
-        #print("f_actual=%.2f[%i] c_actual=%.2f[%i]"%(y, fila_actual, x, columna_actual))
+        if loguear:
+            print("f_actual=%.2f[%i] c_actual=%.2f[%i]"%(y, fila_actual, x, columna_actual))
         #
         fila_actual_punto_medio=fila_actual+longitud_rango_fila/2.0
         offset_pos_fila=y-fila_actual_punto_medio
         columna_actual_punto_medio=columna_actual+longitud_rango_columna/2.0
         offset_pos_columna=x-columna_actual_punto_medio
-        #print("fila_pm=%.2f off_fila_pm=%.2f col_pm=%.2f off_col_pm=%.2f"%(fila_actual_punto_medio, offset_pos_fila, columna_actual_punto_medio, offset_pos_columna))
+        if loguear:
+            print("fila_pm=%.2f off_fila_pm=%.2f col_pm=%.2f off_col_pm=%.2f"%(fila_actual_punto_medio, offset_pos_fila, columna_actual_punto_medio, offset_pos_columna))
         #
         if abs(offset_pos_fila)<=longitud_rango_fila_puro/2.0 and abs(offset_pos_columna)<=longitud_rango_columna_puro/2.0:
             # puro
+            if loguear:
+                print("puro")
             return ((0, 0), 0.0)
         else:
             # interpolar
             if abs(offset_pos_fila)>=abs(offset_pos_columna): # prioriza fila
-                #print("prioriza fila")
+                if loguear:
+                    print("prioriza fila")
                 factor=(abs(offset_pos_fila)-longitud_rango_fila_puro/2.0)/((1.0-rango_pureza))
                 delta=-1 if offset_pos_fila<0.0 else 1
-                return ((0, delta), factor)
+                return ((0, delta), factor if delta==-1 else 1.0-factor)
             else:
-                #print("prioriza columna")
+                if loguear:
+                    print("prioriza columna")
                 factor=(abs(offset_pos_columna)-longitud_rango_columna_puro/2.0)/((1.0-rango_pureza))
                 delta=-1 if offset_pos_columna<0.0 else 1
-                return ((delta, 0), factor)
+                return ((delta, 0), factor if delta==-1 else 1.0-factor)
 
     def _obtener_terreno_bioma(self, bioma): # f()->(tipo_terreno_base,tipo_terreno_superficie)
         if bioma==Sistema.BiomaDesiertoPolar:
