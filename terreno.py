@@ -340,6 +340,7 @@ class Tester(ShowBase):
     TipoImagenNulo=0
     TipoImagenTopo=1
     TipoImagenRuido=2
+    TipoImagenRuidoContinuo=3
 
     # obsoleto
 #    ColoresTipoTerreno={Terreno.TipoNulo:Vec4(0, 0, 0, 255), 
@@ -406,7 +407,7 @@ class Tester(ShowBase):
         self.imagen=None
         self.zoom_imagen=1
         #
-        self.tipo_imagen=Tester.TipoImagenRuido
+        self.tipo_imagen=Tester.TipoImagenRuidoContinuo
         #
         self.taskMgr.add(self.update, "update")
         self.accept("wheel_up", self.zoom, [1])
@@ -521,8 +522,36 @@ class Tester(ShowBase):
             self._generar_imagen_topo()
         elif self.tipo_imagen==Tester.TipoImagenRuido:
             self._generar_imagen_ruido()
+        elif self.tipo_imagen==Tester.TipoImagenRuidoContinuo:
+            self._generar_imagen_ruido_continuo()
+
+    def _generar_imagen_ruido_continuo(self):
+        log.info("_generar_imagen_ruido_continuo")
+        #
+        tamano=128
+        #
+        perlin_noise_scale=64
+        perlin=StackedPerlinNoise2(perlin_noise_scale, perlin_noise_scale, 8, 1.15, 0.8, 256, 123)
+        #
+        #
+        if not self.imagen:
+            self.imagen=PNMImage(tamano+1, tamano+1)
+            self.texturaImagen=Texture()
+            self.frmImagen["image"]=self.texturaImagen
+            self.frmImagen["image_scale"]=0.4
+        #
+        zoom=self.zoom_imagen
+        log.info("zoom: %.2f"%(zoom))
+        for x in range(tamano):
+            for y in range(tamano):
+                _x=self.sistema.posicion_cursor[0]+zoom*(tamano/2.0)-zoom*x
+                _y=self.sistema.posicion_cursor[1]-zoom*(tamano/2.0)+zoom*y
+                self.imagen.setXel(x, y, perlin(_x, _y)*0.5+0.5)
+        #
+        self.texturaImagen.load(self.imagen)
 
     def _generar_imagen_ruido(self):
+        # http://devmag.org.za/2009/04/25/perlin-noise/
         log.info("_generar_imagen_ruido")
         #
         tamano=128
@@ -533,15 +562,18 @@ class Tester(ShowBase):
             self.frmImagen["image"]=self.texturaImagen
             self.frmImagen["image_scale"]=0.4
         #
+        zoom=self.zoom_imagen
+        log.info("zoom: %.2f"%(zoom))        
         imagen_ruido=PNMImage("texturas/white_noise.png")
         n=0
         vals=list()
         tamano_imagen_ruido=imagen_ruido.getReadXSize()
-        dpos=self.sistema.posicion_cursor
         for x in range(tamano_imagen_ruido):
             vals.append(list())
             for y in range(tamano_imagen_ruido):
-                a=self._ruido((x+dpos[0], y+dpos[1]), imagen_ruido, tamano_imagen_ruido)
+                _x=self.sistema.posicion_cursor[0]+zoom*(tamano/2.0)-zoom*x
+                _y=self.sistema.posicion_cursor[1]-zoom*(tamano/2.0)+zoom*y
+                a=self._ruido((_x, _y), imagen_ruido, tamano_imagen_ruido)
                 vals[x].append(a)
                 n+=1
         media=0.0
@@ -633,6 +665,9 @@ class Tester(ShowBase):
             log.info("TipoImagenRuido")
             self.tipo_imagen=Tester.TipoImagenRuido
         elif self.tipo_imagen==Tester.TipoImagenRuido:
+            log.info("TipoImagenRuidoContinuo")
+            self.tipo_imagen=Tester.TipoImagenRuidoContinuo
+        elif self.tipo_imagen==Tester.TipoImagenRuidoContinuo:
             log.info("TipoImagenTopo")
             self.tipo_imagen=Tester.TipoImagenTopo
         self._generar_imagen()
@@ -642,14 +677,14 @@ class Tester(ShowBase):
 
     def _acercar_zoom_imagen(self):
         log.info("_acercar_zoom_imagen")
-        self.zoom_imagen-=1
+        self.zoom_imagen-=4
         if self.zoom_imagen<1:
             self.zoom_imagen=1
         self._generar_imagen()
 
     def _alejar_zoom_imagen(self):
         log.info("_alejar_zoom_imagen")
-        self.zoom_imagen+=1
+        self.zoom_imagen+=4
         if self.zoom_imagen>4096:
             self.zoom_imagen=4096
         self._generar_imagen()

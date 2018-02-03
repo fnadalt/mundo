@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-5.1.dtd">
 <!-- eric project file for project mundo -->
-<!-- Saved: 2018-01-29, 21:30:39 -->
+<!-- Saved: 2018-02-02, 18:38:32 -->
 <!-- Copyright (C) 2018 Fernando Nadal Testa, fnt2006@gmail.com -->
 <Project version="5.1">
   <Language>en_US</Language>
@@ -61,6 +61,7 @@
   <Interfaces/>
   <Others>
     <Other>biomas.txt</Other>
+    <Other>fuentes.txt</Other>
     <Other>objetos.csv</Other>
     <Other>shaders/blur_x.f.glsl</Other>
     <Other>shaders/blur_y.f.glsl</Other>
