@@ -63,7 +63,6 @@ class TextureGui:
         self.frame=None
 
     def update(self):
-        log.info("update")
         if self.dialog:
             if not self.dialog.update():
                 self.dialog.unload()
