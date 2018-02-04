@@ -55,6 +55,7 @@ flat out float info_tipo;
 # FRAGMENT SHADER
 #
 #
+FS_FUNC_TEX_LOOK_UP="texture"
 FS_COMUN="""
 const float TamanoHalo=0.85;
 in vec4 PositionW; // clip

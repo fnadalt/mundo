@@ -146,7 +146,7 @@ class GeneradorShader:
                 texto_fs+=glsl.FS_TEX_23
                 texto_fs+=glsl.FS_POS_PROJ
                 texto_fs+=glsl.FS_AGUA
-                texto_fs+=glsl.FS_FUNC_AGUA
+                texto_fs+=glsl.FS_FUNC_AGUA%{"FS_FUNC_TEX_LOOK_UP":glsl.FS_FUNC_TEX_LOOK_UP}
             if self._clase==GeneradorShader.ClaseSombra:
                 texto_fs+=glsl.FS_POS_PROJ
             if self._clase==GeneradorShader.ClaseTerreno or self._clase==GeneradorShader.ClaseGenerico:
@@ -156,11 +156,11 @@ class GeneradorShader:
                     fs_func_luz_sombra=glsl.FS_FUNC_LUZ_SOMBRA
                 texto_fs+=glsl.FS_FUNC_LUZ%{"FS_FUNC_LUZ_SOMBRA":fs_func_luz_sombra}
                 if self._clase==GeneradorShader.ClaseTerreno:
-                    texto_fs+=glsl.FS_FUNC_TEX_TERRENO
+                    texto_fs+=glsl.FS_FUNC_TEX_TERRENO%{"FS_FUNC_TEX_LOOK_UP":glsl.FS_FUNC_TEX_LOOK_UP}
                 else:
-                    texto_fs+=glsl.FS_FUNC_TEX_GENERICO
+                    texto_fs+=glsl.FS_FUNC_TEX_GENERICO%{"FS_FUNC_TEX_LOOK_UP":glsl.FS_FUNC_TEX_LOOK_UP}
             elif self._clase==GeneradorShader.ClaseSol:
-                texto_fs+=glsl.FS_FUNC_SOL
+                texto_fs+=glsl.FS_FUNC_SOL%{"FS_FUNC_TEX_LOOK_UP":glsl.FS_FUNC_TEX_LOOK_UP}
             elif self._clase==GeneradorShader.ClaseSombra:
                 texto_fs+=glsl.FS_FUNC_SOMBRA
             if self._clase!=GeneradorShader.ClaseSol and self._clase!=GeneradorShader.ClaseSombra:

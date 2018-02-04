@@ -530,8 +530,8 @@ class Tester(ShowBase):
         #
         tamano=512
         #
-        perlin_noise_scale=512
-        perlin=StackedPerlinNoise2(perlin_noise_scale, perlin_noise_scale, 4, 2.5, 0.75, 256, 1069)
+        perlin_noise_scale=1024
+        perlin=StackedPerlinNoise2(perlin_noise_scale, perlin_noise_scale, 4, 1.8, 0.75, 256, 1069)
         #
         #
         if not self.imagen:
@@ -723,6 +723,6 @@ if __name__=="__main__":
     PStatClient.connect()
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    Terreno.RadioExpansion=3
+    Terreno.RadioExpansion=0
     tester.escribir_archivo=False
     tester.run()

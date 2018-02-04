@@ -101,17 +101,53 @@ FS_FUNC_TEX_GENERICO="""
 // generico
 vec4 tex_generico(){
     vec4 color_tex=vec4(0,0,0,0);
-    color_tex+=texture2D(p3d_Texture0, texcoord.st);
+    color_tex+=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord.st);
     return color_tex;
 }
 """
 FS_FUNC_TEX_AGUA="""
-    color_tex+=texture2D(p3d_Texture1, texcoord.st); // agua
-    color_tex+=texture2D(p3d_Texture2, texcoord.st); // agua
-    color_tex+=texture2D(p3d_Texture3, texcoord.st); // agua
+    color_tex+=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1, texcoord.st); // agua
+    color_tex+=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture2, texcoord.st); // agua
+    color_tex+=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture3, texcoord.st); // agua
 """
 FS_FUNC_TEX_TERRENO="""
+// ruido
+const int tamano_textura=512;
+float ruido()
+{
+    float value=0.0;
+    vec2 pos=texcoord.xy*tamano_textura*0.5;
+    int pasos=4;
+    float persistencia=0.85;
+    float amplitud=1.0;
+    float amplitud_total=0.0;
+    for(int i_paso=pasos;pasos>0;--pasos){
+        amplitud*=persistencia;
+        amplitud_total+=amplitud;
+        int periodo=1<<(i_paso+4);
+        //
+        float offset_x=pos.x/periodo;
+        int indice_x0=int(mod(int(offset_x)*periodo,tamano_textura));
+        offset_x=fract(offset_x);
+        float offset_y=pos.y/periodo;
+        int indice_y0=int(mod(int(offset_y)*periodo,tamano_textura));
+        offset_y=fract(offset_y);
+        int indice_x1=int(mod(indice_x0+periodo,tamano_textura));
+        int indice_y1=int(mod(indice_y0+periodo,tamano_textura));
+        float c00=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,vec2(indice_x0,indice_y0)/tamano_textura).r;
+        float c10=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,vec2(indice_x1,indice_y0)/tamano_textura).r;
+        float c01=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,vec2(indice_x0,indice_y1)/tamano_textura).r;
+        float c11=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,vec2(indice_x1,indice_y1)/tamano_textura).r;
+        float interp_x0=mix(c00,c10,offset_x);
+        float interp_x1=mix(c01,c11,offset_x);
+        float interp_y=mix(interp_x0,interp_x1,offset_y);
+        value+=interp_y*amplitud;
+    }
+    //value/=amplitud_total;
+    return value;
+}
 // terreno
+//uniform int osg_FrameNumber;
 vec4 tex_terreno()
 {
     vec4 _color;
@@ -123,28 +159,28 @@ vec4 tex_terreno()
     float tipo1=mod(floor(info_tipo),10);
     //
     if(tipo0==1){ // nieve
-        _color0=texture2D(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.75));
+        _color0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.75));
     } else if(tipo0==2){ // tundra
-        _color0=texture2D(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.50));
+        _color0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.50));
     } else if(tipo0==3){ // tierra seca
-        _color0=texture2D(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.25));
+        _color0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.25));
     } else if(tipo0==4){ // tierra humeda
-        _color0=texture2D(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.00));
+        _color0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.00));
     } else if(tipo0==7){ // arena seca
-        _color0=texture2D(p3d_Texture0, texcoord.st/4.0+vec2(0.50,0.25));
+        _color0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord.st/4.0+vec2(0.50,0.25));
     } else {
         _color0=vec4(0,0,0,1);
     }
     if(tipo1==1){
-        _color1=texture2D(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.75));
+        _color1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.75));
     } else if(tipo1==2){
-        _color1=texture2D(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.50));
+        _color1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.50));
     } else if(tipo1==3){
-        _color1=texture2D(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.25));
+        _color1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.25));
     } else if(tipo1==4){
-        _color1=texture2D(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.00));
+        _color1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.00));
     } else if(tipo1==7){
-        _color1=texture2D(p3d_Texture0, texcoord.st/4.0+vec2(0.50,0.25));
+        _color1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord.st/4.0+vec2(0.50,0.25));
     } else {
         _color1=vec4(1,1,1,1);
     }
@@ -152,8 +188,12 @@ vec4 tex_terreno()
     if(info_tipo_factor==0.0){
         _color=_color0;
     } else {
-        float _ruido=texture2D(p3d_Texture1,texcoord.st).r;
+        //float _ruido=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,texcoord.st).r;
+        //float mix_factor=0.5+0.5*cos(3.14159*osg_FrameNumber*0.003);
+        //_color=mix(_color0,_color1,_ruido>info_tipo_factor?1.0:0.0);
+        float _ruido=ruido();
         _color=mix(_color0,_color1,_ruido>0.5?1.0:0.0);
+        _color=vec4(_ruido,0.0,0.0,1.0);
     }
     //
     //_color.a=1.0;
@@ -170,23 +210,23 @@ vec4 agua()
     vec2 texcoord_reflejo=vec2(ndc.x,1.0-ndc.y);
     vec2 texcoord_refraccion=ndc;
     //
-    vec2 distorted_texcoords=texture2D(p3d_Texture2,vec2(texcoord.s+move_factor, texcoord.t)).rg*0.1;
+    vec2 distorted_texcoords=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture2,vec2(texcoord.s+move_factor, texcoord.t)).rg*0.1;
     distorted_texcoords=texcoord.st+vec2(distorted_texcoords.x,distorted_texcoords.y+move_factor);
-    vec2 total_distortion=(texture2D(p3d_Texture2,distorted_texcoords).rg*2.0-1.0)*0.01;
+    vec2 total_distortion=(%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture2,distorted_texcoords).rg*2.0-1.0)*0.01;
     //
     texcoord_reflejo+=total_distortion;
     texcoord_reflejo=clamp(texcoord_reflejo,0.001,0.999);
     texcoord_refraccion+=total_distortion;
     texcoord_refraccion=clamp(texcoord_refraccion,0.001,0.999);
     //
-    vec4 color_reflection=texture2D(p3d_Texture0, texcoord_reflejo);
-    vec4 color_refraction=texture2D(p3d_Texture1, texcoord_refraccion);
+    vec4 color_reflection=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord_reflejo);
+    vec4 color_refraction=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1, texcoord_refraccion);
     // ok so far
     vec3 view_vector=normalize(cam_pos);
     float refractive_factor=dot(view_vector,vec3(0.0,0.0,1.0)); // abs()? esto era no más, parece
     refractive_factor=pow(refractive_factor,0.9); // renderiza negro ante ciertos desplazamientos de la superficie de agua, habria que corregir. abs()!
     //
-    vec4 color_normal=texture2D(p3d_Texture3,distorted_texcoords*1.5);
+    vec4 color_normal=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture3,distorted_texcoords*1.5);
     vec3 normal=vec3(color_normal.r*2.0-1.0,color_normal.g*2.0-1.0,color_normal.b);
     normal=normalize(normal);
     //
@@ -228,7 +268,7 @@ vec4 sol()
     if(distance(posicion_sol,PositionW.xyz)>20.0){
         return vec4(0,0,0,1);
     } else {
-        vec4 color=texture2D(p3d_Texture0, texcoord.st);
+        vec4 color=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord.st);
         return color;//*2*(color.a - 0.5);
     }
 }

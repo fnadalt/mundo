@@ -55,6 +55,7 @@ varying float info_tipo;
 # FRAGMENT SHADER
 #
 #
+FS_FUNC_TEX_LOOK_UP="texture2D"
 FS_COMUN="""
 const float TamanoHalo=0.85;
 varying vec4 PositionW; // clip
