@@ -267,9 +267,11 @@ class Terreno:
         #
         return lod0
 
+    
     def _establecer_shader(self):
         #
         ruta_tex_ruido="texturas/white_noise.png"
+        tamano=512
         if not os.path.exists(ruta_tex_ruido):
             imagen_ruido=PNMImage(tamano+1, tamano+1)
             for x in range(tamano+1):

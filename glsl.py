@@ -124,7 +124,8 @@ float ruido()
     for(int i_paso=pasos;pasos>0;--pasos){
         amplitud*=persistencia;
         amplitud_total+=amplitud;
-        int periodo=1<<(i_paso+4);
+        int periodo=1; //1<<(i_paso+4);
+        for(int i_mult=1;i_mult<=i_paso;++i_mult){periodo*=(2*i_mult);}
         //
         float offset_x=pos.x/periodo;
         int indice_x0=int(mod(int(offset_x)*periodo,tamano_textura));
@@ -191,9 +192,7 @@ vec4 tex_terreno()
         //float _ruido=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,texcoord.st).r;
         //float mix_factor=0.5+0.5*cos(3.14159*osg_FrameNumber*0.003);
         //_color=mix(_color0,_color1,_ruido>info_tipo_factor?1.0:0.0);
-        float _ruido=ruido();
-        _color=mix(_color0,_color1,_ruido>0.5?1.0:0.0);
-        _color=vec4(_ruido,0.0,0.0,1.0);
+        _color=_color0;
     }
     //
     //_color.a=1.0;

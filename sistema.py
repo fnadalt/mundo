@@ -440,11 +440,17 @@ class Sistema:
         delta_idx_tabla, factor_transicion=self._calcular_transicion_tabla(pos_columna, pos_fila, tabla_cantidad_columnas, tabla_cantidad_filas, 0.5, loguear)
         fila_delta=fila+delta_idx_tabla[1]
         columna_delta=columna+delta_idx_tabla[0]
-        if fila_delta>=0 and fila_delta<tabla_cantidad_filas:
-            fila=fila_delta
-        if columna_delta>=0 and columna_delta<tabla_cantidad_columnas:
-            columna=columna_delta
-        bioma2=Sistema.BiomaTabla[fila][columna]
+        if fila_delta<0 or fila_delta>=tabla_cantidad_filas:
+            fila_delta=fila
+            factor_transicion=0.0
+        if columna_delta<0 or columna_delta>=tabla_cantidad_columnas:
+            columna_delta=columna
+            factor_transicion=0.0
+        bioma2=Sistema.BiomaTabla[fila_delta][columna_delta]
+        if delta_idx_tabla[0]<0 or delta_idx_tabla[1]<0:
+            bioma_tmp=bioma1
+            bioma1=bioma2
+            bioma2=bioma_tmp
         #
         if loguear:
             print("bioma2 delta_idx_tabla=%s factor_transicion=%.3f fila=%i columna=%i %s"%(str(delta_idx_tabla), factor_transicion, fila, columna, str(bioma2)))
@@ -530,6 +536,7 @@ class Sistema:
         # precipitacion.
         # Devuelve un delta de posicion y un factor: ((0,0),0.00),((-1,0),0.76),((0,+1),0.1),etc...
         #
+        delta_pos=None
         longitud_rango_fila=1.0
         longitud_rango_columna=1.0
         longitud_rango_fila_puro=longitud_rango_fila*rango_pureza
@@ -557,7 +564,7 @@ class Sistema:
             # puro
             if loguear:
                 print("puro")
-            return ((0, 0), 0.0)
+            delta_pos=((0, 0), 0.0)
         else:
             # interpolar
             if abs(offset_pos_fila)>=abs(offset_pos_columna): # prioriza fila
@@ -565,13 +572,20 @@ class Sistema:
                     print("prioriza fila")
                 factor=(abs(offset_pos_fila)-longitud_rango_fila_puro/2.0)/((1.0-rango_pureza))
                 delta=-1 if offset_pos_fila<0.0 else 1
-                return ((0, delta), factor if delta==-1 else 1.0-factor)
+                if delta==-1:
+                    factor=1.0-factor
+                delta_pos=((0, delta), factor)
             else:
                 if loguear:
                     print("prioriza columna")
                 factor=(abs(offset_pos_columna)-longitud_rango_columna_puro/2.0)/((1.0-rango_pureza))
                 delta=-1 if offset_pos_columna<0.0 else 1
-                return ((delta, 0), factor if delta==-1 else 1.0-factor)
+                if delta==-1:
+                    factor=1.0-factor
+                delta_pos=((delta, 0), factor)
+        if loguear:
+            print("delta_pos %s"%str(delta_pos))
+        return delta_pos
 
     def _obtener_terreno_bioma(self, bioma): # f()->(tipo_terreno_base,tipo_terreno_superficie)
         if bioma==Sistema.BiomaDesiertoPolar:
@@ -852,7 +866,8 @@ class Tester(ShowBase):
                         pos_fila=filas*y/(tamano+1)
                         idx_fila_0=int(pos_fila)
                         #
-                        delta_pos, factor_transicion=self.sistema._calcular_transicion_tabla(pos_columna, pos_fila, columnas, filas, 0.5, False)
+                        loguear=False#True if (pos_fila>0.5 and pos_fila<0.53) else False
+                        delta_pos, factor_transicion=self.sistema._calcular_transicion_tabla(pos_columna, pos_fila, columnas, filas, 0.5, loguear)
                         idx_columna_d=idx_columna_0+delta_pos[0]
                         idx_fila_d=idx_fila_0+delta_pos[1]
                         if idx_columna_d<0 or idx_columna_d>=columnas:
@@ -883,6 +898,12 @@ class Tester(ShowBase):
                             break
                         color_fila_0*=(idx_columna_0+1)/columnas
                         color_fila_d*=(idx_columna_d+1)/columnas
+                        if delta_pos[0]<0 or delta_pos[1]<0:
+                            color_fila_tmp=color_fila_0
+                            color_fila_0=color_fila_d
+                            color_fila_d=color_fila_tmp
+                        if pos_fila>0.5 and pos_fila<0.53:
+                            print("pos=(%s)(%s) color_0=%s color_1=%s factor_transicion=%.3f"%(str((pos_columna, pos_fila)), str(delta_pos), str(color_fila_0), str(color_fila_d), factor_transicion))
                         color=(color_fila_0*(1.0-factor_transicion))+(color_fila_d*factor_transicion)
                         self.imagen.setXel(x, y, color[0], color[1], color[2])
         #
