@@ -729,6 +729,7 @@ class Tester(ShowBase):
     TipoImagenTemperaturaPrecip=2
     TipoImagenBioma=3
     TipoImagenTerreno=4
+    TipoImagenInterpTabla=5
     
     ColoresTipoTerreno={Sistema.TerrenoTipoNulo:Vec4(0, 0, 0, 255), # negro
                         Sistema.TerrenoTipoNieve:Vec4(255, 255, 255, 255), # blanco
@@ -766,7 +767,7 @@ class Tester(ShowBase):
         plano.setColor((0, 0, 1, 1))
         self.plano=self.render.attachNewNode(plano.generate())
         #
-        self.tipo_imagen=Tester.TipoImagenTopo
+        self.tipo_imagen=Tester.TipoImagenInterpTabla
         #
         self.texturaImagen=None
         self.imagen=None
@@ -844,6 +845,46 @@ class Tester(ShowBase):
                             self.imagen.setXelA(x, y, _c/256)
                         else:
                             self.imagen.setXel(x, y, 0.0)
+                    elif self.tipo_imagen==Tester.TipoImagenInterpTabla:
+                        columnas, filas=4, 3
+                        pos_columna=columnas*x/(tamano+1)
+                        idx_columna_0=int(pos_columna)
+                        pos_fila=filas*y/(tamano+1)
+                        idx_fila_0=int(pos_fila)
+                        #
+                        delta_pos, factor_transicion=self.sistema._calcular_transicion_tabla(pos_columna, pos_fila, columnas, filas, 0.5, False)
+                        idx_columna_d=idx_columna_0+delta_pos[0]
+                        idx_fila_d=idx_fila_0+delta_pos[1]
+                        if idx_columna_d<0 or idx_columna_d>=columnas:
+                            factor_transicion=0.0
+                            idx_columna_d=idx_columna_0
+                        if idx_fila_d<0 or idx_fila_d>=filas:
+                            factor_transicion=0.0
+                            idx_fila_d=idx_fila_0
+                        #
+                        color_fila_0, color_fila_d=None, None
+                        if idx_fila_0==0:
+                            color_fila_0=Vec3(1.0, 0.0, 0.0)
+                        elif idx_fila_0==1:
+                            color_fila_0=Vec3(0.0, 1.0, 0.0)
+                        elif idx_fila_0==2:
+                            color_fila_0=Vec3(0.0, 0.0, 1.0)
+                        else:
+                            log.error("idx_fila_0=%s delta_pos=%s"%(str(idx_fila_0), str(delta_pos)))
+                            break
+                        if idx_fila_d==0:
+                            color_fila_d=Vec3(1.0, 0.0, 0.0)
+                        elif idx_fila_d==1:
+                            color_fila_d=Vec3(0.0, 1.0, 0.0)
+                        elif idx_fila_d==2:
+                            color_fila_d=Vec3(0.0, 0.0, 1.0)
+                        else:
+                            log.error("idx_fila_d=%s delta_pos=%s"%(str(idx_fila_d), str(delta_pos)))
+                            break
+                        color_fila_0*=(idx_columna_0+1)/columnas
+                        color_fila_d*=(idx_columna_d+1)/columnas
+                        color=(color_fila_0*(1.0-factor_transicion))+(color_fila_d*factor_transicion)
+                        self.imagen.setXel(x, y, color[0], color[1], color[2])
         #
         self.texturaImagen.load(self.imagen)
 
@@ -886,7 +927,7 @@ class Tester(ShowBase):
         DirectButton(parent=self.frmControles, pos=(0.75, 0, -0.15), scale=0.075, text="cambiar", command=self._cambiar_tipo_imagen, frameSize=(-1.5, 1.5, -0.60, 0.60), text_scale=0.75)
 
     def _cambiar_tipo_imagen(self):
-        self.tipo_imagen=(self.tipo_imagen+1)%5
+        self.tipo_imagen=(self.tipo_imagen+1)%6
         self._generar_imagen()
 
     def _click_imagen(self, *args):
