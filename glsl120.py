@@ -46,8 +46,8 @@ VS_POS_PROJ="""
 varying vec4 PositionP; // agua
 """
 VS_TIPO_TERRENO="""
-attribute float info_tipo_terreno;
-varying float info_tipo;
+attribute vec3 info_tipo_terreno;
+varying vec3 info_tipo;
 """
 
 #
@@ -116,7 +116,7 @@ uniform struct {
 varying vec4 sombra[8];
 """
 FS_TERRENO="""
-varying float info_tipo;
+varying vec3 info_tipo;
 """
 
 #

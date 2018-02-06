@@ -118,6 +118,8 @@ class Terreno:
         geom_node=self._generar_nodo_parcela(nombre, idx_pos, datos_parcela)
         #
         parcela_node_path.attachNewNode(geom_node)
+        if idx_pos==(0, 0):
+            parcela_node_path.writeBamFile("parcela.bam")
         # debug: normales
         if self.dibujar_normales:
             geom_node_normales=self._generar_lineas_normales("normales_%i_%i"%(int(pos[0]), int(pos[1])), geom_node)
@@ -155,7 +157,7 @@ class Terreno:
                 _pos=(pos[0]+x-1, pos[1]+y-1)
                 temperatura_base=self.sistema.obtener_temperatura_anual_media_norm(_pos)
                 d.pos=Vec3(x-1, y-1, self.sistema.obtener_altitud_suelo(_pos))
-                d.tipo=self.sistema.obtener_tipo_terreno_float(_pos)
+                d.tipo=Vec3(self.sistema.obtener_tipo_terreno(_pos))
                 d.temperatura_base=temperatura_base
                 #log.debug("_generar_datos_parcela pos=%s tipo_terreno=%s"%(str(_pos), str(d.tipo)))
                 data[x].append(d)
@@ -179,13 +181,14 @@ class Terreno:
         return data
 
     def _generar_nodo_parcela(self, nombre, idx_pos, data):
+        pos=self.obtener_pos_parcela(idx_pos)
         # formato
         co_info_tipo_terreno=InternalName.make("info_tipo_terreno") # int()->tipo; fract()->intervalo
         format_array=GeomVertexArrayFormat()
         format_array.addColumn(InternalName.getVertex(), 3, Geom.NT_stdfloat, Geom.C_point)
         format_array.addColumn(InternalName.getNormal(), 3, Geom.NT_stdfloat, Geom.C_normal)
         format_array.addColumn(InternalName.getTexcoord(), 2, Geom.NT_stdfloat, Geom.C_texcoord)
-        format_array.addColumn(co_info_tipo_terreno, 1, Geom.NT_stdfloat, Geom.C_other)
+        format_array.addColumn(co_info_tipo_terreno, 3, Geom.NT_stdfloat, Geom.C_other) # caro?! volver a float?
         formato=GeomVertexFormat()
         formato.addArray(format_array)
         # iniciar vértices y primitivas
@@ -199,11 +202,15 @@ class Terreno:
         wrt_i=GeomVertexWriter(vdata, co_info_tipo_terreno)
         # llenar datos de vertices
         i_vertice=0
-        tc_x, tc_y=0.999, 0.999 # 1.0, 1.0
+        tc_x, tc_y=0.0, 0.0
         for x in range(Terreno.TamanoParcela+1):
-            tc_x=0.001 if tc_x==0.999 else 0.999
+            tc_x=x/(Terreno.TamanoParcela+1) #1.0 if tc_x==0.0 else 0.0
+            if x==0: tc_x=0.0
             for y in range(Terreno.TamanoParcela+1):
-                tc_y=0.001 if tc_y==0.999 else 0.999
+                tc_y=y/(Terreno.TamanoParcela+1) #1.0 if tc_y==0.0 else 0.0
+                if y==0: tc_y=0.0
+                if idx_pos==(0, 0) and (y==16 or y==16):
+                    print("(x,y)=%s tc=%s"%(str((x, y)), str((tc_x, tc_y))))
                 # data
                 d=data[x+1][y+1]
                 d.index=i_vertice # aqui se define el indice
@@ -211,7 +218,7 @@ class Terreno:
                 wrt_v.addData3(d.pos)
                 wrt_n.addData3(d.normal)
                 wrt_t.addData2(tc_x, tc_y)
-                wrt_i.addData1(d.tipo)
+                wrt_i.addData3(d.tipo)
                 i_vertice+=1
         # debug data
         #for fila in data:
@@ -324,7 +331,7 @@ class DatosLocalesTerreno:
         self.index=None # vertex array index
         self.pos=None
         self.normal=None
-        self.tipo=0.0 # obsoleto?
+        self.tipo=Vec3(0.0, 0.0, 0.0) # Vec3(tipo_terreno_0,tipo_terreno_1,factor_transicion) obsoleto?
         self.temperatura_base=0.0 # obsoleto?
     
     def __str__(self):
@@ -725,6 +732,6 @@ if __name__=="__main__":
     PStatClient.connect()
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    Terreno.RadioExpansion=0
+    Terreno.RadioExpansion=2
     tester.escribir_archivo=False
     tester.run()

@@ -112,7 +112,7 @@ FS_FUNC_TEX_AGUA="""
 """
 FS_FUNC_TEX_TERRENO="""
 // ruido
-const int tamano_textura=512;
+/*const int tamano_textura=512;
 float ruido()
 {
     float value=0.0;
@@ -146,7 +146,7 @@ float ruido()
     }
     //value/=amplitud_total;
     return value;
-}
+}*/
 // terreno
 //uniform int osg_FrameNumber;
 vec4 tex_terreno()
@@ -155,33 +155,35 @@ vec4 tex_terreno()
     vec4 _color0;
     vec4 _color1;
     //
-    float info_tipo_factor=fract(info_tipo);
-    float tipo0=floor(info_tipo/10);
-    float tipo1=mod(floor(info_tipo),10);
+    int tipo0=int(info_tipo.x); //floor(info_tipo/10);
+    int tipo1=int(info_tipo.y); //mod(floor(info_tipo),10);
+    float info_tipo_factor=info_tipo.z; //fract(info_tipo);
+    int escala=8.0;
+    vec2 tc=fract(PositionW.xy/escala)/4.0;
     //
     if(tipo0==1){ // nieve
-        _color0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.75));
+        _color0=texture(p3d_Texture0, tc+vec2(0.00,0.75));
     } else if(tipo0==2){ // tundra
-        _color0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.50));
+        _color0=texture(p3d_Texture0, tc+vec2(0.00,0.50));
     } else if(tipo0==3){ // tierra seca
-        _color0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.25));
+        _color0=texture(p3d_Texture0, tc+vec2(0.00,0.25));
     } else if(tipo0==4){ // tierra humeda
-        _color0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.00));
+        _color0=texture(p3d_Texture0, tc+vec2(0.00,0.00));
     } else if(tipo0==7){ // arena seca
-        _color0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord.st/4.0+vec2(0.50,0.25));
+        _color0=texture(p3d_Texture0, tc+vec2(0.50,0.25));
     } else {
         _color0=vec4(0,0,0,1);
     }
     if(tipo1==1){
-        _color1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.75));
+        _color1=texture(p3d_Texture0, tc+vec2(0.00,0.75));
     } else if(tipo1==2){
-        _color1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.50));
+        _color1=texture(p3d_Texture0, tc+vec2(0.00,0.50));
     } else if(tipo1==3){
-        _color1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.25));
+        _color1=texture(p3d_Texture0, tc+vec2(0.00,0.25));
     } else if(tipo1==4){
-        _color1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord.st/4.0+vec2(0.00,0.00));
+        _color1=texture(p3d_Texture0, tc+vec2(0.00,0.00));
     } else if(tipo1==7){
-        _color1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord.st/4.0+vec2(0.50,0.25));
+        _color1=texture(p3d_Texture0, tc+vec2(0.50,0.25));
     } else {
         _color1=vec4(1,1,1,1);
     }
@@ -189,11 +191,12 @@ vec4 tex_terreno()
     if(info_tipo_factor==0.0){
         _color=_color0;
     } else {
-        //float _ruido=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,texcoord.st).r;
+        float _ruido=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,texcoord.st).r;
         //float mix_factor=0.5+0.5*cos(3.14159*osg_FrameNumber*0.003);
-        //_color=mix(_color0,_color1,_ruido>info_tipo_factor?1.0:0.0);
-        _color=_color0;
+        _color=mix(_color0,_color1,_ruido>info_tipo_factor?1.0:0.0);
+        //_color=_color0;
     }
+    //_color=vec4(%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,texcoord.st).rgb,1.0);
     //
     //_color.a=1.0;
     return _color;

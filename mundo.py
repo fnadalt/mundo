@@ -186,7 +186,7 @@ class Mundo(NodePath):
         self.nubes.setPos(self.hombre.cuerpo.getPos()+Vec3(0, -16, 2.5))
         self.nubes.setP(-90)
         #noise=StackedPerlinNoise2(1, 1, 8, 2, 0.5, 256, 18)
-        #ts0=TextureStage("ts_nubes")
+        ts0=TextureStage("ts_nubes")
         tamano=512
         imagen=PNMImage(tamano, tamano)
         #imagen.perlinNoiseFill(noise)
@@ -194,9 +194,9 @@ class Mundo(NodePath):
             for y in range(tamano):
                 #v=noise(x, y)*0.5+0.5
                 imagen.setXelA(x, y, 1, 0, 0, 0.5)
-#        tex0=Texture("tex_nubes")
+        tex0=self.base.loader.loadTexture("texturas/white_noise.png") #Texture("tex_nubes")
 #        tex0.load(imagen)
-#        self.nubes.setTexture(ts0, tex0)
+        self.nubes.setTexture(ts0, tex0)
         #
         quebracho=self.base.loader.loadModel("objetos/quebracho.egg")
         quebracho.setScale(0.5)
