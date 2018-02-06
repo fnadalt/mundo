@@ -96,8 +96,10 @@ class GeneradorShader:
         #
         glsl=None
         if _glsl_version>=130:
+            log.info("se utiliza glsl 130")
             glsl=glsl130
         elif _glsl_version==120:
+            log.info("se utiliza glsl 120")
             glsl=glsl120
         # texto
         texto_vs="#version %s\n"%str(_glsl_version)
