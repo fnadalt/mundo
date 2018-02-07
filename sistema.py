@@ -162,7 +162,7 @@ class Sistema:
     def obtener_info(self):
         tam=self.obtener_temperatura_anual_media_norm(self.posicion_cursor)
         prec_f=self.obtener_precipitacion_frecuencia_anual(self.posicion_cursor)
-        bioma=self.obtener_bioma_transicion(self.posicion_cursor)
+        bioma=self.obtener_transicion_biomas(self.posicion_cursor)
         tipo_terreno=self.obtener_tipo_terreno(self.posicion_cursor)
         info="Sistema posicion_cursor=(%.3f,%.3f,%.3f)\n"%(self.posicion_cursor[0], self.posicion_cursor[1], self.posicion_cursor[2])
         info+="geo: tam=%.3f prec_f=%.3f bioma=(%s) tipo_terreno=(%s)\n"%(tam, prec_f, bioma, tipo_terreno)
@@ -420,15 +420,20 @@ class Sistema:
             log.error("caso no contemplado: tam=%.3f p_frec=%.3f"%(temperatura_anual_media, precipitacion_frecuencia))
             return Sistema.BiomaNulo
 
-    def obtener_bioma_transicion(self, posicion, loguear=False):
+    def obtener_transicion_biomas(self, posicion, loguear=False):
         temperatura_anual_media=self.obtener_temperatura_anual_media_norm(posicion)
         precipitacion_frecuencia=self.obtener_precipitacion_frecuencia_anual(posicion)
         return self._calcular_transicion_tabla_biomas(temperatura_anual_media, precipitacion_frecuencia, loguear)
 
     def obtener_tipo_terreno(self, posicion): # f()->(tipo_terreno_base,tipo_terreno_superficie,factor_transicion)
-        bioma1, bioma2, factor_transicion=self.obtener_bioma_transicion(posicion)
-        tipo_terreno_base1, tipo_terreno_superficie1=self._obtener_terreno_bioma(bioma1)
-        tipo_terreno_base2, tipo_terreno_superficie2=self._obtener_terreno_bioma(bioma2)
+        datos_biomas=self.obtener_transicion_biomas(posicion)
+        # ineficiente llamar dos veces math.modf?
+        _sorted=sorted(datos_biomas, key=lambda x:math.modf(x)[0])
+        distancia_a, bioma_a=math.modf(_sorted[0])
+        distancia_b, bioma_b=math.modf(_sorted[1])
+        factor_transicion=distancia_a/(distancia_a+distancia_b)
+        tipo_terreno_base1, tipo_terreno_superficie1=self._obtener_terreno_bioma(bioma_a)
+        tipo_terreno_base2, tipo_terreno_superficie2=self._obtener_terreno_bioma(bioma_b)
         if factor_transicion<=0.33:
             tipo_terreno_base2=tipo_terreno_base1
             factor_transicion=0.0
@@ -728,7 +733,7 @@ class Tester(ShowBase):
         plano.setColor((0, 0, 1, 1))
         self.plano=self.render.attachNewNode(plano.generate())
         #
-        self.tipo_imagen=Tester.TipoImagenInterpTabla
+        self.tipo_imagen=Tester.TipoImagenTopo
         #
         self.texturaImagen=None
         self.imagen=None
@@ -749,7 +754,7 @@ class Tester(ShowBase):
         paso=Tester.PasoDesplazamiento
         nueva_pos=(int(self.pos_foco[0]+delta_pos[0]*paso), int(self.pos_foco[1]+delta_pos[1]*paso))
         self.pos_foco=nueva_pos
-        self.sistema.obtener_bioma_transicion(self.pos_foco, loguear=True)
+        self.sistema.obtener_transicion_biomas(self.pos_foco, loguear=True)
         self._generar_imagen()
 
     def _generar_imagen(self):
@@ -800,7 +805,7 @@ class Tester(ShowBase):
                     elif self.tipo_imagen==Tester.TipoImagenBioma:
                         a=self.sistema.obtener_altitud_suelo((_x, _y))
                         if a>Sistema.TopoAltitudOceano:
-                            datos_biomas=self.sistema.obtener_bioma_transicion((_x, _y))
+                            datos_biomas=self.sistema.obtener_transicion_biomas((_x, _y))
                             distancia_a, bioma_a=math.modf(datos_biomas[0])
                             distancia_b, bioma_b=math.modf(datos_biomas[1])
                             distancia_c, bioma_c=math.modf(datos_biomas[2])
@@ -858,7 +863,7 @@ class Tester(ShowBase):
         except Exception as e:
             log.exception(str(e))
         log.info("_ir_a_pos (%.3f,%.3f)"%(x, y))
-        self.sistema.obtener_bioma_transicion((x, y), loguear=True)
+        self.sistema.obtener_transicion_biomas((x, y), loguear=True)
         self.pos_foco=(x, y)
         self._generar_imagen()
 
