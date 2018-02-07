@@ -305,6 +305,7 @@ FS_MAIN_LUZ="""
         }
         color+=amb();
 """
+FS_MAIN_LUZ_BLANCA="color+=vec4(1.0,1.0,1.0,1.0);"
 FS_MAIN_TEX_GENERICO="""
         // textura: generico
         vec4 color_tex=tex_generico();

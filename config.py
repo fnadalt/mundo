@@ -66,7 +66,7 @@ def establecer(variable, valor):
         log.exception(str(e))
 
 def iniciar():
-    global configuracion
+    global configuracion, _sucio
     log.info("iniciar")
     if configuracion!=None:
         raise Exception("sistema de configuraciones ya iniciado")
@@ -75,6 +75,7 @@ def iniciar():
     configuracion.read_dict(_default_config)
     if not os.path.exists(nombre_archivo):
         log.warning("no existe el archivo de configuracion '%s', se lo creara..."%nombre_archivo)
+        _sucio=True
         escribir_archivo()
     log.info("leer archivo de configuracion '%s'"%nombre_archivo)
     configuracion.read(nombre_archivo)
