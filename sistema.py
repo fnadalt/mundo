@@ -115,10 +115,11 @@ class Sistema:
     BiomaSavannah=6 # calido arido
     BiomaSelva=7 # calido humedo
     BiomaDesierto=8 # desierto calido
-    BiomaTabla=[[BiomaDesiertoPolar, BiomaTundra, BiomaDesierto,           BiomaDesierto],  \
-                [BiomaDesiertoPolar, BiomaTundra, BiomaBosqueMediterraneo, BiomaSavannah],  \
-                [BiomaDesiertoPolar, BiomaTaiga,  BiomaBosqueCaducifolio,  BiomaSelva],  \
-                ] # tabla(temperatura_anual_media,precipitacion_frecuencia)
+    BiomaTabla=[[BiomaDesiertoPolar, BiomaTundra, BiomaDesierto,           BiomaDesierto, BiomaDesierto],  \
+                [BiomaDesiertoPolar, BiomaTundra, BiomaBosqueMediterraneo, BiomaSavannah, BiomaSavannah],  \
+                [BiomaDesiertoPolar, BiomaTaiga,  BiomaBosqueCaducifolio,  BiomaSelva,    BiomaSelva],  \
+                [BiomaDesiertoPolar, BiomaTaiga,  BiomaBosqueCaducifolio,  BiomaSelva,    BiomaSelva]  \
+                ] # tabla(temperatura_anual_media,precipitacion_frecuencia). Se repiten en los bordes para facilitar calculos.
     # vegetacion
     VegetacionTipoNulo=0
     VegetacionTipoYuyo=1
@@ -420,45 +421,9 @@ class Sistema:
             return Sistema.BiomaNulo
 
     def obtener_bioma_transicion(self, posicion, loguear=False):
-        #
         temperatura_anual_media=self.obtener_temperatura_anual_media_norm(posicion)
         precipitacion_frecuencia=self.obtener_precipitacion_frecuencia_anual(posicion)
-        #
-        tabla_cantidad_filas=len(Sistema.BiomaTabla)
-        tabla_cantidad_columnas=len(Sistema.BiomaTabla[0])
-        pos_fila=precipitacion_frecuencia*tabla_cantidad_filas
-        pos_columna=temperatura_anual_media*tabla_cantidad_columnas
-        fila=int(pos_fila)
-        columna=int(pos_columna)
-        if fila==tabla_cantidad_filas:
-            fila-=1
-        if columna==tabla_cantidad_columnas:
-            columna-=1
-        bioma1=Sistema.BiomaTabla[fila][columna]
-        if loguear:
-            print("obtener_bioma_transicion bioma1 tam=%.2f prec_f=%.2f fila=%i columna=%i %s"%(temperatura_anual_media, precipitacion_frecuencia, fila, columna, str(bioma1)))
-        delta_idx_tabla, factor_transicion=self._calcular_transicion_tabla(pos_columna, pos_fila, tabla_cantidad_columnas, tabla_cantidad_filas, 0.5, loguear)
-        fila_delta=fila+delta_idx_tabla[1]
-        columna_delta=columna+delta_idx_tabla[0]
-        if fila_delta<0 or fila_delta>=tabla_cantidad_filas:
-            fila_delta=fila
-            factor_transicion=0.0
-        if columna_delta<0 or columna_delta>=tabla_cantidad_columnas:
-            columna_delta=columna
-            factor_transicion=0.0
-        bioma2=Sistema.BiomaTabla[fila_delta][columna_delta]
-        if delta_idx_tabla[0]<0 or delta_idx_tabla[1]<0:
-            bioma_tmp=bioma1
-            bioma1=bioma2
-            bioma2=bioma_tmp
-        #
-        if loguear:
-            print("bioma2 delta_idx_tabla=%s factor_transicion=%.3f fila=%i columna=%i %s"%(str(delta_idx_tabla), factor_transicion, fila, columna, str(bioma2)))
-        #
-        transicion=(bioma1, bioma2, factor_transicion)
-        if loguear:
-            print("biomas=%s"%(str(transicion)))
-        return transicion
+        return self._calcular_transicion_tabla_biomas(temperatura_anual_media, precipitacion_frecuencia, loguear)
 
     def obtener_tipo_terreno(self, posicion): # f()->(tipo_terreno_base,tipo_terreno_superficie,factor_transicion)
         bioma1, bioma2, factor_transicion=self.obtener_bioma_transicion(posicion)
@@ -524,68 +489,50 @@ class Sistema:
         _escala=Sistema.VegetacionPerlinNoiseParams[0]
         _semilla=Sistema.VegetacionPerlinNoiseParams[1]
         self.ruido_vegetacion=PerlinNoise2(_escala, _escala, 256, _semilla)
-
-    def _calcular_transicion_tabla(self, x, y, tabla_cantidad_columnas, tabla_cantidad_filas, rango_pureza=0.50, loguear=False): # f()->(delta_idx_tabla,factor)
-        # Surge como necesidad para calcular transicion de biomas, utilizando BiomaTabla.
-        # Segun tamperatura media y precipitacion, se ubica un punto en la tabla.
-        # El bioma es "puro", si el punto se encuentra dentro del 75% del rango de bioma tanto
-        # para temperatura como para precipitacion. Fuera de este porcentaje, se efectuará
-        # interpolacion con el bioma con el cual se encuentre mas cerca. Si la temperatura
-        # se aleja mas del rango, se elegira el siguiente bioma en funcion de esta variable;
-        # si no, se hara en funcion de las precipitaciones. Si ambas son iguales, se priorizara
-        # precipitacion.
-        # Devuelve un delta de posicion y un factor: ((0,0),0.00),((-1,0),0.76),((0,+1),0.1),etc...
+    
+    def _calcular_transicion_tabla_biomas(self, temperatura_anual_media, precipitacion_frecuencia, loguear=False):
+        # Se calcula las distancias desde el punto(temperatura_anual_media,precipitacion_frecuencia), hacia
+        # cada uno de los cuatro biomas circundantes: A, el bioma mas proximo; B, el siguiente mas proximo en
+        # temperatura (x); C, el mas proximo en precipitacion (y); D, el mas lejano (o diagonal).
+        # Devuelve las distancias normalizadas en la porcion fraccional (dA, dB, dC, dD), y el bioma
+        # correspondiente en la porcion entera; el signo indica la direccion.
+        punto=(temperatura_anual_media*4, precipitacion_frecuencia*3)
+        celda_a=(int(punto[0]), int(punto[1]))
+        punto_max_a=(celda_a[0]+0.5, celda_a[1]+0.5)
+        delta_a=[0, 0]
+        delta_a[0]=1 if (punto[0]-punto_max_a[0])>0 else -1
+        delta_a[1]=1 if (punto[1]-punto_max_a[1])>0 else -1
+        punto_max_b=(max(0.0, punto_max_a[0]+delta_a[0]), punto_max_a[1])
+        punto_max_c=(punto_max_a[0], max(0.0, punto_max_a[1]+delta_a[1]))
+        punto_max_d=(max(0.0, punto_max_a[0]+delta_a[0]), max(0.0, punto_max_a[1]+delta_a[1]))
         #
-        delta_pos=None
-        longitud_rango_fila=1.0
-        longitud_rango_columna=1.0
-        longitud_rango_fila_puro=longitud_rango_fila*rango_pureza
-        longitud_rango_columna_puro=longitud_rango_columna*rango_pureza
-        if loguear:
-            print("_calcular_transicion_tabla(col=%.2f,fila=%.2f):\n dim=(%i,%i) long_rango=(%.2f,%.2f) long_rango_puro=(%.2f,%.2f)"%(x, y, tabla_cantidad_filas, tabla_cantidad_columnas, longitud_rango_fila, longitud_rango_columna, longitud_rango_fila_puro, longitud_rango_columna_puro))
+        distancia_a=min(0.99, math.sqrt((punto[0]-punto_max_a[0])**2 + (punto[1]-punto_max_a[1])**2)) # min() necesario?
+        distancia_b=min(0.99, math.sqrt((punto[0]-punto_max_b[0])**2 + (punto[1]-punto_max_b[1])**2)) # min() necesario?
+        distancia_c=min(0.99, math.sqrt((punto[0]-punto_max_c[0])**2 + (punto[1]-punto_max_c[1])**2)) # min() necesario?
+        distancia_d=min(0.99, math.sqrt((punto[0]-punto_max_d[0])**2 + (punto[1]-punto_max_d[1])**2))
         #
-        fila_actual=int(y)
-        if fila_actual==tabla_cantidad_filas:
-            fila_actual=tabla_cantidad_filas-1
-        columna_actual=int(x)
-        if columna_actual==tabla_cantidad_columnas:
-            columna_actual=tabla_cantidad_columnas-1
-        if loguear:
-            print("f_actual=%.2f[%i] c_actual=%.2f[%i]"%(y, fila_actual, x, columna_actual))
+        bioma_a=Sistema.BiomaTabla[celda_a[1]][celda_a[0]]
+        bioma_b=Sistema.BiomaTabla[int(punto_max_b[1])][int(punto_max_b[0])]
+        bioma_c=Sistema.BiomaTabla[int(punto_max_c[1])][int(punto_max_c[0])]
+        bioma_d=Sistema.BiomaTabla[int(punto_max_d[1])][int(punto_max_d[0])]
         #
-        fila_actual_punto_medio=fila_actual+longitud_rango_fila/2.0
-        offset_pos_fila=y-fila_actual_punto_medio
-        columna_actual_punto_medio=columna_actual+longitud_rango_columna/2.0
-        offset_pos_columna=x-columna_actual_punto_medio
-        if loguear:
-            print("fila_pm=%.2f off_fila_pm=%.2f col_pm=%.2f off_col_pm=%.2f"%(fila_actual_punto_medio, offset_pos_fila, columna_actual_punto_medio, offset_pos_columna))
+#        if distancia_a<=0.25:
+#            distancia_a=0.0
+#            distancia_b, distancia_c, distancia_d=0.99, 0.99, 0.99
+#        else:
+#            distancia_a=(distancia_a-0.25)/0.75
         #
-        if abs(offset_pos_fila)<=longitud_rango_fila_puro/2.0 and abs(offset_pos_columna)<=longitud_rango_columna_puro/2.0:
-            # puro
-            if loguear:
-                print("puro")
-            delta_pos=((0, 0), 0.0)
-        else:
-            # interpolar
-            if abs(offset_pos_fila)>=abs(offset_pos_columna): # prioriza fila
-                if loguear:
-                    print("prioriza fila")
-                factor=(abs(offset_pos_fila)-longitud_rango_fila_puro/2.0)/((1.0-rango_pureza))
-                delta=-1 if offset_pos_fila<0.0 else 1
-                if delta==-1:
-                    factor=1.0-factor
-                delta_pos=((0, delta), factor)
-            else:
-                if loguear:
-                    print("prioriza columna")
-                factor=(abs(offset_pos_columna)-longitud_rango_columna_puro/2.0)/((1.0-rango_pureza))
-                delta=-1 if offset_pos_columna<0.0 else 1
-                if delta==-1:
-                    factor=1.0-factor
-                delta_pos=((delta, 0), factor)
         if loguear:
-            print("delta_pos %s"%str(delta_pos))
-        return delta_pos
+            print("_calcular_transicion_tabla_biomas:\n" \
+                  "p=(%s) celda_a=(%s) pmax=(%s) delta_a=(%s)\n" \
+                  "d=(%s) b=(%s)" % (str(punto), str(celda_a), str((punto_max_a, punto_max_b, punto_max_c, punto_max_d)), str(delta_a), str((distancia_a, distancia_b, distancia_c, distancia_d)), str((bioma_a, bioma_b, bioma_c, bioma_d)))
+                  )
+        #
+        return (bioma_a+distancia_a, 
+                bioma_b+distancia_b, 
+                bioma_c+distancia_c, 
+                bioma_d+distancia_d
+                )
 
     def _obtener_terreno_bioma(self, bioma): # f()->(tipo_terreno_base,tipo_terreno_superficie)
         if bioma==Sistema.BiomaDesiertoPolar:
@@ -853,59 +800,47 @@ class Tester(ShowBase):
                     elif self.tipo_imagen==Tester.TipoImagenBioma:
                         a=self.sistema.obtener_altitud_suelo((_x, _y))
                         if a>Sistema.TopoAltitudOceano:
-                            c1, c2, factor_transicion=self.sistema.obtener_bioma_transicion((_x, _y))
-                            #log.debug("bioma=%i"%c)
-                            _c=(Tester.ColoresBioma[c1]*(1.0-factor_transicion))+(Tester.ColoresBioma[c2]*factor_transicion)
+                            datos_biomas=self.sistema.obtener_bioma_transicion((_x, _y))
+                            distancia_a, bioma_a=math.modf(datos_biomas[0])
+                            distancia_b, bioma_b=math.modf(datos_biomas[1])
+                            distancia_c, bioma_c=math.modf(datos_biomas[2])
+                            distancia_d, bioma_d=math.modf(datos_biomas[3])
+                            distancias=distancia_a+distancia_b+distancia_c+distancia_d
+                            _c= (Tester.ColoresBioma[bioma_a]*(1.0-distancia_a))+ \
+                                (Tester.ColoresBioma[bioma_b]*(1.0-distancia_b))+ \
+                                (Tester.ColoresBioma[bioma_c]*(1.0-distancia_c))+ \
+                                (Tester.ColoresBioma[bioma_d]*(1.0-distancia_d))
+                            _c/=distancias
                             self.imagen.setXelA(x, y, _c/256)
                         else:
                             self.imagen.setXel(x, y, 0.0)
                     elif self.tipo_imagen==Tester.TipoImagenInterpTabla:
-                        columnas, filas=4, 3
-                        pos_columna=columnas*x/(tamano+1)
-                        idx_columna_0=int(pos_columna)
-                        pos_fila=filas*y/(tamano+1)
-                        idx_fila_0=int(pos_fila)
+                        pos_columna=x/(tamano+1)
+                        pos_fila=y/(tamano+1)
                         #
-                        loguear=False#True if (pos_fila>0.5 and pos_fila<0.53) else False
-                        delta_pos, factor_transicion=self.sistema._calcular_transicion_tabla(pos_columna, pos_fila, columnas, filas, 0.5, loguear)
-                        idx_columna_d=idx_columna_0+delta_pos[0]
-                        idx_fila_d=idx_fila_0+delta_pos[1]
-                        if idx_columna_d<0 or idx_columna_d>=columnas:
-                            factor_transicion=0.0
-                            idx_columna_d=idx_columna_0
-                        if idx_fila_d<0 or idx_fila_d>=filas:
-                            factor_transicion=0.0
-                            idx_fila_d=idx_fila_0
-                        #
-                        color_fila_0, color_fila_d=None, None
-                        if idx_fila_0==0:
-                            color_fila_0=Vec3(1.0, 0.0, 0.0)
-                        elif idx_fila_0==1:
-                            color_fila_0=Vec3(0.0, 1.0, 0.0)
-                        elif idx_fila_0==2:
-                            color_fila_0=Vec3(0.0, 0.0, 1.0)
-                        else:
-                            log.error("idx_fila_0=%s delta_pos=%s"%(str(idx_fila_0), str(delta_pos)))
-                            break
-                        if idx_fila_d==0:
-                            color_fila_d=Vec3(1.0, 0.0, 0.0)
-                        elif idx_fila_d==1:
-                            color_fila_d=Vec3(0.0, 1.0, 0.0)
-                        elif idx_fila_d==2:
-                            color_fila_d=Vec3(0.0, 0.0, 1.0)
-                        else:
-                            log.error("idx_fila_d=%s delta_pos=%s"%(str(idx_fila_d), str(delta_pos)))
-                            break
-                        color_fila_0*=(idx_columna_0+1)/columnas
-                        color_fila_d*=(idx_columna_d+1)/columnas
-                        if delta_pos[0]<0 or delta_pos[1]<0:
-                            color_fila_tmp=color_fila_0
-                            color_fila_0=color_fila_d
-                            color_fila_d=color_fila_tmp
-                        if pos_fila>0.5 and pos_fila<0.53:
-                            print("pos=(%s)(%s) color_0=%s color_1=%s factor_transicion=%.3f"%(str((pos_columna, pos_fila)), str(delta_pos), str(color_fila_0), str(color_fila_d), factor_transicion))
-                        color=(color_fila_0*(1.0-factor_transicion))+(color_fila_d*factor_transicion)
+                        loguear=False
+                        #if y==63:
+                        #    loguear=True
+                        data=self.sistema._calcular_transicion_tabla_biomas(pos_columna, pos_fila, loguear)
+                        distancia_a, bioma_a=math.modf(data[0])
+                        distancia_b, bioma_b=math.modf(data[1])
+                        distancia_c, bioma_c=math.modf(data[2])
+                        distancia_d, bioma_d=math.modf(data[3])
+                        color_a=Tester.ColoresBioma[bioma_a]
+                        color_b=Tester.ColoresBioma[bioma_b]
+                        color_c=Tester.ColoresBioma[bioma_c]
+                        color_d=Tester.ColoresBioma[bioma_d]
+                        distancia_a=1.0-distancia_a
+                        distancia_b=1.0-distancia_b
+                        distancia_c=1.0-distancia_c
+                        distancia_d=1.0-distancia_d
+                        distancias=distancia_a+distancia_b+distancia_c+distancia_d
+                        color=(color_a*distancia_a+color_b*distancia_b+color_c*distancia_c+color_d*distancia_d)/256
+                        #if y==63:
+                        #    print("(x,y)=(%s) pos=(%s) d=(%s) c=(%s)"%(str((x, y)), str((pos_columna, pos_fila)), str((distancia_a, distancia_b, distancia_c, distancia_d)), str((color_a, color_b, color_c, color_d))))
+                        color/=distancias
                         self.imagen.setXel(x, y, color[0], color[1], color[2])
+        #self.imagen.write("sistema.png")
         #
         self.texturaImagen.load(self.imagen)
 
