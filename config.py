@@ -11,6 +11,7 @@ configuracion=None
 _sucio=False
 _default_config={
         "shader":       {
+                        "phong":True, 
                         "sombras":False, 
                         "fog":False
                         }

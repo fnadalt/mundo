@@ -152,11 +152,12 @@ class GeneradorShader:
             if self._clase==GeneradorShader.ClaseSombra:
                 texto_fs+=glsl.FS_POS_PROJ
             if self._clase==GeneradorShader.ClaseTerreno or self._clase==GeneradorShader.ClaseGenerico:
-                texto_fs+=glsl.FS_LUZ
-                fs_func_luz_sombra=""
-                if config.valbool("shader.sombras"):
-                    fs_func_luz_sombra=glsl.FS_FUNC_LUZ_SOMBRA
-                texto_fs+=glsl.FS_FUNC_LUZ%{"FS_FUNC_LUZ_SOMBRA":fs_func_luz_sombra}
+                if config.valbool("shader.phong"):
+                    texto_fs+=glsl.FS_LUZ
+                    fs_func_luz_sombra=""
+                    if config.valbool("shader.sombras"):
+                        fs_func_luz_sombra=glsl.FS_FUNC_LUZ_SOMBRA
+                    texto_fs+=glsl.FS_FUNC_LUZ%{"FS_FUNC_LUZ_SOMBRA":fs_func_luz_sombra}
                 if self._clase==GeneradorShader.ClaseTerreno:
                     texto_fs+=glsl.FS_FUNC_TEX_TERRENO%{"FS_FUNC_TEX_LOOK_UP":glsl.FS_FUNC_TEX_LOOK_UP}
                 else:
@@ -180,7 +181,8 @@ class GeneradorShader:
             texto_fs+=glsl.FS_MAIN_CIELO
         else:
             if self._clase==GeneradorShader.ClaseGenerico or self._clase==GeneradorShader.ClaseTerreno:
-                texto_fs+=glsl.FS_MAIN_LUZ
+                if config.valbool("shader.phong"):
+                    texto_fs+=glsl.FS_MAIN_LUZ
                 if self._clase==GeneradorShader.ClaseGenerico:
                     texto_fs+=glsl.FS_MAIN_TEX_GENERICO
                 else: # terreno
