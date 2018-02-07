@@ -178,7 +178,7 @@ class Sistema:
             self.duracion_dia_segundos=1800
             self.ano=0
             self.dia=0
-            self._segundos_transcurridos_dia=0.55*self.duracion_dia_segundos
+            self._segundos_transcurridos_dia=0.60*self.duracion_dia_segundos
         else:
             log.info("cargar_parametros_iniciales desde configuracion")
             # leer de archivo
@@ -434,21 +434,16 @@ class Sistema:
         factor_transicion=distancia_a/(distancia_a+distancia_b)
         tipo_terreno_base1, tipo_terreno_superficie1=self._obtener_terreno_bioma(bioma_a)
         tipo_terreno_base2, tipo_terreno_superficie2=self._obtener_terreno_bioma(bioma_b)
-        if factor_transicion<=0.33:
-            tipo_terreno_base2=tipo_terreno_base1
-            factor_transicion=0.0
-        elif factor_transicion>=0.66:
-            tipo_terreno_base1=tipo_terreno_base2
-            factor_transicion=0.0
-        else:
-            factor_transicion-=0.33
-            factor_transicion/=0.33
+#        if factor_transicion<=0.33:
+#            tipo_terreno_base2=tipo_terreno_base1
+#            factor_transicion=0.0
+#        elif factor_transicion>=0.66:
+#            tipo_terreno_base1=tipo_terreno_base2
+#            factor_transicion=0.0
+#        else:
+#            factor_transicion-=0.33
+#            factor_transicion/=0.33
         return (tipo_terreno_base1, tipo_terreno_base2, factor_transicion)
-
-    def obtener_tipo_terreno_float(self, posicion):
-        tipo_terreno_base, tipo_terreno_superficie, factor_transicion=self.obtener_tipo_terreno(posicion)
-        tipo_terreno=tipo_terreno_base*10+tipo_terreno_superficie+factor_transicion
-        return tipo_terreno
 
     def obtener_descriptor_vegetacion(self, posicion, solo_existencia=False):
         pass
@@ -510,11 +505,16 @@ class Sistema:
         punto_max_b=(max(0.0, punto_max_a[0]+delta_a[0]), punto_max_a[1])
         punto_max_c=(punto_max_a[0], max(0.0, punto_max_a[1]+delta_a[1]))
         punto_max_d=(max(0.0, punto_max_a[0]+delta_a[0]), max(0.0, punto_max_a[1]+delta_a[1]))
-        #
-        distancia_a=min(0.99, math.sqrt((punto[0]-punto_max_a[0])**2 + (punto[1]-punto_max_a[1])**2)) # min() necesario?
-        distancia_b=min(0.99, math.sqrt((punto[0]-punto_max_b[0])**2 + (punto[1]-punto_max_b[1])**2)) # min() necesario?
-        distancia_c=min(0.99, math.sqrt((punto[0]-punto_max_c[0])**2 + (punto[1]-punto_max_c[1])**2)) # min() necesario?
-        distancia_d=min(0.99, math.sqrt((punto[0]-punto_max_d[0])**2 + (punto[1]-punto_max_d[1])**2))
+        # pitagoras
+#        distancia_a=min(0.99, math.sqrt((punto[0]-punto_max_a[0])**2 + (punto[1]-punto_max_a[1])**2)) # min() necesario?
+#        distancia_b=min(0.99, math.sqrt((punto[0]-punto_max_b[0])**2 + (punto[1]-punto_max_b[1])**2)) # min() necesario?
+#        distancia_c=min(0.99, math.sqrt((punto[0]-punto_max_c[0])**2 + (punto[1]-punto_max_c[1])**2)) # min() necesario?
+#        distancia_d=min(0.99, math.sqrt((punto[0]-punto_max_d[0])**2 + (punto[1]-punto_max_d[1])**2))
+        # manhattan
+        distancia_a=min(0.99, abs(punto[0]-punto_max_a[0])+abs(punto[1]-punto_max_a[1]))
+        distancia_b=min(0.99, abs(punto[0]-punto_max_b[0])+abs(punto[1]-punto_max_b[1]))
+        distancia_c=min(0.99, abs(punto[0]-punto_max_c[0])+abs(punto[1]-punto_max_c[1]))
+        distancia_d=min(0.99, abs(punto[0]-punto_max_d[0])+abs(punto[1]-punto_max_d[1]))
         #
         bioma_a=Sistema.BiomaTabla[celda_a[1]][celda_a[0]]
         bioma_b=Sistema.BiomaTabla[int(punto_max_b[1])][int(punto_max_b[0])]

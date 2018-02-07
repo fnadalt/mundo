@@ -188,15 +188,7 @@ vec4 tex_terreno()
         _color1=vec4(1,1,1,1);
     }
     //
-    if(info_tipo_factor==0.0){
-        _color=_color0;
-    } else {
-        float _ruido=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,texcoord.st).r;
-        //float mix_factor=0.5+0.5*cos(3.14159*osg_FrameNumber*0.003);
-        _color=mix(_color0,_color1,_ruido>info_tipo_factor?1.0:0.0);
-        //_color=_color0;
-    }
-    //_color=vec4(%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,texcoord.st).rgb,1.0);
+    _color=mix(_color0,_color1,info_tipo_factor);
     //
     //_color.a=1.0;
     return _color;
