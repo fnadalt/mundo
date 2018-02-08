@@ -127,6 +127,28 @@ class Sistema:
     VegetacionTipoArbusto=3
     VegetacionTipoArbol=4
     VegetacionPerlinNoiseParams=(64.0, 9106) # (escala, semilla)
+
+    # colores
+    ColoresTipoTerreno={TerrenoTipoNulo:Vec4(0, 0, 0, 255), # negro
+                        TerrenoTipoNieve:Vec4(255, 255, 255, 255), # blanco
+                        TerrenoTipoTundra:Vec4(128, 128, 128, 255),  # gris
+                        TerrenoTipoTierraSeca:Vec4(255, 0, 255, 255), # fucsia 
+                        TerrenoTipoTierraHumeda:Vec4(255, 0, 0, 255), # rojo
+                        TerrenoTipoPastoSeco:Vec4(255, 255, 0, 255), # amarillo
+                        TerrenoTipoPastoHumedo:Vec4(0, 255, 0, 255), # verde
+                        TerrenoTipoArenaSeca:Vec4(0, 255, 255, 255), # celeste
+                        TerrenoTipoArenaHumeda:Vec4(0, 0, 255, 255), # azul
+                        }
+    ColoresBioma=      {BiomaNulo:Vec4(0, 0, 0, 255), # negro
+                        BiomaDesiertoPolar:Vec4(255, 255, 255, 255), # blanco
+                        BiomaTundra:Vec4(0, 255, 255, 255), # celeste
+                        BiomaTaiga:Vec4(0, 0, 255, 255), # azul
+                        BiomaBosqueCaducifolio:Vec4(255, 0, 255, 255), # fucsia 
+                        BiomaBosqueMediterraneo:Vec4(255, 0, 0, 255), # rojo
+                        BiomaSavannah:Vec4(255, 255, 0, 255), # amarillo
+                        BiomaSelva:Vec4(0, 255, 0, 255), # verde
+                        BiomaDesierto:Vec4(128, 128, 128, 255) # gris
+                        }
     
     def __init__(self):
         # componentes:
@@ -425,7 +447,10 @@ class Sistema:
         precipitacion_frecuencia=self.obtener_precipitacion_frecuencia_anual(posicion)
         return self._calcular_transicion_tabla_biomas(temperatura_anual_media, precipitacion_frecuencia, loguear)
 
-    def obtener_tipo_terreno(self, posicion): # f()->(tipo_terreno_base,tipo_terreno_superficie,factor_transicion)
+    def obtener_tipo_terreno(self, posicion): # f()->(tipo_terreno_base.sup,tipo_terreno_superficie.sup,factor_transicion)
+        # Determina, segun los biomas involucrados en el punto del mapa, dos tipos de terreno y un factor de "mezcla"
+        # entre ambos. De los tipo de terreno, que son valores float, la parte entera es el tipo de terreno base, y la
+        # parte fraccional, la superficie [0.0,1.0): (sin terreno de superficie, solo terreno de superficie).
         datos_biomas=self.obtener_transicion_biomas(posicion)
         # ineficiente llamar dos veces math.modf?
         _sorted=sorted(datos_biomas, key=lambda x:math.modf(x)[0])
@@ -434,15 +459,6 @@ class Sistema:
         factor_transicion=distancia_a/(distancia_a+distancia_b)
         tipo_terreno_base1, tipo_terreno_superficie1=self._obtener_terreno_bioma(bioma_a)
         tipo_terreno_base2, tipo_terreno_superficie2=self._obtener_terreno_bioma(bioma_b)
-#        if factor_transicion<=0.33:
-#            tipo_terreno_base2=tipo_terreno_base1
-#            factor_transicion=0.0
-#        elif factor_transicion>=0.66:
-#            tipo_terreno_base1=tipo_terreno_base2
-#            factor_transicion=0.0
-#        else:
-#            factor_transicion-=0.33
-#            factor_transicion/=0.33
         return (tipo_terreno_base1, tipo_terreno_base2, factor_transicion)
 
     def obtener_descriptor_vegetacion(self, posicion, solo_existencia=False):
@@ -788,8 +804,8 @@ class Tester(ShowBase):
                     elif self.tipo_imagen==Tester.TipoImagenTerreno:
                         a=self.sistema.obtener_altitud_suelo((_x, _y))
                         terreno_base, terreno_superficie, factor_transicion=self.sistema.obtener_tipo_terreno((_x, _y))
-                        color_base=Tester.ColoresTipoTerreno[terreno_base]
-                        color_superficie=Tester.ColoresTipoTerreno[terreno_superficie]
+                        color_base=Sistema.ColoresTipoTerreno[terreno_base]
+                        color_superficie=Sistema.ColoresTipoTerreno[terreno_superficie]
                         c=(color_base*(1.0-factor_transicion))+(color_superficie*factor_transicion)
                         c[3]=1.0
                         if a>Sistema.TopoAltitudOceano:
@@ -811,10 +827,10 @@ class Tester(ShowBase):
                             distancia_c, bioma_c=math.modf(datos_biomas[2])
                             distancia_d, bioma_d=math.modf(datos_biomas[3])
                             distancias=distancia_a+distancia_b+distancia_c+distancia_d
-                            _c= (Tester.ColoresBioma[bioma_a]*(1.0-distancia_a))+ \
-                                (Tester.ColoresBioma[bioma_b]*(1.0-distancia_b))+ \
-                                (Tester.ColoresBioma[bioma_c]*(1.0-distancia_c))+ \
-                                (Tester.ColoresBioma[bioma_d]*(1.0-distancia_d))
+                            _c= (Sistema.ColoresBioma[bioma_a]*(1.0-distancia_a))+ \
+                                (Sistema.ColoresBioma[bioma_b]*(1.0-distancia_b))+ \
+                                (Sistema.ColoresBioma[bioma_c]*(1.0-distancia_c))+ \
+                                (Sistema.ColoresBioma[bioma_d]*(1.0-distancia_d))
                             _c/=distancias
                             self.imagen.setXelA(x, y, _c/256)
                         else:
@@ -831,10 +847,10 @@ class Tester(ShowBase):
                         distancia_b, bioma_b=math.modf(data[1])
                         distancia_c, bioma_c=math.modf(data[2])
                         distancia_d, bioma_d=math.modf(data[3])
-                        color_a=Tester.ColoresBioma[bioma_a]
-                        color_b=Tester.ColoresBioma[bioma_b]
-                        color_c=Tester.ColoresBioma[bioma_c]
-                        color_d=Tester.ColoresBioma[bioma_d]
+                        color_a=Sistema.ColoresBioma[bioma_a]
+                        color_b=Sistema.ColoresBioma[bioma_b]
+                        color_c=Sistema.ColoresBioma[bioma_c]
+                        color_d=Sistema.ColoresBioma[bioma_d]
                         distancia_a=1.0-distancia_a
                         distancia_b=1.0-distancia_b
                         distancia_c=1.0-distancia_c

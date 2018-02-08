@@ -113,13 +113,15 @@ class Terreno:
         # nodo
         parcela_node_path=self.nodo_parcelas.attachNewNode(nombre)
         parcela_node_path.setPos(pos[0], pos[1], 0.0)
-        # geometría
-        datos_parcela=self._generar_datos_parcela(idx_pos)
+        # datos de parcela
+        datos_parcela=self._generar_datos_parcela(pos, idx_pos)
+        # geometria
         geom_node=self._generar_nodo_parcela(nombre, idx_pos, datos_parcela)
-        #
         parcela_node_path.attachNewNode(geom_node)
-        if idx_pos==(0, 0):
-            parcela_node_path.writeBamFile("parcela.bam")
+        # generar textura guia de terreno
+        ts2=TextureStage("ts_parcela")
+        textura_parcela=self._obtener_textura_parcela(nombre, datos_parcela, pos)
+        parcela_node_path.setTexture(ts2, textura_parcela, priority=3)
         # debug: normales
         if self.dibujar_normales:
             geom_node_normales=self._generar_lineas_normales("normales_%i_%i"%(int(pos[0]), int(pos[1])), geom_node)
@@ -143,9 +145,28 @@ class Terreno:
         parcela.removeNode()
         del self.parcelas[idx_pos]
     
-    def _generar_datos_parcela(self, idx_pos):
-        # obtener posición
-        pos=self.obtener_pos_parcela(idx_pos)
+    def _obtener_textura_parcela(self, nombre, datos_parcela, pos):
+        #
+        if not os.path.exists("texturas/terreno"): # esto deberia ir en inicio!!!
+            os.mkdir("texturas/terreno")
+        #
+        ruta_archivo_textura=os.path.join("texturas/terreno", "%s.png"%nombre)
+        if not os.path.exists(ruta_archivo_textura):
+            log.info("_obtener_textura_parcela se genera archivo de textura de parcela '%s'"%ruta_archivo_textura)
+            tamano_imagen=Terreno.TamanoParcela
+            imagen=PNMImage(tamano_imagen, tamano_imagen)
+            imagen.setColorSpace(CS_scRGB)
+            tamano_area=Terreno.TamanoParcela+2 # +/- 1
+            for x in range(tamano_imagen):
+                for y in range(tamano_imagen):
+                    d=datos_parcela[x+1][y+1]
+                    imagen.setXelA(x, y, d.tipo[0], d.tipo[1], d.tipo[2], d.precipitacion_frecuencia)
+            imagen.write(ruta_archivo_textura)
+        #
+        tex0=self.base.loader.loadTexture(ruta_archivo_textura)
+        return tex0
+    
+    def _generar_datos_parcela(self, pos, idx_pos):
         # matriz de DatosLocalesTerreno; x,y->TamanoParcela +/- 1
         data=list() # x,y: [[n, ...], ...]
         _pos=(0, 0)
@@ -155,11 +176,11 @@ class Terreno:
                 d=DatosLocalesTerreno()
                 #data.index=None # no establecer en esta instancia
                 _pos=(pos[0]+x-1, pos[1]+y-1)
-                temperatura_base=self.sistema.obtener_temperatura_anual_media_norm(_pos)
+                precipitacion_frecuencia=self.sistema.obtener_precipitacion_frecuencia_anual(_pos)
                 d.pos=Vec3(x-1, y-1, self.sistema.obtener_altitud_suelo(_pos))
                 d.tipo=Vec3(self.sistema.obtener_tipo_terreno(_pos))
-                d.temperatura_base=temperatura_base
-                #log.debug("_generar_datos_parcela pos=%s tipo_terreno=%s"%(str(_pos), str(d.tipo)))
+                d.precipitacion_frecuencia=precipitacion_frecuencia
+                d.temperatura_base=0.0 # eliminar!!! esta por objetos.py
                 data[x].append(d)
         # calcular normales
         for x in range(Terreno.TamanoParcela+1):
@@ -180,8 +201,7 @@ class Terreno:
         #
         return data
 
-    def _generar_nodo_parcela(self, nombre, idx_pos, data):
-        pos=self.obtener_pos_parcela(idx_pos)
+    def _generar_nodo_parcela(self, nombre, idx_pos, datos_parcela):
         # formato
         co_info_tipo_terreno=InternalName.make("info_tipo_terreno") # int()->tipo; fract()->intervalo
         format_array=GeomVertexArrayFormat()
@@ -204,15 +224,17 @@ class Terreno:
         i_vertice=0
         tc_x, tc_y=0.0, 0.0
         for x in range(Terreno.TamanoParcela+1):
-            tc_x=x/(Terreno.TamanoParcela+1) #1.0 if tc_x==0.0 else 0.0
-            if x==0: tc_x=0.0
+            if x==0:
+                tc_x=0.0
+            else:
+                tc_x=x/(Terreno.TamanoParcela+1)
             for y in range(Terreno.TamanoParcela+1):
-                tc_y=y/(Terreno.TamanoParcela+1) #1.0 if tc_y==0.0 else 0.0
-                if y==0: tc_y=0.0
-                if idx_pos==(0, 0) and (y==16 or y==16):
-                    print("(x,y)=%s tc=%s"%(str((x, y)), str((tc_x, tc_y))))
+                if y==0:
+                    tc_y=0.0
+                else:
+                    tc_y=y/(Terreno.TamanoParcela+1)
                 # data
-                d=data[x+1][y+1]
+                d=datos_parcela[x+1][y+1]
                 d.index=i_vertice # aqui se define el indice
                 # llenar vertex data
                 wrt_v.addData3(d.pos)
@@ -228,10 +250,10 @@ class Terreno:
         for x in range(Terreno.TamanoParcela):
             for y in range(Terreno.TamanoParcela):
                 # vertices
-                i0=data[x+1][y+1].index
-                i1=data[x+2][y+1].index
-                i2=data[x+1][y+2].index
-                i3=data[x+2][y+2].index
+                i0=datos_parcela[x+1][y+1].index
+                i1=datos_parcela[x+2][y+1].index
+                i2=datos_parcela[x+1][y+2].index
+                i3=datos_parcela[x+2][y+2].index
                 # primitivas
                 prim.addVertex(i0)
                 prim.addVertex(i1)
@@ -251,14 +273,14 @@ class Terreno:
         geom_node.setBoundsType(BoundingVolume.BT_box)
         return geom_node
     
-    def _generar_nodo_naturaleza(self, pos, idx_pos, data):
+    def _generar_nodo_naturaleza(self, pos, idx_pos, datos_parcela):
         #
         tamano=Terreno.TamanoParcela+1
         naturaleza=Naturaleza(self.base, pos, tamano)
         naturaleza.iniciar()
         for x in range(tamano):
             for y in range(tamano):
-                _d=data[x+1][y+1]
+                _d=datos_parcela[x+1][y+1]
                 #log.debug(str(_d))
                 naturaleza.cargar_datos(_d.pos, _d.temperatura_base)
         #
@@ -274,7 +296,6 @@ class Terreno:
         #
         return lod0
 
-    
     def _establecer_shader(self):
         #
         ruta_tex_ruido="texturas/white_noise.png"
@@ -287,13 +308,13 @@ class Terreno:
                     imagen_ruido.setXel(x, y, a, a, a)
             imagen_ruido.write(ruta_tex_ruido)
         #
-        ts_terreno=TextureStage("ts_terreno")
+        ts0=TextureStage("ts_terreno")
         textura_terreno=self.base.loader.loadTexture("texturas/terreno2.png")
-        self.nodo_parcelas.setTexture(ts_terreno, textura_terreno)
+        self.nodo_parcelas.setTexture(ts0, textura_terreno, priority=2)
         #
-        ts_ruido=TextureStage("ts_ruido")
+        ts1=TextureStage("ts_ruido")
         textura_ruido=self.base.loader.loadTexture(ruta_tex_ruido)
-        self.nodo_parcelas.setTexture(ts_ruido, textura_ruido)
+        self.nodo_parcelas.setTexture(ts1, textura_ruido, priority=2)
         #
         GeneradorShader.aplicar(self.nodo_parcelas, GeneradorShader.ClaseTerreno, 2)
         GeneradorShader.aplicar(self.nodo_naturaleza, GeneradorShader.ClaseGenerico, 2)
@@ -331,8 +352,8 @@ class DatosLocalesTerreno:
         self.index=None # vertex array index
         self.pos=None
         self.normal=None
-        self.tipo=Vec3(0.0, 0.0, 0.0) # Vec3(tipo_terreno_0,tipo_terreno_1,factor_transicion) obsoleto?
-        self.temperatura_base=0.0 # obsoleto?
+        self.tipo=Vec3(0.0, 0.0, 0.0) # Vec3(tipo_terreno_0,tipo_terreno_1,factor_transicion)
+        self.precipitacion_frecuencia=0.0 # 
     
     def __str__(self):
         return "DatosLocalesTerreno: i=%s; pos=%s; normal=%s; tipo=%.3f; temp_b=%.3f"%(str(self.index), str(self.pos), str(self.normal), self.tipo, self.temperatura_base)
@@ -539,8 +560,8 @@ class Tester(ShowBase):
         #
         tamano=512
         #
-        perlin_noise_scale=1024
-        perlin=StackedPerlinNoise2(perlin_noise_scale, perlin_noise_scale, 4, 1.8, 0.75, 256, 1069)
+        perlin_noise_scale=64
+        perlin=StackedPerlinNoise2(perlin_noise_scale, perlin_noise_scale, 8, 2.0, 0.50, 256, 1069)
         #
         #
         if not self.imagen:

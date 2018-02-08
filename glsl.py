@@ -43,11 +43,11 @@ VS_MAIN_FIN="""
 # FRAGMENT SHADER
 #
 #
-FS_TEX_1="""
+FS_TEX_12="""
 uniform sampler2D p3d_Texture1; // terreno y agua
+uniform sampler2D p3d_Texture2; // terreno y agua
 """
-FS_TEX_23="""
-uniform sampler2D p3d_Texture2; // agua
+FS_TEX_3="""
 uniform sampler2D p3d_Texture3; // agua
 """
 FS_FOG="""
@@ -159,31 +159,31 @@ vec4 tex_terreno()
     int tipo1=int(info_tipo.y); //mod(floor(info_tipo),10);
     float info_tipo_factor=info_tipo.z; //fract(info_tipo);
     int escala=8;
-    vec2 tc=fract(PositionW.xy/escala)/4.0;
+    vec2 texcoord=fract(PositionW.xy/escala)/4.0;
     //
     if(tipo0==1){ // nieve
-        _color0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, tc+vec2(0.00,0.75));
+        _color0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord+vec2(0.00,0.75));
     } else if(tipo0==2){ // tundra
-        _color0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, tc+vec2(0.00,0.50));
+        _color0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord+vec2(0.00,0.50));
     } else if(tipo0==3){ // tierra seca
-        _color0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, tc+vec2(0.00,0.25));
+        _color0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord+vec2(0.00,0.25));
     } else if(tipo0==4){ // tierra humeda
-        _color0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, tc+vec2(0.00,0.00));
+        _color0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord+vec2(0.00,0.00));
     } else if(tipo0==7){ // arena seca
-        _color0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, tc+vec2(0.50,0.25));
+        _color0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord+vec2(0.50,0.25));
     } else {
         _color0=vec4(0,0,0,1);
     }
     if(tipo1==1){
-        _color1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, tc+vec2(0.00,0.75));
+        _color1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord+vec2(0.00,0.75));
     } else if(tipo1==2){
-        _color1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, tc+vec2(0.00,0.50));
+        _color1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord+vec2(0.00,0.50));
     } else if(tipo1==3){
-        _color1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, tc+vec2(0.00,0.25));
+        _color1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord+vec2(0.00,0.25));
     } else if(tipo1==4){
-        _color1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, tc+vec2(0.00,0.00));
+        _color1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord+vec2(0.00,0.00));
     } else if(tipo1==7){
-        _color1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, tc+vec2(0.50,0.25));
+        _color1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord+vec2(0.50,0.25));
     } else {
         _color1=vec4(1,1,1,1);
     }
