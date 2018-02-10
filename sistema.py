@@ -447,10 +447,9 @@ class Sistema:
         precipitacion_frecuencia=self.obtener_precipitacion_frecuencia_anual(posicion)
         return self._calcular_transicion_tabla_biomas(temperatura_anual_media, precipitacion_frecuencia, loguear)
 
-    def obtener_tipo_terreno(self, posicion): # f()->(tipo_terreno_base.sup,tipo_terreno_superficie.sup,factor_transicion)
+    def obtener_tipo_terreno(self, posicion): # f()->(tipo_terreno_base,tipo_terreno_superficie,factor_transicion)
         # Determina, segun los biomas involucrados en el punto del mapa, dos tipos de terreno y un factor de "mezcla"
-        # entre ambos. De los tipo de terreno, que son valores float, la parte entera es el tipo de terreno base, y la
-        # parte fraccional, la superficie [0.0,1.0): (sin terreno de superficie, solo terreno de superficie).
+        # entre ambos.
         datos_biomas=self.obtener_transicion_biomas(posicion)
         # ineficiente llamar dos veces math.modf?
         _sorted=sorted(datos_biomas, key=lambda x:math.modf(x)[0])

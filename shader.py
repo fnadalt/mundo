@@ -136,6 +136,8 @@ class GeneradorShader:
         texto_vs+=glsl.VS_MAIN_FIN
         # fs
         texto_fs+=glsl.FS_COMUN
+        if self._clase!=GeneradorShader.ClaseSol and self._clase!=GeneradorShader.ClaseSombra:
+            texto_fs+=glsl.FS_POS_MODELO
         if self._clase!=GeneradorShader.ClaseCielo:
             if self._clase!=GeneradorShader.ClaseSombra:
                 texto_fs+=glsl.FS_TEX_0
@@ -170,7 +172,6 @@ class GeneradorShader:
                 if config.valbool("shader.fog"):
                     texto_fs+=glsl.FS_FOG
         if self._clase!=GeneradorShader.ClaseSol and self._clase!=GeneradorShader.ClaseSombra:
-            texto_fs+=glsl.FS_POS_MODELO
             texto_fs+=glsl.FS_FUNC_CIELO
         texto_fs+=glsl.FS_MAIN_INICIO
         if self._clase!=GeneradorShader.ClaseAgua and self._clase!=GeneradorShader.ClaseCielo:

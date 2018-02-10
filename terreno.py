@@ -156,12 +156,15 @@ class Terreno:
             tamano_imagen=Terreno.TamanoParcela
             imagen=PNMImage(tamano_imagen, tamano_imagen)
             imagen.setColorSpace(CS_scRGB)
-            tamano_area=Terreno.TamanoParcela+2 # +/- 1
-            for x in range(tamano_imagen):
-                for y in range(tamano_imagen):
+            tamano_area=tamano_imagen
+            for x in range(tamano_area):
+                for y in range(tamano_area):
                     d=datos_parcela[x+1][y+1]
                     imagen.setXelA(x, y, d.tipo[0], d.tipo[1], d.tipo[2], d.precipitacion_frecuencia)
             imagen.write(ruta_archivo_textura)
+            for x in range(tamano_area):
+                for y in range(tamano_area):
+                    print("x,y=%s %s"%(str((x, y)), str(imagen.getXel(x, y))))
         #
         tex0=self.base.loader.loadTexture(ruta_archivo_textura)
         return tex0

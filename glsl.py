@@ -149,8 +149,11 @@ float ruido()
 }*/
 // terreno
 //uniform int osg_FrameNumber;
+const int tamano_textura_parcela=32;
 vec4 tex_terreno()
 {
+    //
+    //
     vec4 _color;
     vec4 _color0;
     vec4 _color1;
