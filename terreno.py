@@ -155,12 +155,12 @@ class Terreno:
             log.info("_obtener_textura_parcela se genera archivo de textura de parcela '%s'"%ruta_archivo_textura)
             tamano_imagen=Terreno.TamanoParcela
             imagen=PNMImage(tamano_imagen, tamano_imagen)
-            imagen.setColorSpace(CS_scRGB)
+            #imagen.setColorSpace(CS_scRGB)
             tamano_area=tamano_imagen
             for x in range(tamano_area):
                 for y in range(tamano_area):
                     d=datos_parcela[x+1][y+1]
-                    imagen.setXelA(x, y, d.tipo[0], d.tipo[1], d.tipo[2], d.precipitacion_frecuencia)
+                    imagen.setXelA(x, y, d.tipo[0]/10.0, d.tipo[1]/10.0, d.tipo[2], d.precipitacion_frecuencia)
             imagen.write(ruta_archivo_textura)
             for x in range(tamano_area):
                 for y in range(tamano_area):
@@ -447,7 +447,7 @@ class Tester(ShowBase):
         self.accept("wheel_down", self.zoom, [-1])
         #
         self._cargar_ui()
-        #self._actualizar_terreno()
+        self._actualizar_terreno()
         self._generar_imagen()
         
     def update(self, task):
@@ -756,6 +756,6 @@ if __name__=="__main__":
     PStatClient.connect()
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    Terreno.RadioExpansion=2
+    Terreno.RadioExpansion=0
     tester.escribir_archivo=False
     tester.run()

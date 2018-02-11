@@ -111,56 +111,55 @@ FS_FUNC_TEX_AGUA="""
     color_tex+=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture3, texcoord.st); // agua
 """
 FS_FUNC_TEX_TERRENO="""
-// ruido
-/*const int tamano_textura=512;
-float ruido()
-{
-    float value=0.0;
-    vec2 pos=texcoord.xy*tamano_textura*0.5;
-    int pasos=4;
-    float persistencia=0.85;
-    float amplitud=1.0;
-    float amplitud_total=0.0;
-    for(int i_paso=pasos;pasos>0;--pasos){
-        amplitud*=persistencia;
-        amplitud_total+=amplitud;
-        int periodo=1; //1<<(i_paso+4);
-        for(int i_mult=1;i_mult<=i_paso;++i_mult){periodo*=(2*i_mult);}
-        //
-        float offset_x=pos.x/periodo;
-        int indice_x0=int(mod(int(offset_x)*periodo,tamano_textura));
-        offset_x=fract(offset_x);
-        float offset_y=pos.y/periodo;
-        int indice_y0=int(mod(int(offset_y)*periodo,tamano_textura));
-        offset_y=fract(offset_y);
-        int indice_x1=int(mod(indice_x0+periodo,tamano_textura));
-        int indice_y1=int(mod(indice_y0+periodo,tamano_textura));
-        float c00=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,vec2(indice_x0,indice_y0)/tamano_textura).r;
-        float c10=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,vec2(indice_x1,indice_y0)/tamano_textura).r;
-        float c01=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,vec2(indice_x0,indice_y1)/tamano_textura).r;
-        float c11=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,vec2(indice_x1,indice_y1)/tamano_textura).r;
-        float interp_x0=mix(c00,c10,offset_x);
-        float interp_x1=mix(c01,c11,offset_x);
-        float interp_y=mix(interp_x0,interp_x1,offset_y);
-        value+=interp_y*amplitud;
-    }
-    //value/=amplitud_total;
-    return value;
-}*/
 // terreno
-//uniform int osg_FrameNumber;
 const int tamano_textura_parcela=32;
 vec4 tex_terreno()
 {
     //
+    float texcoord_parcela_x0=floor(Position.x);
+    float texcoord_parcela_x1=ceil(Position.x);
+    float texcoord_parcela_y0=floor(Position.y);
+    float texcoord_parcela_y1=ceil(Position.y);
+    vec2 texcoord_parcela[4];
+    texcoord_parcela[0]=vec2(texcoord_parcela_x0,texcoord_parcela_y0);
+    texcoord_parcela[1]=vec2(texcoord_parcela_x1,texcoord_parcela_y0);
+    texcoord_parcela[2]=vec2(texcoord_parcela_x0,texcoord_parcela_y1);
+    texcoord_parcela[3]=vec2(texcoord_parcela_x1,texcoord_parcela_y1);
+    float distancias[4];
+    distancias[0]=abs(Position.x-texcoord_parcela[0].x)+abs(Position.y-texcoord_parcela[0].y);
+    distancias[1]=abs(Position.x-texcoord_parcela[1].x)+abs(Position.y-texcoord_parcela[1].y);
+    distancias[2]=abs(Position.x-texcoord_parcela[2].x)+abs(Position.y-texcoord_parcela[2].y);
+    distancias[3]=abs(Position.x-texcoord_parcela[3].x)+abs(Position.y-texcoord_parcela[3].y);
+    int texcoord_parcela_idx_0=-1;
+    int texcoord_parcela_idx_1=-1;
+    for(int i=1;i<=2;i++){
+        float distancia_maxima=2.0;
+        int texcoord_parcela_idx_dist_min=-1;
+        for(int j=0;j<distancias.length();j++){
+            if(j==texcoord_parcela_idx_0) continue;
+            if(distancias[j]<distancia_maxima){
+                distancia_maxima=distancias[j];
+                texcoord_parcela_idx_dist_min=j;
+            }
+        }
+        if(texcoord_parcela_idx_0<0){
+            texcoord_parcela_idx_0=texcoord_parcela_idx_dist_min;
+        } else {
+            texcoord_parcela_idx_1=texcoord_parcela_idx_dist_min;
+        }
+    }
+    vec2 texcoord_parcela_0=texcoord_parcela[texcoord_parcela_idx_0]/tamano_textura_parcela;
+    vec2 texcoord_parcela_1=texcoord_parcela[texcoord_parcela_idx_1]/tamano_textura_parcela;
+    vec4 data_parcela_0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,texcoord_parcela_0);
+    vec4 data_parcela_1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,texcoord_parcela_1);
     //
     vec4 _color;
     vec4 _color0;
     vec4 _color1;
     //
-    int tipo0=int(info_tipo.x); //floor(info_tipo/10);
-    int tipo1=int(info_tipo.y); //mod(floor(info_tipo),10);
-    float info_tipo_factor=info_tipo.z; //fract(info_tipo);
+    int tipo0=int(data_parcela_0.z<0.5?(data_parcela_0.x*10):(data_parcela_0.y*10)); //int(info_tipo.x); //floor(info_tipo/10);
+    int tipo1=int(data_parcela_1.z<0.5?(data_parcela_1.x*10):(data_parcela_1.y*10)); //int(info_tipo.y); //mod(floor(info_tipo),10);
+    float info_tipo_factor=(data_parcela_0.z+data_parcela_1.z)/2.0; //info_tipo.z; //fract(info_tipo);
     int escala=8;
     vec2 texcoord=fract(PositionW.xy/escala)/4.0;
     //
@@ -192,6 +191,7 @@ vec4 tex_terreno()
     }
     //
     _color=mix(_color0,_color1,info_tipo_factor);
+    //_color=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1, texcoord);
     //
     //_color.a=1.0;
     return _color;
