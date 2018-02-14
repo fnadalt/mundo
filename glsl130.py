@@ -48,10 +48,8 @@ out vec4 PositionP; // agua
 VS_TIPO_TERRENO="""
 in vec3 info_tipo_terreno;
 in vec4 Tangent;
-in vec4 Binormal;
 flat out vec3 info_tipo;
 out vec4 tangent;
-out vec4 binormal;
 """
 VS_TERRENO_COLOR_DEBUG="""
 in vec4 Color;
@@ -126,7 +124,6 @@ in vec4 sombra[8];
 FS_TERRENO="""
 flat in vec3 info_tipo;
 in vec4 tangent;
-in vec4 binormal;
 """
 FS_TERRENO_COLOR_DEBUG="""
 in vec4 color_vtx;

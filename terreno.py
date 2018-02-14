@@ -46,6 +46,9 @@ class Terreno:
         #
         self._establecer_shader()
         #
+        Terreno.RadioExpansion=int(config.val("terreno.radio_expansion"))
+        self.dibujar_normales=config.valbool("terreno.dibujar_normales")
+        #
         log.info("altitud (%s)=%.3f"%(str((0, 0)), self.sistema.obtener_altitud_suelo((0, 0))))
     
     def terminar(self):
@@ -125,7 +128,7 @@ class Terreno:
         # debug: normales
         if self.dibujar_normales:
             geom_node_normales=self._generar_lineas_normales("normales_%i_%i"%(int(pos[0]), int(pos[1])), geom_node)
-            parcela_node_path.attachNewNode(geom_node_normales)
+            geom_node_normales.reparentTo(parcela_node_path)
         # agregar a parcelas
         self.parcelas[idx_pos]=parcela_node_path
         # naturaleza
@@ -173,7 +176,7 @@ class Terreno:
         tex0=self.base.loader.loadTexture(ruta_archivo_textura)
         return tex0
     
-    def _calcular_tangente_binormal(self, v0, v1, v2, tc0, tc1, tc2, n0, n1, n2):
+    def _calcular_tangente_binormal(self, v0, v1, v2, tc0, tc1, tc2, n0):
         """
         Lengyel, Eric. “Computing Tangent Space Basis Vectors for an Arbitrary Mesh”. Terathon Software, 2001. http://terathon.com/code/tangent.html
         //
@@ -268,8 +271,8 @@ class Terreno:
         #
         t=(tan1-n0*Vec3.dot(n0, tan1)).normalized()
         th=-1.0 if (Vec3.dot(Vec3.cross(n0, tan1), tan2)<0.0) else 1.0
-        bn=Vec3.cross(n0, t)*th
-        return (Vec4(t[0], t[1], t[2], th), bn.normalized())
+        #bn=Vec3.cross(n0, t)*th
+        return Vec4(t[0], t[1], t[2], th) #bn.normalized()
     
     def _generar_datos_parcela(self, pos, idx_pos):
         # matriz de DatosLocalesTerreno; x,y->TamanoParcela +/- 1
@@ -317,20 +320,18 @@ class Terreno:
         for x in range(Terreno.TamanoParcela+1):
             for y in range(Terreno.TamanoParcela+1):
                 v0, tc0, n0=data[x+1][y+1].pos, data[x+1][y+1].tc, data[x+1][y+1].normal
-                v1, tc1, n1=data[x+2][y+1].pos, data[x+2][y+1].tc, data[x+2][y+1].normal
-                v2, tc2, n2=data[x+1][y+2].pos, data[x+1][y+2].tc, data[x+1][y+2].normal
-                v3, tc3, n3=data[x+2][y].pos, data[x+2][y].tc, data[x+2][y].normal
-                v4, tc4, n4=data[x][y+2].pos, data[x][y+2].tc, data[x][y+2].normal
-                v5, tc5, n5=data[x][y+1].pos, data[x][y+1].tc, data[x][y+1].normal
-                v6, tc6, n6=data[x+1][y].pos, data[x+1][y].tc, data[x+1][y].normal
-                t0, bn0=self._calcular_tangente_binormal(v0, v1, v2, tc0, tc1, tc2, n0, n1, n2)
-                t1, bn1=self._calcular_tangente_binormal(v0, v3, v1, tc0, tc3, tc1, n0, n3, n1)
-                t2, bn2=self._calcular_tangente_binormal(v0, v2, v4, tc0, tc2, tc4, n0, n2, n4)
-                t3, bn3=self._calcular_tangente_binormal(v0, v5, v6, tc0, tc5, tc6, n0, n5, n6)
+                v1, tc1=data[x+2][y+1].pos, data[x+2][y+1].tc
+                v2, tc2=data[x+1][y+2].pos, data[x+1][y+2].tc
+                v3, tc3=data[x+2][y].pos, data[x+2][y].tc
+                v4, tc4=data[x][y+2].pos, data[x][y+2].tc
+                v5, tc5=data[x][y+1].pos, data[x][y+1].tc
+                v6, tc6=data[x+1][y].pos, data[x+1][y].tc
+                t0=self._calcular_tangente_binormal(v0, v1, v2, tc0, tc1, tc2, n0)
+                t1=self._calcular_tangente_binormal(v0, v3, v1, tc0, tc3, tc1, n0)
+                t2=self._calcular_tangente_binormal(v0, v2, v4, tc0, tc2, tc4, n0)
+                t3=self._calcular_tangente_binormal(v0, v5, v6, tc0, tc5, tc6, n0)
                 t_avg=(t0+t1+t2+t3)/4.0
-                bn_avg=(bn0+bn1+bn2+bn3)/4.0
                 data[x+1][y+1].tangent=t_avg
-                data[x+1][y+1].binormal=bn_avg
         #
         return data
 
@@ -344,7 +345,6 @@ class Terreno:
         format_array.addColumn(InternalName.getTexcoord(), 2, Geom.NT_stdfloat, Geom.C_texcoord)
         if con_color: format_array.addColumn(co_color, 4, Geom.NT_stdfloat, Geom.C_other) # debug
         format_array.addColumn(InternalName.getTangent(), 4, Geom.NT_stdfloat, Geom.C_vector)
-        format_array.addColumn(InternalName.getBinormal(), 4, Geom.NT_stdfloat, Geom.C_vector)
         format_array.addColumn(co_info_tipo_terreno, 3, Geom.NT_stdfloat, Geom.C_other) # caro?! volver a float?
         formato=GeomVertexFormat()
         formato.addArray(format_array)
@@ -358,7 +358,6 @@ class Terreno:
         wrt_t=GeomVertexWriter(vdata, InternalName.getTexcoord())
         wrt_i=GeomVertexWriter(vdata, co_info_tipo_terreno)
         wrt_tng=GeomVertexWriter(vdata, InternalName.getTangent())
-        wrt_bn=GeomVertexWriter(vdata, InternalName.getBinormal())
         if con_color: wrt_c=GeomVertexWriter(vdata, co_color) # debug
         # llenar datos de vertices
         i_vertice=0
@@ -366,7 +365,7 @@ class Terreno:
             for y in range(Terreno.TamanoParcela+1):
                 # data
                 d=datos_parcela[x+1][y+1]
-                print(str(d))
+                #print("x,y=%s %s"%(str((x, y)), str(d)))
                 d.index=i_vertice # aqui se define el indice
                 # llenar vertex data
                 wrt_v.addData3(d.pos)
@@ -374,7 +373,6 @@ class Terreno:
                 wrt_t.addData2(d.tc)
                 wrt_i.addData3(d.tipo)
                 wrt_tng.addData4(d.tangent)
-                wrt_bn.addData4(d.binormal)
                 if con_color: # debug
                     if config.val("terreno.debug_info")=="bioma":
                         color=self.sistema.calcular_color_bioma_debug((posicion[0]+x, posicion[1]+y, 0.0))
@@ -468,21 +466,31 @@ class Terreno:
     
     def _generar_lineas_normales(self, nombre, geom_node_parcela):
         #
-        geom=LineSegs(nombre)
-        geom.setColor((0, 0, 1, 1))
+        nodo=self.base.render.attachNewNode(nombre)
+        #
+        geom_normales=LineSegs("%s_normales"%nombre)
+        geom_normales.setColor((0, 0, 1, 1))
+        geom_tangent=LineSegs("%s_tangent"%nombre)
+        geom_tangent.setColor((1, 0, 1, 1))
         #
         geom_parcela=geom_node_parcela.getGeom(0)
         vdata=geom_parcela.getVertexData()
         v_reader=GeomVertexReader(vdata, InternalName.getVertex())
         n_reader=GeomVertexReader(vdata, InternalName.getNormal())
+        t_reader=GeomVertexReader(vdata, InternalName.getTangent())
         #
         while(not v_reader.isAtEnd()):
             vertex=v_reader.getData3f()
             normal1=n_reader.getData3f()
-            geom.moveTo(vertex)
-            geom.drawTo(vertex+normal1)
+            tangent=t_reader.getData4f()
+            geom_normales.moveTo(vertex)
+            geom_normales.drawTo(vertex+normal1)
+            geom_tangent.moveTo(vertex+normal1)
+            geom_tangent.drawTo(vertex+Vec3(tangent[0], tangent[1], tangent[2]))
         #
-        return geom.create()
+        nodo.attachNewNode(geom_normales.create())
+        nodo.attachNewNode(geom_tangent.create())
+        return nodo
 
 #
 # DATOS LOCALES TERRENO
