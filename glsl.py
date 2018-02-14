@@ -133,7 +133,7 @@ vec2 obtener_texcoord_terreno(float tipo_terreno, bool normal_map)
 {
     //
     const int escala=1; // deberia ser una constante externa
-    vec2 texcoord=fract(PositionW.xy+vec2(tipo_terreno/10,tipo_terreno/5)/escala)/4.0;
+    vec2 texcoord=fract(PositionW.xy+vec2(tipo_terreno/7,tipo_terreno/11)/escala)/4.0;
     texcoord.s=clamp(texcoord.s,0.0005,0.9995); // pfpfpfpfpff!!!
     texcoord.t=clamp(texcoord.t,0.0005,0.9995); //
     //
@@ -170,7 +170,7 @@ vec2 obtener_texcoord_terreno(float tipo_terreno, bool normal_map)
     //
     return texcoord;
 }
-const float factor_piso=0.45;
+const float factor_piso=0.47;
 const float factor_techo=0.51;
 float calcular_factor(){
     float factor=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,texcoord.st).r;
@@ -210,11 +210,24 @@ FS_FUNC_NORMAL_MAP_TERRENO="""
 // normal map terreno
 vec3 normal_map_terreno()
 {
+    //
     vec2 tc0=obtener_texcoord_terreno(info_tipo.x,true);
-    vec3 normal0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0,tc0).rgb;
-    normal0*=2.0;
-    normal0-=1.0;
-    return normal0;
+    vec2 tc1=obtener_texcoord_terreno(info_tipo.y,false);
+    //
+    vec3 normal;
+    vec3 normal0=texture(p3d_Texture0,tc0).rgb*2.0-1.0;
+    vec3 normal1=texture(p3d_Texture0,tc1).rgb*2.0-1.0;
+    //
+    float factor=calcular_factor();
+    if(factor==0.0){
+        normal=normal0;
+    } else if(factor==1.0){
+        normal=normal1;
+    } else {
+        normal=mix(normal0,normal1,factor);
+    }
+    //
+    return normal;
 }
 """
 FS_FUNC_AGUA="""

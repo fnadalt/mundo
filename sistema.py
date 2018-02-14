@@ -196,7 +196,7 @@ class Sistema:
         #
         if defecto:
             log.info("cargar_parametros_iniciales por defecto")
-            self.posicion_cursor=Vec3(0, 0, 0)
+            self.posicion_cursor=Vec3(-1100, 2000, 0)
             self.duracion_dia_segundos=1800
             self.ano=0
             self.dia=0
@@ -392,7 +392,7 @@ class Sistema:
 
     def obtener_temperatura_grados(self, temperatura_normalizada):
         # temperatura_normalizada: [0,1] -> [-50,50]
-        temperatura_grados=(temperatura_normalizada-0.5)*2.0*50.0
+        temperatura_grados=(temperatura_normalizada-0.5)*2.0*40.0 # 50
         return temperatura_grados
 
     def obtener_temperatura_actual_grados(self):
