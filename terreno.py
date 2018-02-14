@@ -133,6 +133,10 @@ class Terreno:
         naturaleza_node_path.setPos(pos[0], pos[1], 0.0)
         naturaleza_node_path.reparentTo(self.nodo_naturaleza)
         self.naturaleza[idx_pos]=naturaleza_node_path
+        #
+        if idx_pos==(0, 0):
+            parcela_node_path.writeBamFile("parcela.bam")
+            log.info("se escribio parcela.bam")
 
     def _descargar_parcela(self, idx_pos):
         log.info("_descargar_parcela %s"%str(idx_pos))
@@ -169,7 +173,7 @@ class Terreno:
         tex0=self.base.loader.loadTexture(ruta_archivo_textura)
         return tex0
     
-    def _calcular_binormal(self):
+    def _calcular_tangente_binormal(self, v0, v1, v2, tc0, tc1, tc2, n0, n1, n2):
         """
         Lengyel, Eric. “Computing Tangent Space Basis Vectors for an Arbitrary Mesh”. Terathon Software, 2001. http://terathon.com/code/tangent.html
         //
@@ -242,7 +246,30 @@ class Terreno:
             delete[] tan1;
         }
         """
-        pass
+        #
+        x1=v1[0]-v0[0]
+        x2=v2[0]-v0[0]
+        y1=v1[1]-v0[1]
+        y2=v2[1]-v0[1]
+        z1=v1[2]-v0[2]
+        z2=v2[2]-v0[2]
+        #
+        s1=tc1[0]-tc0[0]
+        s2=tc2[0]-tc0[0]
+        t1=tc1[1]-tc0[1]
+        t2=tc2[1]-tc0[1]
+        #
+        r_div=(s1*t2-s2*t1)
+        r=1.0/r_div if r_div>0.0 else 0.0
+        sdir=Vec3((t2 * x1 - t1 * x2) * r, (t2 * y1 - t1 * y2) * r, (t2 * z1 - t1 * z2) * r);
+        tdir=Vec3((s1 * x2 - s2 * x1) * r, (s1 * y2 - s2 * y1) * r, (s1 * z2 - s2 * z1) * r);
+        tan1=sdir
+        tan2=tdir
+        #
+        t=(tan1-n0*Vec3.dot(n0, tan1)).normalized()
+        th=-1.0 if (Vec3.dot(Vec3.cross(n0, tan1), tan2)<0.0) else 1.0
+        bn=Vec3.cross(n0, t)*th
+        return (Vec4(t[0], t[1], t[2], th), bn.normalized())
     
     def _generar_datos_parcela(self, pos, idx_pos):
         # matriz de DatosLocalesTerreno; x,y->TamanoParcela +/- 1
@@ -289,16 +316,21 @@ class Terreno:
         # calcular tangent & binormal
         for x in range(Terreno.TamanoParcela+1):
             for y in range(Terreno.TamanoParcela+1):
-                v0=data[x+1][y+1].pos
-                v1=data[x+2][y+1].pos
-                v2=data[x+1][y+2].pos
-                v3=data[x+2][y].pos
-                v4=data[x][y+2].pos
-                v5=data[x][y+1].pos
-                v6=data[x+1][y].pos
-                n_avg=Vec4(0, 0, 0, 0)
-                data[x+1][y+1].tangent=n_avg
-                data[x+1][y+1].binormal=n_avg
+                v0, tc0, n0=data[x+1][y+1].pos, data[x+1][y+1].tc, data[x+1][y+1].normal
+                v1, tc1, n1=data[x+2][y+1].pos, data[x+2][y+1].tc, data[x+2][y+1].normal
+                v2, tc2, n2=data[x+1][y+2].pos, data[x+1][y+2].tc, data[x+1][y+2].normal
+                v3, tc3, n3=data[x+2][y].pos, data[x+2][y].tc, data[x+2][y].normal
+                v4, tc4, n4=data[x][y+2].pos, data[x][y+2].tc, data[x][y+2].normal
+                v5, tc5, n5=data[x][y+1].pos, data[x][y+1].tc, data[x][y+1].normal
+                v6, tc6, n6=data[x+1][y].pos, data[x+1][y].tc, data[x+1][y].normal
+                t0, bn0=self._calcular_tangente_binormal(v0, v1, v2, tc0, tc1, tc2, n0, n1, n2)
+                t1, bn1=self._calcular_tangente_binormal(v0, v3, v1, tc0, tc3, tc1, n0, n3, n1)
+                t2, bn2=self._calcular_tangente_binormal(v0, v2, v4, tc0, tc2, tc4, n0, n2, n4)
+                t3, bn3=self._calcular_tangente_binormal(v0, v5, v6, tc0, tc5, tc6, n0, n5, n6)
+                t_avg=(t0+t1+t2+t3)/4.0
+                bn_avg=(bn0+bn1+bn2+bn3)/4.0
+                data[x+1][y+1].tangent=t_avg
+                data[x+1][y+1].binormal=bn_avg
         #
         return data
 
@@ -325,21 +357,24 @@ class Terreno:
         wrt_n=GeomVertexWriter(vdata, InternalName.getNormal())
         wrt_t=GeomVertexWriter(vdata, InternalName.getTexcoord())
         wrt_i=GeomVertexWriter(vdata, co_info_tipo_terreno)
-        if con_color: wrt_c=GeomVertexWriter(vdata, co_color) # debug
         wrt_tng=GeomVertexWriter(vdata, InternalName.getTangent())
         wrt_bn=GeomVertexWriter(vdata, InternalName.getBinormal())
+        if con_color: wrt_c=GeomVertexWriter(vdata, co_color) # debug
         # llenar datos de vertices
         i_vertice=0
         for x in range(Terreno.TamanoParcela+1):
             for y in range(Terreno.TamanoParcela+1):
                 # data
                 d=datos_parcela[x+1][y+1]
+                print(str(d))
                 d.index=i_vertice # aqui se define el indice
                 # llenar vertex data
                 wrt_v.addData3(d.pos)
                 wrt_n.addData3(d.normal)
                 wrt_t.addData2(d.tc)
                 wrt_i.addData3(d.tipo)
+                wrt_tng.addData4(d.tangent)
+                wrt_bn.addData4(d.binormal)
                 if con_color: # debug
                     if config.val("terreno.debug_info")=="bioma":
                         color=self.sistema.calcular_color_bioma_debug((posicion[0]+x, posicion[1]+y, 0.0))
@@ -348,8 +383,6 @@ class Terreno:
                     else:
                         log.error("valor erroneo de configuracion en terreno.debug_info: "+config.val("terreno.debug_info"))
                     wrt_c.addData4(color)
-                wrt_tng.addData4(d.tangent)
-                wrt_bn.addData4(d.binormal)
                 i_vertice+=1
         # debug data
         #for fila in data:
@@ -468,7 +501,7 @@ class DatosLocalesTerreno:
         self.precipitacion_frecuencia=0.0 # 
     
     def __str__(self):
-        return "DatosLocalesTerreno: i=%s; pos=%s; normal=%s; tipo=%.3f; temp_b=%.3f"%(str(self.index), str(self.pos), str(self.normal), self.tipo, self.temperatura_base)
+        return "DatosLocalesTerreno: i=%s; pos=%s; tc=%s; normal=%s; tan=%s; bn=%s; tipo=%s; prec_f=%.3f"%(str(self.index), str(self.pos), str(self.tc), str(self.normal), str(self.tangent), str(self.binormal), self.tipo, self.precipitacion_frecuencia)
 
 #
 # TESTER
@@ -864,8 +897,8 @@ class Tester(ShowBase):
 if __name__=="__main__":
     logging.basicConfig(level=logging.DEBUG)
     PStatClient.connect()
+    Terreno.RadioExpansion=0
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    Terreno.RadioExpansion=4
     tester.escribir_archivo=False
     tester.run()

@@ -47,7 +47,11 @@ varying vec4 PositionP; // agua
 """
 VS_TIPO_TERRENO="""
 attribute vec3 info_tipo_terreno;
+attribute vec4 Tangent;
+attribute vec4 Binormal;
 varying vec3 info_tipo;
+varying vec4 tangent;
+varying vec4 binormal;
 """
 VS_TERRENO_COLOR_DEBUG="""
 attribute vec4 Color;
@@ -121,6 +125,8 @@ varying vec4 sombra[8];
 """
 FS_TERRENO="""
 varying vec3 info_tipo;
+varying vec4 tangent;
+varying vec4 binormal;
 """
 FS_TERRENO_COLOR_DEBUG="""
 varying vec4 color_vtx;

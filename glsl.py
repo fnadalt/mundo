@@ -24,6 +24,8 @@ VS_MAIN_TEX="""
 VS_MAIN_TIPO_TERRENO="""
     // terreno
     info_tipo=info_tipo_terreno;
+    tangent=Tangent;
+    binormal=Binormal;
 """
 VS_MAIN_TERRENO_COLOR_DEBUG="""
     // terreno color debug
