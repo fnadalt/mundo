@@ -14,6 +14,10 @@ _default_config={
                         "phong":True, 
                         "sombras":False, 
                         "fog":False
+                        }, 
+        "terreno":      {
+                        "color_debug":False, 
+                        "debug_info":"terreno" # [terreno|bioma]
                         }
         }
 
