@@ -133,9 +133,20 @@ vec2 obtener_texcoord_terreno(float tipo_terreno, bool normal_map)
 {
     //
     const int escala=1; // deberia ser una constante externa
-    vec2 texcoord=fract(PositionW.xy/escala)/4.0;
+    vec2 texcoord=fract(PositionW.xy+vec2(tipo_terreno/10,tipo_terreno/5)/escala)/4.0;
     texcoord.s=clamp(texcoord.s,0.0005,0.9995); // pfpfpfpfpff!!!
     texcoord.t=clamp(texcoord.t,0.0005,0.9995); //
+    //
+    const float corte_terreno_superficie=0.49; // deberia ser una constante externa
+    if(info_tipo.z<corte_terreno_superficie){
+        if(tipo_terreno==2){
+            tipo_terreno=1;
+        } else if(tipo_terreno==3){
+            tipo_terreno=5;
+        } else if(tipo_terreno==4){
+            tipo_terreno=6;
+        }
+    }
     //
     if(tipo_terreno==1){ // nieve
         texcoord+=vec2(0.00,0.75);
@@ -159,6 +170,19 @@ vec2 obtener_texcoord_terreno(float tipo_terreno, bool normal_map)
     //
     return texcoord;
 }
+const float factor_piso=0.45;
+const float factor_techo=0.51;
+float calcular_factor(){
+    float factor=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,texcoord.st).r;
+    if(factor<factor_piso){
+        factor=0.0;
+    } else if(factor>factor_techo){
+        factor=1.0;
+    } else {
+        factor=(factor-factor_piso)/(factor_techo-factor_piso);
+    }
+    return factor;
+}
 //uniform int osg_FrameNumber;
 vec4 tex_terreno()
 {
@@ -170,8 +194,14 @@ vec4 tex_terreno()
     vec4 _color0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, tc0);
     vec4 _color1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, tc1);
     //
-    // func() p/ determinar cual. para normal_map_terreno() tb.
-    _color=_color0;
+    float factor=calcular_factor();
+    if(factor==0.0){
+        _color=_color0;
+    } else if(factor==1.0){
+        _color=_color1;
+    } else {
+        _color=mix(_color0,_color1,factor);
+    }
     //
     return _color;
 }
