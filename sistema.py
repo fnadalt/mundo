@@ -249,6 +249,15 @@ class Sistema:
 
     def obtener_descriptor_locacion(self, posicion):
         desc=TopoDescriptorLocacion(posicion)
+        desc.altitud_suelo=self.obtener_altitud_suelo(posicion)
+        desc.altitud_tope=self.obtener_altitud_tope(posicion)
+        desc.ambiente=self.obtener_ambiente(posicion)
+        desc.latitud=self.obtener_latitud(posicion)
+        desc.bioma=self.obtener_transicion_biomas(posicion)
+        self.precipitacion_frecuencia=self.obtener_precipitacion_frecuencia_anual(posicion)
+        self.inclinacion_solar_anual_media=None
+        self.vegetacion=None
+        self.roca=None
         return desc
     
     def obtener_altitud_suelo(self, posicion):
@@ -348,11 +357,11 @@ class Sistema:
 
     def obtener_ambiente(self, posicion):
         altitud=self.obtener_altitud_suelo(posicion)
-        if posicion<(Sistema.TopoAltitudOceano-0.5):
+        if posicion[2]<(Sistema.TopoAltitudOceano-0.5):
             return Sistema.AmbienteAgua
-        elif abs(posicion-altitud)<0.1:
+        elif abs(posicion[2]-altitud)<0.1:
             return Sistema.AmbienteSuelo
-        elif (posicion-altitud)>=0.1:
+        elif (posicion[2]-altitud)>=0.1:
             return Sistema.AmbienteAire
 
     def obtener_temperatura_amplitud_dianoche(self, posicion): # no usado
@@ -460,6 +469,42 @@ class Sistema:
         tipo_terreno_base2, tipo_terreno_superficie2=self._obtener_terreno_bioma(bioma_b)
         return (tipo_terreno_base1, tipo_terreno_base2, factor_transicion)
 
+    def calcular_color_bioma_debug(self, posicion=None):
+        _posicion=posicion
+        if not _posicion:
+            _posicion=self.posicion_cursor
+        bioma=self.obtener_transicion_biomas(_posicion)
+        distancia_a, bioma_a=math.modf(bioma[0])
+        distancia_b, bioma_b=math.modf(bioma[1])
+        distancia_c, bioma_c=math.modf(bioma[2])
+        distancia_d, bioma_d=math.modf(bioma[3])
+        color_a=Sistema.ColoresBioma[bioma_a]
+        color_b=Sistema.ColoresBioma[bioma_b]
+        color_c=Sistema.ColoresBioma[bioma_c]
+        color_d=Sistema.ColoresBioma[bioma_d]
+        distancia_a=1.0-distancia_a
+        distancia_b=1.0-distancia_b
+        distancia_c=1.0-distancia_c
+        distancia_d=1.0-distancia_d
+        distancias=distancia_a+distancia_b+distancia_c+distancia_d
+        color=(color_a*distancia_a+color_b*distancia_b+color_c*distancia_c+color_d*distancia_d)/256
+        color/=distancias
+        color=Vec4(color[0], color[1], color[2], 1.0)
+        #print(str(color))
+        return color
+
+    def calcular_color_terreno_debug(self, posicion=None):
+        _posicion=posicion
+        if not _posicion:
+            _posicion=self.posicion_cursor
+        terreno_base, terreno_superficie, factor_transicion=self.obtener_tipo_terreno(_posicion)
+        color_base=Sistema.ColoresTipoTerreno[terreno_base]
+        color_superficie=Sistema.ColoresTipoTerreno[terreno_superficie]
+        color=(color_base*(1.0-factor_transicion))+(color_superficie*factor_transicion)
+        color/=256
+        color=Vec4(color[0], color[1], color[2], 1.0)
+        return color
+
     def obtener_descriptor_vegetacion(self, posicion, solo_existencia=False):
         pass
 
@@ -520,7 +565,7 @@ class Sistema:
         punto_max_b=(max(0.0, punto_max_a[0]+delta_a[0]), punto_max_a[1])
         punto_max_c=(punto_max_a[0], max(0.0, punto_max_a[1]+delta_a[1]))
         punto_max_d=(max(0.0, punto_max_a[0]+delta_a[0]), max(0.0, punto_max_a[1]+delta_a[1]))
-        # pitagoras
+        # euclidean
 #        distancia_a=min(0.99, math.sqrt((punto[0]-punto_max_a[0])**2 + (punto[1]-punto_max_a[1])**2)) # min() necesario?
 #        distancia_b=min(0.99, math.sqrt((punto[0]-punto_max_b[0])**2 + (punto[1]-punto_max_b[1])**2)) # min() necesario?
 #        distancia_c=min(0.99, math.sqrt((punto[0]-punto_max_c[0])**2 + (punto[1]-punto_max_c[1])**2)) # min() necesario?
@@ -535,12 +580,6 @@ class Sistema:
         bioma_b=Sistema.BiomaTabla[int(punto_max_b[1])][int(punto_max_b[0])]
         bioma_c=Sistema.BiomaTabla[int(punto_max_c[1])][int(punto_max_c[0])]
         bioma_d=Sistema.BiomaTabla[int(punto_max_d[1])][int(punto_max_d[0])]
-        #
-#        if distancia_a<=0.25:
-#            distancia_a=0.0
-#            distancia_b, distancia_c, distancia_d=0.99, 0.99, 0.99
-#        else:
-#            distancia_a=(distancia_a-0.25)/0.75
         #
         if loguear:
             print("_calcular_transicion_tabla_biomas:\n" \
@@ -663,20 +702,20 @@ class TopoDescriptorLocacion:
     
     def __init__(self, posicion):
         # 3d
-        self.posicion=None # (latitud,transicion)
-        self.altitud_tope=None # cuevas
+        self.posicion=posicion
+        self.altitud_suelo=None
+        self.altitud_tope=None # para implementar cuevas?
         self.ambiente=None
         # 2d
         self.latitud=None
-        self.bioma=None # (bioma1,bioma2,factor_transicion)
-        self.temperatura_amplitud_dianoche=None
+        self.bioma=None # (bioma_a,bioma_b,bioma_c,bioma_d)
         self.temperatura_anual_media=None # smooth noise
         self.precipitacion_frecuencia=None # smooth noise
         self.inclinacion_solar_anual_media=None
         # objetos; XOR
         self.vegetacion=None # DescriptorVegetacion
         self.roca=None # id_roca?
-
+    
 #
 #
 # DescriptorVegetacion
@@ -711,28 +750,6 @@ class Tester(ShowBase):
     TipoImagenBioma=3
     TipoImagenTerreno=4
     TipoImagenInterpTabla=5
-    
-    ColoresTipoTerreno={Sistema.TerrenoTipoNulo:Vec4(0, 0, 0, 255), # negro
-                        Sistema.TerrenoTipoNieve:Vec4(255, 255, 255, 255), # blanco
-                        Sistema.TerrenoTipoTundra:Vec4(128, 128, 128, 255),  # gris
-                        Sistema.TerrenoTipoTierraSeca:Vec4(255, 0, 255, 255), # fucsia 
-                        Sistema.TerrenoTipoTierraHumeda:Vec4(255, 0, 0, 255), # rojo
-                        Sistema.TerrenoTipoPastoSeco:Vec4(255, 255, 0, 255), # amarillo
-                        Sistema.TerrenoTipoPastoHumedo:Vec4(0, 255, 0, 255), # verde
-                        Sistema.TerrenoTipoArenaSeca:Vec4(0, 255, 255, 255), # celeste
-                        Sistema.TerrenoTipoArenaHumeda:Vec4(0, 0, 255, 255), # azul
-                        }
-
-    ColoresBioma={Sistema.BiomaNulo:Vec4(0, 0, 0, 255), # negro
-                        Sistema.BiomaDesiertoPolar:Vec4(255, 255, 255, 255), # blanco
-                        Sistema.BiomaTundra:Vec4(0, 255, 255, 255), # celeste
-                        Sistema.BiomaTaiga:Vec4(0, 0, 255, 255), # azul
-                        Sistema.BiomaBosqueCaducifolio:Vec4(255, 0, 255, 255), # fucsia 
-                        Sistema.BiomaBosqueMediterraneo:Vec4(255, 0, 0, 255), # rojo
-                        Sistema.BiomaSavannah:Vec4(255, 255, 0, 255), # amarillo
-                        Sistema.BiomaSelva:Vec4(0, 255, 0, 255), # verde
-                        Sistema.BiomaDesierto:Vec4(128, 128, 128, 255) # gris
-                        }
 
     def __init__(self):
         #
@@ -748,7 +765,7 @@ class Tester(ShowBase):
         plano.setColor((0, 0, 1, 1))
         self.plano=self.render.attachNewNode(plano.generate())
         #
-        self.tipo_imagen=Tester.TipoImagenTopo
+        self.tipo_imagen=Tester.TipoImagenBioma
         #
         self.texturaImagen=None
         self.imagen=None
@@ -805,7 +822,10 @@ class Tester(ShowBase):
                         terreno_base, terreno_superficie, factor_transicion=self.sistema.obtener_tipo_terreno((_x, _y))
                         color_base=Sistema.ColoresTipoTerreno[terreno_base]
                         color_superficie=Sistema.ColoresTipoTerreno[terreno_superficie]
-                        c=(color_base*(1.0-factor_transicion))+(color_superficie*factor_transicion)
+                        if factor_transicion<0.55 and factor_transicion>0.45: # debug transiciones
+                            c=Vec4(0, 255, 0, 255)
+                        else:
+                            c=(color_base*(1.0-factor_transicion))+(color_superficie*factor_transicion)
                         c[3]=1.0
                         if a>Sistema.TopoAltitudOceano:
                             self.imagen.setXelA(x, y, c/255)
@@ -820,18 +840,8 @@ class Tester(ShowBase):
                     elif self.tipo_imagen==Tester.TipoImagenBioma:
                         a=self.sistema.obtener_altitud_suelo((_x, _y))
                         if a>Sistema.TopoAltitudOceano:
-                            datos_biomas=self.sistema.obtener_transicion_biomas((_x, _y))
-                            distancia_a, bioma_a=math.modf(datos_biomas[0])
-                            distancia_b, bioma_b=math.modf(datos_biomas[1])
-                            distancia_c, bioma_c=math.modf(datos_biomas[2])
-                            distancia_d, bioma_d=math.modf(datos_biomas[3])
-                            distancias=distancia_a+distancia_b+distancia_c+distancia_d
-                            _c= (Sistema.ColoresBioma[bioma_a]*(1.0-distancia_a))+ \
-                                (Sistema.ColoresBioma[bioma_b]*(1.0-distancia_b))+ \
-                                (Sistema.ColoresBioma[bioma_c]*(1.0-distancia_c))+ \
-                                (Sistema.ColoresBioma[bioma_d]*(1.0-distancia_d))
-                            _c/=distancias
-                            self.imagen.setXelA(x, y, _c/256)
+                            _c=self.sistema.calcular_color_bioma_debug((_x, _y, 0))
+                            self.imagen.setXelA(x, y, _c)
                         else:
                             self.imagen.setXel(x, y, 0.0)
                     elif self.tipo_imagen==Tester.TipoImagenInterpTabla:
@@ -881,6 +891,34 @@ class Tester(ShowBase):
         self.sistema.obtener_transicion_biomas((x, y), loguear=True)
         self.pos_foco=(x, y)
         self._generar_imagen()
+    
+    def _dump_data(self):
+        log.info("_dump_data")
+        #
+        ruta_archivo_data="datadump.txt"
+        #
+        tamano=Tester.TamanoImagen
+        #
+        zoom=self.zoom_imagen
+        #
+        with open(ruta_archivo_data, "w+") as archivo:
+            #
+            archivo.write("pos_foco=%s ruta_archivo_data=%s\n"%(str(self.pos_foco), ruta_archivo_data))
+            #
+            for x in range(tamano+1):
+                for y in range(tamano+1):
+                    _x=self.pos_foco[0]+(x-tamano/2)*zoom
+                    _y=self.pos_foco[1]+(y-tamano/2)*zoom
+                    altitud_suelo=self.sistema.obtener_altitud_suelo((_x, _y, 0.0))
+                    temperatura_anual_media=self.sistema.obtener_temperatura_anual_media_norm((_x, _y, 0.0))
+                    precipitacion_frecuencia=self.sistema.obtener_precipitacion_frecuencia_anual((_x, _y, 0.0))
+                    bioma=self.sistema.obtener_transicion_biomas((_x, _y, 0.0))
+                    terreno=self.sistema.obtener_tipo_terreno((_x, _y, 0.0))
+                    #
+                    texto="(%.2f,%.2f,%.2f) tam=%.2f prec_f=%.2f bioma=%s terreno=%s\n"%(_x, _y, altitud_suelo, temperatura_anual_media, precipitacion_frecuencia, bioma, terreno)
+                    archivo.write(texto)
+        #
+        log.info("archivo escrito %s"%ruta_archivo_data)
 
     def _cargar_ui(self):
         # frame root
@@ -897,6 +935,7 @@ class Tester(ShowBase):
         self.entry_x=DirectEntry(parent=self.frmControles, pos=(-0.7, 0, -0.05), scale=0.05)
         self.entry_y=DirectEntry(parent=self.frmControles, pos=(-0.7, 0, -0.15), scale=0.05)
         DirectButton(parent=self.frmControles, pos=(0, 0, -0.05), scale=0.075, text="actualizar", command=self._ir_a_pos)
+        DirectButton(parent=self.frmControles, pos=(0.4, 0, -0.05), scale=0.075, text="dump data", command=self._dump_data)
         DirectButton(parent=self.frmControles, pos=(-0.05, 0, -0.15), scale=0.075, text="acercar", command=self._acercar_zoom_imagen, frameSize=(-1.5, 1.5, -0.60, 0.60), text_scale=0.75)
         DirectButton(parent=self.frmControles, pos=(0.20, 0, -0.15), scale=0.075, text="alejar", command=self._alejar_zoom_imagen, frameSize=(-1.5, 1.5, -0.60, 0.60), text_scale=0.75)
         DirectButton(parent=self.frmControles, pos=(0.475, 0, -0.15), scale=0.075, text="alejar max", command=self._alejar_zoom_imagen_max, frameSize=(-2.0, 2.0, -0.60, 0.60), text_scale=0.75)

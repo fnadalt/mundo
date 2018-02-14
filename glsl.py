@@ -25,6 +25,10 @@ VS_MAIN_TIPO_TERRENO="""
     // terreno
     info_tipo=info_tipo_terreno;
 """
+VS_MAIN_TERRENO_COLOR_DEBUG="""
+    // terreno color debug
+    color_vtx=Color;
+"""
 VS_MAIN_VERTEX="""
     Position=p3d_Vertex; // fog y cielo
 """
@@ -113,7 +117,7 @@ FS_FUNC_TEX_AGUA="""
 FS_FUNC_TEX_TERRENO="""
 // terreno
 const int tamano_textura_parcela=32;
-vec4 tex_terreno()
+vec3 obtener_info_terreno_tex()
 {
     //
     float texcoord_parcela_x0=floor(Position.x);
@@ -153,13 +157,28 @@ vec4 tex_terreno()
     vec4 data_parcela_0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,texcoord_parcela_0);
     vec4 data_parcela_1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,texcoord_parcela_1);
     //
+    int tipo0=int(data_parcela_0.z<0.5?(data_parcela_0.x*10):(data_parcela_0.y*10));
+    int tipo1=int(data_parcela_1.z<0.5?(data_parcela_1.x*10):(data_parcela_1.y*10));
+    float info_tipo_factor=(data_parcela_0.z+data_parcela_1.z)/2.0; //info_tipo.z;
+    return vec3(tipo0,tipo1,info_tipo_factor);
+}
+vec3 obtener_info_terreno_vtx()
+{
+    return info_tipo;
+}
+//uniform int osg_FrameNumber;
+vec4 tex_terreno()
+{
+    //
     vec4 _color;
     vec4 _color0;
     vec4 _color1;
     //
-    int tipo0=int(data_parcela_0.z<0.5?(data_parcela_0.x*10):(data_parcela_0.y*10)); //int(info_tipo.x); //floor(info_tipo/10);
-    int tipo1=int(data_parcela_1.z<0.5?(data_parcela_1.x*10):(data_parcela_1.y*10)); //int(info_tipo.y); //mod(floor(info_tipo),10);
-    float info_tipo_factor=(data_parcela_0.z+data_parcela_1.z)/2.0; //info_tipo.z; //fract(info_tipo);
+    //vec3 info_terreno=obtener_info_terreno_tex();
+    vec3 info_terreno=info_tipo; // <- obtener_info_terreno_vtx(); // funcion ilustrativa, compatibilidad para intercambiar con obtener_info_terreno_tex()
+    int tipo0=int(info_terreno.x);
+    int tipo1=int(info_terreno.y);
+    float info_tipo_factor=info_terreno.z;
     int escala=8;
     vec2 texcoord=fract(PositionW.xy/escala)/4.0;
     //
@@ -190,8 +209,21 @@ vec4 tex_terreno()
         _color1=vec4(1,1,1,1);
     }
     //
-    _color=mix(_color0,_color1,info_tipo_factor);
-    //_color=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1, texcoord);
+    if(info_tipo_factor<0.55 && info_tipo_factor>0.45){
+        float factor=texture(p3d_Texture1,fract(PositionW.xy/32)).r;
+        //float factorx=sin(3.14159*osg_FrameNumber*0.01);
+        info_tipo_factor=((info_tipo_factor-0.45)/(0.55-0.45))*2.0-1.0;
+        factor+=info_tipo_factor*0.25;
+        _color=factor>0.5?_color0:_color1;
+        /*if(factor<0.0){
+            _color=vec4(1,0,0,1);
+        } else if(factor>1.0){
+            _color=vec4(0,1,0,1);
+        }*/
+    } else {
+        //_color=mix(_color0,_color1,info_tipo_factor);
+        _color=_color0;
+    }
     //
     //_color.a=1.0;
     return _color;
@@ -309,6 +341,9 @@ FS_MAIN_TEX_GENERICO="""
 FS_MAIN_TEX_TERRENO="""
         // textura: terreno
         color*=tex_terreno();
+"""
+FS_MAIN_TEX_TERRENO_COLOR_DEBUG="""
+        color=color_vtx; // terreno color debug
 """
 FS_MAIN_AGUA="""
         // agua

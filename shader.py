@@ -116,6 +116,8 @@ class GeneradorShader:
                 texto_vs+=glsl.VS_POS_PROJ
             elif self._clase==GeneradorShader.ClaseTerreno:
                 texto_vs+=glsl.VS_TIPO_TERRENO
+                if config.valbool("terreno.color_debug"):
+                    texto_vs+=glsl.VS_TERRENO_COLOR_DEBUG
         if self._clase!=GeneradorShader.ClaseSol and self._clase!=GeneradorShader.ClaseSombra:
             texto_vs+=glsl.VS_POS_MODELO
         texto_vs+=glsl.VS_MAIN_INICIO
@@ -128,6 +130,8 @@ class GeneradorShader:
                     texto_vs+=glsl.VS_MAIN_SOMBRA
             if self._clase==GeneradorShader.ClaseTerreno:
                 texto_vs+=glsl.VS_MAIN_TIPO_TERRENO
+                if config.valbool("terreno.color_debug"):
+                    texto_vs+=glsl.VS_MAIN_TERRENO_COLOR_DEBUG
         texto_vs+=glsl.VS_MAIN_POSITION
         if self._clase==GeneradorShader.ClaseAgua or self._clase==GeneradorShader.ClaseSombra:
             texto_vs+=glsl.VS_MAIN_VERTEX_PROJ
@@ -145,6 +149,8 @@ class GeneradorShader:
             if self._clase==GeneradorShader.ClaseTerreno:
                 texto_fs+=glsl.FS_TERRENO
                 texto_fs+=glsl.FS_TEX_12
+                if config.valbool("terreno.color_debug"):
+                    texto_fs+=glsl.FS_TERRENO_COLOR_DEBUG
             if self._clase==GeneradorShader.ClaseAgua:
                 texto_fs+=glsl.FS_TEX_12
                 texto_fs+=glsl.FS_TEX_3
@@ -189,7 +195,10 @@ class GeneradorShader:
                 if self._clase==GeneradorShader.ClaseGenerico:
                     texto_fs+=glsl.FS_MAIN_TEX_GENERICO
                 else: # terreno
-                    texto_fs+=glsl.FS_MAIN_TEX_TERRENO
+                    if config.valbool("terreno.color_debug"):
+                        texto_fs+=glsl.FS_MAIN_TEX_TERRENO_COLOR_DEBUG
+                    else:
+                        texto_fs+=glsl.FS_MAIN_TEX_TERRENO
             elif self._clase==GeneradorShader.ClaseAgua:
                 texto_fs+=glsl.FS_MAIN_AGUA
             elif self._clase==GeneradorShader.ClaseSol:

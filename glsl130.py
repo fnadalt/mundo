@@ -49,6 +49,10 @@ VS_TIPO_TERRENO="""
 in vec3 info_tipo_terreno;
 flat out vec3 info_tipo;
 """
+VS_TERRENO_COLOR_DEBUG="""
+in vec4 Color;
+out vec4 color_vtx;
+"""
 
 #
 #
@@ -117,6 +121,9 @@ in vec4 sombra[8];
 """
 FS_TERRENO="""
 flat in vec3 info_tipo;
+"""
+FS_TERRENO_COLOR_DEBUG="""
+in vec4 color_vtx;
 """
 
 #

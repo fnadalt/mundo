@@ -49,6 +49,10 @@ VS_TIPO_TERRENO="""
 attribute vec3 info_tipo_terreno;
 varying vec3 info_tipo;
 """
+VS_TERRENO_COLOR_DEBUG="""
+attribute vec4 Color;
+varying vec4 color_vtx;
+"""
 
 #
 #
@@ -117,6 +121,9 @@ varying vec4 sombra[8];
 """
 FS_TERRENO="""
 varying vec3 info_tipo;
+"""
+FS_TERRENO_COLOR_DEBUG="""
+varying vec4 color_vtx;
 """
 
 #

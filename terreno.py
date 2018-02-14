@@ -63,7 +63,7 @@ class Terreno:
     def obtener_pos_parcela(self, idx_pos):
         x=idx_pos[0]*Terreno.TamanoParcela
         y=idx_pos[1]*Terreno.TamanoParcela
-        return (x, y)
+        return (x, y, 0.0)
 
     def obtener_info(self):
         pos_parcela_actual=None
@@ -116,12 +116,12 @@ class Terreno:
         # datos de parcela
         datos_parcela=self._generar_datos_parcela(pos, idx_pos)
         # geometria
-        geom_node=self._generar_nodo_parcela(nombre, idx_pos, datos_parcela)
+        geom_node=self._generar_nodo_parcela(nombre, idx_pos, pos, datos_parcela, config.valbool("terreno.color_debug"))
         parcela_node_path.attachNewNode(geom_node)
         # generar textura guia de terreno
-        ts2=TextureStage("ts_parcela")
-        textura_parcela=self._obtener_textura_parcela(nombre, datos_parcela, pos)
-        parcela_node_path.setTexture(ts2, textura_parcela, priority=3)
+#        ts2=TextureStage("ts_parcela") # para metodo de interpolacion de texturas
+#        textura_parcela=self._obtener_textura_parcela(nombre, datos_parcela, pos)
+#        parcela_node_path.setTexture(ts2, textura_parcela, priority=3)
         # debug: normales
         if self.dibujar_normales:
             geom_node_normales=self._generar_lineas_normales("normales_%i_%i"%(int(pos[0]), int(pos[1])), geom_node)
@@ -162,25 +162,110 @@ class Terreno:
                     d=datos_parcela[x+1][y+1]
                     imagen.setXelA(x, y, d.tipo[0]/10.0, d.tipo[1]/10.0, d.tipo[2], d.precipitacion_frecuencia)
             imagen.write(ruta_archivo_textura)
-            for x in range(tamano_area):
-                for y in range(tamano_area):
-                    print("x,y=%s %s"%(str((x, y)), str(imagen.getXel(x, y))))
+#            for x in range(tamano_area):
+#                for y in range(tamano_area):
+#                    print("x,y=%s %s"%(str((x, y)), str(imagen.getXel(x, y))))
         #
         tex0=self.base.loader.loadTexture(ruta_archivo_textura)
         return tex0
+    
+    def _calcular_binormal(self):
+        """
+        Lengyel, Eric. “Computing Tangent Space Basis Vectors for an Arbitrary Mesh”. Terathon Software, 2001. http://terathon.com/code/tangent.html
+        //
+        struct Triangle
+        {
+            unsigned short  index[3];
+        };
+        void CalculateTangentArray(long vertexCount, const Point3D *vertex, const Vector3D *normal,
+                const Point2D *texcoord, long triangleCount, const Triangle *triangle, Vector4D *tangent)
+        {
+            Vector3D *tan1 = new Vector3D[vertexCount * 2];
+            Vector3D *tan2 = tan1 + vertexCount;
+            ZeroMemory(tan1, vertexCount * sizeof(Vector3D) * 2);
+            
+            for (long a = 0; a < triangleCount; a++)
+            {
+                long i1 = triangle->index[0];
+                long i2 = triangle->index[1];
+                long i3 = triangle->index[2];
+                
+                const Point3D& v1 = vertex[i1];
+                const Point3D& v2 = vertex[i2];
+                const Point3D& v3 = vertex[i3];
+                
+                const Point2D& w1 = texcoord[i1];
+                const Point2D& w2 = texcoord[i2];
+                const Point2D& w3 = texcoord[i3];
+                
+                float x1 = v2.x - v1.x;
+                float x2 = v3.x - v1.x;
+                float y1 = v2.y - v1.y;
+                float y2 = v3.y - v1.y;
+                float z1 = v2.z - v1.z;
+                float z2 = v3.z - v1.z;
+                
+                float s1 = w2.x - w1.x;
+                float s2 = w3.x - w1.x;
+                float t1 = w2.y - w1.y;
+                float t2 = w3.y - w1.y;
+                
+                float r = 1.0F / (s1 * t2 - s2 * t1);
+                Vector3D sdir((t2 * x1 - t1 * x2) * r, (t2 * y1 - t1 * y2) * r,
+                        (t2 * z1 - t1 * z2) * r);
+                Vector3D tdir((s1 * x2 - s2 * x1) * r, (s1 * y2 - s2 * y1) * r,
+                        (s1 * z2 - s2 * z1) * r);
+                
+                tan1[i1] += sdir;
+                tan1[i2] += sdir;
+                tan1[i3] += sdir;
+                
+                tan2[i1] += tdir;
+                tan2[i2] += tdir;
+                tan2[i3] += tdir;
+                
+                triangle++;
+            }
+            
+            for (long a = 0; a < vertexCount; a++)
+            {
+                const Vector3D& n = normal[a];
+                const Vector3D& t = tan1[a];
+                
+                // Gram-Schmidt orthogonalize
+                tangent[a] = (t - n * Dot(n, t)).Normalize();
+                
+                // Calculate handedness
+                tangent[a].w = (Dot(Cross(n, t), tan2[a]) < 0.0F) ? -1.0F : 1.0F;
+            }
+            
+            delete[] tan1;
+        }
+        """
+        pass
     
     def _generar_datos_parcela(self, pos, idx_pos):
         # matriz de DatosLocalesTerreno; x,y->TamanoParcela +/- 1
         data=list() # x,y: [[n, ...], ...]
         _pos=(0, 0)
+        tc_x, tc_y=0.0, 0.0
         for x in range(Terreno.TamanoParcela+3):
+            if x==1: # 1, en vez de 0
+                tc_x=0.0
+            else:
+                tc_x=x/(Terreno.TamanoParcela+1)
             data.append(list())
             for y in range(Terreno.TamanoParcela+3):
+                if y==1: # 1, en vez de 0
+                    tc_y=0.0
+                else:
+                    tc_y=y/(Terreno.TamanoParcela+1)
                 d=DatosLocalesTerreno()
                 #data.index=None # no establecer en esta instancia
                 _pos=(pos[0]+x-1, pos[1]+y-1)
                 precipitacion_frecuencia=self.sistema.obtener_precipitacion_frecuencia_anual(_pos)
                 d.pos=Vec3(x-1, y-1, self.sistema.obtener_altitud_suelo(_pos))
+                d.tc=Vec2(tc_x, tc_y)
                 d.tipo=Vec3(self.sistema.obtener_tipo_terreno(_pos))
                 d.precipitacion_frecuencia=precipitacion_frecuencia
                 d.temperatura_base=0.0 # eliminar!!! esta por objetos.py
@@ -201,16 +286,33 @@ class Terreno:
                 n3=self._calcular_normal(v0, v5, v6)
                 n_avg=(n0+n1+n2+n3)/4.0
                 data[x+1][y+1].normal=n_avg
+        # calcular tangent & binormal
+        for x in range(Terreno.TamanoParcela+1):
+            for y in range(Terreno.TamanoParcela+1):
+                v0=data[x+1][y+1].pos
+                v1=data[x+2][y+1].pos
+                v2=data[x+1][y+2].pos
+                v3=data[x+2][y].pos
+                v4=data[x][y+2].pos
+                v5=data[x][y+1].pos
+                v6=data[x+1][y].pos
+                n_avg=Vec4(0, 0, 0, 0)
+                data[x+1][y+1].tangent=n_avg
+                data[x+1][y+1].binormal=n_avg
         #
         return data
 
-    def _generar_nodo_parcela(self, nombre, idx_pos, datos_parcela):
+    def _generar_nodo_parcela(self, nombre, idx_pos, posicion, datos_parcela, con_color=False):
         # formato
         co_info_tipo_terreno=InternalName.make("info_tipo_terreno") # int()->tipo; fract()->intervalo
+        if con_color: co_color=InternalName.make("Color") # debug
         format_array=GeomVertexArrayFormat()
         format_array.addColumn(InternalName.getVertex(), 3, Geom.NT_stdfloat, Geom.C_point)
         format_array.addColumn(InternalName.getNormal(), 3, Geom.NT_stdfloat, Geom.C_normal)
         format_array.addColumn(InternalName.getTexcoord(), 2, Geom.NT_stdfloat, Geom.C_texcoord)
+        if con_color: format_array.addColumn(co_color, 4, Geom.NT_stdfloat, Geom.C_other) # debug
+        format_array.addColumn(InternalName.getTangent(), 4, Geom.NT_stdfloat, Geom.C_vector)
+        format_array.addColumn(InternalName.getBinormal(), 4, Geom.NT_stdfloat, Geom.C_vector)
         format_array.addColumn(co_info_tipo_terreno, 3, Geom.NT_stdfloat, Geom.C_other) # caro?! volver a float?
         formato=GeomVertexFormat()
         formato.addArray(format_array)
@@ -223,27 +325,31 @@ class Terreno:
         wrt_n=GeomVertexWriter(vdata, InternalName.getNormal())
         wrt_t=GeomVertexWriter(vdata, InternalName.getTexcoord())
         wrt_i=GeomVertexWriter(vdata, co_info_tipo_terreno)
+        if con_color: wrt_c=GeomVertexWriter(vdata, co_color) # debug
+        wrt_tng=GeomVertexWriter(vdata, InternalName.getTangent())
+        wrt_bn=GeomVertexWriter(vdata, InternalName.getBinormal())
         # llenar datos de vertices
         i_vertice=0
-        tc_x, tc_y=0.0, 0.0
         for x in range(Terreno.TamanoParcela+1):
-            if x==0:
-                tc_x=0.0
-            else:
-                tc_x=x/(Terreno.TamanoParcela+1)
             for y in range(Terreno.TamanoParcela+1):
-                if y==0:
-                    tc_y=0.0
-                else:
-                    tc_y=y/(Terreno.TamanoParcela+1)
                 # data
                 d=datos_parcela[x+1][y+1]
                 d.index=i_vertice # aqui se define el indice
                 # llenar vertex data
                 wrt_v.addData3(d.pos)
                 wrt_n.addData3(d.normal)
-                wrt_t.addData2(tc_x, tc_y)
+                wrt_t.addData2(d.tc)
                 wrt_i.addData3(d.tipo)
+                if con_color: # debug
+                    if config.val("terreno.debug_info")=="bioma":
+                        color=self.sistema.calcular_color_bioma_debug((posicion[0]+x, posicion[1]+y, 0.0))
+                    elif config.val("terreno.debug_info")=="terreno":
+                        color=self.sistema.calcular_color_terreno_debug((posicion[0]+x, posicion[1]+y, 0.0))
+                    else:
+                        log.error("valor erroneo de configuracion en terreno.debug_info: "+config.val("terreno.debug_info"))
+                    wrt_c.addData4(color)
+                wrt_tng.addData4(d.tangent)
+                wrt_bn.addData4(d.binormal)
                 i_vertice+=1
         # debug data
         #for fila in data:
@@ -354,7 +460,10 @@ class DatosLocalesTerreno:
         #
         self.index=None # vertex array index
         self.pos=None
+        self.tc=None
         self.normal=None
+        self.tangent=None
+        self.binormal=None
         self.tipo=Vec3(0.0, 0.0, 0.0) # Vec3(tipo_terreno_0,tipo_terreno_1,factor_transicion)
         self.precipitacion_frecuencia=0.0 # 
     
@@ -568,7 +677,8 @@ class Tester(ShowBase):
         #
         #
         if not self.imagen:
-            self.imagen=PNMImage(tamano, tamano)
+            type=PNMFileTypeRegistry.getGlobalPtr().getTypeFromExtension("*.png")
+            self.imagen=PNMImage(tamano, tamano, 4, 255, type, CS_linear)
             self.texturaImagen=Texture()
             self.frmImagen["image"]=self.texturaImagen
             self.frmImagen["image_scale"]=0.4
@@ -597,7 +707,7 @@ class Tester(ShowBase):
                 c=interp_y
                 if c<0.0 or c>1.0:
                     print("error c")
-                self.imagen.setXel(x, y, c)
+                self.imagen.setXelA(x, y, c, c, c, 1.0)
         #
         self.imagen.write("texturas/white_noise.png")
         image_tiled=PNMImage(2*tamano, 2*tamano)
@@ -756,6 +866,6 @@ if __name__=="__main__":
     PStatClient.connect()
     tester=Tester()
     tester.terreno.dibujar_normales=False
-    Terreno.RadioExpansion=0
+    Terreno.RadioExpansion=4
     tester.escribir_archivo=False
     tester.run()
