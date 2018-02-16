@@ -196,7 +196,7 @@ class Sistema:
         #
         if defecto:
             log.info("cargar_parametros_iniciales por defecto")
-            self.posicion_cursor=Vec3(-1100, 2000, 0)
+            self.posicion_cursor=Vec3(0, 0, 0) # selva pura:Vec3(-1100, 2000, 0)
             self.duracion_dia_segundos=1800
             self.ano=0
             self.dia=0
@@ -758,12 +758,6 @@ class Tester(ShowBase):
         self.win.setClearColor(Vec4(0.95, 1.0, 1.0, 1.0))
         #
         self.pos_foco=None
-        #
-        plano=CardMaker("plano_agua")
-        r=0.0 # !!!
-        plano.setFrame(-r, r, -r, r)
-        plano.setColor((0, 0, 1, 1))
-        self.plano=self.render.attachNewNode(plano.generate())
         #
         self.tipo_imagen=Tester.TipoImagenBioma
         #

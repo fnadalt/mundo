@@ -524,6 +524,8 @@ class Tester(ShowBase):
     TipoImagenTopo=1
     TipoImagenRuido=2
     TipoImagenRuidoContinuo=3
+    TipoImagenBlendTerrenosBase=4
+    TipoImagenBlendTerreno=5
 
     # obsoleto
 #    ColoresTipoTerreno={Terreno.TipoNulo:Vec4(0, 0, 0, 255), 
@@ -590,14 +592,14 @@ class Tester(ShowBase):
         self.imagen=None
         self.zoom_imagen=1
         #
-        self.tipo_imagen=Tester.TipoImagenTopo
+        self.tipo_imagen=Tester.TipoImagenBlendTerrenosBase
         #
         self.taskMgr.add(self.update, "update")
         self.accept("wheel_up", self.zoom, [1])
         self.accept("wheel_down", self.zoom, [-1])
         #
         self._cargar_ui()
-        self._actualizar_terreno()
+        #self._actualizar_terreno()
         self._generar_imagen()
         
     def update(self, task):
@@ -695,6 +697,9 @@ class Tester(ShowBase):
 
     def _limpiar_imagen(self):
         if self.imagen:
+            self.texturaImagen.releaseAll()
+            self.texturaImagen.clear()
+            self.texturaImagen=None
             self.imagen.clear()
             self.imagen=None
 
@@ -707,7 +712,131 @@ class Tester(ShowBase):
             self._generar_imagen_ruido()
         elif self.tipo_imagen==Tester.TipoImagenRuidoContinuo:
             self._generar_imagen_ruido_continuo()
+        elif self.tipo_imagen==Tester.TipoImagenBlendTerrenosBase:
+            self._generar_imagen_blend_terreno_base()
+        elif self.tipo_imagen==Tester.TipoImagenBlendTerreno:
+            self._generar_imagen_blend_terreno()
 
+    def _generar_imagen_blend_terreno_base(self):
+        log.info("_generar_imagen_blend_terreno_base")
+        #
+        idx_pos=self.terreno.obtener_indice_parcela(self.sistema.posicion_cursor)
+        log.info("idx_pos=%s"%str(idx_pos))
+        ruta_archivo_textura="texturas/terreno/tester_%i_%i.png"%(idx_pos[0], idx_pos[1])
+        log.info("ruta_archivo_textura=%s"%ruta_archivo_textura)
+        if os.path.exists(ruta_archivo_textura):
+            log.warning("se elimina archivo previo")
+            os.remove(ruta_archivo_textura)
+        #
+        tamano=Terreno.TamanoParcela
+        #
+        if not self.imagen:
+            type=PNMFileTypeRegistry.getGlobalPtr().getTypeFromExtension("*.png")
+            self.imagen=PNMImage(tamano, tamano, 4, 255, type, CS_linear)
+            self.texturaImagen=Texture()
+            self.frmImagen["image"]=self.texturaImagen
+            self.frmImagen["image_scale"]=0.4
+        #
+        x0=math.floor(self.sistema.posicion_cursor[0]/tamano)*tamano
+        y0=math.floor(self.sistema.posicion_cursor[1]/tamano)*tamano
+        for x in range(tamano):
+            for y in range(tamano):
+                posicion=(x0+x, y0+y, 0.0)
+                tipo_terreno_0, tipo_terreno_1, factor_transicion=self.sistema.obtener_tipo_terreno(posicion)
+                tipo=tipo_terreno_0 if factor_transicion<0.5 else tipo_terreno_1
+                tipo/=10.0
+                self.imagen.setXelA(x, y, tipo, tipo, tipo, 1.0)
+        #
+        self.imagen.write(ruta_archivo_textura)
+        log.info("archivo de imagen escrito")
+        #
+        self.texturaImagen.load(self.imagen)
+
+    def _generar_imagen_blend_terreno(self):
+        log.info("_generar_imagen_blend_terreno")
+        #
+        idx_pos=self.terreno.obtener_indice_parcela(self.sistema.posicion_cursor)
+        log.info("idx_pos=%s"%str(idx_pos))
+        ruta_archivo_textura="texturas/terreno/tester_%i_%i.png"%(idx_pos[0], idx_pos[1])
+        log.info("ruta_archivo_textura=%s"%ruta_archivo_textura)
+        if not os.path.exists(ruta_archivo_textura):
+            log.warning("el archivo no existe, se lo creara...")
+            self._generar_imagen_blend_terreno_base()
+            self._limpiar_imagen()
+            log.info("...continua")
+        #
+        imagen_ruido=PNMImage(ruta_archivo_textura)
+        #
+        tamano=Terreno.TamanoParcela*16
+        #
+        if not self.imagen:
+            type=PNMFileTypeRegistry.getGlobalPtr().getTypeFromExtension("*.png")
+            self.imagen=PNMImage(tamano, tamano, 4, 255, type, CS_linear)
+            self.texturaImagen=Texture()
+            self.frmImagen["image"]=self.texturaImagen
+            self.frmImagen["image_scale"]=0.4
+        #
+        cant_total, cant_calc_ext, cant_mezcla=0, 0, 0
+        for x in range(tamano):
+            for y in range(tamano):
+                pos_parcela_x=x*(Terreno.TamanoParcela-1)/tamano
+                pos_parcela_y=y*(Terreno.TamanoParcela-1)/tamano
+                fract_x, entero_x=math.modf(pos_parcela_x)
+                fract_y, entero_y=math.modf(pos_parcela_y)
+                fract_x_rnd=round(fract_x)
+                fract_y_rnd=round(fract_y)
+                proximo_x=int(entero_x+fract_x_rnd)
+                proximo_y=int(entero_y+fract_y_rnd)
+                dist_proximo=math.sqrt((fract_x_rnd-fract_x)**2+(fract_y_rnd-fract_y)**2)
+                texel_a=math.floor(imagen_ruido.getXelA(proximo_x, proximo_y)[0]*10.0)
+                color=Sistema.ColoresTipoTerreno[texel_a]/255
+                print("posp=%s e/f=%s prox=%s distp=%.2f tx=%s (%s)"%(str((pos_parcela_x, pos_parcela_y)), 
+                                                                      str(((entero_x, fract_x), (entero_y, fract_y))), 
+                                                                      str((proximo_x, proximo_y)), 
+                                                                      dist_proximo, 
+                                                                      str(texel_a), str(color)
+                                                               ))
+                if dist_proximo>0.40:
+                    fract_x_rnd_op, fract_y_rnd_op=(fract_x_rnd+1)%2, (fract_y_rnd+1)%2
+                    siguiente_x, siguiente_y, dist_siguiente=0, 0, 0.0
+                    # b
+                    dist_siguiente=math.sqrt((fract_x_rnd_op-fract_x)**2+(fract_y_rnd-fract_y)**2)
+                    siguiente_x, siguiente_y=int(entero_x+fract_x_rnd_op), int(entero_y+fract_y_rnd)
+                    info=" sgte=%s dists=%.2f "%(str((siguiente_x, siguiente_y)), dist_siguiente)
+                    # c
+                    dist_c=math.sqrt((fract_x_rnd-fract_x)**2+(fract_y_rnd_op-fract_y)**2)
+                    if dist_c<dist_siguiente:
+                        dist_siguiente=dist_c
+                        siguiente_x, siguiente_y=int(entero_x+fract_x_rnd), int(entero_y+fract_y_rnd_op)
+                    info+="sgte=%s dist_c=%.2f "%(str((siguiente_x, siguiente_y)), dist_c)
+                    # d
+                    dist_d=math.sqrt((fract_x_rnd_op-fract_x)**2+(fract_y_rnd_op-fract_y)**2)
+                    if dist_d<dist_siguiente:
+                        dist_siguiente=dist_d
+                        siguiente_x, siguiente_y=int(entero_x+fract_x_rnd_op), int(entero_y+fract_y_rnd_op)
+                    info+="sgte=%s dist_d=%.2f "%(str((siguiente_x, siguiente_y)), dist_d)
+                    #
+                    texel_2=math.floor(imagen_ruido.getXelA(siguiente_x, siguiente_y)[0]*10.0)
+                    cant_calc_ext+=1
+                    if texel_a!=texel_2:
+                        factor_transicion=(dist_siguiente/(dist_proximo+dist_siguiente))
+                        color=(color*(factor_transicion))+((Sistema.ColoresTipoTerreno[texel_2]/255)*(1.0-factor_transicion))
+                        cant_mezcla+=1
+                        info+="texel_2(%s)=%s factor_transicion=%.3f c=%s"%(str((siguiente_x, siguiente_y)), str(texel_2), factor_transicion, str(color))
+                    print(info)
+                cant_total+=1
+                self.imagen.setXelA(x, y, color)
+        print("cant_total=%i; cant_calc_ext=%i(%.2fpct); cant_mezcla=%i(%.2fpct)"%(cant_total, cant_calc_ext, cant_calc_ext*100/cant_total, cant_mezcla, cant_mezcla*100/cant_total))
+        #
+        imagen_ruido.clear()
+        #
+        if os.path.exists("tipo_terreno.png"):
+            os.remove("tipo_terreno.png")
+        self.imagen.write("tipo_terreno.png")
+        log.info("archivo de imagen escrito")
+        #
+        self.texturaImagen.load(self.imagen)
+        
     def _generar_imagen_ruido_continuo(self):
         log.info("_generar_imagen_ruido_continuo")
         #
@@ -715,7 +844,6 @@ class Tester(ShowBase):
         #
         perlin_noise_scale=64
         perlin=StackedPerlinNoise2(perlin_noise_scale, perlin_noise_scale, 8, 2.0, 0.50, 256, 1069)
-        #
         #
         if not self.imagen:
             type=PNMFileTypeRegistry.getGlobalPtr().getTypeFromExtension("*.png")
@@ -881,6 +1009,12 @@ class Tester(ShowBase):
             log.info("TipoImagenRuidoContinuo")
             self.tipo_imagen=Tester.TipoImagenRuidoContinuo
         elif self.tipo_imagen==Tester.TipoImagenRuidoContinuo:
+            log.info("TipoImagenBlendTerrenosBase")
+            self.tipo_imagen=Tester.TipoImagenBlendTerrenosBase
+        elif self.tipo_imagen==Tester.TipoImagenBlendTerrenosBase:
+            log.info("TipoImagenBlendTerreno")
+            self.tipo_imagen=Tester.TipoImagenBlendTerreno
+        elif self.tipo_imagen==Tester.TipoImagenBlendTerreno:
             log.info("TipoImagenTopo")
             self.tipo_imagen=Tester.TipoImagenTopo
         self._generar_imagen()
