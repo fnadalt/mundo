@@ -70,15 +70,16 @@ class Terreno:
 
     def obtener_info(self):
         pos_parcela_actual=None
-        temp=None
+        tam, prec_f=0.0, 0.0
         if len(self.parcelas)>0:
             parcela_actual=self.parcelas[self.idx_pos_parcela_actual]
             pos_parcela_actual=parcela_actual.getPos() 
-            temp=self.sistema.obtener_temperatura_anual_media_norm(pos_parcela_actual.getXy())
+            tam=self.sistema.obtener_temperatura_anual_media_norm(pos_parcela_actual.getXy())
+            prec_f=self.sistema.obtener_precipitacion_frecuencia_anual(pos_parcela_actual.getXy())
         #
         info="Terreno\n"
-        info+="idx_pos_parcela_actual=%s pos=%s\n"%(str(self.idx_pos_parcela_actual), str(pos_parcela_actual))
-        info+="RadioExpansion=%i altitud=%.2f temp_base=%s\n"%(Terreno.RadioExpansion, self.sistema.obtener_altitud_suelo_cursor(), str(temp))
+        info+="idx_pos_parcela_actual=%s pos=%s radio_exp=%i\n"%(str(self.idx_pos_parcela_actual), str(pos_parcela_actual), Terreno.RadioExpansion)
+        info+="altitud=%.2f tam=%.3f prec_f=%.3f\n"%(self.sistema.obtener_altitud_suelo_cursor(), tam, prec_f)
         return info
 
     def update(self, forzar=False):
@@ -122,9 +123,9 @@ class Terreno:
         geom_node=self._generar_nodo_parcela(nombre, idx_pos, pos, datos_parcela, config.valbool("terreno.color_debug"))
         parcela_node_path.attachNewNode(geom_node)
         # generar textura guia de terreno
-        ts2=TextureStage("ts_parcela") # para metodo de interpolacion de texturas
-        textura_parcela=self._obtener_textura_parcela(nombre, datos_parcela, pos)
-        parcela_node_path.setTexture(ts2, textura_parcela, priority=3)
+#        ts2=TextureStage("ts_parcela") # para metodo de interpolacion de texturas
+#        textura_parcela=self._obtener_textura_parcela(nombre, datos_parcela, pos)
+#        parcela_node_path.setTexture(ts2, textura_parcela, priority=3)
         # debug: normales
         if self.dibujar_normales:
             geom_node_normales=self._generar_lineas_normales("normales_%i_%i"%(int(pos[0]), int(pos[1])), geom_node)
@@ -295,8 +296,7 @@ class Terreno:
                 precipitacion_frecuencia=self.sistema.obtener_precipitacion_frecuencia_anual(_pos)
                 d.pos=Vec3(x-1, y-1, self.sistema.obtener_altitud_suelo(_pos))
                 d.tc=Vec2(tc_x, tc_y)
-                #d.tipo=Vec3(self.sistema.obtener_tipo_terreno(_pos)) # FS_FUNC_TEX_TERRENO_1
-                d.tipo=Vec3(self.sistema.obtener_temperatura_anual_media_norm(_pos), self.sistema.obtener_precipitacion_frecuencia_anual(_pos), 0.0) # FS_FUNC_TEX_TERRENO_2
+                d.tipo=Vec3(self.sistema.obtener_temperatura_anual_media_norm(_pos), self.sistema.obtener_precipitacion_frecuencia_anual(_pos), 0.0)
                 d.precipitacion_frecuencia=precipitacion_frecuencia
                 d.temperatura_base=0.0 # eliminar!!! esta por objetos.py
                 data[x].append(d)
@@ -524,8 +524,6 @@ class Tester(ShowBase):
     TipoImagenTopo=1
     TipoImagenRuido=2
     TipoImagenRuidoContinuo=3
-    TipoImagenBlendTerrenosBase=4
-    TipoImagenBlendTerreno=5
 
     def __init__(self):
         #
@@ -583,7 +581,7 @@ class Tester(ShowBase):
         self.imagen=None
         self.zoom_imagen=1
         #
-        self.tipo_imagen=Tester.TipoImagenBlendTerrenosBase
+        self.tipo_imagen=Tester.TipoImagenTopo
         #
         self.taskMgr.add(self.update, "update")
         self.accept("wheel_up", self.zoom, [1])
@@ -703,131 +701,6 @@ class Tester(ShowBase):
             self._generar_imagen_ruido()
         elif self.tipo_imagen==Tester.TipoImagenRuidoContinuo:
             self._generar_imagen_ruido_continuo()
-        elif self.tipo_imagen==Tester.TipoImagenBlendTerrenosBase:
-            self._generar_imagen_blend_terreno_base()
-        elif self.tipo_imagen==Tester.TipoImagenBlendTerreno:
-            self._generar_imagen_blend_terreno()
-
-    def _generar_imagen_blend_terreno_base(self):
-        log.info("_generar_imagen_blend_terreno_base")
-        #
-        idx_pos=self.terreno.obtener_indice_parcela(self.sistema.posicion_cursor)
-        log.info("idx_pos=%s"%str(idx_pos))
-        ruta_archivo_textura="texturas/terreno/tester_%i_%i.png"%(idx_pos[0], idx_pos[1])
-        log.info("ruta_archivo_textura=%s"%ruta_archivo_textura)
-        if os.path.exists(ruta_archivo_textura):
-            log.warning("se elimina archivo previo")
-            os.remove(ruta_archivo_textura)
-        #
-        tamano=int(Terreno.TamanoParcela/4)
-        #
-        if not self.imagen:
-            type=PNMFileTypeRegistry.getGlobalPtr().getTypeFromExtension("png")
-            self.imagen=PNMImage(tamano, tamano, 4, 255, type, CS_linear)
-            self.texturaImagen=Texture()
-            self.frmImagen["image"]=self.texturaImagen
-            self.frmImagen["image_scale"]=0.4
-        #
-        x0=math.floor(self.sistema.posicion_cursor[0]/tamano)*tamano
-        y0=math.floor(self.sistema.posicion_cursor[1]/tamano)*tamano
-        for x in range(tamano):
-            for y in range(tamano):
-                posicion=(x0+(x*Terreno.TamanoParcela/tamano), y0+(y*Terreno.TamanoParcela/tamano), 0.0)
-                tipo_terreno_0, tipo_terreno_1, factor_transicion=self.sistema.obtener_tipo_terreno(posicion)
-                tipo=tipo_terreno_0 if factor_transicion<0.5 else tipo_terreno_1
-                tipo/=10.0
-                self.imagen.setXelA(x, y, tipo, tipo, tipo, 1.0)
-        #
-        self.imagen.write(ruta_archivo_textura)
-        log.info("archivo de imagen escrito")
-        #
-        self.texturaImagen.load(self.imagen)
-
-    def _generar_imagen_blend_terreno(self):
-        log.info("_generar_imagen_blend_terreno")
-        #
-        idx_pos=self.terreno.obtener_indice_parcela(self.sistema.posicion_cursor)
-        log.info("idx_pos=%s"%str(idx_pos))
-        ruta_archivo_textura="texturas/terreno/tester_%i_%i.png"%(idx_pos[0], idx_pos[1])
-        log.info("ruta_archivo_textura=%s"%ruta_archivo_textura)
-        if not os.path.exists(ruta_archivo_textura):
-            log.warning("el archivo no existe, se lo creara...")
-            self._generar_imagen_blend_terreno_base()
-            self._limpiar_imagen()
-            log.info("...continua")
-        #
-        imagen_ruido=PNMImage(ruta_archivo_textura)
-        tamano_imagen_ruido=imagen_ruido.getReadXSize()
-        #
-        tamano=Terreno.TamanoParcela*4
-        #
-        if not self.imagen:
-            type=PNMFileTypeRegistry.getGlobalPtr().getTypeFromExtension("*.png")
-            self.imagen=PNMImage(tamano, tamano, 4, 255, type, CS_linear)
-            self.texturaImagen=Texture()
-            self.frmImagen["image"]=self.texturaImagen
-            self.frmImagen["image_scale"]=0.4
-        #
-        cant_total, cant_calc_ext, cant_mezcla=0, 0, 0
-        for x in range(tamano):
-            for y in range(tamano):
-                pos_parcela_x=x*(tamano_imagen_ruido-1)/tamano
-                pos_parcela_y=y*(tamano_imagen_ruido-1)/tamano
-                fract_x, entero_x=math.modf(pos_parcela_x)
-                fract_y, entero_y=math.modf(pos_parcela_y)
-                fract_x_rnd=round(fract_x)
-                fract_y_rnd=round(fract_y)
-                proximo_x=int(entero_x+fract_x_rnd)
-                proximo_y=int(entero_y+fract_y_rnd)
-                dist_proximo=math.sqrt((fract_x_rnd-fract_x)**2+(fract_y_rnd-fract_y)**2)
-                texel_a=math.floor(imagen_ruido.getXelA(proximo_x, proximo_y)[0]*10.0)
-                color=Sistema.ColoresTipoTerreno[texel_a]/255
-                print("posp=%s e/f=%s prox=%s distp=%.2f tx=%s (%s)"%(str((pos_parcela_x, pos_parcela_y)), 
-                                                                      str(((entero_x, fract_x), (entero_y, fract_y))), 
-                                                                      str((proximo_x, proximo_y)), 
-                                                                      dist_proximo, 
-                                                                      str(texel_a), str(color)
-                                                               ))
-                if dist_proximo>0.25:
-                    fract_x_rnd_op, fract_y_rnd_op=(fract_x_rnd+1)%2, (fract_y_rnd+1)%2
-                    siguiente_x, siguiente_y, dist_siguiente=0, 0, 0.0
-                    # b
-                    dist_siguiente=math.sqrt((fract_x_rnd_op-fract_x)**2+(fract_y_rnd-fract_y)**2)
-                    siguiente_x, siguiente_y=int(entero_x+fract_x_rnd_op), int(entero_y+fract_y_rnd)
-                    info=" sgte=%s dists=%.2f "%(str((siguiente_x, siguiente_y)), dist_siguiente)
-                    # c
-                    dist_c=math.sqrt((fract_x_rnd-fract_x)**2+(fract_y_rnd_op-fract_y)**2)
-                    if dist_c<dist_siguiente:
-                        dist_siguiente=dist_c
-                        siguiente_x, siguiente_y=int(entero_x+fract_x_rnd), int(entero_y+fract_y_rnd_op)
-                    info+="sgte=%s dist_c=%.2f "%(str((siguiente_x, siguiente_y)), dist_c)
-                    # d
-                    dist_d=math.sqrt((fract_x_rnd_op-fract_x)**2+(fract_y_rnd_op-fract_y)**2)
-                    if dist_d<dist_siguiente:
-                        dist_siguiente=dist_d
-                        siguiente_x, siguiente_y=int(entero_x+fract_x_rnd_op), int(entero_y+fract_y_rnd_op)
-                    info+="sgte=%s dist_d=%.2f "%(str((siguiente_x, siguiente_y)), dist_d)
-                    #
-                    texel_2=math.floor(imagen_ruido.getXelA(siguiente_x, siguiente_y)[0]*10.0)
-                    cant_calc_ext+=1
-                    if texel_a!=texel_2:
-                        factor_transicion=(dist_siguiente/(dist_proximo+dist_siguiente))
-                        color=(color*(factor_transicion))+((Sistema.ColoresTipoTerreno[texel_2]/255)*(1.0-factor_transicion))
-                        cant_mezcla+=1
-                        info+="texel_2(%s)=%s factor_transicion=%.3f c=%s"%(str((siguiente_x, siguiente_y)), str(texel_2), factor_transicion, str(color))
-                    print(info)
-                cant_total+=1
-                self.imagen.setXelA(x, y, color)
-        print("cant_total=%i; cant_calc_ext=%i(%.2fpct); cant_mezcla=%i(%.2fpct)"%(cant_total, cant_calc_ext, cant_calc_ext*100/cant_total, cant_mezcla, cant_mezcla*100/cant_total))
-        #
-        imagen_ruido.clear()
-        #
-        if os.path.exists("tipo_terreno.png"):
-            os.remove("tipo_terreno.png")
-        self.imagen.write("tipo_terreno.png")
-        log.info("archivo de imagen escrito")
-        #
-        self.texturaImagen.load(self.imagen)
         
     def _generar_imagen_ruido_continuo(self):
         log.info("_generar_imagen_ruido_continuo")
@@ -968,7 +841,9 @@ class Tester(ShowBase):
             idx_x=int(self.entry_x.get())
             idx_y=int(self.entry_y.get())
             pos=self.terreno.obtener_pos_parcela((idx_x, idx_y))
-            log.info("idx_pos:(%i,%i); pos:%s"%(idx_x, idx_y, str(pos)))
+            tam=self.sistema.obtener_temperatura_anual_media_norm(pos)
+            prec_f=self.sistema.obtener_precipitacion_frecuencia_anual(pos)
+            log.info("idx_pos:(%i,%i); pos:%s; tam=%.4f prec_f=%.4f"%(idx_x, idx_y, str(pos), tam, prec_f))
             self.sistema.posicion_cursor=Vec3(pos[0], pos[1], 0.0)
             self._actualizar_terreno()
         except Exception as e:
@@ -980,10 +855,11 @@ class Tester(ShowBase):
         # info
         self.lblInfo=DirectLabel(parent=self.frame, pos=(-1, 0, 0.15), scale=0.05, text="info terreno?", frameColor=(1, 1, 1, 0.2), frameSize=(0, 40, -2, 2), text_align=TextNode.ALeft, text_pos=(0, 1, 1))
         # idx_pos
+        idx_pos=self.terreno.obtener_indice_parcela(self.sistema.posicion_cursor)
         DirectLabel(parent=self.frame, pos=(-1, 0, 0), scale=0.05, text="idx_pos_x", frameColor=(1, 1, 1, 0), frameSize=(0, 2, -1, 1), text_align=TextNode.ALeft)
         DirectLabel(parent=self.frame, pos=(-1, 0, -0.1), scale=0.05, text="idx_pos_y", frameColor=(1, 1, 1, 0), frameSize=(0, 2, -1, 1), text_align=TextNode.ALeft)
-        self.entry_x=DirectEntry(parent=self.frame, pos=(-0.7, 0, 0), scale=0.05, initialText="0")
-        self.entry_y=DirectEntry(parent=self.frame, pos=(-0.7, 0, -0.1), scale=0.05, initialText="0")
+        self.entry_x=DirectEntry(parent=self.frame, pos=(-0.7, 0, 0), scale=0.05, initialText=str(idx_pos[0]))
+        self.entry_y=DirectEntry(parent=self.frame, pos=(-0.7, 0, -0.1), scale=0.05, initialText=str(idx_pos[1]))
         DirectButton(parent=self.frame, pos=(0, 0, -0.1), scale=0.075, text="actualizar", command=self._ir_a_idx_pos)
         #
         self.frmImagen=DirectFrame(parent=self.frame, pos=(0.8, 0, 0.2), state=DGG.NORMAL, frameSize=(-0.4, 0.4, -0.4, 0.4))
@@ -1001,12 +877,6 @@ class Tester(ShowBase):
             log.info("TipoImagenRuidoContinuo")
             self.tipo_imagen=Tester.TipoImagenRuidoContinuo
         elif self.tipo_imagen==Tester.TipoImagenRuidoContinuo:
-            log.info("TipoImagenBlendTerrenosBase")
-            self.tipo_imagen=Tester.TipoImagenBlendTerrenosBase
-        elif self.tipo_imagen==Tester.TipoImagenBlendTerrenosBase:
-            log.info("TipoImagenBlendTerreno")
-            self.tipo_imagen=Tester.TipoImagenBlendTerreno
-        elif self.tipo_imagen==Tester.TipoImagenBlendTerreno:
             log.info("TipoImagenTopo")
             self.tipo_imagen=Tester.TipoImagenTopo
         self._generar_imagen()

@@ -174,7 +174,7 @@ class GeneradorShader:
                     texto_fs+=glsl.FS_FUNC_LUZ%{"FS_FUNC_LUZ_SOMBRA":fs_func_luz_sombra, 
                                                 "FUNC_LIGHT_VEC_TRANSFORM":fs_func_luz_transform_luz}
                 if self._clase==GeneradorShader.ClaseTerreno:
-                    texto_fs+=glsl.FS_FUNC_TEX_TERRENO_2%{"FS_FUNC_TEX_LOOK_UP":glsl.FS_FUNC_TEX_LOOK_UP}
+                    texto_fs+=glsl.FS_FUNC_TEX_TERRENO%{"FS_FUNC_TEX_LOOK_UP":glsl.FS_FUNC_TEX_LOOK_UP}
                     if config.valbool("terreno.normal_map"):
                         texto_fs+=glsl.FS_FUNC_NORMAL_MAP_TERRENO%{"FS_FUNC_TEX_LOOK_UP":glsl.FS_FUNC_TEX_LOOK_UP}
                 else:

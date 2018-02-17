@@ -127,93 +127,99 @@ FS_FUNC_TEX_AGUA="""
     color_tex+=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture2, texcoord.st); // agua
     color_tex+=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture3, texcoord.st); // agua
 """
-FS_FUNC_TEX_TERRENO_1="""
+FS_FUNC_TEX_TERRENO="""
 // terreno
+const TiposTerreno tipos_terreno[12]=TiposTerreno[](TiposTerreno(2,2),TiposTerreno(2,3),TiposTerreno(7,7),TiposTerreno(7,7),
+                                                    TiposTerreno(2,1),TiposTerreno(3,1),TiposTerreno(3,5),TiposTerreno(3,5),
+                                                    TiposTerreno(2,1),TiposTerreno(4,6),TiposTerreno(4,6),TiposTerreno(4,6)
+                                                    ); 
 vec2 obtener_texcoord_terreno(float tipo_terreno, bool normal_map)
 {
     //
-    const int escala=1; // deberia ser una constante externa
-    vec2 texcoord=fract(PositionW.xy+vec2(tipo_terreno/7,tipo_terreno/11)/escala)/4.0;
-    texcoord.s=clamp(texcoord.s,0.0005,0.9995); // pfpfpfpfpff!!!
-    texcoord.t=clamp(texcoord.t,0.0005,0.9995); //
+    float tam=info_tipo.x*3;
+    float precf=info_tipo.y*2;
+    float entero_x=floor(tam);
+    float entero_y=floor(precf);
+    float fract_x=fract(tam);
+    float fract_y=fract(precf);
+    float fract_x_rnd=round(fract_x);
+    float fract_y_rnd=round(fract_y);
+    float dist_x=abs(fract_x_rnd-fract_x);
+    float dist_y=abs(fract_y_rnd-fract_y);
     //
-    const float corte_terreno_superficie=0.49; // deberia ser una constante externa
-    if(info_tipo.z<corte_terreno_superficie){
-        if(tipo_terreno==2){
-            tipo_terreno=1;
-        } else if(tipo_terreno==3){
-            tipo_terreno=5;
-        } else if(tipo_terreno==4){
-            tipo_terreno=6;
-        }
-    }
-    //
-    if(tipo_terreno==1){ // nieve
-        texcoord+=vec2(0.00,0.75);
-    } else if(tipo_terreno==2){ // tundra
-        texcoord+=vec2(0.00,0.50);
-    } else if(tipo_terreno==3){ // tierra seca
-        texcoord+=vec2(0.00,0.25);
-    } else if(tipo_terreno==4){ // tierra humeda
-        texcoord+=vec2(0.00,0.00);
-    } else if(tipo_terreno==5){ // pasto seco
-        texcoord+=vec2(0.50,0.75);
-    } else if(tipo_terreno==6){ // pasto humedo
-        texcoord+=vec2(0.50,0.50);
-    } else if(tipo_terreno==7){ // arena seca
-        texcoord+=vec2(0.50,0.25);
-    } else if(tipo_terreno==8){ // arena humeda
-        texcoord+=vec2(0.50,0.00);
-    }
-    //
-    if(normal_map) texcoord.s+=0.25;
-    //
-    return texcoord;
-}
-const float factor_piso=0.47;
-const float factor_techo=0.51;
-float calcular_factor(){
-    float factor=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,texcoord.st).r;
-    if(factor<factor_piso){
-        factor=0.0;
-    } else if(factor>factor_techo){
-        factor=1.0;
+    vec2 idx_tabla_0=vec2(entero_x+fract_x_rnd,entero_y+fract_y_rnd);
+    vec2 idx_tabla_1=idx_tabla_0;
+    float dist_0=0.0;
+    if(dist_x>dist_y){
+        float fract_x_rnd_op=(int(fract_x_rnd)+1)%%2;
+        idx_tabla_1=vec2(entero_x+fract_x_rnd_op,entero_y+fract_y_rnd);
+        dist_0=dist_x;
     } else {
-        factor=(factor-factor_piso)/(factor_techo-factor_piso);
+        float fract_y_rnd_op=(int(fract_y_rnd)+1)%%2;
+        idx_tabla_1=vec2(entero_x+fract_x_rnd,entero_y+fract_y_rnd_op);
+        dist_0=dist_y;
     }
-    return factor;
+    //
+    TiposTerreno tipos0=tipos_terreno[int(idx_tabla_0.y*4+idx_tabla_0.x)];
+    float tipo0=tipos0.base;
+    //
+    vec4 color0=texture(p3d_Texture0,obtener_texcoord_terreno(tipo0,false));
+    //
+    vec4 color=color0;
+    //
+    if(dist_0>0.3){
+        TiposTerreno tipos1=tipos_terreno[int(idx_tabla_1.y*4+idx_tabla_1.x)];
+        float tipo1=tipos1.base;
+        vec4 color1=texture(p3d_Texture0,obtener_texcoord_terreno(tipo1,false));
+        float factor=(dist_0-0.3)/((0.5-0.3)*2.0);
+        color=mix(color0,color1,factor);
+    }
+    //
+    return color;
 }
-//uniform int osg_FrameNumber;
 vec4 tex_terreno()
 {
     //
-    vec2 tc0=obtener_texcoord_terreno(info_tipo.x,false);
-    vec2 tc1=obtener_texcoord_terreno(info_tipo.y,false);
+    float tam=info_tipo.x*3;
+    float precf=info_tipo.y*2;
+    float entero_x=floor(tam);
+    float entero_y=floor(precf);
+    float fract_x=fract(tam);
+    float fract_y=fract(precf);
+    float fract_x_rnd=round(fract_x);
+    float fract_y_rnd=round(fract_y);
+    float dist_x=abs(fract_x_rnd-fract_x);
+    float dist_y=abs(fract_y_rnd-fract_y);
     //
-    vec4 _color;
-    vec4 _color0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, tc0);
-    vec4 _color1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, tc1);
-    //
-    float factor=calcular_factor();
-    if(factor==0.0){
-        _color=_color0;
-    } else if(factor==1.0){
-        _color=_color1;
+    vec2 idx_tabla_0=vec2(entero_x+fract_x_rnd, entero_y+fract_y_rnd);
+    vec2 idx_tabla_1=idx_tabla_0;
+    float dist_0=0.0;
+    if(dist_x>dist_y){
+        float fract_x_rnd_op=(int(fract_x_rnd)+1)%%2;
+        idx_tabla_1=vec2(entero_x+fract_x_rnd_op,entero_y+fract_y_rnd);
+        dist_0=dist_x;
     } else {
-        _color=mix(_color0,_color1,factor);
+        float fract_y_rnd_op=(int(fract_y_rnd)+1)%%2;
+        idx_tabla_1=vec2(entero_x+fract_x_rnd,entero_y+fract_y_rnd_op);
+        dist_0=dist_y;
     }
     //
-    return _color;
-}
-"""
-FS_FUNC_TEX_TERRENO_2="""
-// terreno
-vec4 tex_terreno()
-{
+    TiposTerreno tipos0=tipos_terreno[int(idx_tabla_0.y*4+idx_tabla_0.x)];
+    float tipo0=tipos0.base;
     //
-    vec4 _color=vec4(1,0,1,1);
+    vec4 color0=texture(p3d_Texture0,obtener_texcoord_terreno(tipo0,false));
     //
-    return _color;
+    vec4 color=color0;
+    //
+    if(dist_0>0.3){
+        TiposTerreno tipos1=tipos_terreno[int(idx_tabla_1.y*4+idx_tabla_1.x)];
+        float tipo1=tipos1.base;
+        vec4 color1=texture(p3d_Texture0,obtener_texcoord_terreno(tipo1,false));
+        float factor=(dist_0-0.3)/((0.5-0.3)*2.0);
+        color=mix(color0,color1,factor);
+    }
+    //
+    return color;
 }
 """
 FS_FUNC_NORMAL_MAP_TERRENO="""
