@@ -127,7 +127,7 @@ FS_FUNC_TEX_AGUA="""
     color_tex+=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture2, texcoord.st); // agua
     color_tex+=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture3, texcoord.st); // agua
 """
-FS_FUNC_TEX_TERRENO="""
+FS_FUNC_TEX_TERRENO_1="""
 // terreno
 vec2 obtener_texcoord_terreno(float tipo_terreno, bool normal_map)
 {
@@ -202,6 +202,16 @@ vec4 tex_terreno()
     } else {
         _color=mix(_color0,_color1,factor);
     }
+    //
+    return _color;
+}
+"""
+FS_FUNC_TEX_TERRENO_2="""
+// terreno
+vec4 tex_terreno()
+{
+    //
+    vec4 _color=vec4(1,0,1,1);
     //
     return _color;
 }

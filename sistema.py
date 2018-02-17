@@ -187,7 +187,7 @@ class Sistema:
         bioma=self.obtener_transicion_biomas(self.posicion_cursor)
         tipo_terreno=self.obtener_tipo_terreno(self.posicion_cursor)
         info="Sistema posicion_cursor=(%.3f,%.3f,%.3f)\n"%(self.posicion_cursor[0], self.posicion_cursor[1], self.posicion_cursor[2])
-        info+="geo: tam=%.3f prec_f=%.3f bioma=(%s) tipo_terreno=(%s)\n"%(tam, prec_f, bioma, tipo_terreno)
+        info+="geo: tam=%.3f prec_f=%.3f\nbioma=(%s) tipo_terreno=(%s)\n"%(tam, prec_f, bioma, tipo_terreno)
         info+="era: año=%i estacion=%i dia=%i hora=%.2f(%.2f/%i) periodo_dia_actual=%i\n"%(self.ano, self.estacion, self.dia, self.hora_normalizada, self._segundos_transcurridos_dia, self.duracion_dia_segundos, self.periodo_dia_actual)
         info+="temp=%.2f nubosidad=%.2f precipitacion=[tipo=%i intens=%i t=(%.2f/%2.f)]\n"%(self.temperatura_actual_norm, self.nubosidad, self.precipitacion_actual_tipo, self.precipitacion_actual_intensidad, self.precipitacion_actual_t, self.precipitacion_actual_duracion)
         return info
@@ -566,15 +566,15 @@ class Sistema:
         punto_max_c=(punto_max_a[0], max(0.0, punto_max_a[1]+delta_a[1]))
         punto_max_d=(max(0.0, punto_max_a[0]+delta_a[0]), max(0.0, punto_max_a[1]+delta_a[1]))
         # euclidean
-#        distancia_a=min(0.99, math.sqrt((punto[0]-punto_max_a[0])**2 + (punto[1]-punto_max_a[1])**2)) # min() necesario?
-#        distancia_b=min(0.99, math.sqrt((punto[0]-punto_max_b[0])**2 + (punto[1]-punto_max_b[1])**2)) # min() necesario?
-#        distancia_c=min(0.99, math.sqrt((punto[0]-punto_max_c[0])**2 + (punto[1]-punto_max_c[1])**2)) # min() necesario?
-#        distancia_d=min(0.99, math.sqrt((punto[0]-punto_max_d[0])**2 + (punto[1]-punto_max_d[1])**2))
+        distancia_a=min(0.99, math.sqrt((punto[0]-punto_max_a[0])**2 + (punto[1]-punto_max_a[1])**2)) # min() necesario?
+        distancia_b=min(0.99, math.sqrt((punto[0]-punto_max_b[0])**2 + (punto[1]-punto_max_b[1])**2)) # min() necesario?
+        distancia_c=min(0.99, math.sqrt((punto[0]-punto_max_c[0])**2 + (punto[1]-punto_max_c[1])**2)) # min() necesario?
+        distancia_d=min(0.99, math.sqrt((punto[0]-punto_max_d[0])**2 + (punto[1]-punto_max_d[1])**2))
         # manhattan
-        distancia_a=min(0.99, abs(punto[0]-punto_max_a[0])+abs(punto[1]-punto_max_a[1]))
-        distancia_b=min(0.99, abs(punto[0]-punto_max_b[0])+abs(punto[1]-punto_max_b[1]))
-        distancia_c=min(0.99, abs(punto[0]-punto_max_c[0])+abs(punto[1]-punto_max_c[1]))
-        distancia_d=min(0.99, abs(punto[0]-punto_max_d[0])+abs(punto[1]-punto_max_d[1]))
+#        distancia_a=min(0.99, abs(punto[0]-punto_max_a[0])+abs(punto[1]-punto_max_a[1]))
+#        distancia_b=min(0.99, abs(punto[0]-punto_max_b[0])+abs(punto[1]-punto_max_b[1]))
+#        distancia_c=min(0.99, abs(punto[0]-punto_max_c[0])+abs(punto[1]-punto_max_c[1]))
+#        distancia_d=min(0.99, abs(punto[0]-punto_max_d[0])+abs(punto[1]-punto_max_d[1]))
         #
         bioma_a=Sistema.BiomaTabla[celda_a[1]][celda_a[0]]
         bioma_b=Sistema.BiomaTabla[int(punto_max_b[1])][int(punto_max_b[0])]
@@ -739,6 +739,7 @@ class DescriptorVegetacion:
 #
 from direct.showbase.ShowBase import ShowBase
 from direct.gui.DirectGui import *
+import os, os.path
 class Tester(ShowBase):
 
     TamanoImagen=128
@@ -819,7 +820,8 @@ class Tester(ShowBase):
                         if factor_transicion<0.55 and factor_transicion>0.45: # debug transiciones
                             c=Vec4(0, 255, 0, 255)
                         else:
-                            c=(color_base*(1.0-factor_transicion))+(color_superficie*factor_transicion)
+                            pass # desactivar debug transiciones --v
+                        c=(color_base*(1.0-factor_transicion))+(color_superficie*factor_transicion) # -->
                         c[3]=1.0
                         if a>Sistema.TopoAltitudOceano:
                             self.imagen.setXelA(x, y, c/255)
@@ -864,7 +866,6 @@ class Tester(ShowBase):
                         #    print("(x,y)=(%s) pos=(%s) d=(%s) c=(%s)"%(str((x, y)), str((pos_columna, pos_fila)), str((distancia_a, distancia_b, distancia_c, distancia_d)), str((color_a, color_b, color_c, color_d))))
                         color/=distancias
                         self.imagen.setXel(x, y, color[0], color[1], color[2])
-        #self.imagen.write("sistema.png")
         #
         self.texturaImagen.load(self.imagen)
 
@@ -886,6 +887,15 @@ class Tester(ShowBase):
         self.pos_foco=(x, y)
         self._generar_imagen()
     
+    def _guardar_imagen(self):
+        ruta_archivo_imagen="sistema.png"
+        log.info("_guardar_imagen ruta_archivo_imagen=%s"%ruta_archivo_imagen)
+        if os.path.exists(ruta_archivo_imagen):
+            log.warning("se eliminara el archivo")
+            os.remove(ruta_archivo_imagen)
+        self.imagen.write(ruta_archivo_imagen)
+        log.info("archivo escrito")
+
     def _dump_data(self):
         log.info("_dump_data")
         #
@@ -930,6 +940,8 @@ class Tester(ShowBase):
         self.entry_y=DirectEntry(parent=self.frmControles, pos=(-0.7, 0, -0.15), scale=0.05)
         DirectButton(parent=self.frmControles, pos=(0, 0, -0.05), scale=0.075, text="actualizar", command=self._ir_a_pos)
         DirectButton(parent=self.frmControles, pos=(0.4, 0, -0.05), scale=0.075, text="dump data", command=self._dump_data)
+        DirectButton(parent=self.frmControles, pos=(0.9, 0, -0.05), scale=0.075, text="guardar imagen", command=self._guardar_imagen)
+        #
         DirectButton(parent=self.frmControles, pos=(-0.05, 0, -0.15), scale=0.075, text="acercar", command=self._acercar_zoom_imagen, frameSize=(-1.5, 1.5, -0.60, 0.60), text_scale=0.75)
         DirectButton(parent=self.frmControles, pos=(0.20, 0, -0.15), scale=0.075, text="alejar", command=self._alejar_zoom_imagen, frameSize=(-1.5, 1.5, -0.60, 0.60), text_scale=0.75)
         DirectButton(parent=self.frmControles, pos=(0.475, 0, -0.15), scale=0.075, text="alejar max", command=self._alejar_zoom_imagen_max, frameSize=(-2.0, 2.0, -0.60, 0.60), text_scale=0.75)

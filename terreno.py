@@ -122,9 +122,9 @@ class Terreno:
         geom_node=self._generar_nodo_parcela(nombre, idx_pos, pos, datos_parcela, config.valbool("terreno.color_debug"))
         parcela_node_path.attachNewNode(geom_node)
         # generar textura guia de terreno
-#        ts2=TextureStage("ts_parcela") # para metodo de interpolacion de texturas
-#        textura_parcela=self._obtener_textura_parcela(nombre, datos_parcela, pos)
-#        parcela_node_path.setTexture(ts2, textura_parcela, priority=3)
+        ts2=TextureStage("ts_parcela") # para metodo de interpolacion de texturas
+        textura_parcela=self._obtener_textura_parcela(nombre, datos_parcela, pos)
+        parcela_node_path.setTexture(ts2, textura_parcela, priority=3)
         # debug: normales
         if self.dibujar_normales:
             geom_node_normales=self._generar_lineas_normales("normales_%i_%i"%(int(pos[0]), int(pos[1])), geom_node)
@@ -160,13 +160,12 @@ class Terreno:
         ruta_archivo_textura=os.path.join("texturas/terreno", "%s.png"%nombre)
         if not os.path.exists(ruta_archivo_textura):
             log.info("_obtener_textura_parcela se genera archivo de textura de parcela '%s'"%ruta_archivo_textura)
-            tamano_imagen=Terreno.TamanoParcela
+            tamano_imagen=int(Terreno.TamanoParcela/4)
             imagen=PNMImage(tamano_imagen, tamano_imagen)
-            #imagen.setColorSpace(CS_scRGB)
-            tamano_area=tamano_imagen
-            for x in range(tamano_area):
-                for y in range(tamano_area):
-                    d=datos_parcela[x+1][y+1]
+            tamano_area=Terreno.TamanoParcela
+            for x in range(tamano_imagen):
+                for y in range(tamano_imagen):
+                    d=datos_parcela[1+int(x*tamano_area/tamano_imagen)][1+int(y*tamano_area/tamano_imagen)]
                     imagen.setXelA(x, y, d.tipo[0]/10.0, d.tipo[1]/10.0, d.tipo[2], d.precipitacion_frecuencia)
             imagen.write(ruta_archivo_textura)
 #            for x in range(tamano_area):
@@ -296,7 +295,8 @@ class Terreno:
                 precipitacion_frecuencia=self.sistema.obtener_precipitacion_frecuencia_anual(_pos)
                 d.pos=Vec3(x-1, y-1, self.sistema.obtener_altitud_suelo(_pos))
                 d.tc=Vec2(tc_x, tc_y)
-                d.tipo=Vec3(self.sistema.obtener_tipo_terreno(_pos))
+                #d.tipo=Vec3(self.sistema.obtener_tipo_terreno(_pos)) # FS_FUNC_TEX_TERRENO_1
+                d.tipo=Vec3(self.sistema.obtener_temperatura_anual_media_norm(_pos), self.sistema.obtener_precipitacion_frecuencia_anual(_pos), 0.0) # FS_FUNC_TEX_TERRENO_2
                 d.precipitacion_frecuencia=precipitacion_frecuencia
                 d.temperatura_base=0.0 # eliminar!!! esta por objetos.py
                 data[x].append(d)
@@ -337,7 +337,7 @@ class Terreno:
 
     def _generar_nodo_parcela(self, nombre, idx_pos, posicion, datos_parcela, con_color=False):
         # formato
-        co_info_tipo_terreno=InternalName.make("info_tipo_terreno") # int()->tipo; fract()->intervalo
+        co_info_tipo_terreno=InternalName.make("info_tipo_terreno")
         if con_color: co_color=InternalName.make("Color") # debug
         format_array=GeomVertexArrayFormat()
         format_array.addColumn(InternalName.getVertex(), 3, Geom.NT_stdfloat, Geom.C_point)
@@ -526,15 +526,6 @@ class Tester(ShowBase):
     TipoImagenRuidoContinuo=3
     TipoImagenBlendTerrenosBase=4
     TipoImagenBlendTerreno=5
-
-    # obsoleto
-#    ColoresTipoTerreno={Terreno.TipoNulo:Vec4(0, 0, 0, 255), 
-#                        Terreno.TipoArena:Vec4(240, 230, 0, 255), 
-#                        Terreno.TipoTierra1:Vec4(70, 60, 0, 255), 
-#                        Terreno.TipoPasto:Vec4(0, 190, 10, 255), 
-#                        Terreno.TipoTierra2:Vec4(70, 60, 0, 255), 
-#                        Terreno.TipoNieve:Vec4(250, 250, 250, 255)
-#                        }
 
     def __init__(self):
         #
@@ -728,10 +719,10 @@ class Tester(ShowBase):
             log.warning("se elimina archivo previo")
             os.remove(ruta_archivo_textura)
         #
-        tamano=Terreno.TamanoParcela
+        tamano=int(Terreno.TamanoParcela/4)
         #
         if not self.imagen:
-            type=PNMFileTypeRegistry.getGlobalPtr().getTypeFromExtension("*.png")
+            type=PNMFileTypeRegistry.getGlobalPtr().getTypeFromExtension("png")
             self.imagen=PNMImage(tamano, tamano, 4, 255, type, CS_linear)
             self.texturaImagen=Texture()
             self.frmImagen["image"]=self.texturaImagen
@@ -741,7 +732,7 @@ class Tester(ShowBase):
         y0=math.floor(self.sistema.posicion_cursor[1]/tamano)*tamano
         for x in range(tamano):
             for y in range(tamano):
-                posicion=(x0+x, y0+y, 0.0)
+                posicion=(x0+(x*Terreno.TamanoParcela/tamano), y0+(y*Terreno.TamanoParcela/tamano), 0.0)
                 tipo_terreno_0, tipo_terreno_1, factor_transicion=self.sistema.obtener_tipo_terreno(posicion)
                 tipo=tipo_terreno_0 if factor_transicion<0.5 else tipo_terreno_1
                 tipo/=10.0
@@ -766,8 +757,9 @@ class Tester(ShowBase):
             log.info("...continua")
         #
         imagen_ruido=PNMImage(ruta_archivo_textura)
+        tamano_imagen_ruido=imagen_ruido.getReadXSize()
         #
-        tamano=Terreno.TamanoParcela*16
+        tamano=Terreno.TamanoParcela*4
         #
         if not self.imagen:
             type=PNMFileTypeRegistry.getGlobalPtr().getTypeFromExtension("*.png")
@@ -779,8 +771,8 @@ class Tester(ShowBase):
         cant_total, cant_calc_ext, cant_mezcla=0, 0, 0
         for x in range(tamano):
             for y in range(tamano):
-                pos_parcela_x=x*(Terreno.TamanoParcela-1)/tamano
-                pos_parcela_y=y*(Terreno.TamanoParcela-1)/tamano
+                pos_parcela_x=x*(tamano_imagen_ruido-1)/tamano
+                pos_parcela_y=y*(tamano_imagen_ruido-1)/tamano
                 fract_x, entero_x=math.modf(pos_parcela_x)
                 fract_y, entero_y=math.modf(pos_parcela_y)
                 fract_x_rnd=round(fract_x)
@@ -796,7 +788,7 @@ class Tester(ShowBase):
                                                                       dist_proximo, 
                                                                       str(texel_a), str(color)
                                                                ))
-                if dist_proximo>0.40:
+                if dist_proximo>0.25:
                     fract_x_rnd_op, fract_y_rnd_op=(fract_x_rnd+1)%2, (fract_y_rnd+1)%2
                     siguiente_x, siguiente_y, dist_siguiente=0, 0, 0.0
                     # b
