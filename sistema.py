@@ -517,29 +517,27 @@ class Sistema:
 
     def _calcular_transicion_tabla_biomas(self, temperatura_anual_media, precipitacion_frecuencia, loguear=False):
         #
-        pos_x, pos_y=temperatura_anual_media*3.99, precipitacion_frecuencia*2.99
-        fract_x, entero_x=math.modf(pos_x)
-        fract_y, entero_y=math.modf(pos_y)
-        fract_x_rnd, fract_y_rnd=round(fract_x), round(fract_y)
-        dist_x, dist_y=abs((entero_x+0.5)-pos_x), abs((entero_y+0.5)-pos_y)
-        #
-        idx_tabla_0=[max(0, min(3, entero_x+fract_x_rnd)), max(0, min(2, entero_y+fract_y_rnd))]
-        idx_tabla_1=idx_tabla_0
-        dist_0=0.0
-        if dist_x>dist_y:
-            fract_x_rnd_op=(fract_x_rnd+1)%2
-            idx_tabla_1=[max(0, min(3, entero_x+fract_x_rnd_op)), max(0, min(2, entero_y+fract_y_rnd))]
-            dist_0=dist_x
+        pos=(temperatura_anual_media*4, precipitacion_frecuencia*3)
+        celda0=(int(pos[0]), int(pos[1]))
+        punto_medio0=(celda0[0]+0.5, celda0[1]+0.5)
+        distancia0=(pos[0]-punto_medio0[0], pos[1]-punto_medio0[1])
+        delta_celda0=((-1 if distancia0[0]<0 else 1), (-1 if distancia0[1]<0 else 1))
+        distancia, celda1=0.0, None
+        if abs(distancia0[0])>abs(distancia0[1]):
+            celda1=(max(0, min(3, celda0[0]+delta_celda0[0])), celda0[1])
+            distancia=abs(distancia0[0])
         else:
-            fract_y_rnd_op=(fract_y_rnd+1)%2
-            idx_tabla_1=[max(0, min(3, entero_x+fract_x_rnd)), max(0, min(2, entero_y+fract_y_rnd_op))]
-            dist_0=dist_y
+            celda1=(celda0[0], max(0, min(2, celda0[1]+delta_celda0[1])))
+            distancia=abs(distancia0[0])
         factor_transicion=0.0
-        if dist_0>0.3:
-            factor_transicion=(dist_0-0.3)/0.4 # =(dist_0-0.3)/((0.5-0.3)*2.0)
+        corte=0.2 # quitar una vez debugged
+        if distancia>corte:
+            factor_transicion=(distancia-corte)/((0.5-corte)*2.0) # (distancia-0.3)/((0.5-0.3)*2.0)
         if loguear:
-            log.debug("_calcular_transicion_tabla_biomas tam=%.2f prec_f=%.2f p=(%.2f,%.2f) e/f=%s dist=(%.2f,%.2f) idx=(%s) f=%.2f"%(temperatura_anual_media, precipitacion_frecuencia, pos_x, pos_y, str(((entero_x, fract_x), (entero_y, fract_y))), dist_x, dist_y, str((idx_tabla_0, idx_tabla_1)), factor_transicion))
-        return (idx_tabla_0, idx_tabla_1, factor_transicion)
+            log.debug("_calcular_transicion_tabla_biomas pos=(%.4f,%.4f) c0=(%.4f,%.4f) pm0=(%.4f,%.4f) d=(%.4f,%.4f) c1=(%.4f,%.4f) f=%.4f"% \
+                      (pos[0], pos[1], celda0[0], celda0[1], punto_medio0[0], punto_medio0[1], \
+                       distancia0[0], distancia0[1], celda1[0], celda1[1], factor_transicion))
+        return (celda0, celda1, factor_transicion)
 
     def calcular_color_bioma_debug(self, posicion=None):
         _posicion=posicion
@@ -757,7 +755,7 @@ class Tester(ShowBase):
         #
         self.pos_foco=None
         #
-        self.tipo_imagen=Tester.TipoImagenTopo
+        self.tipo_imagen=Tester.TipoImagenInterpTabla
         #
         self.texturaImagen=None
         self.imagen=None
@@ -838,14 +836,17 @@ class Tester(ShowBase):
                         pos_fila=y/(tamano+1)
                         #
                         loguear=False
-                        #if y==63:
-                        #    loguear=True
-                        data=self.sistema._calcular_transicion_tabla_biomas(pos_columna, pos_fila, loguear)
-                        bioma_a=Sistema.BiomaTabla[int(data[0][1])][int(data[0][0])]
-                        bioma_b=Sistema.BiomaTabla[int(data[1][1])][int(data[1][0])]
-                        color_a=Sistema.ColoresBioma[bioma_a]
-                        color_b=Sistema.ColoresBioma[bioma_b]
-                        color=(color_a*(1.0-data[2]))+(color_b*data[2])
+                        if x==63:
+                            log.debug("_generar_imagen (%.2f,%.2f)"%(pos_columna, pos_fila))
+                            loguear=True
+                        celda0, celda1, factor_transicion=self.sistema._calcular_transicion_tabla_biomas(pos_columna, pos_fila, loguear)
+                        bioma_a=Sistema.BiomaTabla[int(celda0[1])][int(celda0[0])]
+                        bioma_b=Sistema.BiomaTabla[int(celda1[1])][int(celda1[0])]
+                        color_a=Sistema.ColoresBioma[bioma_a]/255
+                        color_b=Sistema.ColoresBioma[bioma_b]/255
+                        color=(color_a*(1.0-factor_transicion))+(color_b*(factor_transicion))
+                        if x==63:
+                            log.debug("biomas (%i %i f=%.3f) colores %s %s %s"%(bioma_a, bioma_b, factor_transicion, str(color_a), str(color_b), str(color)))
                         self.imagen.setXel(x, y, color[0], color[1], color[2])
         #
         self.texturaImagen.load(self.imagen)

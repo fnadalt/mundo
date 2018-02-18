@@ -136,87 +136,65 @@ const TiposTerreno tipos_terreno[12]=TiposTerreno[](TiposTerreno(2,2),TiposTerre
 vec2 obtener_texcoord_terreno(float tipo_terreno, bool normal_map)
 {
     //
-    float tam=info_tipo.x*3;
-    float precf=info_tipo.y*2;
-    float entero_x=floor(tam);
-    float entero_y=floor(precf);
-    float fract_x=fract(tam);
-    float fract_y=fract(precf);
-    float fract_x_rnd=round(fract_x);
-    float fract_y_rnd=round(fract_y);
-    float dist_x=abs(fract_x_rnd-fract_x);
-    float dist_y=abs(fract_y_rnd-fract_y);
+    const int escala=8; // deberia ser una constante externa
+    vec2 _texcoord=fract(PositionW.xy/escala)/4.0;
+    _texcoord.s=clamp(_texcoord.s,0.0005,0.9995); // pfpfpfpfpff!!!
+    _texcoord.t=clamp(_texcoord.t,0.0005,0.9995); //
     //
-    vec2 idx_tabla_0=vec2(entero_x+fract_x_rnd,entero_y+fract_y_rnd);
-    vec2 idx_tabla_1=idx_tabla_0;
-    float dist_0=0.0;
-    if(dist_x>dist_y){
-        float fract_x_rnd_op=(int(fract_x_rnd)+1)%%2;
-        idx_tabla_1=vec2(entero_x+fract_x_rnd_op,entero_y+fract_y_rnd);
-        dist_0=dist_x;
-    } else {
-        float fract_y_rnd_op=(int(fract_y_rnd)+1)%%2;
-        idx_tabla_1=vec2(entero_x+fract_x_rnd,entero_y+fract_y_rnd_op);
-        dist_0=dist_y;
+    if(tipo_terreno==1){ // nieve
+        _texcoord+=vec2(0.00,0.75);
+    } else if(tipo_terreno==2){ // tundra
+        _texcoord+=vec2(0.00,0.50);
+    } else if(tipo_terreno==3){ // tierra seca
+        _texcoord+=vec2(0.00,0.25);
+    } else if(tipo_terreno==4){ // tierra humeda
+        _texcoord+=vec2(0.00,0.00);
+    } else if(tipo_terreno==5){ // pasto seco
+        _texcoord+=vec2(0.50,0.75);
+    } else if(tipo_terreno==6){ // pasto humedo
+        _texcoord+=vec2(0.50,0.50);
+    } else if(tipo_terreno==7){ // arena seca
+        _texcoord+=vec2(0.50,0.25);
+    } else if(tipo_terreno==8){ // arena humeda
+        _texcoord+=vec2(0.50,0.00);
     }
     //
-    TiposTerreno tipos0=tipos_terreno[int(idx_tabla_0.y*4+idx_tabla_0.x)];
-    float tipo0=tipos0.base;
+    if(normal_map) _texcoord.s+=0.25;
     //
-    vec4 color0=texture(p3d_Texture0,obtener_texcoord_terreno(tipo0,false));
-    //
-    vec4 color=color0;
-    //
-    if(dist_0>0.3){
-        TiposTerreno tipos1=tipos_terreno[int(idx_tabla_1.y*4+idx_tabla_1.x)];
-        float tipo1=tipos1.base;
-        vec4 color1=texture(p3d_Texture0,obtener_texcoord_terreno(tipo1,false));
-        float factor=(dist_0-0.3)/((0.5-0.3)*2.0);
-        color=mix(color0,color1,factor);
-    }
-    //
-    return color;
+    return _texcoord;
 }
 vec4 tex_terreno()
 {
     //
-    float tam=info_tipo.x*3;
-    float precf=info_tipo.y*2;
-    float entero_x=floor(tam);
-    float entero_y=floor(precf);
-    float fract_x=fract(tam);
-    float fract_y=fract(precf);
-    float fract_x_rnd=round(fract_x);
-    float fract_y_rnd=round(fract_y);
-    float dist_x=abs(fract_x_rnd-fract_x);
-    float dist_y=abs(fract_y_rnd-fract_y);
-    //
-    vec2 idx_tabla_0=vec2(entero_x+fract_x_rnd, entero_y+fract_y_rnd);
-    vec2 idx_tabla_1=idx_tabla_0;
-    float dist_0=0.0;
-    if(dist_x>dist_y){
-        float fract_x_rnd_op=(int(fract_x_rnd)+1)%%2;
-        idx_tabla_1=vec2(entero_x+fract_x_rnd_op,entero_y+fract_y_rnd);
-        dist_0=dist_x;
+    vec2 pos=vec2(info_tipo.x*4,info_tipo.y*3);
+    vec2 celda0=vec2(int(pos.x),int(pos.y));
+    vec2 punto_medio0=vec2(celda0.x+0.5,celda0.y+0.5);
+    vec2 distancia0=pos-punto_medio0;
+    ivec2 delta_celda0=ivec2((distancia0.x<0?-1:1),(distancia0.y<0?-1:1));
+    vec2 celda1;
+    float distancia;
+    float factor_transicion=0.0;
+    if(abs(distancia0.x)>abs(distancia0.y)){
+        celda1=vec2(clamp(celda0.x+delta_celda0.x,0,3),celda0.y);
+        distancia=abs(distancia0.x);
     } else {
-        float fract_y_rnd_op=(int(fract_y_rnd)+1)%%2;
-        idx_tabla_1=vec2(entero_x+fract_x_rnd,entero_y+fract_y_rnd_op);
-        dist_0=dist_y;
+        celda1=vec2(celda0.y,clamp(celda0.y+delta_celda0.y,0,2));
+        distancia=abs(distancia0.y);
     }
     //
-    TiposTerreno tipos0=tipos_terreno[int(idx_tabla_0.y*4+idx_tabla_0.x)];
+    TiposTerreno tipos0=tipos_terreno[int(celda0.y*4+celda0.x)];
     float tipo0=tipos0.base;
     //
     vec4 color0=texture(p3d_Texture0,obtener_texcoord_terreno(tipo0,false));
     //
     vec4 color=color0;
     //
-    if(dist_0>0.3){
-        TiposTerreno tipos1=tipos_terreno[int(idx_tabla_1.y*4+idx_tabla_1.x)];
+    if(distancia>0.3){
+        TiposTerreno tipos1=tipos_terreno[int(celda1.y*4+celda1.x)];
         float tipo1=tipos1.base;
         vec4 color1=texture(p3d_Texture0,obtener_texcoord_terreno(tipo1,false));
-        float factor=(dist_0-0.3)/((0.5-0.3)*2.0);
-        color=mix(color0,color1,factor);
+        factor_transicion=(distancia-0.3)/((0.5-0.3)*2.0);
+        color=mix(color0,color1,factor_transicion);
     }
     //
     return color;
