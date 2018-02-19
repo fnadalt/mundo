@@ -567,7 +567,7 @@ class Tester(ShowBase):
         self.cam_driver.setP(self.cam_pitch)
         #
         self.luz_ambiental=self.render.attachNewNode(AmbientLight("luz_ambiental"))
-        self.luz_ambiental.node().setColor(Vec4(0, 1, 1, 1))
+        self.luz_ambiental.node().setColor(Vec4(0.1, 0.1, 0.1, 1))
         #
         self.sun=self.render.attachNewNode(DirectionalLight("sun"))
         self.sun.node().setColor(Vec4(1, 1, 1, 1))
@@ -575,7 +575,7 @@ class Tester(ShowBase):
         self.sun.lookAt(self.terreno.nodo)
         #
         self.render.setLight(self.luz_ambiental)
-        #self.render.setLight(self.sun)
+        self.render.setLight(self.sun)
         #
         self.texturaImagen=None
         self.imagen=None
@@ -588,7 +588,7 @@ class Tester(ShowBase):
         self.accept("wheel_down", self.zoom, [-1])
         #
         self._cargar_ui()
-        #self._actualizar_terreno()
+        self._actualizar_terreno()#
         self._generar_imagen()
         
     def update(self, task):

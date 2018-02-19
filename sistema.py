@@ -185,7 +185,7 @@ class Sistema:
         self.cargar_parametros_iniciales(defecto=True)
 
     def _FS_FUNC_TEX_TERRENO_4(self, tam, prec_f):
-        fract_x, entero_x=math.modf(tam*3)
+        fract_x, entero_x=math.modf(((tam-0.2)/0.8)*3)
         fract_y, entero_y=math.modf(prec_f*2)
         fract_x_rnd=round(fract_x)
         fract_y_rnd=round(fract_y)
@@ -204,7 +204,7 @@ class Sistema:
         tipos0=Sistema.TerrenoTiposTabla[int(idx_tabla_0[1])][int(idx_tabla_0[0])]
         tipo0=tipos0[0]
         color0=Sistema.ColoresTipoTerreno[tipo0]
-        color1=None
+        tipo1, color1=None, None
         color=color0
         factor=0.0
         if dist_0>0.3:
@@ -259,8 +259,8 @@ class Sistema:
         bioma=self.obtener_bioma_transicion(self.posicion_cursor)
         tipo_terreno=self.obtener_tipo_terreno(self.posicion_cursor)
         info="Sistema posicion_cursor=(%.3f,%.3f,%.3f)\n"%(self.posicion_cursor[0], self.posicion_cursor[1], self.posicion_cursor[2])
-        info+="geo: tam=%.3f prec_f=%.3f\nbioma=(%s) tipo_terreno=(%s)\n"%(tam, prec_f, bioma, tipo_terreno)
-        info+="FS_FUNC_TEX_TERRENO_4: %s\n"%self._FS_FUNC_TEX_TERRENO_4(tam, prec_f)
+        info+="geo: tam=%.4f prec_f=%.4f\nbioma=(%s) tipo_terreno=(%s)\n"%(tam, prec_f, bioma, tipo_terreno)
+        info+="_FS_FUNC_TEX_TERRENO_4: %s"%self._FS_FUNC_TEX_TERRENO_4(tam, prec_f)
         info+="era: año=%i estacion=%i dia=%i hora=%.2f(%.2f/%i) periodo_dia_actual=%i\n"%(self.ano, self.estacion, self.dia, self.hora_normalizada, self._segundos_transcurridos_dia, self.duracion_dia_segundos, self.periodo_dia_actual)
         info+="temp=%.2f nubosidad=%.2f precipitacion=[tipo=%i intens=%i t=(%.2f/%2.f)]\n"%(self.temperatura_actual_norm, self.nubosidad, self.precipitacion_actual_tipo, self.precipitacion_actual_intensidad, self.precipitacion_actual_t, self.precipitacion_actual_duracion)
         return info
@@ -269,7 +269,7 @@ class Sistema:
         #
         if defecto:
             log.info("cargar_parametros_iniciales por defecto")
-            self.posicion_cursor=Vec3(-0, 0, 0) # Vec3(-826, 121, 0) # selva pura:Vec3(-1100, 2000, 0)
+            self.posicion_cursor=Vec3(-374, 2176, 0) # Vec3(-826, 121, 0) # selva pura:Vec3(-1100, 2000, 0)
             self.duracion_dia_segundos=1800
             self.ano=0
             self.dia=0
@@ -547,16 +547,18 @@ class Sistema:
         color0=Sistema.ColoresBioma[bioma0]
         color1=Sistema.ColoresBioma[bioma1]
         color=(color0*(1.0-factor_transicion))+(color1*factor_transicion)
+        color/=256
+        color=Vec4(color[0], color[1], color[2], 1.0)
         return color
 
     def calcular_color_terreno_debug(self, posicion=None):
         _posicion=posicion
         if not _posicion:
             _posicion=self.posicion_cursor
-        terreno_base, terreno_superficie, factor_transicion=self.obtener_tipo_terreno(_posicion)
-        color_base=Sistema.ColoresTipoTerreno[terreno_base]
-        color_superficie=Sistema.ColoresTipoTerreno[terreno_superficie]
-        color=(color_base*(1.0-factor_transicion))+(color_superficie*factor_transicion)
+        tipo0, tipo1, factor_transicion=self.obtener_tipo_terreno(_posicion)
+        color0=Sistema.ColoresTipoTerreno[tipo0]
+        color1=Sistema.ColoresTipoTerreno[tipo1]
+        color=(color0*(1.0-factor_transicion))+(color1*factor_transicion)
         color/=256
         color=Vec4(color[0], color[1], color[2], 1.0)
         return color
@@ -588,7 +590,7 @@ class Sistema:
         # terreno
         _escala=Sistema.TerrenoPerlinNoiseParams[0]
         _semilla=Sistema.TerrenoPerlinNoiseParams[1]
-        self.ruido_terreno=PerlinNoise2(_escala, _escala, 256, _semilla)
+        self.ruido_terreno=StackedPerlinNoise2(_escala, _escala, 6, 2, 0.5, 256, _semilla)
         # temperatura
         _escala=Sistema.TemperaturaPerlinNoiseParams[0]
         _semilla=Sistema.TemperaturaPerlinNoiseParams[1]
@@ -809,13 +811,9 @@ class Tester(ShowBase):
                             self.imagen.setPixel(x, y, PNMImageHeader.PixelSpec(0, 0, c[0], 255))
                     elif self.tipo_imagen==Tester.TipoImagenTerreno:
                         a=self.sistema.obtener_altitud_suelo((_x, _y))
-                        tipo0, tipo1, factor_transicion=self.sistema.obtener_tipo_terreno((_x, _y))
-                        color0=Sistema.ColoresTipoTerreno[tipo0]
-                        color1=Sistema.ColoresTipoTerreno[tipo1]
-                        c=(color0*(1.0-factor_transicion))+(color1*factor_transicion)
-                        c[3]=1.0
                         if a>Sistema.TopoAltitudOceano:
-                            self.imagen.setXelA(x, y, c/255)
+                            c=self.sistema.calcular_color_terreno_debug((_x, _y))
+                            self.imagen.setXelA(x, y, c)
                         else:
                             self.imagen.setXel(x, y, 0.0)
                     elif self.tipo_imagen==Tester.TipoImagenTemperaturaAM:
@@ -842,8 +840,8 @@ class Tester(ShowBase):
                         celda0, celda1, factor_transicion=self.sistema._calcular_transicion_tabla_biomas(pos_columna, pos_fila, loguear)
                         bioma_a=Sistema.BiomaTabla[int(celda0[1])][int(celda0[0])]
                         bioma_b=Sistema.BiomaTabla[int(celda1[1])][int(celda1[0])]
-                        color_a=Sistema.ColoresBioma[bioma_a]/255
-                        color_b=Sistema.ColoresBioma[bioma_b]/255
+                        color_a=Sistema.ColoresBioma[bioma_a]/256
+                        color_b=Sistema.ColoresBioma[bioma_b]/256
                         color=(color_a*(1.0-factor_transicion))+(color_b*(factor_transicion))
                         if x==63:
                             log.debug("biomas (%i %i f=%.3f) colores %s %s %s"%(bioma_a, bioma_b, factor_transicion, str(color_a), str(color_b), str(color)))

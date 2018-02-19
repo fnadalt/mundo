@@ -129,6 +129,11 @@ FS_FUNC_TEX_AGUA="""
 """
 FS_FUNC_TEX_TERRENO="""
 // terreno
+struct TiposTerreno 
+{
+    int base;
+    int superficie;
+};
 const TiposTerreno tipos_terreno[12]=TiposTerreno[](TiposTerreno(2,2),TiposTerreno(2,3),TiposTerreno(7,7),TiposTerreno(7,7),
                                                     TiposTerreno(2,1),TiposTerreno(3,1),TiposTerreno(3,5),TiposTerreno(3,5),
                                                     TiposTerreno(2,1),TiposTerreno(4,6),TiposTerreno(4,6),TiposTerreno(4,6)
@@ -136,7 +141,7 @@ const TiposTerreno tipos_terreno[12]=TiposTerreno[](TiposTerreno(2,2),TiposTerre
 vec2 obtener_texcoord_terreno(float tipo_terreno, bool normal_map)
 {
     //
-    const int escala=8; // deberia ser una constante externa
+    const int escala=2; // deberia ser una constante externa
     vec2 _texcoord=fract(PositionW.xy/escala)/4.0;
     _texcoord.s=clamp(_texcoord.s,0.0005,0.9995); // pfpfpfpfpff!!!
     _texcoord.t=clamp(_texcoord.t,0.0005,0.9995); //
@@ -163,7 +168,8 @@ vec2 obtener_texcoord_terreno(float tipo_terreno, bool normal_map)
     //
     return _texcoord;
 }
-vec4 tex_terreno()
+/*
+vec4 tex_terreno_0()
 {
     //
     vec2 pos=vec2(info_tipo.x*4,info_tipo.y*3);
@@ -185,16 +191,61 @@ vec4 tex_terreno()
     TiposTerreno tipos0=tipos_terreno[int(celda0.y*4+celda0.x)];
     float tipo0=tipos0.base;
     //
-    vec4 color0=texture(p3d_Texture0,obtener_texcoord_terreno(tipo0,false));
+    vec4 color0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0,obtener_texcoord_terreno(tipo0,false));
     //
     vec4 color=color0;
     //
     if(distancia>0.3){
         TiposTerreno tipos1=tipos_terreno[int(celda1.y*4+celda1.x)];
         float tipo1=tipos1.base;
-        vec4 color1=texture(p3d_Texture0,obtener_texcoord_terreno(tipo1,false));
+        vec4 color1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0,obtener_texcoord_terreno(tipo1,false));
         factor_transicion=(distancia-0.3)/((0.5-0.3)*2.0);
         color=mix(color0,color1,factor_transicion);
+    }
+    //
+    return color;
+}
+*/
+vec4 tex_terreno()
+{
+    //
+    vec2 pos=vec2(((info_tipo.x-0.2)/0.8)*3,info_tipo.y*2);
+    vec2 entero=vec2(int(pos.x),int(pos.y));
+    vec2 fracc=vec2(fract(pos.x),fract(pos.y));
+    vec2 fracc_rnd=vec2(round(fracc.x),round(fracc.y));
+    vec2 idx_tabla_0=vec2(entero.x+fracc_rnd.x,entero.y+fracc_rnd.y);
+    vec2 idx_tabla_1=idx_tabla_0;
+    vec2 distancias=vec2(fracc_rnd.x-fracc.x,fracc_rnd.y-fracc.y);
+    float distancia;
+    if(abs(distancias.x)>abs(distancias.y)){
+        float fracc_rnd_op=(int(fracc_rnd.x)+1)%%2;
+        idx_tabla_1.x=entero.x+fracc_rnd_op;
+        distancia=abs(distancias.x);
+    } else {
+        float fracc_rnd_op=(int(fracc_rnd.y)+1)%%2;
+        idx_tabla_1.y=entero.y+fracc_rnd_op;
+        distancia=abs(distancias.y);
+    }
+    //
+    float factor_ruido=texture(p3d_Texture1,texcoord.st).r;
+    //
+    TiposTerreno tipos0=tipos_terreno[int(idx_tabla_0.y*4+idx_tabla_0.x)];
+    float tipo0=factor_ruido>0.33?tipos0.superficie:tipos0.superficie;
+    //
+    vec4 color0=texture(p3d_Texture0,obtener_texcoord_terreno(tipo0,false));
+    //
+    vec4 color=color0;
+    //color=vec4(1,0,0,1);
+    //
+    if(distancia>0.45){
+        //
+        TiposTerreno tipos1=tipos_terreno[int(idx_tabla_1.y*4+idx_tabla_1.x)];
+        float tipo1=factor_ruido>0.33?tipos1.superficie:tipos1.superficie;
+        //
+        vec4 color1=texture(p3d_Texture0,obtener_texcoord_terreno(tipo1,false));
+        float factor_transicion=(distancia-0.45)/((0.5-0.45)*2.0);
+        color=((factor_ruido*2.0-1.0)+factor_transicion)<0.5?color0:color1;
+        //color=(color0*(1.0-factor_transicion))+(color1*factor_transicion);
     }
     //
     return color;
