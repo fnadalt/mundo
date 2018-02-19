@@ -269,7 +269,7 @@ class Sistema:
         #
         if defecto:
             log.info("cargar_parametros_iniciales por defecto")
-            self.posicion_cursor=Vec3(-374, 2176, 0) # Vec3(-826, 121, 0) # selva pura:Vec3(-1100, 2000, 0)
+            self.posicion_cursor=Vec3(32, -2700, 0) # selva pura:Vec3(-374, 2176, 0)
             self.duracion_dia_segundos=1800
             self.ano=0
             self.dia=0
@@ -358,7 +358,7 @@ class Sistema:
             altitud=min(Sistema.TopoAltura, altitud+Sistema.TopoAltura*factor_transicion)
         #
         #altitud=min(Sistema.TopoAltitudOceano+1, altitud) # !!! terreno plano sobre el oceano
-        return altitud
+        return altitud #Sistema.TopoAltitudOceano+0.05
 
     def obtener_altitud_suelo_cursor(self):
         return self.obtener_altitud_suelo(self.posicion_cursor)

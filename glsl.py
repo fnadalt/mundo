@@ -210,6 +210,9 @@ vec4 tex_terreno()
 {
     //
     vec2 pos=vec2(((info_tipo.x-0.2)/0.8)*3,info_tipo.y*2);
+    //vec2 pos=fract(Position.xy/32);
+    //pos.x=((pos.x-0.2)/0.8)*3;
+    //pos.y*=2;
     vec2 entero=vec2(int(pos.x),int(pos.y));
     vec2 fracc=vec2(fract(pos.x),fract(pos.y));
     vec2 fracc_rnd=vec2(round(fracc.x),round(fracc.y));
@@ -229,10 +232,20 @@ vec4 tex_terreno()
     //
     float factor_ruido=texture(p3d_Texture1,texcoord.st).r;
     //
-    TiposTerreno tipos0=tipos_terreno[int(idx_tabla_0.y*4+idx_tabla_0.x)];
-    float tipo0=factor_ruido>0.33?tipos0.superficie:tipos0.superficie;
+    vec4 color0;
     //
-    vec4 color0=texture(p3d_Texture0,obtener_texcoord_terreno(tipo0,false));
+    TiposTerreno tipos0=tipos_terreno[int(idx_tabla_0.y*4+idx_tabla_0.x)];
+    float f0=clamp(0.2+distancia-(factor_ruido*2.0-1.0),0.0,1.0);
+    if(f0<0.40){
+        color0=texture(p3d_Texture0,obtener_texcoord_terreno(tipos0.base,false));
+    } else if(f0>0.50){
+        color0=texture(p3d_Texture0,obtener_texcoord_terreno(tipos0.superficie,false));
+    } else {
+        f0=(f0-0.40)/(0.50-0.40);
+        vec4 color00=texture(p3d_Texture0,obtener_texcoord_terreno(tipos0.base,false));
+        vec4 color01=texture(p3d_Texture0,obtener_texcoord_terreno(tipos0.superficie,false));
+        color0=mix(color00,color01,f0);
+    }
     //
     vec4 color=color0;
     //color=vec4(1,0,0,1);
@@ -240,14 +253,32 @@ vec4 tex_terreno()
     if(distancia>0.45){
         //
         TiposTerreno tipos1=tipos_terreno[int(idx_tabla_1.y*4+idx_tabla_1.x)];
-        float tipo1=factor_ruido>0.33?tipos1.superficie:tipos1.superficie;
+        float f1=clamp(0.2+distancia-(factor_ruido*2.0-1.0),0.0,1.0);
+        vec4 color1;
+        if(f1<0.40){
+            color1=texture(p3d_Texture0,obtener_texcoord_terreno(tipos1.base,false));
+        } else if(f1>0.50){
+            color1=texture(p3d_Texture0,obtener_texcoord_terreno(tipos1.superficie,false));
+        } else {
+            f1=(f1-0.40)/(0.50-0.40);
+            vec4 color10=texture(p3d_Texture0,obtener_texcoord_terreno(tipos1.base,false));
+            vec4 color11=texture(p3d_Texture0,obtener_texcoord_terreno(tipos1.superficie,false));
+            color1=mix(color10,color11,f1);
+        }
         //
-        vec4 color1=texture(p3d_Texture0,obtener_texcoord_terreno(tipo1,false));
-        float factor_transicion=(distancia-0.45)/((0.5-0.45)*2.0);
-        color=((factor_ruido*2.0-1.0)+factor_transicion)<0.5?color0:color1;
+        float factor_transicion=(distancia-0.45)/((0.50-0.45)*2.0);
+        factor_transicion=clamp((factor_transicion+factor_ruido*2.0-1.0),0.0,1.0);
+        if(factor_transicion<0.45){
+            color=color0;
+        } else if(factor_transicion>0.50) {
+            color=color1;
+        } else {
+            color=mix(color0,color1,((factor_transicion-0.45)/(0.50-0.45)));
+        }
         //color=(color0*(1.0-factor_transicion))+(color1*factor_transicion);
     }
     //
+    //if(f0==-1) color=vec4(1,0,0,1);
     return color;
 }
 """
