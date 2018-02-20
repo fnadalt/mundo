@@ -51,7 +51,7 @@ class Sistema:
     TopoIslasPerlinNoiseParams=(8.0*1024.0, 1199) # (escala, semilla)
     TopoPerlinNoiseEscalaGlobal=1.0
     # terrenos; alpha para splatting
-    TerrenoPerlinNoiseParams=(64.0, 1199) # (escala, semilla)
+    TerrenoPerlinNoiseParams=(64.0, 1069) # (escala, semilla)
     TerrenoTipoNulo=0
     TerrenoTipoNieve=1 # alpha=1.0 (tope)
     TerrenoTipoTundra=2 # alpha=0.0 (fondo)
@@ -184,75 +184,6 @@ class Sistema:
         #
         self.cargar_parametros_iniciales(defecto=True)
 
-    def _FS_FUNC_TEX_TERRENO_4(self, tam, prec_f):
-        fract_x, entero_x=math.modf(((tam-0.2)/0.8)*3)
-        fract_y, entero_y=math.modf(prec_f*2)
-        fract_x_rnd=round(fract_x)
-        fract_y_rnd=round(fract_y)
-        idx_tabla_0=[entero_x+fract_x_rnd, entero_y+fract_y_rnd]
-        idx_tabla_1=idx_tabla_0
-        dist_x, dist_y=abs(fract_x_rnd-fract_x), abs(fract_y_rnd-fract_y)
-        dist_0=0.0
-        if dist_x>dist_y:
-            fract_x_rnd_op=(fract_x_rnd+1)%2
-            idx_tabla_1=[entero_x+fract_x_rnd_op, entero_y+fract_y_rnd]
-            dist_0=dist_x
-        else:
-            fract_y_rnd_op=(fract_y_rnd+1)%2
-            idx_tabla_1=[entero_x+fract_x_rnd, entero_y+fract_y_rnd_op]
-            dist_0=dist_y
-        tipos0=Sistema.TerrenoTiposTabla[int(idx_tabla_0[1])][int(idx_tabla_0[0])]
-        tipo0=tipos0[0]
-        color0=Sistema.ColoresTipoTerreno[tipo0]
-        tipo1, color1=None, None
-        color=color0
-        factor=0.0
-        if dist_0>0.3:
-            tipos1=Sistema.TerrenoTiposTabla[int(idx_tabla_1[1])][int(idx_tabla_1[0])]
-            tipo1=tipos1[0]
-            color1=Sistema.ColoresTipoTerreno[tipo1]
-            factor=(dist_0-0.3)/((0.5-0.3)*2.0)
-            color=(color0*(1.0-factor))+(color1*factor)
-        return "fract=(%.2f,%.2f) idx_tabla_0=%s idx_tabla_1=%s dist_0=%.3f factor=%.3f\n\ttipo0=%s tipo1=%s\n\tc0=%s c1=%s c=%s\n"%(fract_x, fract_y, str(idx_tabla_0), str(idx_tabla_1), dist_0, factor, str(tipo0), str(tipo1), str(color0), str(color1), str(color))
-
-    def _FS_FUNC_TEX_TERRENO_2(self, tam, prec_f):
-        fract_x, entero_x=math.modf(tam*3)
-        fract_y, entero_y=math.modf(prec_f*2)
-        fract_x_rnd=round(fract_x)
-        fract_y_rnd=round(fract_y)
-        proximo_x=int(entero_x+fract_x_rnd)
-        proximo_y=int(entero_y+fract_y_rnd)
-        dist_proximo=math.sqrt((fract_x_rnd-fract_x)**2+(fract_y_rnd-fract_y)**2)
-        tipos0=Sistema.TerrenoTiposTabla[proximo_y][proximo_x]
-        tipo0=tipos0[0] #
-        color0=Sistema.ColoresTipoTerreno[tipo0]/255
-        info="tbl=(%.2f,%.2f) prox=%s d_prox=%.4f tipos0=%s t0=%i c0=%s\n\t"%(tam*3, prec_f*2, str((proximo_x, proximo_y)), dist_proximo, str(tipos0), tipo0, str(color0))
-        if dist_proximo>0.40:
-            fract_x_rnd_op, fract_y_rnd_op=(fract_x_rnd+1)%2, (fract_y_rnd+1)%2
-            # b
-            dist_siguiente=math.sqrt((fract_x_rnd_op-fract_x)**2+(fract_y_rnd-fract_y)**2)
-            siguiente_x, siguiente_y=int(entero_x+fract_x_rnd_op), int(entero_y+fract_y_rnd)
-            # c
-            dist_c=math.sqrt((fract_x_rnd-fract_x)**2+(fract_y_rnd_op-fract_y)**2)
-            if dist_c<dist_siguiente:
-                dist_siguiente=dist_c
-                siguiente_x, siguiente_y=int(entero_x+fract_x_rnd), int(entero_y+fract_y_rnd_op)
-            # d
-            dist_d=math.sqrt((fract_x_rnd_op-fract_x)**2+(fract_y_rnd_op-fract_y)**2)
-            if dist_d<dist_siguiente: # siempre estara lejos?
-                dist_siguiente=dist_d
-                siguiente_x, siguiente_y=int(entero_x+fract_x_rnd_op), int(entero_y+fract_y_rnd_op)
-            #
-            tipos1=Sistema.TerrenoTiposTabla[siguiente_y][siguiente_x]
-            tipo1=tipos1[0] #
-            info+="| sgte=%s d_sgte=%.4f tipos1=%s t1=%i\n\t"%(str((siguiente_x, siguiente_y)), dist_siguiente, str(tipos1), tipo1)
-            if tipo0!=tipo1:
-                factor_transicion=dist_proximo#(dist_siguiente/(dist_proximo+dist_siguiente))
-                color1=Sistema.ColoresTipoTerreno[tipo1]/255
-                color=(color0*(1.0-factor_transicion))+(color1*(factor_transicion))
-                info+="| c1=%s f=%.4f c=%s"%(str(color1), factor_transicion, str(color))
-        return info
-
     def obtener_info(self):
         tam=self.obtener_temperatura_anual_media_norm(self.posicion_cursor)
         prec_f=self.obtener_precipitacion_frecuencia_anual(self.posicion_cursor)
@@ -260,7 +191,6 @@ class Sistema:
         tipo_terreno=self.obtener_tipo_terreno(self.posicion_cursor)
         info="Sistema posicion_cursor=(%.3f,%.3f,%.3f)\n"%(self.posicion_cursor[0], self.posicion_cursor[1], self.posicion_cursor[2])
         info+="geo: tam=%.4f prec_f=%.4f\nbioma=(%s) tipo_terreno=(%s)\n"%(tam, prec_f, bioma, tipo_terreno)
-        info+="_FS_FUNC_TEX_TERRENO_4: %s"%self._FS_FUNC_TEX_TERRENO_4(tam, prec_f)
         info+="era: año=%i estacion=%i dia=%i hora=%.2f(%.2f/%i) periodo_dia_actual=%i\n"%(self.ano, self.estacion, self.dia, self.hora_normalizada, self._segundos_transcurridos_dia, self.duracion_dia_segundos, self.periodo_dia_actual)
         info+="temp=%.2f nubosidad=%.2f precipitacion=[tipo=%i intens=%i t=(%.2f/%2.f)]\n"%(self.temperatura_actual_norm, self.nubosidad, self.precipitacion_actual_tipo, self.precipitacion_actual_intensidad, self.precipitacion_actual_t, self.precipitacion_actual_duracion)
         return info
@@ -312,7 +242,6 @@ class Sistema:
         
     def terminar(self):
         log.info("terminar")
-        pass
     
     def update(self, dt, posicion_cursor):
         self.posicion_cursor=posicion_cursor
@@ -496,7 +425,7 @@ class Sistema:
     def obtener_bioma_transicion(self, posicion, loguear=False):
         temperatura_anual_media=self.obtener_temperatura_anual_media_norm(posicion)
         precipitacion_frecuencia=self.obtener_precipitacion_frecuencia_anual(posicion)
-        idx_tabla_0, idx_tabla_1, factor_transicion=self._calcular_transicion_tabla_biomas(temperatura_anual_media, precipitacion_frecuencia, loguear)
+        idx_tabla_0, idx_tabla_1, factor_transicion, dist_0=self._calcular_transicion_tabla_biomas(temperatura_anual_media, precipitacion_frecuencia, loguear)
         if loguear:
             log.debug("obtener_bioma_transicion idx_tabla_0=%s idx_tabla_1=%s factor_transicion=%.3f"%(str(idx_tabla_0), str(idx_tabla_1), factor_transicion))
         bioma0=Sistema.BiomaTabla[int(idx_tabla_0[1])][int(idx_tabla_0[0])]
@@ -506,38 +435,44 @@ class Sistema:
     def obtener_tipo_terreno(self, posicion, loguear=False):
         temperatura_anual_media=self.obtener_temperatura_anual_media_norm(posicion)
         precipitacion_frecuencia=self.obtener_precipitacion_frecuencia_anual(posicion)
-        idx_tabla_0, idx_tabla_1, factor_transicion=self._calcular_transicion_tabla_biomas(temperatura_anual_media, precipitacion_frecuencia, loguear)
+        idx_tabla_0, idx_tabla_1, factor_transicion, dist_0=self._calcular_transicion_tabla_biomas(temperatura_anual_media, precipitacion_frecuencia, loguear)
+        #
         tipos0=Sistema.TerrenoTiposTabla[int(idx_tabla_0[1])][int(idx_tabla_0[0])]
         tipos1=Sistema.TerrenoTiposTabla[int(idx_tabla_1[1])][int(idx_tabla_1[0])]
-        ruido0=self.ruido_terreno(posicion[0], posicion[1])
-        ruido1=self.ruido_terreno(posicion[1], posicion[0])
-        tipo0=tipos0[0] if ruido0<0.5 else tipos0[1]
-        tipo1=tipos1[0] if ruido1<0.5 else tipos1[1]
+        #
+        #
+        tipo0=tipos0[0] # no representa
+        tipo1=tipos1[0] # no representa
+        if loguear:
+            log.debug("obtener_tipo_terreno idx_tabla_0=%s idx_tabla_1=%s ft=%.3f dist_0=%.3f"%(str(idx_tabla_0), str(idx_tabla_1), factor_transicion, dist_0))
         return (tipo0, tipo1, factor_transicion)
 
     def _calcular_transicion_tabla_biomas(self, temperatura_anual_media, precipitacion_frecuencia, loguear=False):
         #
-        pos=(temperatura_anual_media*4, precipitacion_frecuencia*3)
-        celda0=(int(pos[0]), int(pos[1]))
-        punto_medio0=(celda0[0]+0.5, celda0[1]+0.5)
-        distancia0=(pos[0]-punto_medio0[0], pos[1]-punto_medio0[1])
-        delta_celda0=((-1 if distancia0[0]<0 else 1), (-1 if distancia0[1]<0 else 1))
-        distancia, celda1=0.0, None
-        if abs(distancia0[0])>abs(distancia0[1]):
-            celda1=(max(0, min(3, celda0[0]+delta_celda0[0])), celda0[1])
-            distancia=abs(distancia0[0])
+        fract_x, entero_x=math.modf(temperatura_anual_media*3)#(((temperatura_anual_media-0.2)/0.8)*3)
+        fract_y, entero_y=math.modf(precipitacion_frecuencia*2)
+        fract_x_rnd=round(fract_x)
+        fract_y_rnd=round(fract_y)
+        idx_tabla_0=[entero_x+fract_x_rnd, entero_y+fract_y_rnd]
+        idx_tabla_1=idx_tabla_0
+        dist_x, dist_y=abs(fract_x-fract_x_rnd), abs(fract_y-fract_y_rnd)
+        dist_0=0.0
+        if dist_x>dist_y:
+            fract_x_rnd_op=(fract_x_rnd+1)%2
+            idx_tabla_1=[entero_x+fract_x_rnd_op, entero_y+fract_y_rnd]
+            dist_0=dist_x
         else:
-            celda1=(celda0[0], max(0, min(2, celda0[1]+delta_celda0[1])))
-            distancia=abs(distancia0[0])
+            fract_y_rnd_op=(fract_y_rnd+1)%2
+            idx_tabla_1=[entero_x+fract_x_rnd, entero_y+fract_y_rnd_op]
+            dist_0=dist_y
+        #
         factor_transicion=0.0
-        corte=0.2 # quitar una vez debugged
-        if distancia>corte:
-            factor_transicion=(distancia-corte)/((0.5-corte)*2.0) # (distancia-0.3)/((0.5-0.3)*2.0)
+        if dist_0>=0.45:
+            factor_transicion=(dist_0-0.45)/((0.50-0.45)*2.0)
+        #
         if loguear:
-            log.debug("_calcular_transicion_tabla_biomas pos=(%.4f,%.4f) c0=(%.4f,%.4f) pm0=(%.4f,%.4f) d=(%.4f,%.4f) c1=(%.4f,%.4f) f=%.4f"% \
-                      (pos[0], pos[1], celda0[0], celda0[1], punto_medio0[0], punto_medio0[1], \
-                       distancia0[0], distancia0[1], celda1[0], celda1[1], factor_transicion))
-        return (celda0, celda1, factor_transicion)
+            log.debug("_calcular_transicion_tabla_biomas idx_tabla_0=%s idx_tabla_1=%s factor_transicion=%.3f"%(str(idx_tabla_0), str(idx_tabla_1), factor_transicion))
+        return (idx_tabla_0, idx_tabla_1, factor_transicion, dist_0)
 
     def calcular_color_bioma_debug(self, posicion=None):
         _posicion=posicion
@@ -546,7 +481,7 @@ class Sistema:
         bioma0, bioma1, factor_transicion=self.obtener_bioma_transicion(_posicion)
         color0=Sistema.ColoresBioma[bioma0]
         color1=Sistema.ColoresBioma[bioma1]
-        color=(color0*(1.0-factor_transicion))+(color1*factor_transicion)
+        color=(color0*(1.0-factor_transicion))+(color1*(factor_transicion))
         color/=256
         color=Vec4(color[0], color[1], color[2], 1.0)
         return color
@@ -562,6 +497,27 @@ class Sistema:
         color/=256
         color=Vec4(color[0], color[1], color[2], 1.0)
         return color
+
+    def calcular_ruido_continuo(self, ruido, x, y, tamano=512):
+        _x=(x%32)*tamano/32
+        _y=(y%32)*tamano/32
+        c00=ruido(_x,                 _y                 )
+        c10=ruido((_x+tamano)        ,_y                 )
+        c01=ruido(_x,                 (_y+tamano)        )
+        c11=ruido((_x+tamano)        ,(_y+tamano)        )
+        mix_x, mix_y=1.0-_x/tamano, 1.0-_y/tamano
+        if mix_x<0.0 or mix_y<0.0 or mix_x>1.0 or mix_y>1.0:
+            print("error mix_x,mix_y fuera de limites [0.0,1.0]")
+        interp_x0=(c00*(1.0-mix_x))+(c10*mix_x)
+        interp_x1=(c01*(1.0-mix_x))+(c11*mix_x)
+        interp_y=(interp_x0*(1.0-mix_y))+(interp_x1*mix_y)
+        interp_y=interp_y*0.5+0.5
+        interp_y=interp_y if interp_y<1.0 else 1.0
+        interp_y=interp_y if interp_y>0.0 else 0.0
+        valor=interp_y
+        if valor<0.0 or valor>1.0:
+            print("error valor fuera de limites [0.0,1.0]")
+        return valor
 
     def obtener_descriptor_vegetacion(self, posicion, solo_existencia=False):
         pass
@@ -740,14 +696,15 @@ import os, os.path
 class Tester(ShowBase):
 
     TamanoImagen=128
-    PasoDesplazamiento=TamanoImagen/3.0
+    PasoDesplazamiento=TamanoImagen/4.0
 
     TipoImagenTopo=0
     TipoImagenTemperaturaAM=1
     TipoImagenTemperaturaPrecip=2
     TipoImagenBioma=3
     TipoImagenTerreno=4
-    TipoImagenInterpTabla=5
+    TipoImagenRuidoTerreno=5
+    TipoImagenInterpTabla=6
 
     def __init__(self):
         #
@@ -757,7 +714,7 @@ class Tester(ShowBase):
         #
         self.pos_foco=None
         #
-        self.tipo_imagen=Tester.TipoImagenInterpTabla
+        self.tipo_imagen=Tester.TipoImagenRuidoTerreno
         #
         self.texturaImagen=None
         self.imagen=None
@@ -816,6 +773,13 @@ class Tester(ShowBase):
                             self.imagen.setXelA(x, y, c)
                         else:
                             self.imagen.setXel(x, y, 0.0)
+                    elif self.tipo_imagen==Tester.TipoImagenRuidoTerreno:
+                        a=self.sistema.obtener_altitud_suelo((_x, _y))
+                        if a>Sistema.TopoAltitudOceano:
+                            c=self.sistema.calcular_ruido_continuo(self.sistema.ruido_terreno, _x, _y, 512)#*0.5+0.5
+                            self.imagen.setXel(x, y, c)
+                        else:
+                            self.imagen.setXel(x, y, 0.0)
                     elif self.tipo_imagen==Tester.TipoImagenTemperaturaAM:
                         c=self.sistema.obtener_temperatura_anual_media_norm((_x, _y))
                         self.imagen.setXel(x, y, c)
@@ -837,7 +801,7 @@ class Tester(ShowBase):
                         if x==63:
                             log.debug("_generar_imagen (%.2f,%.2f)"%(pos_columna, pos_fila))
                             loguear=True
-                        celda0, celda1, factor_transicion=self.sistema._calcular_transicion_tabla_biomas(pos_columna, pos_fila, loguear)
+                        celda0, celda1, factor_transicion, dist_0=self.sistema._calcular_transicion_tabla_biomas(pos_columna, pos_fila, loguear)
                         bioma_a=Sistema.BiomaTabla[int(celda0[1])][int(celda0[0])]
                         bioma_b=Sistema.BiomaTabla[int(celda1[1])][int(celda1[0])]
                         color_a=Sistema.ColoresBioma[bioma_a]/256
@@ -928,7 +892,7 @@ class Tester(ShowBase):
         DirectButton(parent=self.frmControles, pos=(0.75, 0, -0.15), scale=0.075, text="cambiar", command=self._cambiar_tipo_imagen, frameSize=(-1.5, 1.5, -0.60, 0.60), text_scale=0.75)
 
     def _cambiar_tipo_imagen(self):
-        self.tipo_imagen=(self.tipo_imagen+1)%6
+        self.tipo_imagen=(self.tipo_imagen+1)%7
         self._generar_imagen()
 
     def _click_imagen(self, *args):

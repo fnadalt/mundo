@@ -588,7 +588,7 @@ class Tester(ShowBase):
         self.accept("wheel_down", self.zoom, [-1])
         #
         self._cargar_ui()
-        self._actualizar_terreno()#
+        #self._actualizar_terreno()
         self._generar_imagen()
         
     def update(self, task):
@@ -707,8 +707,9 @@ class Tester(ShowBase):
         #
         tamano=512
         #
-        perlin_noise_scale=64
-        perlin=StackedPerlinNoise2(perlin_noise_scale, perlin_noise_scale, 8, 2.0, 0.50, 256, 1069)
+#        perlin_noise_scale=64
+#        perlin=StackedPerlinNoise2(perlin_noise_scale, perlin_noise_scale, 6, 2.0, 0.50, 256, 1069)
+        perlin=self.sistema.ruido_terreno
         #
         if not self.imagen:
             type=PNMFileTypeRegistry.getGlobalPtr().getTypeFromExtension("*.png")
@@ -719,31 +720,32 @@ class Tester(ShowBase):
         #
         zoom=self.zoom_imagen
         log.info("zoom: %.2f"%(zoom))
-        range_x, range_y=tamano, tamano
-        factor_x, factor_y=range_x/tamano, range_y/tamano
+#        range_x, range_y=tamano, tamano
+#        factor_x, factor_y=range_x/tamano, range_y/tamano
         for x in range(tamano):
             for y in range(tamano):
-                _x=x*factor_x
-                _y=y*factor_y
-                c00=perlin(_x,                  _y                  )
-                c10=perlin((_x+range_x)        ,_y                  )
-                c01=perlin(_x,                  (_y+range_y)        )
-                c11=perlin((_x+range_x)        ,(_y+range_y)        )
-                mix_x, mix_y=1.0-_x/range_x, 1.0-_y/range_y
-                if mix_x<0.0 or mix_y<0.0 or mix_x>1.0 or mix_y>1.0:
-                    print("error mix_x,mix_y")
-                interp_x0=(c00*(1.0-mix_x))+(c10*mix_x)
-                interp_x1=(c01*(1.0-mix_x))+(c11*mix_x)
-                interp_y=(interp_x0*(1.0-mix_y))+(interp_x1*mix_y)
-                interp_y=interp_y*0.5+0.5
-                interp_y=interp_y if interp_y<1.0 else 1.0
-                interp_y=interp_y if interp_y>0.0 else 0.0
-                c=interp_y
-                if c<0.0 or c>1.0:
-                    print("error c")
+#                _x=x*factor_x
+#                _y=y*factor_y
+#                c00=perlin(_x,                  _y                  )
+#                c10=perlin((_x+range_x)        ,_y                  )
+#                c01=perlin(_x,                  (_y+range_y)        )
+#                c11=perlin((_x+range_x)        ,(_y+range_y)        )
+#                mix_x, mix_y=1.0-_x/range_x, 1.0-_y/range_y
+#                if mix_x<0.0 or mix_y<0.0 or mix_x>1.0 or mix_y>1.0:
+#                    print("error mix_x,mix_y")
+#                interp_x0=(c00*(1.0-mix_x))+(c10*mix_x)
+#                interp_x1=(c01*(1.0-mix_x))+(c11*mix_x)
+#                interp_y=(interp_x0*(1.0-mix_y))+(interp_x1*mix_y)
+#                interp_y=interp_y*0.5+0.5
+#                interp_y=interp_y if interp_y<1.0 else 1.0
+#                interp_y=interp_y if interp_y>0.0 else 0.0
+#                c=interp_y
+#                if c<0.0 or c>1.0:
+#                    print("error c")
+                c=self.sistema.calcular_ruido_continuo(perlin, x, y, tamano)
                 self.imagen.setXelA(x, y, c, c, c, 1.0)
         #
-        self.imagen.write("texturas/white_noise.png")
+#        self.imagen.write("texturas/white_noise.png")
         image_tiled=PNMImage(2*tamano, 2*tamano)
         image_tiled.copySubImage(self.imagen, 0,      0,      0, 0, tamano, tamano)
         image_tiled.copySubImage(self.imagen, tamano, 0,      0, 0, tamano, tamano)
