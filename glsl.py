@@ -230,7 +230,7 @@ vec4 tex_terreno(bool normal_map)
         distancia=abs(distancias.y);
     }
     //
-    float factor_ruido=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,texcoord.st).r;
+    float factor_ruido=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,vec2(texcoord.s,-texcoord.t)).r;
     //
     vec4 color0;
     //
@@ -278,6 +278,7 @@ vec4 tex_terreno(bool normal_map)
         //color=(color0*(1.0-factor_transicion))+(color1*factor_transicion);
     }
     //
+    //color=vec4(factor_ruido,factor_ruido,factor_ruido,1.0);
     //if(f0==-1) color=vec4(1,0,0,1);
     return color;
 }

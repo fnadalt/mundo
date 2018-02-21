@@ -199,7 +199,7 @@ class Sistema:
         #
         if defecto:
             log.info("cargar_parametros_iniciales por defecto")
-            self.posicion_cursor=Vec3(32, -2700, 0) # selva pura:Vec3(-374, 2176, 0)
+            self.posicion_cursor=Vec3(0, 0, 0) # transicion desierto Vec3(32, -2700, 0) # selva pura:Vec3(-374, 2176, 0)
             self.duracion_dia_segundos=1800
             self.ano=0
             self.dia=0
@@ -440,9 +440,16 @@ class Sistema:
         tipos0=Sistema.TerrenoTiposTabla[int(idx_tabla_0[1])][int(idx_tabla_0[0])]
         tipos1=Sistema.TerrenoTiposTabla[int(idx_tabla_1[1])][int(idx_tabla_1[0])]
         #
+        tipo0=tipos0[0]
+        tipo1=tipos1[0]
+        ruido_terreno=self.calcular_ruido_continuo(self.ruido_terreno, posicion[0], posicion[1])*2.0-1.0
+        if max(0, min(1, (0.2+dist_0-(ruido_terreno))))>0.4:
+            tipo0=tipos0[1]
+        if max(0, min(1, (0.2+dist_0-(ruido_terreno))))>0.4:
+            tipo1=tipos1[1]
         #
-        tipo0=tipos0[0] # no representa
-        tipo1=tipos1[0] # no representa
+        factor_transicion=max(0, min(1, (factor_transicion+ruido_terreno)))
+        #
         if loguear:
             log.debug("obtener_tipo_terreno idx_tabla_0=%s idx_tabla_1=%s ft=%.3f dist_0=%.3f"%(str(idx_tabla_0), str(idx_tabla_1), factor_transicion, dist_0))
         return (tipo0, tipo1, factor_transicion)
@@ -467,7 +474,7 @@ class Sistema:
             dist_0=dist_y
         #
         factor_transicion=0.0
-        if dist_0>=0.45:
+        if dist_0>0.45:
             factor_transicion=(dist_0-0.45)/((0.50-0.45)*2.0)
         #
         if loguear:
@@ -498,14 +505,14 @@ class Sistema:
         color=Vec4(color[0], color[1], color[2], 1.0)
         return color
 
-    def calcular_ruido_continuo(self, ruido, x, y, tamano=512):
-        _x=(x%32)*tamano/32
-        _y=(y%32)*tamano/32
-        c00=ruido(_x,                 _y                 )
-        c10=ruido((_x+tamano)        ,_y                 )
-        c01=ruido(_x,                 (_y+tamano)        )
-        c11=ruido((_x+tamano)        ,(_y+tamano)        )
-        mix_x, mix_y=1.0-_x/tamano, 1.0-_y/tamano
+    def calcular_ruido_continuo(self, ruido, x, y, tamano=32, rango=512):
+        _x=(x%tamano)*rango/tamano
+        _y=(y%tamano)*rango/tamano
+        c00=ruido(_x,                 _y               )
+        c10=ruido((_x+rango)        , _y               )
+        c01=ruido(_x,                (_y+rango)        )
+        c11=ruido((_x+rango)        ,(_y+rango)        )
+        mix_x, mix_y=1.0-_x/rango, 1.0-_y/rango
         if mix_x<0.0 or mix_y<0.0 or mix_x>1.0 or mix_y>1.0:
             print("error mix_x,mix_y fuera de limites [0.0,1.0]")
         interp_x0=(c00*(1.0-mix_x))+(c10*mix_x)
@@ -755,7 +762,7 @@ class Tester(ShowBase):
         for x in range(tamano+1):
             for y in range(tamano+1):
                 _x=self.pos_foco[0]+(x-tamano/2)*zoom
-                _y=self.pos_foco[1]+(y-tamano/2)*zoom
+                _y=(self.pos_foco[1]+(y-tamano/2)*zoom)
                 if x==(tamano/2.0) or y==(tamano/2.0):
                     self.imagen.setXel(x, y, 0)
                 else:
@@ -776,7 +783,7 @@ class Tester(ShowBase):
                     elif self.tipo_imagen==Tester.TipoImagenRuidoTerreno:
                         a=self.sistema.obtener_altitud_suelo((_x, _y))
                         if a>Sistema.TopoAltitudOceano:
-                            c=self.sistema.calcular_ruido_continuo(self.sistema.ruido_terreno, _x, _y, 512)#*0.5+0.5
+                            c=self.sistema.calcular_ruido_continuo(self.sistema.ruido_terreno, _x, _y)#*0.5+0.5
                             self.imagen.setXel(x, y, c)
                         else:
                             self.imagen.setXel(x, y, 0.0)
