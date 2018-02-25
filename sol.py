@@ -1,7 +1,7 @@
 from direct.gui.DirectGui import *
 from panda3d.core import *
 
-from shader import GeneradorShader
+from shader import GestorShader
 import config
 
 import logging
@@ -22,6 +22,9 @@ class Sol:
         self.pivot=None
         self.nodo=None
         self.luz=None
+        self.blur_x_buffer=None
+        self.blur_y_buffer=None
+        self.buffer_sombra=None
         # variable internas:
         self._altitud_agua=altitud_agua
         self._periodo_actual=0
@@ -50,9 +53,21 @@ class Sol:
             self.luz.node().setShadowCaster(True, 512, 512)
         # init:
         self._establecer_shaders()
-    
+
+    def terminar(self):
+        #
+        if self.blur_x_buffer:
+            self.base.graphicsEngine.removeWindow(self.blur_x_buffer)
+        if self.blur_y_buffer:
+            self.base.graphicsEngine.removeWindow(self.blur_y_buffer)
+        if self.buffer_sombra:
+            self.base.graphicsEngine.removeWindow(self.buffer_sombra)
+        #
+        self.glow_camera.removeNode()
+        self.glow_camera=None
+        
     def obtener_info(self):
-            info="Sol roll=%.2f p=%i ci=%s cf=%s c=%s"%(self.pivot.getR(), self._periodo_actual, str(self._color_inicial), str(self._color_final), str(self.luz.node().getColor()))
+            info="Sol pos=%s roll=%.2f p=%i ci=%s cf=%s c=%s"%(str(self.nodo.getPos(self.base.render)), self.pivot.getR(), self._periodo_actual, str(self._color_inicial), str(self._color_final), str(self.luz.node().getColor()))
             return info
 
     def mostrar_camaras(self):
@@ -125,20 +140,20 @@ class Sol:
 
     def _establecer_shaders(self):
         # glow shader
-        GeneradorShader.aplicar(self.nodo, GeneradorShader.ClaseSol, 2)
+        GestorShader.aplicar(self.nodo, GestorShader.ClaseSol, 2)
         # glow buffer
         self.glow_buffer = base.win.makeTextureBuffer("escena_glow", 512, 512)
         self.glow_buffer.setSort(-3)
         self.glow_buffer.setClearColor(LVector4(0, 0, 0, 1))
         # glow camera
-        tempnode = NodePath(PandaNode("temp_node"))
-        tempnode.setShader(self.nodo.getShader(), priority=3)
-        tempnode.setShaderInput("plano_recorte_agua", Vec4(0, 0, 1, self._altitud_agua))
-        tempnode.setShaderInput("posicion_sol", Vec3(0, 0, 0))
-        glow_camera = self.base.makeCamera(self.glow_buffer, lens=self.base.cam.node().getLens())
-        glow_camera.node().setInitialState(tempnode.getState())
+        tempnode = self.base.render.attachNewNode(PandaNode("temp_node"))
+        tempnode.setShader(self.nodo.getShader(), priority=4)
+        tempnode.setShaderInput("plano_recorte_agua", Vec4(0, 0, 1, self._altitud_agua), priority=4)
+        tempnode.setShaderInput("posicion_sol", Vec3(0, 0, 0), priority=4)
+        self.glow_camera = self.base.makeCamera(self.glow_buffer, lens=self.base.cam.node().getLens())
+        self.glow_camera.node().setInitialState(tempnode.getState())
         # blur shaders
-        self.blur_x_buffer = self._generar_buffer_filtro(self.glow_buffer, "blur_x", -2, "blur_x")
+        self.blur_x_buffer=self._generar_buffer_filtro(self.glow_buffer, "blur_x", -2, "blur_x")
         self.blur_y_buffer= self._generar_buffer_filtro(self.blur_x_buffer, "blur_y", -1, "blur_y")
         finalcard = self.blur_y_buffer.getTextureCard()
         finalcard.reparentTo(self.base.render2d)
@@ -150,6 +165,7 @@ class Sol:
         blur_buffer.setSort(orden)
         blur_buffer.setClearColor(LVector4(0, 0, 0, 1))
         blur_camera = self.base.makeCamera2d(blur_buffer)
+        blur_camera.reparentTo(self.base.render) # a self.base.render?
         blur_scene = NodePath("escena_filtro_%s"%nombre)
         blur_camera.node().setScene(blur_scene)
         card = buffer_base.getTextureCard()
@@ -167,7 +183,7 @@ class Sol:
         self.shadow_camera.node().getLens().setFov(self.base.camera.find("+Camera").node().getLens().getFov())
         self.shadow_camera.node().getLens().setNearFar(20, 100)
         dummy_sombra=self.base.render.attachNewNode("dummy_sombra")
-        GeneradorShader.aplicar(dummy_sombra, GeneradorShader.ClaseSombra, 3)
+        GestorShader.aplicar(dummy_sombra, GestorShader.ClaseSombra, 3)
         self.shadow_camera.node().setCameraMask(DrawMask(2))
         self.shadow_camera.node().setInitialState(dummy_sombra.getState())
         distancia=self.nodo.getPos() * 0.20

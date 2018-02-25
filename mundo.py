@@ -12,7 +12,7 @@ from agua import Agua
 from personaje import *
 from camara import ControladorCamara
 from input import InputMapper
-from shader import GeneradorShader
+from shader import GestorShader
 
 #import voxels
 
@@ -20,17 +20,16 @@ import logging
 log=logging.getLogger(__name__)
 
 
-class Mundo(NodePath):
+class Mundo:
 
     PosInicialFoco=Vec3(600, -54, 1) # |(-937,-323,1)
 
     def __init__(self, base):
-        NodePath.__init__(self, "mundo")
-        self.reparentTo(base.render)
         # referencias:
         self.base=base
         self.sistema=None
         # componentes:
+        self.nodo=self.base.render.attachNewNode("mundo")
         self.input_mapper=None
         self.controlador_camara=None
         # variables internas:
@@ -72,6 +71,8 @@ class Mundo(NodePath):
     def terminar(self):
         log.info("terminar")
         #
+        self.agua.terminar()
+        self.sol.terminar()
         self.terreno.terminar()
         #
         self.sistema=None
@@ -79,17 +80,19 @@ class Mundo(NodePath):
 
     def _establecer_material(self):
         log.info("_establecer_material")
+        intensidades=(0.3, 0.2, 0.0) # (a,d,s)
         material=Material("material_mundo")
-        material.setAmbient((0.2, 0.2, 0.2, 1.0))
-        material.setDiffuse((0.2, 0.2, 0.2, 1.0))
-        material.setSpecular((0.0, 0.0, 0.0, 1.0))
+        material.setAmbient((intensidades[0], intensidades[0], intensidades[0], 1.0))
+        material.setDiffuse((intensidades[1], intensidades[1], intensidades[1], 1.0))
+        material.setSpecular((intensidades[2], intensidades[2], intensidades[2], 1.0))
         material.setShininess(0)
-        self.setMaterial(material, 1)
+        self.nodo.setMaterial(material, 1)
 
     def _establecer_shader(self):
         log.info("_establecer_shader")
-        GeneradorShader.iniciar(self.base, sistema.Sistema.TopoAltitudOceano, Vec4(0, 0, 1, sistema.Sistema.TopoAltitudOceano))
-        GeneradorShader.aplicar(self, GeneradorShader.ClaseGenerico, 1)
+        GestorShader.iniciar(self.base, sistema.Sistema.TopoAltitudOceano, Vec4(0, 0, 1, sistema.Sistema.TopoAltitudOceano))
+        GestorShader.aplicar(self.nodo, GestorShader.ClaseGenerico, 1)
+        #GestorShader.aplicar(self, GestorShader.ClaseDebug, 1000)
 
     def _cargar_obj_voxel(self):
         return
@@ -103,7 +106,7 @@ class Mundo(NodePath):
                 for z in range(h):
                     self.obj.establecer_valor(x+1, y+1, z+1, 255)
         model_root=ModelRoot("volumen")
-        self.objN=self.attachNewNode(model_root)
+        self.objN=self.nodo.attachNewNode(model_root)
         self.objN.attachNewNode(self.obj.construir_smooth())
         self.objN.setColor(0.4, 0.4, 0.4, 1)
         self.objN.setTwoSided(True, 1)
@@ -116,7 +119,7 @@ class Mundo(NodePath):
         #
         debug_fisica=BulletDebugNode("debug_fisica")
         debug_fisica.showNormals(True)
-        self.debug_fisicaN=self.attachNewNode(debug_fisica)
+        self.debug_fisicaN=self.nodo.attachNewNode(debug_fisica)
         self.debug_fisicaN.hide()
         self.base.accept("f3", self._toggle_debug_fisica)
         #
@@ -128,11 +131,11 @@ class Mundo(NodePath):
         _cuerpo=BulletRigidBodyNode("caja_rigid_body")
         _cuerpo.setMass(1.0)
         _cuerpo.addShape(_shape)
-        _cuerpoN=self.attachNewNode(_cuerpo)
+        _cuerpoN=self.nodo.attachNewNode(_cuerpo)
         _cuerpoN.setPos(0.0, 0.0, 100.0)
         _cuerpoN.setCollideMask(BitMask32.bit(3))
         self.bullet_world.attachRigidBody(_cuerpo)
-        _cuerpoN.reparentTo(self)
+        _cuerpoN.reparentTo(self.nodo)
         caja=self.base.loader.loadModel("box.egg")
         caja.reparentTo(_cuerpoN)
 
@@ -150,7 +153,7 @@ class Mundo(NodePath):
         self.hombre=Personaje()
         self.hombre.altitud_agua=sistema.Sistema.TopoAltitudOceano
         self.hombre.input_mapper=self.input_mapper
-        self.hombre.construir(self, self.bullet_world)
+        self.hombre.construir(self.nodo, self.bullet_world)
         self.hombre.cuerpo.setPos(self.sistema.posicion_cursor)
         self.hombre.cuerpo.setZ(self.sistema.obtener_altitud_suelo_cursor()+0.5)
         #
@@ -166,22 +169,22 @@ class Mundo(NodePath):
         self.palo.setR(-85.0)
         self.palo.setScale(10.0)
         #
-        self.point_light=self.attachNewNode(PointLight("point_light"))
+        self.point_light=self.nodo.attachNewNode(PointLight("point_light"))
 #        self.point_light.setPos(self.hombre.cuerpo.getPos()+Vec3(0, -3, 5))
 #        self.point_light.node().setColor((1, 0, 0, 1))
 #        self.point_light.node().setAttenuation(Vec3(1, 0, 0.1))
-#        self.setLight(self.point_light)
+#        self.nodo.setLight(self.point_light)
         #
-        self.spot_light=self.attachNewNode(Spotlight("spot_light"))
-        self.spot_light.setPos(self.hombre.cuerpo.getPos()+Vec3(0, 0, 4))
+        self.spot_light=self.nodo.attachNewNode(Spotlight("spot_light"))
+        self.spot_light.setPos(self.hombre.cuerpo.getPos()+Vec3(0, 0, 6))
         self.spot_light.node().setColor((0, 0, 1, 1))
         self.spot_light.node().setAttenuation(Vec3(1, 0, 0))
         self.spot_light.node().setLens(PerspectiveLens())
         self.spot_light.lookAt(self.hombre.cuerpo)
-        self.setLight(self.spot_light)
+        self.nodo.setLight(self.spot_light)
         #
         self.nubes=self.base.loader.loadModel("objetos/plano")
-        self.nubes.reparentTo(self)
+        self.nubes.reparentTo(self.nodo)
         #self.nubes.setTwoSided(True)
         self.nubes.setPos(self.hombre.cuerpo.getPos()+Vec3(0, -16, 2.5))
         self.nubes.setP(-90)
@@ -200,29 +203,41 @@ class Mundo(NodePath):
         #
         quebracho=self.base.loader.loadModel("objetos/quebracho.egg")
         quebracho.setScale(0.5)
-        quebracho.reparentTo(self)
+        quebracho.reparentTo(self.nodo)
         quebracho.setPos(self.hombre.cuerpo.getPos()+Vec3(0, -10, 0))
         quebracho.setTwoSided(True)
-        #GeneradorShader.aplicar(quebracho, GeneradorShader.ClaseGenerico, 6)
+        #GestorShader.aplicar(quebracho, GestorShader.ClaseGenerico, 6)
+        #
+        pelota=self.base.loader.loadModel("objetos/pelota.egg")
+        pelota.reparentTo(self.nodo)
+        pelota.setZ(self.sistema.obtener_altitud_suelo(self.sistema.posicion_cursor)+3.0)
+        material_pelota=Material("material_pelota")
+        intensidades=(0.3, 0.2, 0.5)
+        material_pelota.setAmbient((intensidades[0], intensidades[0], intensidades[0], 1.0))
+        material_pelota.setDiffuse((intensidades[1], intensidades[1], intensidades[1], 1.0))
+        material_pelota.setSpecular((intensidades[2], intensidades[2], intensidades[2], 1.0))
+        material_pelota.setShininess(2)
+        pelota.setMaterial(material_pelota, priority=2)
+        GestorShader.aplicar(pelota, GestorShader.ClaseGenerico, 3)
 
     def _cargar_terreno(self):
         # terreno
         self.terreno=Terreno(self.base, self.bullet_world)
         self.terreno.iniciar()
-        self.terreno.nodo.reparentTo(self)
+        self.terreno.nodo.reparentTo(self.nodo)
         self.terreno.update()
         # cielo
         self.cielo=Cielo(self.base, sistema.Sistema.TopoAltitudOceano-20.0)
-        self.cielo.nodo.reparentTo(self)
-#        self.setLight(self.cielo.luz) reemplazado por shader input
+        self.cielo.nodo.reparentTo(self.nodo)
+#        self.nodo.setLight(self.cielo.luz) reemplazado por shader input
         # sol
         self.sol=Sol(self.base, sistema.Sistema.TopoAltitudOceano-20.0)
-        self.sol.pivot.reparentTo(self) # self.cielo.nodo
+        self.sol.pivot.reparentTo(self.nodo) # self.cielo.nodo
         #self.sol.mostrar_camaras()
-        self.setLight(self.sol.luz)
+        self.nodo.setLight(self.sol.luz)
         # agua
         self.agua=Agua(self.base, sistema.Sistema.TopoAltitudOceano)
-        self.agua.superficie.reparentTo(self.base.render)
+        self.agua.superficie.reparentTo(self.nodo) # estaba self.base.render
         self.agua.generar()
         #self.agua.mostrar_camaras()
         #
@@ -247,7 +262,7 @@ class Mundo(NodePath):
         # controlador cámara
         self.controlador_camara.altitud_suelo=self.sistema.obtener_altitud_suelo(self.controlador_camara.pos_camara.getXy())
         self.controlador_camara.update(dt)
-        pos_pivot_camara=self.controlador_camara.pivot.getPos(self)
+        pos_pivot_camara=self.controlador_camara.pivot.getPos(self.nodo)
         # sistema
         self.sistema.update(dt, pos_pivot_camara)
         # ciclo dia/noche, cielo, sol
@@ -269,20 +284,20 @@ class Mundo(NodePath):
         if self._counter==50:
             # terreno
             self._counter=0
-            self.terreno.update(self.controlador_camara.target_node_path.getPos())
+            self.terreno.update(pos_pivot_camara)#self.controlador_camara.target_node_path.getPos())
             # gui
             self.lblHora["text"]=self.sistema.obtener_hora()
             self.lblTemperatura["text"]="%.0fº"%self.sistema.obtener_temperatura_actual_grados()
         # mundo
-        #log.debug("_update posicion_sol %s"%(str(self.sol.nodo.getPos(self))))
-        self.setShaderInput("color_luz_ambiental", self.cielo.color_luz_ambiental, priority=10)
-        self.setShaderInput("pos_pivot_camara", pos_pivot_camara, priority=10)
-        self.setShaderInput("posicion_sol", self.sol.nodo.getPos(self), priority=10)
-        self.setShaderInput("offset_periodo_cielo", self.cielo.offset_periodo, priority=10)
-        self.setShaderInput("color_cielo_base_inicial", self.cielo.color_cielo_base_inicial, priority=10)
-        self.setShaderInput("color_cielo_base_final", self.cielo.color_cielo_base_final, priority=10)
-        self.setShaderInput("color_halo_sol_inicial", self.cielo.color_halo_sol_inicial, priority=10)
-        self.setShaderInput("color_halo_sol_final", self.cielo.color_halo_sol_final, priority=10)
+        #log.debug("_update posicion_sol %s"%(str(self.sol.nodo.getPos(self.nodo))))
+        self.nodo.setShaderInput("color_luz_ambiental", self.cielo.color_luz_ambiental, priority=10)
+        self.nodo.setShaderInput("pos_pivot_camara", pos_pivot_camara, priority=10)
+        self.nodo.setShaderInput("posicion_sol", self.sol.nodo.getPos(self.nodo), priority=10)
+        self.nodo.setShaderInput("offset_periodo_cielo", self.cielo.offset_periodo, priority=10)
+        self.nodo.setShaderInput("color_cielo_base_inicial", self.cielo.color_cielo_base_inicial, priority=10)
+        self.nodo.setShaderInput("color_cielo_base_final", self.cielo.color_cielo_base_final, priority=10)
+        self.nodo.setShaderInput("color_halo_sol_inicial", self.cielo.color_halo_sol_inicial, priority=10)
+        self.nodo.setShaderInput("color_halo_sol_final", self.cielo.color_halo_sol_final, priority=10)
         #
         #self.point_light.setPos(self.point_light, Vec3(0.01, 0, 0))
         #

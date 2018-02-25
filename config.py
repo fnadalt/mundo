@@ -13,7 +13,13 @@ _default_config={
         "shader":       {
                         "phong":True, 
                         "sombras":False, 
-                        "fog":False
+                        "fog":False, 
+                        "max_cantidad_luces":8, 
+                        "max_cantidad_sombras":4
+                        }, 
+        "generico":     {
+                        "sombras":True, 
+                        "profundidad_agua":True
                         }, 
         "terreno":      {
                         "color_debug":False, 

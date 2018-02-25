@@ -1,7 +1,7 @@
 from panda3d.bullet import *
 from panda3d.core import *
 
-from shader import GeneradorShader
+from shader import GestorShader
 from objetos import *
 import sistema, config
 
@@ -456,8 +456,8 @@ class Terreno:
         textura_ruido=self.base.loader.loadTexture(ruta_tex_ruido)
         self.nodo_parcelas.setTexture(ts1, textura_ruido, priority=2)
         #
-        GeneradorShader.aplicar(self.nodo_parcelas, GeneradorShader.ClaseTerreno, 2)
-        GeneradorShader.aplicar(self.nodo_naturaleza, GeneradorShader.ClaseGenerico, 2)
+        GestorShader.aplicar(self.nodo_parcelas, GestorShader.ClaseTerreno, 2)
+        GestorShader.aplicar(self.nodo_naturaleza, GestorShader.ClaseGenerico, 2)
 
     def _calcular_normal(self, v0, v1, v2):
         U=v1-v0
@@ -541,8 +541,8 @@ class Tester(ShowBase):
         self.sistema.iniciar()
         sistema.establecer_instancia(self.sistema)
         #
-        GeneradorShader.iniciar(self, sistema.Sistema.TopoAltitudOceano, Vec4(0, 0, 1, sistema.Sistema.TopoAltitudOceano))
-        GeneradorShader.aplicar(self.render, GeneradorShader.ClaseGenerico, 1)
+        GestorShader.iniciar(self, sistema.Sistema.TopoAltitudOceano, Vec4(0, 0, 1, sistema.Sistema.TopoAltitudOceano))
+        GestorShader.aplicar(self.render, GestorShader.ClaseGenerico, 1)
         self.render.setShaderInput("distancia_fog_maxima", 3000.0, 0, 0, 0, priority=3)
         #
         self.terreno=Terreno(self, bullet_world)

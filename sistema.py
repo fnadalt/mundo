@@ -273,7 +273,7 @@ class Sistema:
         altitud*=Sistema.TopoAltura
         if altitud>Sistema.TopoAltitudOceano+0.25:
             altura_sobre_agua=altitud-Sistema.TopoAltitudOceano
-            altura_sobre_agua_n=altura_sobre_agua/Sistema.TopoAlturaSobreOceano
+            altura_sobre_agua_n=altura_sobre_agua/(Sistema.TopoAlturaSobreOceano)
             altitud=Sistema.TopoAltitudOceano
             altitud+=0.25+altura_sobre_agua*altura_sobre_agua_n*altura_sobre_agua_n
             altitud+=75.0*altura_sobre_agua_n*altura_sobre_agua_n

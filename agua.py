@@ -2,7 +2,7 @@ from direct.gui.DirectFrame import DirectFrame
 from direct.gui.DirectLabel import DirectLabel
 from panda3d.core import *
 
-from shader import GeneradorShader
+from shader import GestorShader
 
 import logging
 log=logging.getLogger(__name__)
@@ -16,12 +16,20 @@ class Agua:
         self.camera=self.base.camera
         self.camera2=None
         self.camera3=None
+        self.reflection_buffer=None
+        self.refraction_buffer=None
         #
         self.superficie=self.base.loader.loadModel("objetos/plano_agua")
         self.superficie.setZ(self.altitud)
         self.superficie.node().adjustDrawMask(DrawMask(5), DrawMask(2), DrawMask(0))
         #self.superficie.hide()
 
+    def terminar(self):
+        if self.reflection_buffer:
+            self.base.graphicsEngine.removeWindow(self.reflection_buffer)
+        if self.refraction_buffer:
+            self.base.graphicsEngine.removeWindow(self.refraction_buffer)
+ 
     def generar(self):
         #
         self.configurar_reflejo()
@@ -29,7 +37,7 @@ class Agua:
         self.configurar_dudv()
         self.configurar_normal()
         self.move_factor=0.0
-        self.shader=GeneradorShader.aplicar(self.superficie, GeneradorShader.ClaseAgua, 2)
+        self.shader=GestorShader.aplicar(self.superficie, GestorShader.ClaseAgua, 2)
 
     def configurar_reflejo(self):
         #
@@ -85,7 +93,7 @@ class Agua:
         #self._posicionar_camaras()
         self._posicionar_camaras_2()
         #
-        self.move_factor+=0.03*dt
+        self.move_factor+=0.02*dt
         self.move_factor%=1
         ref=self.superficie # self.superficie|self.base.render
         self.superficie.setShaderInput("move_factor", self.move_factor)

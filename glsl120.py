@@ -66,6 +66,7 @@ FS_COMUN="""
 const float TamanoHalo=0.85;
 varying vec4 PositionW; // clip
 // comun
+uniform float altitud_agua;
 uniform vec3 posicion_sol;
 uniform vec4 plano_recorte_agua;
 uniform vec3 pos_pivot_camara;

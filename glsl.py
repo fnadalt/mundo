@@ -93,7 +93,7 @@ vec4 ds(int iLightSource, vec3 normal)
     color=diffuse;
     if(p3d_Material.specular!=vec3(0,0,0)){
         vec3 v=normalize(-PositionV.xyz);
-        vec3 r=normalize(-reflect(s, normal));
+        vec3 r=normalize(-reflect(s, normal)); //(2.0*dot(s, normal)*normal-s)
         color+=vec4(p3d_Material.specular,1.0) * p3d_LightSource[iLightSource].specular * pow(max(dot(r,v),0),p3d_Material.shininess);
     }
     if(p3d_LightSource[iLightSource].spotCosCutoff>0.0){
@@ -317,8 +317,9 @@ vec4 agua()
     vec2 texcoord_reflejo=vec2(ndc.x,1.0-ndc.y);
     vec2 texcoord_refraccion=ndc;
     //
-    vec2 distorted_texcoords=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture2,vec2(texcoord.s+move_factor, texcoord.t)).rg*0.1;
-    distorted_texcoords=texcoord.st+vec2(distorted_texcoords.x,distorted_texcoords.y+move_factor);
+    vec2 tc=texcoord.st*75.0;
+    vec2 distorted_texcoords=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture2,vec2(tc.s+move_factor, tc.t)).rg*0.1;
+    distorted_texcoords=tc.st+vec2(distorted_texcoords.x,distorted_texcoords.y+move_factor);
     vec2 total_distortion=(%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture2,distorted_texcoords).rg*2.0-1.0)*0.01;
     //
     texcoord_reflejo+=total_distortion;
@@ -329,15 +330,17 @@ vec4 agua()
     vec4 color_reflection=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord_reflejo);
     vec4 color_refraction=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1, texcoord_refraccion);
     // ok so far
-    vec3 view_vector=normalize(cam_pos);
+    vec3 view_vector=normalize(cam_pos-PositionV.xyz);
     float refractive_factor=dot(view_vector,vec3(0.0,0.0,1.0)); // abs()? esto era no más, parece
-    refractive_factor=pow(refractive_factor,0.9); // renderiza negro ante ciertos desplazamientos de la superficie de agua, habria que corregir. abs()!
+    refractive_factor=pow(abs(refractive_factor),0.9); // renderiza negro ante ciertos desplazamientos de la superficie de agua, habria que corregir. abs()!
     //
     vec4 color_normal=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture3,distorted_texcoords*1.5);
     vec3 normal=vec3(color_normal.r*2.0-1.0,color_normal.g*2.0-1.0,color_normal.b);
     normal=normalize(normal);
     //
-    vec3 reflected_light=reflect(normalize(PositionW.xyz-posicion_sol),normal);
+    //vec3 reflected_light=reflect(normalize(posicion_sol-PositionW.xyz),normal);
+    vec3 s=normalize(posicion_sol-PositionW.xyz);
+    vec3 reflected_light=(2.0*dot(s,normal)*normal)-s;
     float specular=max(dot(reflected_light,view_vector), 0.0);
     specular=pow(specular,shine_damper);
     vec3 specular_highlights=vec4(1,1,1,1).rgb * specular * reflectivity;
@@ -410,6 +413,10 @@ FS_MAIN_LUZ="""
         }
         color+=amb();
 """
+FS_MAIN_LUZ_SOMBRA="""
+        float factor_sombra=shadow2DProj(textura_sombra_0, sombra_0).r; // 120: shadow2DProj?
+        color*=factor_sombra>0.0?factor_sombra:1.0;
+"""
 FS_MAIN_LUZ_BLANCA="color+=vec4(1.0,1.0,1.0,1.0);"
 FS_MAIN_TEX_GENERICO="""
         // textura: generico
@@ -448,6 +455,12 @@ FS_MAIN_FOG_COLOR="""
 """
 FS_MAIN_CIELO="""
         color=color_cielo;
+"""
+FS_MAIN_PROF_AGUA="""
+        if(PositionW.z<altitud_agua){
+            float altitud_oscuridad=altitud_agua-7.5;
+            color*=pow(max(PositionW.z-altitud_oscuridad,0.0)/(altitud_agua-altitud_oscuridad),2); // pow(), caro?
+        }
 """
 FS_MAIN_ALPHA="""
         color.a=1.0;

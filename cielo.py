@@ -1,6 +1,6 @@
 from panda3d.core import *
 
-from shader import GeneradorShader
+from shader import GestorShader
 
 import logging
 log=logging.getLogger(__name__)
@@ -20,7 +20,7 @@ class Cielo:
         self.base=base
         # componentes:
         # nodo
-        self.nodo=self.base.cam.attachNewNode("sky_dome")
+        self.nodo=self.base.cam.attachNewNode("sky_dome") # cam?
         # modelo
         self.modelo=self.base.loader.loadModel("objetos/sky_dome")
         self.modelo.reparentTo(self.nodo)
@@ -123,4 +123,4 @@ class Cielo:
                 self.color_halo_sol_final=self._color_ambiente_final
 
     def _establecer_shader(self):
-        GeneradorShader.aplicar(self.nodo, GeneradorShader.ClaseCielo, 2)
+        GestorShader.aplicar(self.nodo, GestorShader.ClaseCielo, 2)
