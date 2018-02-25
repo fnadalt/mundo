@@ -1,6 +1,8 @@
 from panda3d.core import *
 import math
 
+import config
+
 import logging
 log=logging.getLogger(__name__)
 
@@ -165,6 +167,7 @@ class Sistema:
         self.ruido_vegetacion=None
         # parametros:
         self.posicion_cursor=Vec3(0, 0, 0)
+        self.radio_expansion_parcelas=2
         self.duracion_dia_segundos=0.0
         self.ano=0
         self.dia=0
@@ -201,6 +204,7 @@ class Sistema:
         if defecto:
             log.info("cargar_parametros_iniciales por defecto")
             self.posicion_cursor=Vec3(0, 0, 0) # transicion desierto Vec3(32, -2700, 0) # selva pura:Vec3(-374, 2176, 0)
+            self.radio_expansion_parcelas=int(config.val("sistema.radio_expansion_parcelas"))
             self.duracion_dia_segundos=1800
             self.ano=0
             self.dia=0
@@ -533,6 +537,18 @@ class Sistema:
     def obtener_momento_era(self):
         momento=self.ano*Sistema.DiasDelAno+self.dia+self.hora_normalizada
         return momento
+
+    def obtener_indice_parcela(self, posicion): # ineficiente?
+        x=posicion[0]/Sistema.TopoTamanoParcela
+        y=posicion[1]/Sistema.TopoTamanoParcela
+        if x<0.0: x=math.floor(x)
+        if y<0.0: y=math.floor(y)
+        return (int(x), int(y))
+    
+    def obtener_pos_parcela(self, idx_pos):
+        x=idx_pos[0]*Sistema.TopoTamanoParcela
+        y=idx_pos[1]*Sistema.TopoTamanoParcela
+        return (x, y, 0.0)
 
     def _configurar_objetos_ruido(self):
         log.info("_configurar_objetos_ruido")

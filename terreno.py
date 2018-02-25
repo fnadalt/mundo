@@ -14,9 +14,6 @@ log=logging.getLogger(__name__)
 #
 class Terreno:
     
-    # radio de expansion
-    RadioExpansion=1 #4
-
     def __init__(self, base, bullet_world):
         # referencias:
         self.base=base
@@ -39,27 +36,14 @@ class Terreno:
         #
         self._establecer_shader()
         #
-        Terreno.RadioExpansion=int(config.val("terreno.radio_expansion"))
         self.dibujar_normales=config.valbool("terreno.dibujar_normales")
-        #
-        log.info("altitud (%s)=%.3f"%(str((0, 0)), self.sistema.obtener_altitud_suelo((0, 0))))
     
     def terminar(self):
         log.info("terminar")
+        self.nodo.removeNode()
+        self.nodo=None
         self.sistema=None
     
-    def obtener_indice_parcela(self, pos):
-        x=pos[0]/sistema.Sistema.TopoTamanoParcela
-        y=pos[1]/sistema.Sistema.TopoTamanoParcela
-        if x<0.0: x=math.floor(x)
-        if y<0.0: y=math.floor(y)
-        return (int(x), int(y))
-    
-    def obtener_pos_parcela(self, idx_pos):
-        x=idx_pos[0]*sistema.Sistema.TopoTamanoParcela
-        y=idx_pos[1]*sistema.Sistema.TopoTamanoParcela
-        return (x, y, 0.0)
-
     def obtener_info(self):
         pos_parcela_actual=None
         tam, prec_f=0.0, 0.0
@@ -70,13 +54,13 @@ class Terreno:
             prec_f=self.sistema.obtener_precipitacion_frecuencia_anual(pos_parcela_actual.getXy())
         #
         info="Terreno\n"
-        info+="idx_pos_parcela_actual=%s pos=%s radio_exp=%i\n"%(str(self.idx_pos_parcela_actual), str(pos_parcela_actual), Terreno.RadioExpansion)
+        info+="idx_pos_parcela_actual=%s pos=%s radio_exp=%i\n"%(str(self.idx_pos_parcela_actual), str(pos_parcela_actual), self.sistema.radio_expansion_parcelas)
         info+="altitud=%.2f tam=%.3f prec_f=%.3f\n"%(self.sistema.obtener_altitud_suelo_cursor(), tam, prec_f)
         return info
 
     def update(self, forzar=False):
         #
-        idx_pos=self.obtener_indice_parcela(self.sistema.posicion_cursor)
+        idx_pos=self.sistema.obtener_indice_parcela(self.sistema.posicion_cursor)
         #log.debug("idx_pos=%s"%(str(idx_pos)))
         if forzar or idx_pos!=self.idx_pos_parcela_actual:
             self.idx_pos_parcela_actual=idx_pos
@@ -85,8 +69,8 @@ class Terreno:
             idxs_pos_parcelas_cargar=[]
             idxs_pos_parcelas_descargar=[]
             # determinar parcelas que deben estar cargadas
-            for idx_pos_x in range(idx_pos[0]-Terreno.RadioExpansion, idx_pos[0]+Terreno.RadioExpansion+1):
-                for idx_pos_y in range(idx_pos[1]-Terreno.RadioExpansion, idx_pos[1]+Terreno.RadioExpansion+1):
+            for idx_pos_x in range(idx_pos[0]-self.sistema.radio_expansion_parcelas, idx_pos[0]+self.sistema.radio_expansion_parcelas+1):
+                for idx_pos_y in range(idx_pos[1]-self.sistema.radio_expansion_parcelas, idx_pos[1]+self.sistema.radio_expansion_parcelas+1):
                     idxs_pos_parcelas_obj.append((idx_pos_x, idx_pos_y))
             # crear listas de parcelas a descargar y a cargar
             for idx_pos in self.parcelas.keys():
@@ -102,9 +86,9 @@ class Terreno:
                 self._generar_parcela(idx_pos)
 
     def _generar_parcela(self, idx_pos):
-        # posición y nombre
-        pos=self.obtener_pos_parcela(idx_pos)
-        nombre="parcela_%i_%i"%(int(idx_pos[0]), int(idx_pos[1]))
+        # posicion y nombre
+        pos=self.sistema.obtener_pos_parcela(idx_pos)
+        nombre="parcela_terreno_%i_%i"%(int(idx_pos[0]), int(idx_pos[1]))
         log.info("_generar_parcela idx_pos=%s pos=%s nombre=%s"%(str(idx_pos), str(pos), nombre))
         # nodo
         parcela_node_path=self.nodo_parcelas.attachNewNode(nombre)
@@ -125,9 +109,10 @@ class Terreno:
         # agregar a parcelas
         self.parcelas[idx_pos]=parcela_node_path
         #
-        if idx_pos==(0, 0):
-            parcela_node_path.writeBamFile("parcela.bam")
-            log.info("se escribio parcela.bam")
+        if idx_pos==(0, 0): # debug
+            #parcela_node_path.writeBamFile("parcela.bam")
+            #log.info("se escribio parcela.bam")
+            pass
 
     def _descargar_parcela(self, idx_pos):
         log.info("_descargar_parcela %s"%str(idx_pos))
@@ -800,7 +785,7 @@ class Tester(ShowBase):
         try:
             idx_x=int(self.entry_x.get())
             idx_y=int(self.entry_y.get())
-            pos=self.terreno.obtener_pos_parcela((idx_x, idx_y))
+            pos=self.sistema.obtener_pos_parcela((idx_x, idx_y))
             tam=self.sistema.obtener_temperatura_anual_media_norm(pos)
             prec_f=self.sistema.obtener_precipitacion_frecuencia_anual(pos)
             log.info("idx_pos:(%i,%i); pos:%s; tam=%.4f prec_f=%.4f"%(idx_x, idx_y, str(pos), tam, prec_f))
@@ -815,7 +800,7 @@ class Tester(ShowBase):
         # info
         self.lblInfo=DirectLabel(parent=self.frame, pos=(-1, 0, 0.15), scale=0.05, text="info terreno?", frameColor=(1, 1, 1, 0.2), frameSize=(0, 40, -2, 2), text_align=TextNode.ALeft, text_pos=(0, 1, 1))
         # idx_pos
-        idx_pos=self.terreno.obtener_indice_parcela(self.sistema.posicion_cursor)
+        idx_pos=self.sistema.obtener_indice_parcela(self.sistema.posicion_cursor)
         DirectLabel(parent=self.frame, pos=(-1, 0, 0), scale=0.05, text="idx_pos_x", frameColor=(1, 1, 1, 0), frameSize=(0, 2, -1, 1), text_align=TextNode.ALeft)
         DirectLabel(parent=self.frame, pos=(-1, 0, -0.1), scale=0.05, text="idx_pos_y", frameColor=(1, 1, 1, 0), frameSize=(0, 2, -1, 1), text_align=TextNode.ALeft)
         self.entry_x=DirectEntry(parent=self.frame, pos=(-0.7, 0, 0), scale=0.05, initialText=str(idx_pos[0]))
@@ -861,7 +846,7 @@ class Tester(ShowBase):
 if __name__=="__main__":
     logging.basicConfig(level=logging.DEBUG)
     PStatClient.connect()
-    Terreno.RadioExpansion=0
+    self.sistema.radio_expansion_parcelas=0
     tester=Tester()
     tester.terreno.dibujar_normales=False
     tester.escribir_archivo=False
