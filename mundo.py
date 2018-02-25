@@ -8,6 +8,7 @@ import sistema
 from cielo import Cielo
 from sol import Sol
 from terreno import Terreno
+from objetos import Objetos
 from agua import Agua
 from personaje import *
 from camara import ControladorCamara
@@ -226,6 +227,11 @@ class Mundo:
         self.terreno.iniciar()
         self.terreno.nodo.reparentTo(self.nodo)
         self.terreno.update()
+        #
+        self.objetos=Objetos(self.base)
+        self.objetos.iniciar()
+        self.objetos.nodo.reparentTo(self.nodo)
+        self.objetos.update()
         # cielo
         self.cielo=Cielo(self.base, sistema.Sistema.TopoAltitudOceano-20.0)
         self.cielo.nodo.reparentTo(self.nodo)
@@ -282,9 +288,10 @@ class Mundo:
         self.agua.update(dt, self.sol.luz.getPos(self.cielo.nodo), self.sol.luz.node().getColor())
         # contador 1/50
         if self._counter==50:
-            # terreno
             self._counter=0
-            self.terreno.update(pos_pivot_camara)#self.controlador_camara.target_node_path.getPos())
+            #
+            self.terreno.update(pos_pivot_camara)#self.controlador_camara.target_node_path.getPos()) ?
+            self.objetos.update(pos_pivot_camara)
             # gui
             self.lblHora["text"]=self.sistema.obtener_hora()
             self.lblTemperatura["text"]="%.0fº"%self.sistema.obtener_temperatura_actual_grados()

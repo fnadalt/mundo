@@ -2,129 +2,19 @@ from panda3d.core import *
 import sqlite3
 import csv
 import os, os.path
-import random
 
 from sistema import *
+from shader import GestorShader
 
 import logging
 log=logging.getLogger(__name__)
 
 #
 #
-# GLOBAL
+# OBJETOS
 #
 #
-def terminar_objetos():
-    log.info("terminar")
-    terminar_pool_modelos()
-    cerrar_db()
-
-#
-#
-# DB
-#
-#
-conexion_db=None
-NombreArchivoDB="objetos.sql"
-NombreArchivoLlenadoDB="objetos.csv"
-# objetos segun parametros climaticos (temperatura_base, altitud).
-#  rangos temperatura_base [0,1], cada 0.2 (5 grupos) [0,4].
-#  rangos altitud [0,altura_maxima_terreno], cada 10% (10 grupos) [0,9].
-#  se conforman asi un total de 50 grupos.
-# distinta densidad de objetos segun grupo y tipo de objeto.
-#  densidad [0,1); se usara como umbral en el ruido Perlin.
-SqlCreacionDB="""
-DROP TABLE IF EXISTS naturaleza;
-CREATE TABLE naturaleza (_id INTEGER PRIMARY KEY, gpo_altitud INTEGER, gpo_temp_base INTEGER, tipo INTEGER, densidad FLOAT, radio_inferior FLOAT, radio_superior FLOAT, ambiente INTEGER, nombre_archivo VARCHAR(32));
-"""
-#
-def iniciar_db():
-    global conexion_db
-    if conexion_db!=None:
-        return
-    #
-    log.info("iniciar_db")
-    #
-    if os.path.exists(NombreArchivoDB):
-        log.warning("se elimina el archivo de base de datos %s"%NombreArchivoDB)
-        os.remove(NombreArchivoDB)
-    #
-    if not os.path.exists(NombreArchivoDB):
-        if not os.path.exists(NombreArchivoLlenadoDB):
-            raise Exception("no se encuentra el archivo %s"%NombreArchivoLlenadoDB)
-        #
-        log.info("crear base de datos en archivo %s"%NombreArchivoDB)
-        con=sqlite3.connect(NombreArchivoDB)
-        con.executescript(SqlCreacionDB)
-        con.commit()
-        #
-        log.info("abrir archivo %s"%NombreArchivoLlenadoDB)
-        with open(NombreArchivoLlenadoDB, "r") as archivo_csv:
-            lector_csv=csv.DictReader(archivo_csv)
-            for fila in lector_csv:
-                sql="INSERT INTO %s (gpo_altitud,gpo_temp_base,tipo,densidad,radio_inferior,radio_superior,ambiente,nombre_archivo) VALUES (%s,%s,%s,%s,%s,%s,%s,'%s')"%(fila["tabla"], fila["gpo_altitud"], fila["gpo_temp_base"], fila["tipo"], fila["densidad"], fila["radio_inferior"], fila["radio_superior"], fila["ambiente"], fila["nombre_archivo"])
-                con.execute(sql)
-        con.commit()
-        con.close()
-        log.info("base de datos creada con exito")
-        #
-    #
-    log.info("abrir db %s"%NombreArchivoDB)
-    conexion_db=sqlite3.connect(NombreArchivoDB)
-    log.info("conexion de datos establecida")
-#
-def cerrar_db():
-    log.info("cerrar_db")
-    global conexion_db
-    if conexion_db==None:
-        return
-    conexion_db.close()
-    conexion_db=None
-
-#
-#
-# POOL DE MODELOS
-#
-#
-pool=dict() # {id:modelo,...}; id="nombre_archivo"
-#
-def iniciar_pool_modelos(loader):
-    global pool
-    if len(pool)>0:
-        return
-    log.info("iniciar_pool_modelos")
-    #
-    tablas=["naturaleza"]
-    for tabla in tablas:
-        log.info("tabla '%s'"%tabla)
-        sql="SELECT * FROM %s"%tabla
-        cursor=conexion_db.execute(sql)
-        filas=cursor.fetchall()
-        for fila in filas:
-            if fila[8] in pool:
-                continue
-            ruta_archivo_modelo=os.path.join("objetos", "%s.egg"%fila[8])
-            log.info("-cargar %s"%ruta_archivo_modelo)
-            modelo=loader.loadModel(ruta_archivo_modelo)
-            pool[fila[8]]=modelo
-#
-def terminar_pool_modelos():
-    log.info("terminar_pool_modelos")
-    global pool
-    for id, modelo in pool.items():
-        modelo.removeNode()
-    for id in [id for id in pool.keys()]:
-        del pool[id]
-
-#
-#
-# NATURALEZA
-#
-#
-class Naturaleza:
-
-    # ruido de distribucion de objetos
-    ParamsRuido=[16.0, 345]
+class Objetos:
 
     # ambiente
     AmbienteNulo=0
@@ -141,224 +31,205 @@ class Naturaleza:
     TipoObjetoRocaMediana=6
     TipoObjetoRocaGrande=7
 
-    # parametros
-    RadioMaximo=4.0
+    # db
+    NombreArchivoDB="objetos.sql"
+    NombreArchivoLlenadoDB="objetos.csv"
+    SqlCreacionDB="""
+    DROP TABLE IF EXISTS objetos;
+    CREATE TABLE objetos (_id INTEGER PRIMARY KEY, 
+                          ambiente INTEGER, 
+                          tipo INTEGER, 
+                          densidad FLOAT, 
+                          radio_inferior FLOAT, 
+                          radio_superior FLOAT, 
+                          terreno INTEGER,
+                          temperatura_minima FLOAT, 
+                          temperatura_maxima FLOAT, 
+                          precipitacion_minima FLOAT, 
+                          precipitacion_maxima FLOAT, 
+                          nombre_archivo VARCHAR(32)
+                         );
+    """
 
-    def __init__(self, base, pos_base, tamano):
+    # ruido de distribucion de objetos
+    ParamsRuido=[16.0, 345]
+
+    def __init__(self, base):
         # referencias:
         self.base=base
         self.sistema=None
         # componentes:
-        self.ruido_perlin=PerlinNoise2(Naturaleza.ParamsRuido[0], Naturaleza.ParamsRuido[0], 256, Naturaleza.ParamsRuido[1])
-        # variables internas:
-        self._pos_base=pos_base
-        self._altura_maxima_terreno=Sistema.TopoAltura
-        self._tamano=tamano
-        self._altitud_agua=Sistema.TopoAltitudOceano
-        self._data=None
+        self.nodo=self.base.render.attachNewNode("objetos")
+        self.nodo_parcelas=self.nodo.attachNewNode("parcelas")
+        #self.nodo.setRenderModeWireframe()
+        self.parcelas={} # {idx_pos:parcela_node_path,...}
+        self.db=None
+        self.pool_modelos=dict() # {id:Model,...}; id="nombre_archivo" <- hashear!!!
+        self.ruido_perlin=PerlinNoise2(Objetos.ParamsRuido[0], Objetos.ParamsRuido[0], 256, Objetos.ParamsRuido[1])
+        # variables externas:
+        self.idx_pos_parcela_actual=None # (x,y)
 
     def iniciar(self):
-        #log.debug("iniciar")
-        # db
-        iniciar_db()
-        # pool de modelos
-        iniciar_pool_modelos(self.base.loader)
-        # matriz
-        self._data=list() # x,y -> [[(altitud,temperatura_base),...],...]
-        for x in range(self._tamano):
-            fila=list()
-            for y in range(self._tamano):
-                fila.append((0.0, 0.0))
-            self._data.append(fila)
+        log.info("iniciar")
         # sistema
         self.sistema=obtener_instancia()
+        # db
+        self._iniciar_db()
+        # self.pool_modelos de modelos
+        self._iniciar_pool_modelos()
+        #
+        self._establecer_shader()
 
     def terminar(self):
+        log.info("terminar")
+        #
+        self.nodo.removeNode()
+        self.nodo=None
+        #
+        self._terminar_pool_modelos()
+        self._terminar_db()
+        #
         self.sistema=None
 
-    def cargar_datos(self, pos, temperatura_base):
-        x=int(pos[0])
-        y=int(pos[1])
-        altitud=pos[2]
-        self._data[x][y]=(altitud, temperatura_base)
+    def obtener_info(self):
+        info="Objetos\n"
+        return info
 
-    def generar(self, nombre):
-        # ruido generico
-        random.seed(Naturaleza.ParamsRuido[1])
-        # nodo central
-        nodo_central=NodePath(nombre)
-        # representacion espacial
-        espacio=list()
-        for x in range(self._tamano):
+    def update(self, forzar=False):
+        #
+        idx_pos=self.sistema.obtener_indice_parcela(self.sistema.posicion_cursor)
+        #log.debug("idx_pos=%s"%(str(idx_pos)))
+        if forzar or idx_pos!=self.idx_pos_parcela_actual:
+            self.idx_pos_parcela_actual=idx_pos
+            #
+            idxs_pos_parcelas_obj=[]
+            idxs_pos_parcelas_cargar=[]
+            idxs_pos_parcelas_descargar=[]
+            # determinar parcelas que deben estar cargadas
+            for idx_pos_x in range(idx_pos[0]-self.sistema.radio_expansion_parcelas, idx_pos[0]+self.sistema.radio_expansion_parcelas+1):
+                for idx_pos_y in range(idx_pos[1]-self.sistema.radio_expansion_parcelas, idx_pos[1]+self.sistema.radio_expansion_parcelas+1):
+                    idxs_pos_parcelas_obj.append((idx_pos_x, idx_pos_y))
+            # crear listas de parcelas a descargar y a cargar
+            for idx_pos in self.parcelas.keys():
+                if idx_pos not in idxs_pos_parcelas_obj:
+                    idxs_pos_parcelas_descargar.append(idx_pos)
+            for idx_pos in idxs_pos_parcelas_obj:
+                if idx_pos not in self.parcelas:
+                    idxs_pos_parcelas_cargar.append(idx_pos)
+            # descarga y carga de parcelas
+            for idx_pos in idxs_pos_parcelas_descargar:
+                self._descargar_parcela(idx_pos)
+            for idx_pos in idxs_pos_parcelas_cargar:
+                self._generar_parcela(idx_pos)
+
+    def _generar_parcela(self, idx_pos):
+        # posicion y nombre
+        pos=self.sistema.obtener_pos_parcela(idx_pos)
+        nombre="parcela_objetos_%i_%i"%(int(idx_pos[0]), int(idx_pos[1]))
+        log.info("_generar_parcela idx_pos=%s pos=%s nombre=%s"%(str(idx_pos), str(pos), nombre))
+        # nodo
+        parcela_node_path=self.nodo_parcelas.attachNewNode(nombre)
+        parcela_node_path.setPos(pos[0], pos[1], 0.0)
+        # datos de parcela
+        datos_parcela=self._generar_datos_parcela(pos, idx_pos)
+        #
+        # agregar a parcelas
+        self.parcelas[idx_pos]=parcela_node_path
+
+    def _descargar_parcela(self, idx_pos):
+        log.info("_descargar_parcela %s"%str(idx_pos))
+        #
+        parcela=self.parcelas[idx_pos]
+        parcela.removeNode()
+        del self.parcelas[idx_pos]
+
+    def _generar_datos_parcela(self, pos, idx_pos):
+        # indices
+        # grilla de datos
+        datos=list()
+        for x in range(sistema.Sistema.TamanoParcela+2): # +/- 1
             fila=list()
-            for y in range(self._tamano):
-                fila.append([0.0, 0.0, (0.0, 0.0)]) # radios inferior y superior de objeto en esa posicion, (dx,dy) aleatorio; 0.0==vacio
-            espacio.append(fila)
-        # compaginar informacion de objetos
-        info_gpos=dict() # {gpo_altitud:{gpo_temp_base:(descripcion_tipo_objeto,factor_densidad,[pos,...]),...},...}
-        for x in range(self._tamano):
-            for y in range(self._tamano):
-                altitud, temperatura_base=self._data[x][y]
-                gpo_altitud=int(9.9*altitud/self._altura_maxima_terreno)
-                gpo_temp_base=int(4.9*temperatura_base)
-                #log.debug("generar altitud=%.2f temperatura_base=%.2f gpo_altitud=%i gpo_temp_base=%i"%(altitud, temperatura_base, gpo_altitud, gpo_temp_base))
-                if not gpo_altitud in info_gpos:
-                    info_gpos[gpo_altitud]=dict()
-                if not gpo_temp_base in info_gpos[gpo_altitud]:
-                    sql="SELECT * FROM naturaleza WHERE gpo_altitud=%i AND gpo_temp_base=%i ORDER BY densidad DESC"%(gpo_altitud, gpo_temp_base)
-                    #log.debug(sql)
-                    cursor=conexion_db.execute(sql)
-                    filas_objetos=cursor.fetchall()
-                    #log.debug(str(filas_objetos))
-                    cant=len(filas_objetos)
-                    factor_densidad=0.0
-                    for fila in filas_objetos:
-                        factor_densidad+=fila[4]
-                    if cant>0 and factor_densidad>1.0:
-                        factor_densidad=1.0/factor_densidad
-                    else:
-                        factor_densidad=1.0
-                    info_gpos[gpo_altitud][gpo_temp_base]=(filas_objetos, factor_densidad, [(x, y, altitud)])
-                else:
-                    info_gpos[gpo_altitud][gpo_temp_base][2].append((x, y, altitud))
-        # distribuir objetos
-        cnt_objetos=0
-        for gpo_altitud, gpos_temp_base in info_gpos.items(): # para cada grupo de altitud
-            for gpo_temp_base, datos in gpos_temp_base.items(): # para cada grupo de temperatura_base por grupo de altitud
-                #log.debug(str(datos))
-                descripciones_tipo_objeto, factor_densidad, lista_pos=datos
-                for descripcion_tipo_objeto in descripciones_tipo_objeto: # para cada tipo de objeto en cada grupo altitud/temperatura_base
-                    for pos in lista_pos: # testear para cada posicion posible
-                        # filtrar por ambiente
-                        if descripcion_tipo_objeto[7]==Naturaleza.AmbienteNulo or \
-                           (descripcion_tipo_objeto[7]==Naturaleza.AmbienteSubacuatico and pos[2]>self._altitud_agua) or \
-                           (descripcion_tipo_objeto[7]==Naturaleza.AmbienteTerrestre and pos[2]<self._altitud_agua):
-                               continue
-                        # ruido -> trigger por "densidad"
-                        ruido1=(self.ruido_perlin(self._pos_base[0]+pos[0], self._pos_base[1]+pos[1])+1.0)/2.0
-                        ruido1*=random.random()
-                        trigger=descripcion_tipo_objeto[4]# [*/] factor_densidad
-                        if ruido1>trigger: # testear colocacion de objeto en una posicion
-                            #log.debug("colocar objeto %s en posicion %s?"%(str(descripcion_tipo_objeto), str(pos)))
-                            radio_inferior=descripcion_tipo_objeto[5]
-                            radio_superior=descripcion_tipo_objeto[6]
-                            # si hay espacio inferior y superior colocar objeto
-                            if self._chequear_espacio(pos, radio_inferior, radio_superior, espacio):
-                                #log.debug("se agregara")
-                                # desplazamiento aleatorio
-                                dpos=(random.random(), random.random())
-                                # colocar modelo
-                                ruido2=random.random()
-                                modelo=pool[descripcion_tipo_objeto[8]]
-                                dummy=nodo_central.attachNewNode("dummy")
-                                dummy.setPos(self.base.render, Vec3(pos[0]+dpos[0], pos[1]+dpos[1], pos[2]))
-                                dummy.setHpr(90.0*ruido2, 3.5*(ruido2-0.5), 0.0)
-                                modelo.instanceTo(dummy)
-                                # establecer informacion espacial de radios
-                                self._establecer_informacion_espacial(pos, radio_inferior, radio_superior, espacio)
-                                # contador de objetos colocados
-                                cnt_objetos+=1
-        log.info("%s: se colocaron %i objetos"%(nombre, cnt_objetos))
-        #self._dibujar_espacio(espacio, nombre)
+            for y in range(sistema.Sistema.TamanoParcela+2):
+                pass
+            datos.append(fila)
         #
-        nodo_central
-        return nodo_central
+        return datos
 
-    def _chequear_espacio(self, pos, radio_inferior, radio_superior, espacio):
-        #log.debug("_chequear_espacio pos=%s radio_inferior=%.1f radio_superior=%.1f"%(str(pos), radio_inferior, radio_superior))
+    def _establecer_shader(self):
         #
-        x, y=pos[0], pos[1]
-        # esta el espacio ocupado?
-        if espacio[x][y][0]>0.0 or espacio[x][y][1]>0.0:
-            #log.debug("ocupado")
-            return False
-        # suficientemente lejos del borde?
-        radio_mayor=radio_inferior if radio_inferior>radio_superior else radio_superior
-        if (x+1)<radio_mayor or (self._tamano-x)<radio_mayor or \
-           (y+1)<radio_mayor or (self._tamano-y)<radio_mayor:
-               #log.debug("proximo a borde")
-               return False
-        # testear radio_inferior
-        for i in range(int(radio_inferior)):
-            d=i+1
-            limite=1+d
-            if (radio_inferior+espacio[x+d][y][0])>limite or \
-               (radio_inferior+espacio[x][y+d][0])>limite or \
-               (radio_inferior+espacio[x-d][y][0])>limite or \
-               (radio_inferior+espacio[x][y-d][0])>limite or \
-               (radio_inferior+espacio[x+d][y+d][0])>limite or \
-               (radio_inferior+espacio[x+d][y+d][0])>limite or \
-               (radio_inferior+espacio[x-d][y-d][0])>limite or \
-               (radio_inferior+espacio[x-d][y-d][0])>limite:
-                   #log.debug("radio_inferior")
-                   return False
-        # testear radio_superior
-        for i in range(int(radio_superior)):
-            d=i+1
-            limite=1+d
-            if (radio_inferior+espacio[x+d][y][1])>limite or \
-               (radio_inferior+espacio[x][y+d][1])>limite or \
-               (radio_inferior+espacio[x-d][y][1])>limite or \
-               (radio_inferior+espacio[x][y-d][1])>limite or \
-               (radio_inferior+espacio[x+d][y+d][1])>limite or \
-               (radio_inferior+espacio[x-d][y+d][1])>limite or \
-               (radio_inferior+espacio[x+d][y-d][1])>limite or \
-               (radio_inferior+espacio[x-d][y-d][1])>limite:
-                   #log.debug("radio_superior")
-                   return False
-        #
-        #log.debug("ok")
-        return True
+        GestorShader.aplicar(self.nodo_parcelas, GestorShader.ClaseGenerico, 2)
 
-    def _establecer_informacion_espacial(self, pos, radio_inferior, radio_superior, espacio):
-        # esta el espacio ocupado o suficientemente lejos del borde?
-        # no testear, ya deberia haber sido descartado por _chequear_espacio()
+    def _iniciar_db(self):
+        log.info("_iniciar_db")
         #
-        x, y=pos[0], pos[1]
-        # establecer alcance radio_inferior
-        piso_radio_inferior=int(radio_inferior)
-        espacio[x][y][0]=1.0
-        for i in range(piso_radio_inferior):
-            d=i+1
-            r=1.0
-            if radio_inferior>piso_radio_inferior and d==piso_radio_inferior:
-                r=radio_inferior-piso_radio_inferior
-            espacio[x+d][y][0]=r
-            espacio[x][y+d][0]=r
-            espacio[x-d][y][0]=r
-            espacio[x][y-d][0]=r
-            espacio[x+d][y+d][0]=r
-            espacio[x-d][y+d][0]=r
-            espacio[x+d][y-d][0]=r
-            espacio[x-d][y-d][0]=r
-        # establecer alcance radio_superior
-        piso_radio_superior=int(radio_superior)
-        espacio[x][y][1]=1.0
-        for i in range(piso_radio_superior):
-            d=i+1
-            r=1.0
-            if radio_superior>piso_radio_superior and d==piso_radio_superior:
-                r=radio_superior-piso_radio_superior
-            espacio[x+d][y][1]=r
-            espacio[x][y+d][1]=r
-            espacio[x-d][y][1]=r
-            espacio[x][y-d][1]=r
-            espacio[x+d][y+d][1]=r
-            espacio[x-d][y+d][1]=r
-            espacio[x+d][y-d][1]=r
-            espacio[x-d][y-d][1]=r
+        if self.db!=None:
+            log.warning("base de datos ya iniciada")
+            return
+        #
+        if os.path.exists(Objetos.NombreArchivoDB):
+            log.warning("se elimina el archivo de base de datos %s"%Objetos.NombreArchivoDB)
+            os.remove(Objetos.NombreArchivoDB)
+        #
+        if not os.path.exists(Objetos.NombreArchivoDB):
+            if not os.path.exists(Objetos.NombreArchivoLlenadoDB):
+                raise Exception("no se encuentra el archivo %s"%Objetos.NombreArchivoLlenadoDB)
+            #
+            log.info("crear base de datos en archivo %s"%Objetos.NombreArchivoDB)
+            con=sqlite3.connect(Objetos.NombreArchivoDB)
+            con.executescript(Objetos.SqlCreacionDB)
+            con.commit()
+            #
+            log.info("abrir archivo %s"%Objetos.NombreArchivoLlenadoDB)
+            with open(Objetos.NombreArchivoLlenadoDB, "r") as archivo_csv:
+                lector_csv=csv.DictReader(archivo_csv)
+                for fila in lector_csv:
+                    sql="INSERT INTO %s (ambiente,tipo,densidad,radio_inferior,radio_superior,terreno,temperatura_minima,temperatura_maxima,precipitacion_minima,precipitacion_maxima,nombre_archivo) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'%s')" \
+                       %(fila["tabla"], fila["ambiente"], fila["tipo"], fila["densidad"], \
+                         fila["radio_inferior"], fila["radio_superior"], fila["terreno"], fila["temperatura_minima"], \
+                         fila["temperatura_maxima"], fila["precipitacion_minima"], fila["precipitacion_maxima"], \
+                         fila["nombre_archivo"])
+                    con.execute(sql)
+            con.commit()
+            con.close()
+            log.info("base de datos creada con exito")
+            #
+        #
+        log.info("abrir db %s"%Objetos.NombreArchivoDB)
+        self.db=sqlite3.connect(Objetos.NombreArchivoDB)
+        log.info("conexion de datos establecida")
+    #
+    def _terminar_db(self):
+        log.info("_terminar_db")
+        if self.db==None:
+            log.warning("base de datos no iniciada")
+            return
+        self.db.close()
+        self.db=None
 
-    def _dibujar_espacio(self, espacio, nombre):
-        log.info("dibujando espacio (png) %s..."%nombre)
+    def _iniciar_pool_modelos(self):
+        log.info("_iniciar_pool_modelos")
         #
-        if not os.path.exists("espacios/"):
-            log.info("creando directorio espacios/")
-            os.mkdir("espacios/")
+        if len(self.pool_modelos)>0:
+            log.warning("pool_modelos ya iniciado")
+            return
         #
-        imagen=PNMImage(self._tamano, self._tamano)
-        for i_fila in range(len(espacio)):
-            fila=espacio[i_fila]
-            for i_valor in range(len(fila)):
-                pixel_val=min(int(255*fila[i_valor][0]), 255)
-                imagen.setPixel(self._tamano-i_fila-1, i_valor, PNMImageHeader.PixelSpec(pixel_val, pixel_val, pixel_val, 255))
-        imagen.write("espacios/%s.png"%nombre)
+        tablas=["objetos"]
+        for tabla in tablas:
+            log.info("tabla '%s'"%tabla)
+            sql="SELECT * FROM %s"%tabla
+            cursor=self.db.execute(sql)
+            filas=cursor.fetchall()
+            for fila in filas:
+                if fila[11] in self.pool_modelos:
+                    continue
+                ruta_archivo_modelo=os.path.join("objetos", "%s.egg"%fila[11])
+                log.info("-cargar %s"%ruta_archivo_modelo)
+                modelo=self.base.loader.loadModel(ruta_archivo_modelo)
+                self.pool_modelos[fila[11]]=modelo
+
+    def _terminar_pool_modelos(self):
+        log.info("_terminar_pool_modelos")
+        for id, modelo in self.pool_modelos.items():
+            modelo.removeNode()
+        for id in [id for id in self.pool_modelos.keys()]:
+            del self.pool_modelos[id]

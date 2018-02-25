@@ -17,6 +17,9 @@ _default_config={
                         "max_cantidad_luces":8, 
                         "max_cantidad_sombras":4
                         }, 
+        "sistema":      {
+                        "radio_expansion_parcelas":2
+                        }, 
         "generico":     {
                         "sombras":True, 
                         "profundidad_agua":True
@@ -24,9 +27,8 @@ _default_config={
         "terreno":      {
                         "color_debug":False, 
                         "debug_info":"terreno",  # [terreno|bioma]
-                        "normal_map":True, 
-                        "dibujar_normales":False, 
-                        "radio_expansion":2
+                        "normal_map":False, 
+                        "dibujar_normales":False
                         }
         }
 
