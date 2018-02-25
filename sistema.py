@@ -41,6 +41,7 @@ def remover_instancia():
 class Sistema:
     
     # topografia
+    TopoTamanoParcela=32
     TopoExtension=8*1024 # +/-TopoExtension; ecuador=0
     TopoExtensionTransicion=TopoExtension+1024
     TopoAltura=300.0

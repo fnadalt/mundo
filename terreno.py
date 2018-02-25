@@ -14,9 +14,6 @@ log=logging.getLogger(__name__)
 #
 class Terreno:
     
-    # tamano de la parcela
-    TamanoParcela=32
-
     # radio de expansion
     RadioExpansion=1 #4
 
@@ -52,15 +49,15 @@ class Terreno:
         self.sistema=None
     
     def obtener_indice_parcela(self, pos):
-        x=pos[0]/Terreno.TamanoParcela
-        y=pos[1]/Terreno.TamanoParcela
+        x=pos[0]/sistema.Sistema.TopoTamanoParcela
+        y=pos[1]/sistema.Sistema.TopoTamanoParcela
         if x<0.0: x=math.floor(x)
         if y<0.0: y=math.floor(y)
         return (int(x), int(y))
     
     def obtener_pos_parcela(self, idx_pos):
-        x=idx_pos[0]*Terreno.TamanoParcela
-        y=idx_pos[1]*Terreno.TamanoParcela
+        x=idx_pos[0]*sistema.Sistema.TopoTamanoParcela
+        y=idx_pos[1]*sistema.Sistema.TopoTamanoParcela
         return (x, y, 0.0)
 
     def obtener_info(self):
@@ -147,9 +144,9 @@ class Terreno:
         ruta_archivo_textura=os.path.join("texturas/terreno", "%s.png"%nombre)
         if not os.path.exists(ruta_archivo_textura):
             log.info("_obtener_textura_parcela se genera archivo de textura de parcela '%s'"%ruta_archivo_textura)
-            tamano_imagen=int(Terreno.TamanoParcela/4)
+            tamano_imagen=int(sistema.Sistema.TopoTamanoParcela/4)
             imagen=PNMImage(tamano_imagen, tamano_imagen)
-            tamano_area=Terreno.TamanoParcela
+            tamano_area=sistema.Sistema.TopoTamanoParcela
             for x in range(tamano_imagen):
                 for y in range(tamano_imagen):
                     d=datos_parcela[1+int(x*tamano_area/tamano_imagen)][1+int(y*tamano_area/tamano_imagen)]
@@ -162,7 +159,7 @@ class Terreno:
         tex0=self.base.loader.loadTexture(ruta_archivo_textura)
         return tex0
     
-    def _calcular_tangente_binormal(self, v0, v1, v2, tc0, tc1, tc2, n0):
+    def _calcular_tangente(self, v0, v1, v2, tc0, tc1, tc2, n0):
         """
         Lengyel, Eric. “Computing Tangent Space Basis Vectors for an Arbitrary Mesh”. Terathon Software, 2001. http://terathon.com/code/tangent.html
         //
@@ -265,17 +262,17 @@ class Terreno:
         data=list() # x,y: [[n, ...], ...]
         _pos=(0, 0)
         tc_x, tc_y=0.0, 0.0
-        for x in range(Terreno.TamanoParcela+3):
+        for x in range(sistema.Sistema.TopoTamanoParcela+3):
             if x==1: # 1, en vez de 0
                 tc_x=0.0
             else:
-                tc_x=x/(Terreno.TamanoParcela+1)
+                tc_x=x/(sistema.Sistema.TopoTamanoParcela+1)
             data.append(list())
-            for y in range(Terreno.TamanoParcela+3):
+            for y in range(sistema.Sistema.TopoTamanoParcela+3):
                 if y==1: # 1, en vez de 0
                     tc_y=0.0
                 else:
-                    tc_y=y/(Terreno.TamanoParcela+1)
+                    tc_y=y/(sistema.Sistema.TopoTamanoParcela+1)
                 d=DatosLocalesTerreno()
                 #data.index=None # no establecer en esta instancia
                 _pos=(pos[0]+x-1, pos[1]+y-1)
@@ -286,8 +283,8 @@ class Terreno:
                 d.precipitacion_frecuencia=precipitacion_frecuencia
                 data[x].append(d)
         # calcular normales
-        for x in range(Terreno.TamanoParcela+1):
-            for y in range(Terreno.TamanoParcela+1):
+        for x in range(sistema.Sistema.TopoTamanoParcela+1):
+            for y in range(sistema.Sistema.TopoTamanoParcela+1):
                 v0=data[x+1][y+1].pos
                 v1=data[x+2][y+1].pos
                 v2=data[x+1][y+2].pos
@@ -302,8 +299,8 @@ class Terreno:
                 n_avg=(n0+n1+n2+n3)/4.0
                 data[x+1][y+1].normal=n_avg
         # calcular tangent & binormal
-        for x in range(Terreno.TamanoParcela+1):
-            for y in range(Terreno.TamanoParcela+1):
+        for x in range(sistema.Sistema.TopoTamanoParcela+1):
+            for y in range(sistema.Sistema.TopoTamanoParcela+1):
                 v0, tc0, n0=data[x+1][y+1].pos, data[x+1][y+1].tc, data[x+1][y+1].normal
                 v1, tc1=data[x+2][y+1].pos, data[x+2][y+1].tc
                 v2, tc2=data[x+1][y+2].pos, data[x+1][y+2].tc
@@ -311,10 +308,10 @@ class Terreno:
                 v4, tc4=data[x][y+2].pos, data[x][y+2].tc
                 v5, tc5=data[x][y+1].pos, data[x][y+1].tc
                 v6, tc6=data[x+1][y].pos, data[x+1][y].tc
-                t0=self._calcular_tangente_binormal(v0, v1, v2, tc0, tc1, tc2, n0)
-                t1=self._calcular_tangente_binormal(v0, v3, v1, tc0, tc3, tc1, n0)
-                t2=self._calcular_tangente_binormal(v0, v2, v4, tc0, tc2, tc4, n0)
-                t3=self._calcular_tangente_binormal(v0, v5, v6, tc0, tc5, tc6, n0)
+                t0=self._calcular_tangente(v0, v1, v2, tc0, tc1, tc2, n0)
+                t1=self._calcular_tangente(v0, v3, v1, tc0, tc3, tc1, n0)
+                t2=self._calcular_tangente(v0, v2, v4, tc0, tc2, tc4, n0)
+                t3=self._calcular_tangente(v0, v5, v6, tc0, tc5, tc6, n0)
                 t_avg=(t0+t1+t2+t3)/4.0
                 data[x+1][y+1].tangent=t_avg
         #
@@ -335,7 +332,7 @@ class Terreno:
         formato.addArray(format_array)
         # iniciar vértices y primitivas
         vdata=GeomVertexData("vertex_data", GeomVertexFormat.registerFormat(formato), Geom.UHStatic)
-        vdata.setNumRows((Terreno.TamanoParcela+1)*(Terreno.TamanoParcela+1)) # +1 ?
+        vdata.setNumRows((sistema.Sistema.TopoTamanoParcela+1)*(sistema.Sistema.TopoTamanoParcela+1)) # +1 ?
         prim=GeomTriangles(Geom.UHStatic)
         # vertex writers
         wrt_v=GeomVertexWriter(vdata, InternalName.getVertex())
@@ -346,8 +343,8 @@ class Terreno:
         if con_color: wrt_c=GeomVertexWriter(vdata, co_color) # debug
         # llenar datos de vertices
         i_vertice=0
-        for x in range(Terreno.TamanoParcela+1):
-            for y in range(Terreno.TamanoParcela+1):
+        for x in range(sistema.Sistema.TopoTamanoParcela+1):
+            for y in range(sistema.Sistema.TopoTamanoParcela+1):
                 # data
                 d=datos_parcela[x+1][y+1]
                 #print("x,y=%s %s"%(str((x, y)), str(d)))
@@ -372,8 +369,8 @@ class Terreno:
         #    for _d in fila:
         #        log.debug(str(_d))
         # llenar datos de primitivas
-        for x in range(Terreno.TamanoParcela):
-            for y in range(Terreno.TamanoParcela):
+        for x in range(sistema.Sistema.TopoTamanoParcela):
+            for y in range(sistema.Sistema.TopoTamanoParcela):
                 # vertices
                 i0=datos_parcela[x+1][y+1].index
                 i1=datos_parcela[x+2][y+1].index
@@ -511,7 +508,7 @@ class Tester(ShowBase):
         #self.terreno.nodo.setRenderModeWireframe()
         #
         plano=CardMaker("plano_agua")
-        r=Terreno.TamanoParcela*6
+        r=sistema.Sistema.TopoTamanoParcela*6
         plano.setFrame(-r, r, -r, r)
         plano.setColor((0, 0, 1, 1))
         self.plano_agua=self.render.attachNewNode(plano.generate())
@@ -523,7 +520,7 @@ class Tester(ShowBase):
         #
         self.cam_driver=self.render.attachNewNode("cam_driver")
         self.camera.reparentTo(self.cam_driver)
-        self.camera.setPos(Terreno.TamanoParcela/2, 500, 100)
+        self.camera.setPos(sistema.Sistema.TopoTamanoParcela/2, 500, 100)
         self.camera.lookAt(self.cam_driver)
         self.cam_driver.setP(self.cam_pitch)
         #
@@ -584,7 +581,7 @@ class Tester(ShowBase):
         max=-999999
         for x in range(tamano):
             for y in range(tamano):
-                a=self.terreno.sistema.obtener_altitud_suelo((pos_foco[0]+x, pos_foco[1]+y))
+                a=self.sistema.obtener_altitud_suelo((pos_foco[0]+x, pos_foco[1]+y))
                 vals.append(a)
                 if a>max:
                     max=a
@@ -605,9 +602,9 @@ class Tester(ShowBase):
         if self.escribir_archivo:
             log.info("escribir_archivo")
             self.terreno.nodo.writeBamFile("terreno.bam")
-        self.plano_agua.setPos(Vec3(self.sistema.posicion_cursor[0], self.sistema.posicion_cursor[1], Sistema.TopoAltitudOceano))
+        self.plano_agua.setPos(Vec3(self.sistema.posicion_cursor[0], self.sistema.posicion_cursor[1], sistema.Sistema.TopoAltitudOceano))
         #
-        self.cam_driver.setPos(Vec3(self.sistema.posicion_cursor[0]+Terreno.TamanoParcela/2, self.sistema.posicion_cursor[1]-Terreno.TamanoParcela, Sistema.TopoAltitudOceano))
+        self.cam_driver.setPos(Vec3(self.sistema.posicion_cursor[0]+sistema.Sistema.TopoTamanoParcela/2, self.sistema.posicion_cursor[1]-sistema.Sistema.TopoTamanoParcela, sistema.Sistema.TopoAltitudOceano))
         #
         self.lblInfo["text"]=self.terreno.obtener_info()
         #
@@ -787,11 +784,11 @@ class Tester(ShowBase):
             for y in range(tamano+1):
                 _x=self.sistema.posicion_cursor[0]+zoom*(tamano/2.0)-zoom*x
                 _y=self.sistema.posicion_cursor[1]-zoom*(tamano/2.0)+zoom*y
-                a=self.terreno.sistema.obtener_altitud_suelo((_x, _y))/Sistema.TopoAltura
+                a=self.terreno.sistema.obtener_altitud_suelo((_x, _y))/sistema.Sistema.TopoAltura
                 if x==tamano/2 or y==tamano/2:
                     self.imagen.setXel(x, y, 1.0)
                 else:
-                    if a>(Sistema.TopoAltitudOceano/Sistema.TopoAltura):
+                    if a>(sistema.Sistema.TopoAltitudOceano/sistema.Sistema.TopoAltura):
                         self.imagen.setXel(x, y, a, a, 0.0)
                     else:
                         self.imagen.setXel(x, y, 0.0, 0.0, a)
