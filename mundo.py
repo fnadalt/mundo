@@ -173,7 +173,7 @@ class Mundo:
         self.point_light.setPos(self.hombre.cuerpo.getPos()+Vec3(0, -3, 5))
         self.point_light.node().setColor((1, 0, 0, 1))
         self.point_light.node().setAttenuation(Vec3(1, 0, 0.1))
-        self.nodo.setLight(self.point_light)
+        #self.nodo.setLight(self.point_light)
         #
         self.spot_light=self.nodo.attachNewNode(Spotlight("spot_light"))
         self.spot_light.setPos(self.hombre.cuerpo.getPos()+Vec3(0, 0, 6))

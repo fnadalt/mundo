@@ -2,7 +2,6 @@ from panda3d.bullet import *
 from panda3d.core import *
 
 from shader import GestorShader
-from objetos import *
 import sistema, config
 
 import math
@@ -29,13 +28,10 @@ class Terreno:
         # componentes:
         self.nodo=self.base.render.attachNewNode("terreno")
         self.nodo_parcelas=self.nodo.attachNewNode("parcelas")
-        self.nodo_naturaleza=self.nodo.attachNewNode("naturaleza")
         #self.nodo.setRenderModeWireframe()
         self.parcelas={} # {idx_pos:parcela_node_path,...}
-        self.naturaleza={} # {idx_pos:naturaleza_node_path,...}
         # variables externas:
         self.idx_pos_parcela_actual=None # (x,y)
-        self.switch_lod_naturaleza=(6.0*Terreno.TamanoParcela, 0.0)
         # debug
         self.dibujar_normales=False # cada update
 
@@ -53,7 +49,6 @@ class Terreno:
     
     def terminar(self):
         log.info("terminar")
-        terminar_objetos()
         self.sistema=None
     
     def obtener_indice_parcela(self, pos):
@@ -132,11 +127,6 @@ class Terreno:
             geom_node_normales.reparentTo(parcela_node_path)
         # agregar a parcelas
         self.parcelas[idx_pos]=parcela_node_path
-        # naturaleza
-        naturaleza_node_path=self._generar_nodo_naturaleza(pos, idx_pos, datos_parcela) # datos_parcela es obsoleto
-        naturaleza_node_path.setPos(pos[0], pos[1], 0.0)
-        naturaleza_node_path.reparentTo(self.nodo_naturaleza)
-        self.naturaleza[idx_pos]=naturaleza_node_path
         #
         if idx_pos==(0, 0):
             parcela_node_path.writeBamFile("parcela.bam")
@@ -144,10 +134,6 @@ class Terreno:
 
     def _descargar_parcela(self, idx_pos):
         log.info("_descargar_parcela %s"%str(idx_pos))
-        #
-        naturaleza=self.naturaleza[idx_pos]
-        naturaleza.removeNode()
-        del self.naturaleza[idx_pos]
         #
         parcela=self.parcelas[idx_pos]
         parcela.removeNode()
@@ -298,7 +284,6 @@ class Terreno:
                 d.tc=Vec2(tc_x, tc_y)
                 d.tipo=Vec3(self.sistema.obtener_temperatura_anual_media_norm(_pos), self.sistema.obtener_precipitacion_frecuencia_anual(_pos), 0.0)
                 d.precipitacion_frecuencia=precipitacion_frecuencia
-                d.temperatura_base=0.0 # eliminar!!! esta por objetos.py
                 data[x].append(d)
         # calcular normales
         for x in range(Terreno.TamanoParcela+1):
@@ -412,29 +397,6 @@ class Terreno:
         geom_node.addGeom(geom)
         geom_node.setBoundsType(BoundingVolume.BT_box)
         return geom_node
-    
-    def _generar_nodo_naturaleza(self, pos, idx_pos, datos_parcela):
-        #
-        tamano=Terreno.TamanoParcela+1
-        naturaleza=Naturaleza(self.base, pos, tamano)
-        naturaleza.iniciar()
-        for x in range(tamano):
-            for y in range(tamano):
-                _d=datos_parcela[x+1][y+1]
-                #log.debug(str(_d))
-                naturaleza.cargar_datos(_d.pos, _d.temperatura_base)
-        #
-        nombre="nodo_naturaleza_%i_%i"%(idx_pos[0], idx_pos[1])
-        #
-        nodo=naturaleza.generar("%s_objetos"%nombre)
-        #
-        naturaleza.terminar()
-        #
-        lod0=NodePath(LODNode("%s_lod"%nombre))
-        lod0.node().addSwitch(*self.switch_lod_naturaleza)
-        nodo.reparentTo(lod0)
-        #
-        return lod0
 
     def _establecer_shader(self):
         #
@@ -457,7 +419,6 @@ class Terreno:
         self.nodo_parcelas.setTexture(ts1, textura_ruido, priority=2)
         #
         GestorShader.aplicar(self.nodo_parcelas, GestorShader.ClaseTerreno, 2)
-        GestorShader.aplicar(self.nodo_naturaleza, GestorShader.ClaseGenerico, 2)
 
     def _calcular_normal(self, v0, v1, v2):
         U=v1-v0
