@@ -1,2 +1,3 @@
 tabla,ambiente,tipo,densidad,radio_inferior,radio_superior,terreno,temperatura_minima,temperatura_maxima,precipitacion_minima,precipitacion_maxima,nombre_archivo
-objetos,2,1,0.5,1.0,2.0,4,0.5,1.0,0.4,1.0,quebracho
+objetos,2,1,0.5,1.0,2.0,3,0.50,1.0,0.4,1.0,quebracho
+objetos,2,1,0.5,1.0,2.0,4,0.50,1.0,0.4,1.0,quebracho

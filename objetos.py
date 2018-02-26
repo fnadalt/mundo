@@ -3,7 +3,7 @@ import sqlite3
 import csv
 import os, os.path
 
-from sistema import *
+import sistema
 from shader import GestorShader
 
 import logging
@@ -16,11 +16,6 @@ log=logging.getLogger(__name__)
 #
 class Objetos:
 
-    # ambiente
-    AmbienteNulo=0
-    AmbienteSubacuatico=1
-    AmbienteTerrestre=2
-
     # tipos de objeto
     TipoObjetoNulo=0
     TipoObjetoArbol=1
@@ -30,6 +25,10 @@ class Objetos:
     TipoObjetoRocaPequena=5
     TipoObjetoRocaMediana=6
     TipoObjetoRocaGrande=7
+
+    # radio maximo
+    RadioMaximoInferior=1
+    RadioMaximoSuperior=3
 
     # db
     NombreArchivoDB="objetos.sql"
@@ -72,7 +71,7 @@ class Objetos:
     def iniciar(self):
         log.info("iniciar")
         # sistema
-        self.sistema=obtener_instancia()
+        self.sistema=sistema.obtener_instancia()
         # db
         self._iniciar_db()
         # self.pool_modelos de modelos
@@ -132,7 +131,14 @@ class Objetos:
         parcela_node_path.setPos(pos[0], pos[1], 0.0)
         # datos de parcela
         datos_parcela=self._generar_datos_parcela(pos, idx_pos)
-        #
+        for fila in datos_parcela:
+            for d in fila:
+                if not d.datos_objeto:
+                    continue
+                #log.debug(d)
+                objeto=self.base.loader.loadModel("objetos/%s.egg"%d.datos_objeto[11])
+                objeto.reparentTo(parcela_node_path)
+                objeto.setPos(d.posicion_parcela)
         # agregar a parcelas
         self.parcelas[idx_pos]=parcela_node_path
 
@@ -144,16 +150,159 @@ class Objetos:
         del self.parcelas[idx_pos]
 
     def _generar_datos_parcela(self, pos, idx_pos):
-        # indices
-        # grilla de datos
-        datos=list()
-        for x in range(sistema.Sistema.TamanoParcela+2): # +/- 1
+        # obtener informacion de terreno
+        cantidad_total_locaciones=sistema.Sistema.TopoTamanoParcela**2
+        indexado_objetos=dict() # {ambiente:{tipo_terreno:GrupoObjetosLocaciones,...},...}
+        datos_locales=list()
+        ambientes=list()
+        tipos_terreno=list()
+        temperatura_minima, temperatura_maxima=1.0, 0.0
+        precipitacion_minima, precipitacion_maxima=1.0, 0.0
+        for x in range(sistema.Sistema.TopoTamanoParcela):
             fila=list()
-            for y in range(sistema.Sistema.TamanoParcela+2):
+            for y in range(sistema.Sistema.TopoTamanoParcela):
+                _pos_parcela=Vec3(x, y, 0.0)
+                _pos_global=Vec3(pos[0], pos[1], 0.0)+_pos_parcela
+                # altitud suelo
+                altitud_suelo=self.sistema.obtener_altitud_suelo(_pos_global)
+                _pos_parcela.setZ(altitud_suelo)
+                _pos_global.setZ(altitud_suelo)
+                # ambiente
+                ambiente=self.sistema.obtener_ambiente(_pos_global, altitud_suelo)
+                if ambiente not in ambientes:
+                    ambientes.append(ambiente)
+                if ambiente not in indexado_objetos.keys():
+                    #log.debug("agregando indexado_objetos[%i]"%ambiente)
+                    indexado_objetos[ambiente]=dict()
+                # tipo terreno
+                tipo_terreno0, tipo_terreno1, factor_transicion=self.sistema.obtener_tipo_terreno(_pos_global)
+                tipo_terreno=tipo_terreno0 if factor_transicion<0.5 else tipo_terreno1
+                if not tipo_terreno in tipos_terreno:
+                    tipos_terreno.append(tipo_terreno)
+                if not tipo_terreno in indexado_objetos[ambiente]:
+                    #log.debug("agregando indexado_objetos[%i][%i]"%(ambiente, tipo_terreno))
+                    indexado_objetos[ambiente][tipo_terreno]=GrupoObjetosLocaciones(cantidad_total_locaciones)
+                # temperatura anual media
+                tam=self.sistema.obtener_temperatura_anual_media_norm(_pos_global, altitud_suelo)
+                if tam<temperatura_minima:
+                    temperatura_minima=tam
+                if tam>temperatura_maxima:
+                    temperatura_maxima=tam
+                # precipitacion frecuencia anual
+                prec_f=self.sistema.obtener_precipitacion_frecuencia_anual(_pos_global)
+                if prec_f<precipitacion_minima:
+                    precipitacion_minima=prec_f
+                if prec_f>precipitacion_maxima:
+                    precipitacion_maxima=prec_f
+                #
+                d=DatosLocalesObjetos(_pos_global, _pos_parcela, ambiente, tipo_terreno)
+                d.factor_ruido=self.ruido_perlin(_pos_global[0], _pos_global[1])
+                fila.append(d)
+                indexado_objetos[ambiente][tipo_terreno].locaciones_disponibles.append(d)
+            datos_locales.append(fila)
+        # obtener tipos de objeto segun datos de terreno
+        condicion_ambientes="(%s)"%(" OR ".join(["ambiente=%i"%amb for amb in ambientes]))
+        condicion_tipos_terreno="(%s)"%(" OR ".join(["terreno=%i"%tipo for tipo in tipos_terreno]))
+        condicion_temperatura=("(temperatura_minima<=%.2f AND temperatura_maxima>=%.2f)"%(temperatura_minima, temperatura_maxima))
+        condicion_precipitacion=("(precipitacion_minima<=%.2f AND precipitacion_maxima>=%.2f)"%(precipitacion_minima, precipitacion_maxima))
+        condiciones="%s AND %s AND %s AND %s"%(condicion_ambientes, condicion_tipos_terreno, condicion_temperatura, condicion_precipitacion)
+        sql="SELECT * FROM objetos WHERE %(condiciones)s ORDER BY radio_superior DESC, densidad ASC"%{"condiciones":condiciones}
+        #log.debug(sql)
+        try:
+            db_cursor=self.db.execute(sql)
+        except Exception as e:
+            log.exception(str(e))
+            return list()
+        filas_tipos_objeto=db_cursor.fetchall()
+        #log.debug(str(filas_tipos_objeto))
+        # distribuir los tipos de objeto segun datos de terreno
+        for fila in filas_tipos_objeto:
+            ambiente=fila[1]
+            tipo_terreno=fila[6]
+            #log.debug("solicitar indexado_objetos[%i][%i]"%(ambiente, tipo_terreno))
+            try:
+                grupo_objetos_locaciones=indexado_objetos[ambiente][tipo_terreno]
+                grupo_objetos_locaciones.tipos_objeto.append(fila)
+            except Exception as e:
+                log.exception("tipo_objeto no posicionable en indexado_objetos[%i][%i] %s Mensaje: %s"%(ambiente, tipo_terreno, str(fila), str(e)))
                 pass
-            datos.append(fila)
+        # recolectar grupos_objetos_locaciones
+        grupos_objetos_locaciones=list()
+        for ambiente in sorted(indexado_objetos.keys()):
+            for tipo_terreno in sorted(indexado_objetos[ambiente].keys()):
+                grupo_objetos_locaciones=indexado_objetos[ambiente][tipo_terreno]
+                if len(grupo_objetos_locaciones.tipos_objeto)==0:
+                    continue
+                grupos_objetos_locaciones.append(grupo_objetos_locaciones)
+        # realizar operaciones pertinentes sobre grupos_objetos_locaciones
+        for grupo_objetos_locaciones in grupos_objetos_locaciones:
+            grupo_objetos_locaciones.ordenar_locaciones_disponibles()
+            grupo_objetos_locaciones.determinar_cantidades_tipos_objeto()
+            #log.debug(str(grupo_objetos_locaciones))
+            for tipo_objeto in grupo_objetos_locaciones.tipos_objeto:
+                log.debug("colocar %i objetos '%s'"%(grupo_objetos_locaciones.cantidades_tipos_objeto[tipo_objeto[2]], tipo_objeto[11]))
+                cant_obj_colocados=grupo_objetos_locaciones.cantidades_tipos_objeto[tipo_objeto[2]]
+                for d in grupo_objetos_locaciones.locaciones_disponibles:
+                    if self._chequear_espacio_disponible(d.posicion_parcela, tipo_objeto[4], tipo_objeto[5], datos_locales):
+                        log.debug("colocar en d=%s"%str(d))
+                        d.datos_objeto=tipo_objeto
+                    cant_obj_colocados-=1
+                    if cant_obj_colocados==0:
+                        break
         #
-        return datos
+        return datos_locales
+
+    def _obtener_vecino(self, datos_locales, posicion_parcela, dx, dy):
+        if (posicion_parcela[0]==0 and dx<0) or \
+           (posicion_parcela[0]==(len(datos_locales[0])-1) and dx>0) or \
+           (posicion_parcela[1]==0 and dy<0) or \
+           (posicion_parcela[1]==(len(datos_locales[1])-1) and dy>0):
+               return None
+        return datos_locales[int(posicion_parcela[0])+dx][int(posicion_parcela[1])+dy]
+
+    def _chequear_espacio_disponible(self, _pos_parcela, radio_inferior, radio_superior, datos_locales):
+        radio_maximo=radio_superior if radio_superior>radio_inferior else radio_inferior
+        # distancia del borde de parcela
+        if abs(_pos_parcela[0]-sistema.Sistema.TopoTamanoParcela)<radio_maximo or \
+           abs(_pos_parcela[1]-sistema.Sistema.TopoTamanoParcela)<radio_maximo:
+               return False
+        #
+        #radio_maximo_total_inferior=Objetos.RadioMaximoInferior+radio_inferior
+        radio_maximo_total_superior=Objetos.RadioMaximoSuperior+radio_superior
+        for dx in range(round(radio_maximo_total_superior)):
+            for dy in range(round(radio_maximo_total_superior)):
+                #
+                vecinos=list()
+                vecinos.append(self._obtener_vecino(datos_locales, _pos_parcela, -1, -1))
+                vecinos.append(self._obtener_vecino(datos_locales, _pos_parcela,  0, -1))
+                vecinos.append(self._obtener_vecino(datos_locales, _pos_parcela,  1, -1))
+                vecinos.append(self._obtener_vecino(datos_locales, _pos_parcela, -1,  0))
+                vecinos.append(self._obtener_vecino(datos_locales, _pos_parcela,  1,  0))
+                vecinos.append(self._obtener_vecino(datos_locales, _pos_parcela, -1,  1))
+                vecinos.append(self._obtener_vecino(datos_locales, _pos_parcela,  0,  1))
+                vecinos.append(self._obtener_vecino(datos_locales, _pos_parcela,  1,  1))
+                #
+                for vecino in vecinos:
+                    if not vecino:
+                        continue
+                    datos_objeto=vecino.datos_objeto
+                    if not datos_objeto:
+                        continue
+                    radio_inferior_vecino=datos_objeto[4]
+                    radio_superior_vecino=datos_objeto[5]
+                    #log.debug("_chequear_espacio_disponible: radios_maximos_totales(i/s)=(%.1f,%.1f) \n candidato _pos_parcela=%s radios(i/s)=(%.1f,%.1f)\n vecino _pos_parcela=%s radios(i/s)=(%.1f,%.1f)\n" \
+                    #          %(radio_maximo_total_inferior, radio_maximo_total_superior,  \
+                    #            str(_pos_parcela), radio_inferior, radio_superior, \
+                    #            str(vecino.posicion_parcela), radio_inferior_vecino, radio_superior_vecino))
+                    dmin=dx if dx<dy else dy
+                    radios_inferiores=(radio_inferior+radio_inferior_vecino)
+                    radios_superiores=(radio_superior+radio_superior_vecino)
+                    if radios_inferiores>(radios_inferiores*dmin) or \
+                       radios_superiores>(radios_superiores*dmin):
+                        return False
+        #
+        return True
+        
 
     def _establecer_shader(self):
         #
@@ -233,3 +382,57 @@ class Objetos:
             modelo.removeNode()
         for id in [id for id in self.pool_modelos.keys()]:
             del self.pool_modelos[id]
+
+#
+#
+# DATOS LOCALES DE OBJETOS
+#
+#
+class DatosLocalesObjetos:
+    
+    def __init__(self, posicion_global, posicion_parcela, ambiente, tipo_terreno):
+        self.posicion_global=posicion_global
+        self.posicion_parcela=posicion_parcela
+        self.ambiente=ambiente
+        self.tipo_terreno=tipo_terreno
+        self.datos_objeto=None
+        self.factor_ruido=0.0
+    
+    def __str__(self):
+        return "DatosLocalesObjetos:\n_pg=%s _pp=%s a=%i t=%i fr=%.3f %s" \
+                %(str(self.posicion_global), str(self.posicion_parcela), self.ambiente, self.tipo_terreno, self.factor_ruido, str(self.datos_objeto))
+
+#
+#
+# GRUPO OBJETOS LOCACIONES
+#
+#
+class GrupoObjetosLocaciones:
+    
+    def __init__(self, cantidad_total_locaciones):
+        self.cantidad_total_locaciones=cantidad_total_locaciones
+        self.tipos_objeto=list() # [fila,...]
+        self.locaciones_disponibles=list() # [DatosLocalesObjetos,...]
+        self.cantidades_tipos_objeto=dict() # {tipo_objeto:n,...}
+    
+    def __str__(self):
+        return "GrupoObjetosLocaciones:\ntipos_objeto:%s\nlocaciones_disponibles:%s\ncantidades_tipos_objeto:%s\n" \
+                %(str(self.tipos_objeto), str(["%s\n"%str(loc) for loc in self.locaciones_disponibles]), str(self.cantidades_tipos_objeto))
+    
+    def ordenar_locaciones_disponibles(self):
+        self.locaciones_disponibles.sort(key=lambda x:x.factor_ruido)
+
+    def determinar_cantidades_tipos_objeto(self):
+        cantidad_tipos_objeto=len(self.tipos_objeto)
+        cantidad_locaciones_disponibles=len(self.locaciones_disponibles)
+        #log.debug("determinar_cantidades_tipos_objeto cantidad_tipos_objeto=%i cantidad_locaciones_disponibles=%i cantidad_total_locaciones=%i" \
+        #        %(cantidad_tipos_objeto, cantidad_locaciones_disponibles, self.cantidad_total_locaciones))
+        for fila in self.tipos_objeto:
+            tipo_objeto=fila[2]
+            densidad=fila[3]/cantidad_tipos_objeto
+            cantidad=densidad*(cantidad_locaciones_disponibles)#/self.cantidad_total_locaciones)
+            if tipo_objeto in self.cantidades_tipos_objeto:
+                log.error("el tipo de objeto %i ya se encuentra en self.cantidades_tipos_objeto"%tipo_objeto)
+                continue
+            #log.debug("cantidad de objetos '%s' a colocar: %i"%(fila[11], cantidad))
+            self.cantidades_tipos_objeto[tipo_objeto]=cantidad

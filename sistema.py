@@ -301,8 +301,8 @@ class Sistema:
         # a implementar para grillas 3D, con cuevas, etc...
         return 5.0*Sistema.TopoAltura
 
-    def obtener_altitud_suelo_supra_oceanica_norm(self, posicion):
-        altitud=self.obtener_altitud_suelo(posicion)
+    def obtener_altitud_suelo_supra_oceanica_norm(self, posicion, altitud_suelo=None):
+        altitud=self.obtener_altitud_suelo(posicion) if altitud_suelo==None else altitud_suelo
         altitud-=Sistema.TopoAltitudOceano
         altitud/=Sistema.TopoAlturaSobreOceano
         return altitud
@@ -362,8 +362,8 @@ class Sistema:
                 transicion=((1.0-latitud_normalizada)/0.33)
             return (Sistema.LatitudPolar, transicion)
 
-    def obtener_ambiente(self, posicion):
-        altitud=self.obtener_altitud_suelo(posicion)
+    def obtener_ambiente(self, posicion, altitud_suelo=None):
+        altitud=self.obtener_altitud_suelo(posicion) if altitud_suelo==None else altitud_suelo
         if posicion[2]<(Sistema.TopoAltitudOceano-0.5):
             return Sistema.AmbienteAgua
         elif abs(posicion[2]-altitud)<0.1:
@@ -381,9 +381,9 @@ class Sistema:
         amplitud=5.0+20.0*(altitud/Sistema.TopoAlturaSobreOceano)*(1.0-precipitacion_frecuencia)
         return amplitud
 
-    def obtener_temperatura_anual_media_norm(self, posicion):
+    def obtener_temperatura_anual_media_norm(self, posicion, altitud_suelo=None):
         #print("obtener_temperatura_anual_media_norm (%.2f,%.2f)"%(posicion[0], posicion[1]))
-        altitud_normalizada=self.obtener_altitud_suelo_supra_oceanica_norm(posicion)
+        altitud_normalizada=self.obtener_altitud_suelo_supra_oceanica_norm(posicion, altitud_suelo)
         latitud_normalizada=self.obtener_latitud_norm(posicion)
         temperatura=1.0-(0.925*latitud_normalizada**2)
         temperatura+=0.5*self.ruido_temperatura(posicion[0], posicion[1])

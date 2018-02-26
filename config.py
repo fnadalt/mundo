@@ -28,7 +28,8 @@ _default_config={
                         "color_debug":False, 
                         "debug_info":"terreno",  # [terreno|bioma]
                         "normal_map":False, 
-                        "dibujar_normales":False
+                        "dibujar_normales":False, 
+                        "sombras":True
                         }
         }
 
