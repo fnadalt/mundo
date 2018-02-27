@@ -171,7 +171,7 @@ class GestorShader:
                     fs_func_luz_transform_luz=glsl.FUNC_LIGHT_VEC_TRANSFORM_VTX
                     if self._clase==GestorShader.ClaseTerreno and config.valbool("terreno.normal_map"):
                         fs_func_luz_transform_luz=glsl.FUNC_LIGHT_VEC_TRANSFORM_NORMAL_MAP_TERRENO
-                        texto_fs+=glsl.FS_FUNC_TRANSFORM_LUZ_NORMAL_MAP_TERRENO
+                        texto_fs+=glsl.FS_FUNC_transform_luz_normal_map
                     fs_func_luz_sombra=""
                     if config.valbool("shader.sombras"):
                         if (self._clase==GestorShader.ClaseGenerico and config.valbool("generico.sombras")) or \
@@ -206,6 +206,8 @@ class GestorShader:
                 if config.valbool("shader.phong"):
                     if self._clase==GestorShader.ClaseTerreno and config.valbool("terreno.normal_map"):
                         texto_fs+=glsl.FS_MAIN_LUZ%{"FUNC_NORMAL_SOURCE":glsl.FUNC_NORMAL_SOURCE_NORMAL_MAP_TERRENO}
+                    elif self._clase==GestorShader.ClaseGenerico and config.valbool("generico.normal_map"):
+                        texto_fs+=glsl.FS_MAIN_LUZ%{"FUNC_NORMAL_SOURCE":glsl.FUNC_NORMAL_SOURCE_NORMAL_MAP_GENERICO}
                     else:
                         texto_fs+=glsl.FS_MAIN_LUZ%{"FUNC_NORMAL_SOURCE":glsl.FUNC_NORMAL_SOURCE_VTX}
                 else:

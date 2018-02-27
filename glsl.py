@@ -68,8 +68,8 @@ uniform vec3 cam_pos;
 const float shine_damper=20.0;
 const float reflectivity=0.6;
 """
-FS_FUNC_TRANSFORM_LUZ_NORMAL_MAP_TERRENO="""
-vec3 transform_luz_normal_map_terreno(vec3 vec_luz)
+FS_FUNC_transform_luz_normal_map="""
+vec3 transform_luz_normal_map(vec3 vec_luz)
 {
     vec3 binormal=cross(Normal,tangent.xyz)*tangent.w;
     mat3 M=mat3(tangent.x,binormal.x,Normal.x,
@@ -116,9 +116,9 @@ vec4 ds(int iLightSource, vec3 normal)
 FS_FUNC_LUZ_SOMBRA="color*=shadow2DProj(p3d_LightSource[iLightSource].shadowMap, sombra[iLightSource]);"
 FS_FUNC_TEX_GENERICO="""
 // generico
-vec4 tex_generico(){
+vec4 tex_generico(sampler2D textura){
     vec4 color_tex=vec4(0,0,0,0);
-    color_tex+=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord.st);
+    color_tex+=%(FS_FUNC_TEX_LOOK_UP)s(textura, texcoord.st);
     return color_tex;
 }
 """
@@ -409,7 +409,10 @@ FS_MAIN_LUZ="""
         int cantidad_luces=p3d_LightSource.length();
         for(int i=0; i<cantidad_luces; ++i)
         {
-            color+=ds(i,%(FUNC_NORMAL_SOURCE)s);
+            if(p3d_LightSource[i].diffuse.a!=0.0)
+            {
+                color+=ds(i,%(FUNC_NORMAL_SOURCE)s);
+            }
         }
         color+=amb();
 """
@@ -420,7 +423,7 @@ FS_MAIN_LUZ_SOMBRA="""
 FS_MAIN_LUZ_BLANCA="color+=vec4(1.0,1.0,1.0,1.0);"
 FS_MAIN_TEX_GENERICO="""
         // textura: generico
-        vec4 color_tex=tex_generico();
+        vec4 color_tex=tex_generico(p3d_Texture0);
         color*=color_tex;
 """
 FS_MAIN_TEX_TERRENO="""
@@ -487,6 +490,7 @@ FS_MAIN_FIN="""
 #
 #
 FUNC_NORMAL_SOURCE_VTX="Normal"
+FUNC_NORMAL_SOURCE_NORMAL_MAP_GENERICO="(tex_generico(textura_normal).rgb*2.0-1.0)"
 FUNC_NORMAL_SOURCE_NORMAL_MAP_TERRENO="(tex_terreno(true).rgb*2.0-1.0)"
 FUNC_LIGHT_VEC_TRANSFORM_VTX="normalize(s);"
-FUNC_LIGHT_VEC_TRANSFORM_NORMAL_MAP_TERRENO="transform_luz_normal_map_terreno(s);"
+FUNC_LIGHT_VEC_TRANSFORM_NORMAL_MAP_TERRENO="transform_luz_normal_map(s);"
