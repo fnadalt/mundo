@@ -81,7 +81,7 @@ class Mundo:
 
     def _establecer_material(self):
         log.info("_establecer_material")
-        intensidades=(0.15, 0.4, 0.0) # (a,d,s)
+        intensidades=(0.20, 0.35, 0.0) # (a,d,s)
         material=Material("material_mundo")
         material.setAmbient((intensidades[0], intensidades[0], intensidades[0], 1.0))
         material.setDiffuse((intensidades[1], intensidades[1], intensidades[1], 1.0))

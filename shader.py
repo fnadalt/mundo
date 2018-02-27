@@ -16,8 +16,6 @@ _glsl_version=130
 _altitud_agua=None
 _plano_recorte_agua=Vec4(0, 0, 1, 0)
 _plano_recorte_agua_inv=Vec4(0, 0, -1, 0)
-_max_cantidad_luces=8
-_max_cantidad_sombras=4
 
 class GestorShader:
 
@@ -33,7 +31,7 @@ class GestorShader:
 
     @staticmethod
     def iniciar(base, altitud_agua, plano_recorte_agua):
-        global _glsl_version, _altitud_agua, _plano_recorte_agua, _plano_recorte_agua_inv, _max_cantidad_luces, _max_cantidad_sombras
+        global _glsl_version, _altitud_agua, _plano_recorte_agua, _plano_recorte_agua_inv
         #
         if base:
             glsl_mj=base.win.getGsg().getDriverShaderVersionMajor()
@@ -122,6 +120,9 @@ class GestorShader:
                 texto_vs+=glsl.VS_TIPO_TERRENO
                 if config.valbool("terreno.color_debug"):
                     texto_vs+=glsl.VS_TERRENO_COLOR_DEBUG
+            if (self._clase==GestorShader.ClaseTerreno and config.valbool("terreno.normal_map")) or \
+               (self._clase==GestorShader.ClaseGenerico and config.valbool("generico.normal_map")):
+                   texto_vs+=glsl.VS_NORMAL_MAP
         if self._clase!=GestorShader.ClaseSol and self._clase!=GestorShader.ClaseSombra:
             texto_vs+=glsl.VS_POS_MODELO
         texto_vs+=glsl.VS_MAIN_INICIO
@@ -136,6 +137,9 @@ class GestorShader:
                 texto_vs+=glsl.VS_MAIN_TIPO_TERRENO
                 if config.valbool("terreno.color_debug"):
                     texto_vs+=glsl.VS_MAIN_TERRENO_COLOR_DEBUG
+            if (self._clase==GestorShader.ClaseTerreno and config.valbool("terreno.normal_map")) or \
+               (self._clase==GestorShader.ClaseGenerico and config.valbool("generico.normal_map")):
+                   texto_vs+=glsl.VS_MAIN_NORMAL_MAP
         texto_vs+=glsl.VS_MAIN_POSITION
         if self._clase==GestorShader.ClaseAgua or self._clase==GestorShader.ClaseSombra:
             texto_vs+=glsl.VS_MAIN_VERTEX_PROJ
@@ -156,6 +160,11 @@ class GestorShader:
                 texto_fs+=glsl.FS_TEX_2
                 if config.valbool("terreno.color_debug"):
                     texto_fs+=glsl.FS_TERRENO_COLOR_DEBUG
+            if (self._clase==GestorShader.ClaseTerreno and config.valbool("terreno.normal_map")):
+                texto_fs+=glsl.FS_NORMAL_MAP
+            elif (self._clase==GestorShader.ClaseGenerico and config.valbool("generico.normal_map")):
+                texto_fs+=glsl.FS_TEX_1
+                texto_fs+=glsl.FS_NORMAL_MAP
             if self._clase==GestorShader.ClaseAgua:
                 texto_fs+=glsl.FS_TEX_1
                 texto_fs+=glsl.FS_TEX_2
@@ -169,9 +178,10 @@ class GestorShader:
                 if config.valbool("shader.phong"):
                     texto_fs+=glsl.FS_LUZ
                     fs_func_luz_transform_luz=glsl.FUNC_LIGHT_VEC_TRANSFORM_VTX
-                    if self._clase==GestorShader.ClaseTerreno and config.valbool("terreno.normal_map"):
-                        fs_func_luz_transform_luz=glsl.FUNC_LIGHT_VEC_TRANSFORM_NORMAL_MAP_TERRENO
-                        texto_fs+=glsl.FS_FUNC_transform_luz_normal_map
+                    if (self._clase==GestorShader.ClaseTerreno and config.valbool("terreno.normal_map")) or \
+                       (self._clase==GestorShader.ClaseGenerico and config.valbool("generico.normal_map")):
+                        fs_func_luz_transform_luz=glsl.FUNC_LIGHT_VEC_TRANSFORM_NORMAL_MAP
+                        texto_fs+=glsl.FS_FUNC_TRANSFORM_LUZ_NORMAL_MAP
                     fs_func_luz_sombra=""
                     if config.valbool("shader.sombras"):
                         if (self._clase==GestorShader.ClaseGenerico and config.valbool("generico.sombras")) or \

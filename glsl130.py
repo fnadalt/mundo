@@ -45,11 +45,13 @@ out vec4 sombra[8];
 VS_POS_PROJ="""
 out vec4 PositionP; // agua
 """
+VS_NORMAL_MAP="""
+in vec4 p3d_Tangent;
+out vec4 tangent;
+"""
 VS_TIPO_TERRENO="""
 in vec3 info_tipo_terreno;
-in vec4 Tangent;
 flat out vec3 info_tipo;
-out vec4 tangent;
 """
 VS_TERRENO_COLOR_DEBUG="""
 in vec4 Color;
@@ -87,6 +89,7 @@ in vec4 Position; // cielo
 FS_POS_VIEW="""
 in vec4 PositionV; // luz, fog
 in vec3 Normal;
+uniform mat4 p3d_ModelViewMatrix;
 """
 FS_POS_PROJ="""
 in vec4 PositionP; // agua
@@ -124,6 +127,8 @@ in vec4 sombra[8];
 """
 FS_TERRENO="""
 flat in vec3 info_tipo;
+"""
+FS_NORMAL_MAP="""
 in vec4 tangent;
 """
 FS_TERRENO_COLOR_DEBUG="""

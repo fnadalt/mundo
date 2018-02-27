@@ -13,9 +13,7 @@ _default_config={
         "shader":       {
                         "phong":True, 
                         "sombras":False, 
-                        "fog":False, 
-                        "max_cantidad_luces":8, 
-                        "max_cantidad_sombras":4
+                        "fog":False
                         }, 
         "sistema":      {
                         "radio_expansion_parcelas":2

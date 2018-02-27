@@ -21,10 +21,12 @@ VS_MAIN_SOMBRA="""
 VS_MAIN_TEX="""
     texcoord=p3d_MultiTexCoord0;
 """
+VS_MAIN_NORMAL_MAP="""
+    tangent=vec4(normalize(p3d_NormalMatrix*p3d_Tangent.xyz),p3d_Tangent.w);
+"""
 VS_MAIN_TIPO_TERRENO="""
     // terreno
     info_tipo=info_tipo_terreno;
-    tangent=vec4(normalize(p3d_NormalMatrix*Tangent.xyz),Tangent.w);
 """
 VS_MAIN_TERRENO_COLOR_DEBUG="""
     // terreno color debug
@@ -49,10 +51,10 @@ VS_MAIN_FIN="""
 #
 #
 FS_TEX_1="""
-uniform sampler2D p3d_Texture1; // terreno y agua
+uniform sampler2D p3d_Texture1; // normal map generico, terreno y agua
 """
 FS_TEX_2="""
-uniform sampler2D p3d_Texture2; // terreno y agua
+uniform sampler2D p3d_Texture2; // agua, y terreno?
 """
 FS_TEX_3="""
 uniform sampler2D p3d_Texture3; // agua
@@ -68,7 +70,7 @@ uniform vec3 cam_pos;
 const float shine_damper=20.0;
 const float reflectivity=0.6;
 """
-FS_FUNC_transform_luz_normal_map="""
+FS_FUNC_TRANSFORM_LUZ_NORMAL_MAP="""
 vec3 transform_luz_normal_map(vec3 vec_luz)
 {
     vec3 binormal=cross(Normal,tangent.xyz)*tangent.w;
@@ -490,7 +492,7 @@ FS_MAIN_FIN="""
 #
 #
 FUNC_NORMAL_SOURCE_VTX="Normal"
-FUNC_NORMAL_SOURCE_NORMAL_MAP_GENERICO="(tex_generico(textura_normal).rgb*2.0-1.0)"
+FUNC_NORMAL_SOURCE_NORMAL_MAP_GENERICO="(tex_generico(p3d_Texture1).rgb*2.0-1.0)"
 FUNC_NORMAL_SOURCE_NORMAL_MAP_TERRENO="(tex_terreno(true).rgb*2.0-1.0)"
 FUNC_LIGHT_VEC_TRANSFORM_VTX="normalize(s);"
-FUNC_LIGHT_VEC_TRANSFORM_NORMAL_MAP_TERRENO="transform_luz_normal_map(s);"
+FUNC_LIGHT_VEC_TRANSFORM_NORMAL_MAP="transform_luz_normal_map(s);"
