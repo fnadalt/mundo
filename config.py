@@ -22,7 +22,8 @@ _default_config={
                         }, 
         "generico":     {
                         "sombras":True, 
-                        "profundidad_agua":True
+                        "profundidad_agua":True, 
+                        "normal_map":True
                         }, 
         "terreno":      {
                         "color_debug":False, 

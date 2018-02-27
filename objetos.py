@@ -124,6 +124,7 @@ class Objetos:
     def _generar_parcela(self, idx_pos):
         # posicion y nombre
         pos=self.sistema.obtener_pos_parcela(idx_pos)
+        altitud_suelo=self.sistema.obtener_altitud_suelo(pos)
         nombre="parcela_objetos_%i_%i"%(int(idx_pos[0]), int(idx_pos[1]))
         log.info("_generar_parcela idx_pos=%s pos=%s nombre=%s"%(str(idx_pos), str(pos), nombre))
         # nodo
@@ -131,14 +132,27 @@ class Objetos:
         parcela_node_path.setPos(pos[0], pos[1], 0.0)
         # datos de parcela
         datos_parcela=self._generar_datos_parcela(pos, idx_pos)
+        # lod
+        lod=LODNode("%s_lod"%nombre)
+        lod_np=NodePath(lod)
+        lod_np.reparentTo(parcela_node_path)
+        lod_np.setPos(0.0, 0.0, altitud_suelo)
+        lod.addSwitch(100.0, 0.0)
+        # colocar objetos
+        cntr_objs=0
+        concentrador=lod_np.attachNewNode("concentrador")
         for fila in datos_parcela:
             for d in fila:
                 if not d.datos_objeto:
                     continue
                 #log.debug(d)
-                objeto=self.base.loader.loadModel("objetos/%s.egg"%d.datos_objeto[11])
-                objeto.reparentTo(parcela_node_path)
-                objeto.setPos(d.posicion_parcela)
+                nombre_modelo=d.datos_objeto[11]
+                instancia=concentrador.attachNewNode("instancia_%s_%i"%(nombre_modelo, cntr_objs))
+                modelo=self.pool_modelos[nombre_modelo]
+                modelo.instanceTo(instancia)
+                instancia.setPos(parcela_node_path, d.posicion_parcela)
+                log.debug("se coloco un '%s' en posicion_parcela=%s..."%(d.datos_objeto[11], str(d.posicion_parcela)))
+                cntr_objs+=1
         # agregar a parcelas
         self.parcelas[idx_pos]=parcela_node_path
 
@@ -240,15 +254,14 @@ class Objetos:
             grupo_objetos_locaciones.determinar_cantidades_tipos_objeto()
             #log.debug(str(grupo_objetos_locaciones))
             for tipo_objeto in grupo_objetos_locaciones.tipos_objeto:
-                log.debug("colocar %i objetos '%s'"%(grupo_objetos_locaciones.cantidades_tipos_objeto[tipo_objeto[2]], tipo_objeto[11]))
-                cant_obj_colocados=grupo_objetos_locaciones.cantidades_tipos_objeto[tipo_objeto[2]]
+                cant_obj_remanentes=grupo_objetos_locaciones.cantidades_tipos_objeto[tipo_objeto[2]]
+                log.debug("colocar %i objetos '%s' en ambiente=%i y tipo_terreno=%i"%(cant_obj_remanentes, tipo_objeto[11], tipo_objeto[1], tipo_objeto[6]))
                 for d in grupo_objetos_locaciones.locaciones_disponibles:
-                    if self._chequear_espacio_disponible(d.posicion_parcela, tipo_objeto[4], tipo_objeto[5], datos_locales):
-                        log.debug("colocar en d=%s"%str(d))
+                    if cant_obj_remanentes>0 and \
+                       self._chequear_espacio_disponible(d.posicion_parcela, tipo_objeto[4], tipo_objeto[5], datos_locales):
+                        cant_obj_remanentes-=1
+                        #log.debug("hay espacio disponible, colocar en d=%s. quedan %i"%(str(d), cant_obj_remanentes))
                         d.datos_objeto=tipo_objeto
-                    cant_obj_colocados-=1
-                    if cant_obj_colocados==0:
-                        break
         #
         return datos_locales
 
@@ -399,7 +412,7 @@ class DatosLocalesObjetos:
         self.factor_ruido=0.0
     
     def __str__(self):
-        return "DatosLocalesObjetos:\n_pg=%s _pp=%s a=%i t=%i fr=%.3f %s" \
+        return "DatosLocalesObjetos: _pg=%s _pp=%s a=%i t=%i fr=%.3f %s" \
                 %(str(self.posicion_global), str(self.posicion_parcela), self.ambiente, self.tipo_terreno, self.factor_ruido, str(self.datos_objeto))
 
 #
@@ -430,9 +443,9 @@ class GrupoObjetosLocaciones:
         for fila in self.tipos_objeto:
             tipo_objeto=fila[2]
             densidad=fila[3]/cantidad_tipos_objeto
-            cantidad=densidad*(cantidad_locaciones_disponibles)#/self.cantidad_total_locaciones)
+            cantidad=densidad*(self.cantidad_total_locaciones/cantidad_locaciones_disponibles)#cantidad_locaciones_disponibles/self.cantidad_total_locaciones)
             if tipo_objeto in self.cantidades_tipos_objeto:
                 log.error("el tipo de objeto %i ya se encuentra en self.cantidades_tipos_objeto"%tipo_objeto)
                 continue
             #log.debug("cantidad de objetos '%s' a colocar: %i"%(fila[11], cantidad))
-            self.cantidades_tipos_objeto[tipo_objeto]=cantidad
+            self.cantidades_tipos_objeto[tipo_objeto]=int(cantidad)

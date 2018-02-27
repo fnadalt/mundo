@@ -81,7 +81,7 @@ class Mundo:
 
     def _establecer_material(self):
         log.info("_establecer_material")
-        intensidades=(0.3, 0.2, 0.0) # (a,d,s)
+        intensidades=(0.15, 0.4, 0.0) # (a,d,s)
         material=Material("material_mundo")
         material.setAmbient((intensidades[0], intensidades[0], intensidades[0], 1.0))
         material.setDiffuse((intensidades[1], intensidades[1], intensidades[1], 1.0))
@@ -177,9 +177,9 @@ class Mundo:
         #self.nodo.setLight(self.point_light)
         #
         self.spot_light=self.nodo.attachNewNode(Spotlight("spot_light"))
-        self.spot_light.setPos(self.hombre.cuerpo.getPos()+Vec3(0, 0, 6))
+        self.spot_light.setPos(self.hombre.cuerpo.getPos()+Vec3(0, -5, 6))
         self.spot_light.node().setColor((0, 0, 1, 1))
-        self.spot_light.node().setAttenuation(Vec3(1, 0, 0))
+        self.spot_light.node().setAttenuation(Vec3(0.1, 0, 0))
         self.spot_light.node().setLens(PerspectiveLens())
         self.spot_light.lookAt(self.hombre.cuerpo)
         self.nodo.setLight(self.spot_light)
@@ -202,24 +202,30 @@ class Mundo:
 #        tex0.load(imagen)
         self.nubes.setTexture(ts0, tex0)
         #
-        quebracho=self.base.loader.loadModel("objetos/quebracho.egg")
-        quebracho.setScale(0.5)
-        quebracho.reparentTo(self.nodo)
-        quebracho.setPos(self.hombre.cuerpo.getPos()+Vec3(0, -10, 0))
-        quebracho.setTwoSided(True)
-        #GestorShader.aplicar(quebracho, GestorShader.ClaseGenerico, 6)
+#        quebracho=self.base.loader.loadModel("objetos/quebracho.egg")
+#        quebracho.setScale(0.5)
+#        quebracho.reparentTo(self.nodo)
+#        quebracho.setPos(self.hombre.cuerpo.getPos()+Vec3(0, -10, 0))
+#        quebracho.setTwoSided(True)
         #
         pelota=self.base.loader.loadModel("objetos/pelota.egg")
         pelota.reparentTo(self.nodo)
         pelota.setZ(self.sistema.obtener_altitud_suelo(self.sistema.posicion_cursor)+3.0)
         material_pelota=Material("material_pelota")
-        intensidades=(0.3, 0.2, 0.5)
+        intensidades=(0.3, 0.2, 0.3)
         material_pelota.setAmbient((intensidades[0], intensidades[0], intensidades[0], 1.0))
         material_pelota.setDiffuse((intensidades[1], intensidades[1], intensidades[1], 1.0))
         material_pelota.setSpecular((intensidades[2], intensidades[2], intensidades[2], 1.0))
         material_pelota.setShininess(2)
         pelota.setMaterial(material_pelota, priority=2)
         GestorShader.aplicar(pelota, GestorShader.ClaseGenerico, 3)
+        #
+        plano_vertical=self.base.loader.loadModel("objetos/plano_vertical.egg")
+        plano_vertical.reparentTo(self.nodo)
+        plano_vertical.setPos(0, -6, self.sistema.obtener_altitud_suelo((0, -6, 0)))
+        #plano_vertical.setTwoSided(True)
+        plano_vertical.setBillboardAxis()
+        GestorShader.aplicar(plano_vertical, GestorShader.ClaseGenerico, 3)
 
     def _cargar_terreno(self):
         # terreno

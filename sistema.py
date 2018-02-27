@@ -189,11 +189,12 @@ class Sistema:
         self.cargar_parametros_iniciales(defecto=True)
 
     def obtener_info(self):
+        idx_pos=self.obtener_indice_parcela(self.posicion_cursor)
         tam=self.obtener_temperatura_anual_media_norm(self.posicion_cursor)
         prec_f=self.obtener_precipitacion_frecuencia_anual(self.posicion_cursor)
         bioma=self.obtener_bioma_transicion(self.posicion_cursor)
         tipo_terreno=self.obtener_tipo_terreno(self.posicion_cursor)
-        info="Sistema posicion_cursor=(%.3f,%.3f,%.3f)\n"%(self.posicion_cursor[0], self.posicion_cursor[1], self.posicion_cursor[2])
+        info="Sistema posicion_cursor=(%.3f,%.3f,%.3f) idx_pos=(%i,%i)\n"%(self.posicion_cursor[0], self.posicion_cursor[1], self.posicion_cursor[2], idx_pos[0], idx_pos[1])
         info+="geo: tam=%.4f prec_f=%.4f\nbioma=(%s) tipo_terreno=(%s)\n"%(tam, prec_f, bioma, tipo_terreno)
         info+="era: año=%i estacion=%i dia=%i hora=%.2f(%.2f/%i) periodo_dia_actual=%i\n"%(self.ano, self.estacion, self.dia, self.hora_normalizada, self._segundos_transcurridos_dia, self.duracion_dia_segundos, self.periodo_dia_actual)
         info+="temp=%.2f nubosidad=%.2f precipitacion=[tipo=%i intens=%i t=(%.2f/%2.f)]\n"%(self.temperatura_actual_norm, self.nubosidad, self.precipitacion_actual_tipo, self.precipitacion_actual_intensidad, self.precipitacion_actual_t, self.precipitacion_actual_duracion)
