@@ -2,6 +2,33 @@ from glsl import *
 
 #
 #
+#
+#
+#
+STRUCT_LUZ_P3D="""
+uniform struct {
+    vec4 color;
+    //vec4 ambient;
+    //vec4 diffuse;
+    //vec4 specular;
+    vec4 position;
+    vec3 spotDirection;
+    float spotExponent;
+    float spotCutoff;
+    float spotCosCutoff;
+    vec3 attenuation;
+    sampler2DShadow shadowMap;
+    mat4 shadowViewMatrix;
+} """
+STRUCT_LUZ_PUNTUAL="""
+uniform struct {
+    vec4 color;
+    vec4 position;
+    vec3 attenuation;
+} """
+
+#
+#
 # VERTEX SHADER
 #
 #
@@ -26,22 +53,9 @@ out vec4 PositionV; // luz, fog
 out vec3 Normal;
 """
 VS_SOMBRA="""
-uniform struct {
-    vec4 color;
-    vec4 ambient;
-    vec4 diffuse;
-    vec4 specular;
-    vec4 position;
-    vec3 spotDirection;
-    float spotExponent;
-    float spotCutoff;
-    float spotCosCutoff;
-    vec3 attenuation;
-    sampler2DShadow shadowMap;
-    mat4 shadowViewMatrix;
-} p3d_LightSource[8];
-out vec4 sombra[8];
-"""
+%(STRUCT_LUZ_P3D)s p3d_LightSource[4];
+out vec4 sombra[4];
+"""%{"STRUCT_LUZ_P3D":STRUCT_LUZ_P3D}
 VS_POS_PROJ="""
 out vec4 PositionP; // agua
 """
@@ -109,22 +123,10 @@ uniform struct {
     float metallic;
     float refractiveIndex;
 } p3d_Material;
-uniform struct {
-    vec4 color;
-    vec4 ambient;
-    vec4 diffuse;
-    vec4 specular;
-    vec4 position;
-    vec3 spotDirection;
-    float spotExponent;
-    float spotCutoff;
-    float spotCosCutoff;
-    vec3 attenuation;
-    sampler2DShadow shadowMap;
-    mat4 shadowViewMatrix;
-} p3d_LightSource[8];
-in vec4 sombra[8];
-"""
+%(STRUCT_LUZ_P3D)s p3d_LightSource[4];
+%(STRUCT_LUZ_PUNTUAL)s luz_puntual[4];
+in vec4 sombra[4];
+"""%{"STRUCT_LUZ_P3D":STRUCT_LUZ_P3D, "STRUCT_LUZ_PUNTUAL":STRUCT_LUZ_PUNTUAL}
 FS_TERRENO="""
 flat in vec3 info_tipo;
 """

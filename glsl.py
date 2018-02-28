@@ -86,17 +86,17 @@ vec4 amb()
 {
     return color_luz_ambiental*p3d_Material.ambient;
 }
-vec4 ds(int iLightSource, vec3 normal)
+vec4 ds_generico(int iLightSource, vec3 normal)
 {
     vec4 color;
     vec3 s=p3d_LightSource[iLightSource].position.xyz-(PositionV.xyz*p3d_LightSource[iLightSource].position.w);
     vec3 l=%(FUNC_LIGHT_VEC_TRANSFORM)s
-    vec4 diffuse=clamp(p3d_Material.diffuse*p3d_LightSource[iLightSource].diffuse*max(dot(normal,l),0),0,1);
+    vec4 diffuse=clamp(p3d_Material.diffuse*p3d_LightSource[iLightSource].color*max(dot(normal,l),0),0,1);
     color=diffuse;
     if(p3d_Material.specular!=vec3(0,0,0)){
         vec3 v=normalize(-PositionV.xyz);
-        vec3 r=normalize(-reflect(s, normal)); //(2.0*dot(s, normal)*normal-s)
-        color+=vec4(p3d_Material.specular,1.0) * p3d_LightSource[iLightSource].specular * pow(max(dot(r,v),0),p3d_Material.shininess);
+        vec3 r=normalize(-reflect(l, normal)); //(2.0*dot(s, normal)*normal-s)
+        color+=vec4(p3d_Material.specular,1.0) * p3d_LightSource[iLightSource].color * pow(max(dot(r,v),0),p3d_Material.shininess);
     }
     if(p3d_LightSource[iLightSource].spotCosCutoff>0.0){
         float spotEffect = dot(normalize(p3d_LightSource[iLightSource].spotDirection), -l);
@@ -110,6 +110,26 @@ vec4 ds(int iLightSource, vec3 normal)
     if(p3d_LightSource[iLightSource].position.w!=0.0){
         float distancia=length(s);
         float atenuacion=1.0/(p3d_LightSource[iLightSource].attenuation.x+p3d_LightSource[iLightSource].attenuation.y*distancia+p3d_LightSource[iLightSource].attenuation.z*distancia*distancia);
+        color*=atenuacion;
+    }
+    return color;
+}
+vec4 ds_puntual(int i_luz_puntual, vec3 normal)
+{
+    vec4 color;
+    vec4 luz_p_v=luz_puntual[i_luz_puntual].position;
+    vec3 s=luz_p_v.xyz-PositionV.xyz;
+    vec3 l=%(FUNC_LIGHT_VEC_TRANSFORM)s
+    vec4 diffuse=clamp(p3d_Material.diffuse*luz_puntual[i_luz_puntual].color*max(dot(normal,l),0),0,1);
+    color=diffuse;
+    if(p3d_Material.specular!=vec3(0,0,0)){
+        vec3 v=normalize(-PositionV.xyz);
+        vec3 r=normalize(-reflect(l, normal));
+        color+=vec4(p3d_Material.specular,1.0) * luz_puntual[i_luz_puntual].color * pow(max(dot(r,v),0),p3d_Material.shininess);
+    }
+    if(luz_puntual[i_luz_puntual].attenuation!=vec3(0,0,0)){
+        float distancia=length(s);
+        float atenuacion=1.0/(luz_puntual[i_luz_puntual].attenuation.x+luz_puntual[i_luz_puntual].attenuation.y*distancia+luz_puntual[i_luz_puntual].attenuation.z*distancia*distancia);
         color*=atenuacion;
     }
     return color;
@@ -408,12 +428,21 @@ FS_MAIN_CLIP_INICIO="""
 """
 FS_MAIN_LUZ="""
         // luz: generico y terreno
-        int cantidad_luces=p3d_LightSource.length();
-        for(int i=0; i<cantidad_luces; ++i)
+        int cantidad_luces_genericas=p3d_LightSource.length();
+        vec3 _normal=%(FUNC_NORMAL_SOURCE)s;
+        for(int i=0; i<cantidad_luces_genericas; ++i)
         {
-            if(p3d_LightSource[i].diffuse.a!=0.0)
+            if(p3d_LightSource[i].color.a!=0.0)
             {
-                color+=ds(i,%(FUNC_NORMAL_SOURCE)s);
+                color+=ds_generico(i,_normal);
+            }
+        }
+        int cantidad_luces_puntuales=luz_puntual.length();
+        for(int i=0; i<cantidad_luces_puntuales; ++i)
+        {
+            if(luz_puntual[i].color.a!=0.0)
+            {
+                color+=ds_puntual(i,_normal);
             }
         }
         color+=amb();

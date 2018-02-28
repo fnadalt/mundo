@@ -54,7 +54,7 @@ vec4 amb()
 {
     return color_luz_ambiental*p3d_Material.ambient;
 }
-vec4 ds(int iLightSource)
+vec4 ds_generico(int iLightSource)
 {
     vec4 color;
     vec3 s=p3d_LightSource[iLightSource].position.xyz-(PositionV.xyz*p3d_LightSource[iLightSource].position.w);
@@ -130,7 +130,7 @@ void main()
         int cantidad_luces=p3d_LightSource.length();
         for(int i=0; i<cantidad_luces; ++i)
         {
-            color+=ds(i);
+            color+=ds_generico(i);
         }
         color+=amb();
 
