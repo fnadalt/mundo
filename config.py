@@ -29,6 +29,9 @@ _default_config={
                         "normal_map":False, 
                         "dibujar_normales":False, 
                         "sombras":True
+                        }, 
+        "objetos":      {
+                        "lod0":"75.0 0.0"
                         }
         }
 
@@ -46,6 +49,12 @@ def valbool(variable):
     valor=val(variable).lower()
     return True if valor=="true" else False
 
+def vallist(variable, separador=" "):
+    valor=val(variable)
+    if valor:
+        return valor.split(separador)
+    return None
+
 def val(variable):
     if configuracion==None:
         raise Exception("sistema de configuraciones no iniciado")
@@ -59,7 +68,7 @@ def val(variable):
     try:
         valor=configuracion[seccion][nombre_variable]
     except:
-        log.exception("error al intentar obtener valor de configuracion '%s'"%variable)
+        log.warning("error al intentar obtener valor de configuracion '%s'"%variable)
     return valor
 
 def establecer(variable, valor):

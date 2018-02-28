@@ -1,0 +1,72 @@
+<CoordinateSystem> { Z-Up }
+
+<Comment> {
+  "egg-trans -F -o /tmp/quebracho.lod1.egg.tmp /home/flaco/panda3d/mundo/objetos/quebracho.lod1.egg"
+}
+<Texture> lod1 {
+  "/home/flaco/panda3d/mundo/objetos/texturas/quebracho.lod1.png"
+  <Scalar> alpha-file { "/home/flaco/panda3d/mundo/objetos/texturas/quebracho.lod1.png" }
+  <Scalar> alpha-file-channel { 4 }
+  <Scalar> wrap { clamp }
+  <Scalar> minfilter { linear_mipmap_linear }
+  <Scalar> magfilter { linear_mipmap_linear }
+  <Scalar> envtype { modulate }
+}
+<Material> lod1 {
+  <Scalar> diffr { 0.800000011920929 }
+  <Scalar> diffg { 0.800000011920929 }
+  <Scalar> diffb { 0.800000011920929 }
+  <Scalar> diffa { 0 }
+  <Scalar> ambr { 1 }
+  <Scalar> ambg { 1 }
+  <Scalar> ambb { 1 }
+  <Scalar> emitr { 0 }
+  <Scalar> emitg { 0 }
+  <Scalar> emitb { 0 }
+  <Scalar> specr { 0 }
+  <Scalar> specg { 0 }
+  <Scalar> specb { 0 }
+  <Scalar> shininess { 12.5 }
+}
+<Group> Plane {
+  <VertexPool> Plane {
+    <Vertex> 0 {
+      -1.725051 0 0
+      <UV> {
+        0.092602 -0.002543
+        <Tangent> { 1 0 0 }
+        <Binormal> { 0 0 1 }
+      }
+    }
+    <Vertex> 1 {
+      2.838525 0 0
+      <UV> {
+        1.022259 -0.002543
+        <Tangent> { 1 0 0 }
+        <Binormal> { 0 0 1 }
+      }
+    }
+    <Vertex> 2 {
+      2.838525 -0 5.338223
+      <UV> {
+        1.022259 1.017423
+        <Tangent> { 1 0 0 }
+        <Binormal> { 0 0 1 }
+      }
+    }
+    <Vertex> 3 {
+      -1.725051 -0 5.338223
+      <UV> {
+        0.092602 1.017423
+        <Tangent> { 1 0 0 }
+        <Binormal> { 0 0 1 }
+      }
+    }
+  }
+  <Polygon> {
+    <Normal> { 0 -1 0 }
+    <TRef> { lod1 }
+    <MRef> { lod1 }
+    <VertexRef> { 0 1 2 3 <Ref> { Plane } }
+  }
+}

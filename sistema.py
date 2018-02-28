@@ -206,10 +206,10 @@ class Sistema:
             log.info("cargar_parametros_iniciales por defecto")
             self.posicion_cursor=Vec3(0, 0, 0) # transicion desierto Vec3(32, -2700, 0) # selva pura:Vec3(-374, 2176, 0)
             self.radio_expansion_parcelas=int(config.val("sistema.radio_expansion_parcelas"))
-            self.duracion_dia_segundos=30
+            self.duracion_dia_segundos=1800
             self.ano=0
             self.dia=0
-            self._segundos_transcurridos_dia=0.50*self.duracion_dia_segundos
+            self._segundos_transcurridos_dia=0.60*self.duracion_dia_segundos
         else:
             log.info("cargar_parametros_iniciales desde configuracion")
             # leer de archivo

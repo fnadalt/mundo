@@ -3,7 +3,7 @@ import sqlite3
 import csv
 import os, os.path
 
-import sistema
+import sistema, config
 from shader import GestorShader
 
 import logging
@@ -29,6 +29,9 @@ class Objetos:
     # radio maximo
     RadioMaximoInferior=1
     RadioMaximoSuperior=3
+
+    # lods por defecto
+    LODs=((75.0, 0.0), (150.0, 75.0), (1000.0, 150.0))
 
     # db
     NombreArchivoDB="objetos.sql"
@@ -60,18 +63,30 @@ class Objetos:
         # componentes:
         self.nodo=self.base.render.attachNewNode("objetos")
         self.nodo_parcelas=self.nodo.attachNewNode("parcelas")
-        #self.nodo.setRenderModeWireframe()
         self.parcelas={} # {idx_pos:parcela_node_path,...}
         self.db=None
         self.pool_modelos=dict() # {id:Model,...}; id="nombre_archivo" <- hashear!!!
         self.ruido_perlin=PerlinNoise2(Objetos.ParamsRuido[0], Objetos.ParamsRuido[0], 256, Objetos.ParamsRuido[1])
         # variables externas:
         self.idx_pos_parcela_actual=None # (x,y)
+        # variables internas
+        self._lods=list()
 
     def iniciar(self):
         log.info("iniciar")
         # sistema
         self.sistema=sistema.obtener_instancia()
+        # config
+        for i_lod in range(len(Objetos.LODs)):
+            config_lod=config.vallist("objetos.lod%i"%i_lod)
+            lod=()
+            if config_lod:
+                lod=(float(config_lod[0]), float(config_lod[1]))
+                log.debug("se carga lod de configuracion en indice %i %s"%(i_lod, str(lod)))
+            else:
+                lod=Objetos.LODs[i_lod]
+                log.debug("se carga lod pos defecto en indice %i %s"%(i_lod, str(lod)))
+            self._lods.append(lod)
         # db
         self._iniciar_db()
         # self.pool_modelos de modelos
@@ -137,22 +152,30 @@ class Objetos:
         lod_np=NodePath(lod)
         lod_np.reparentTo(parcela_node_path)
         lod_np.setPos(0.0, 0.0, altitud_suelo)
-        lod.addSwitch(100.0, 0.0)
         # colocar objetos
         cntr_objs=0
-        concentrador=lod_np.attachNewNode("concentrador")
+        concentradores_lod=list()
+        for i_lod in range(len(self._lods)):
+            lod.addSwitch(self._lods[i_lod][0], self._lods[i_lod][1])
+            concentrador_lod=lod_np.attachNewNode("concentrador_lod%i"%i_lod)
+            concentradores_lod.append(concentrador_lod)
         for fila in datos_parcela:
             for d in fila:
                 if not d.datos_objeto:
                     continue
                 #log.debug(d)
-                nombre_modelo=d.datos_objeto[11]
-                instancia=concentrador.attachNewNode("instancia_%s_%i"%(nombre_modelo, cntr_objs))
-                modelo=self.pool_modelos[nombre_modelo]
-                modelo.instanceTo(instancia)
-                instancia.setPos(parcela_node_path, d.posicion_parcela)
-                log.debug("se coloco un '%s' en posicion_parcela=%s..."%(d.datos_objeto[11], str(d.posicion_parcela)))
-                cntr_objs+=1
+                for i_lod in range(len(self._lods)):
+                    nombre_modelo="%s.lod%i"%(d.datos_objeto[11], i_lod)
+                    if nombre_modelo not in self.pool_modelos:
+                        continue
+                    instancia=concentradores_lod[i_lod].attachNewNode("instancia_%s_%i_lod%i"%(nombre_modelo, cntr_objs, i_lod))
+                    if i_lod>0:
+                        instancia.setBillboardAxis()
+                    modelo=self.pool_modelos[nombre_modelo]
+                    modelo.instanceTo(instancia)
+                    instancia.setPos(parcela_node_path, d.posicion_parcela)
+                    #log.debug("se coloco un '%s' en posicion_parcela=%s..."%(d.datos_objeto[11], str(d.posicion_parcela)))
+                    cntr_objs+=1
         # agregar a parcelas
         self.parcelas[idx_pos]=parcela_node_path
 
@@ -382,12 +405,19 @@ class Objetos:
             cursor=self.db.execute(sql)
             filas=cursor.fetchall()
             for fila in filas:
-                if fila[11] in self.pool_modelos:
-                    continue
-                ruta_archivo_modelo=os.path.join("objetos", "%s.egg"%fila[11])
-                log.info("-cargar %s"%ruta_archivo_modelo)
-                modelo=self.base.loader.loadModel(ruta_archivo_modelo)
-                self.pool_modelos[fila[11]]=modelo
+                ids_modelos=list()
+                for i_lod in range(len(self._lods)):
+                    ids_modelos.append("%s.lod%i"%(fila[11], i_lod))
+                    ruta_archivo_modelo=os.path.join("objetos", "%s.egg"%ids_modelos[i_lod])
+                    if i_lod==0:
+                        if not os.path.exists(ruta_archivo_modelo):
+                            ruta_archivo_modelo=os.path.join("objetos", "%s.egg"%fila[11])
+                    if not os.path.exists(ruta_archivo_modelo):
+                        continue
+                    if not ids_modelos[i_lod] in self.pool_modelos:
+                        log.info("-cargar %s"%ruta_archivo_modelo)
+                        modelo=self.base.loader.loadModel(ruta_archivo_modelo)
+                        self.pool_modelos[ids_modelos[i_lod]]=modelo
 
     def _terminar_pool_modelos(self):
         log.info("_terminar_pool_modelos")
