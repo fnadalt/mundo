@@ -2,6 +2,7 @@ from panda3d.core import *
 import sqlite3
 import csv
 import os, os.path
+import random
 
 import sistema, config
 from shader import GestorShader
@@ -54,7 +55,7 @@ class Objetos:
     """
 
     # ruido de distribucion de objetos
-    ParamsRuido=[16.0, 345]
+    ParamsRuido=[32.0, 345]
 
     def __init__(self, base):
         # referencias:
@@ -173,7 +174,14 @@ class Objetos:
                         instancia.setBillboardAxis()
                     modelo=self.pool_modelos[nombre_modelo]
                     modelo.instanceTo(instancia)
-                    instancia.setPos(parcela_node_path, d.posicion_parcela)
+                    if not instancia.hasBillboard():
+                        d.generar_deltas()
+                        altitud_suelo=self.sistema.obtener_altitud_suelo(d.posicion_global+d.delta_pos)
+                        instancia.setPos(parcela_node_path, d.posicion_parcela+d.delta_pos)
+                        instancia.setZ(parcela_node_path, altitud_suelo)
+                        instancia.setHpr(d.delta_hpr)
+                    else:
+                        instancia.setPos(parcela_node_path, d.posicion_parcela)
                     #log.debug("se coloco un '%s' en posicion_parcela=%s..."%(d.datos_objeto[11], str(d.posicion_parcela)))
                     cntr_objs+=1
         # agregar a parcelas
@@ -440,6 +448,15 @@ class DatosLocalesObjetos:
         self.tipo_terreno=tipo_terreno
         self.datos_objeto=None
         self.factor_ruido=0.0
+        self.delta_pos=Vec3()
+        self.delta_hpr=Vec3()
+    
+    def generar_deltas(self):
+        random.seed(Objetos.ParamsRuido[1]) # a cada llamado?!
+        self.delta_pos.setX(0.75*(random.random()*2.0-1.0))
+        self.delta_pos.setY(0.75*(random.random()*2.0-1.0))
+        self.delta_hpr.setX(90.0*(random.random()*2.0-1.0))
+        self.delta_hpr.setY(3.50*(random.random()*2.0-1.0))
     
     def __str__(self):
         return "DatosLocalesObjetos: _pg=%s _pp=%s a=%i t=%i fr=%.3f %s" \
