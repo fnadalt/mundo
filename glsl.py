@@ -91,12 +91,12 @@ vec4 ds_generico(int iLightSource, vec3 normal)
     vec4 color;
     vec3 s=p3d_LightSource[iLightSource].position.xyz-(PositionV.xyz*p3d_LightSource[iLightSource].position.w);
     vec3 l=%(FUNC_LIGHT_VEC_TRANSFORM)s
-    vec4 diffuse=clamp(p3d_Material.diffuse*p3d_LightSource[iLightSource].color*max(dot(normal,l),0),0,1);
+    vec4 diffuse=clamp(p3d_Material.diffuse*p3d_LightSource[iLightSource].diffuse*max(dot(normal,l),0),0,1);
     color=diffuse;
     if(p3d_Material.specular!=vec3(0,0,0)){
         vec3 v=normalize(-PositionV.xyz);
         vec3 r=normalize(-reflect(l, normal)); //(2.0*dot(s, normal)*normal-s)
-        color+=vec4(p3d_Material.specular,1.0) * p3d_LightSource[iLightSource].color * pow(max(dot(r,v),0),p3d_Material.shininess);
+        color+=vec4(p3d_Material.specular,1.0) * p3d_LightSource[iLightSource].specular * pow(max(dot(r,v),0),p3d_Material.shininess);
     }
     if(p3d_LightSource[iLightSource].spotCosCutoff>0.0){
         float spotEffect = dot(normalize(p3d_LightSource[iLightSource].spotDirection), -l);
@@ -120,12 +120,12 @@ vec4 ds_puntual(int i_luz_puntual, vec3 normal)
     vec4 luz_p_v=luz_puntual[i_luz_puntual].position;
     vec3 s=luz_p_v.xyz-PositionV.xyz;
     vec3 l=%(FUNC_LIGHT_VEC_TRANSFORM)s
-    vec4 diffuse=clamp(p3d_Material.diffuse*luz_puntual[i_luz_puntual].color*max(dot(normal,l),0),0,1);
+    vec4 diffuse=clamp(p3d_Material.diffuse*luz_puntual[i_luz_puntual].diffuse*max(dot(normal,l),0),0,1);
     color=diffuse;
     if(p3d_Material.specular!=vec3(0,0,0)){
         vec3 v=normalize(-PositionV.xyz);
         vec3 r=normalize(-reflect(l, normal));
-        color+=vec4(p3d_Material.specular,1.0) * luz_puntual[i_luz_puntual].color * pow(max(dot(r,v),0),p3d_Material.shininess);
+        color+=vec4(p3d_Material.specular,1.0) * luz_puntual[i_luz_puntual].specular * pow(max(dot(r,v),0),p3d_Material.shininess);
     }
     if(luz_puntual[i_luz_puntual].attenuation!=vec3(0,0,0)){
         float distancia=length(s);

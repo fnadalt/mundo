@@ -173,7 +173,7 @@ class Mundo:
         luz_puntual=self.nodo.attachNewNode(PointLight("luz_puntual"))
         luz_puntual.setPos(Vec3(0, -2, 152.5))
         luz_puntual.node().setColor(Vec4(1, 0, 0, 1))
-        luz_puntual.node().setAttenuation(Vec3(1, 1, 0))
+        luz_puntual.node().setAttenuation(Vec3(0, 1, 0))
         self.nodo.setShaderInput("luz_puntual[0]", luz_puntual, priority=4)
         #
         self.spot_light=self.nodo.attachNewNode(Spotlight("spot_light"))
@@ -202,12 +202,6 @@ class Mundo:
 #        tex0.load(imagen)
         self.nubes.setTexture(ts0, tex0)
         #
-#        quebracho=self.base.loader.loadModel("objetos/quebracho.egg")
-#        quebracho.setScale(0.5)
-#        quebracho.reparentTo(self.nodo)
-#        quebracho.setPos(self.hombre.cuerpo.getPos()+Vec3(0, -10, 0))
-#        quebracho.setTwoSided(True)
-        #
         pelota=self.base.loader.loadModel("objetos/pelota.egg")
         pelota.reparentTo(self.nodo)
         pelota.setZ(self.sistema.obtener_altitud_suelo(self.sistema.posicion_cursor)+3.0)
@@ -226,6 +220,14 @@ class Mundo:
         #plano_vertical.setTwoSided(True)
         plano_vertical.setBillboardAxis()
         GestorShader.aplicar(plano_vertical, GestorShader.ClaseGenerico, 3)
+        #
+        nodo_flatten=self.nodo.attachNewNode("nodo_flatten")
+        for x in range(4):
+            p=self.base.loader.loadModel("objetos/pelota.egg")
+            p.reparentTo(nodo_flatten)
+            p.setPos(6, 0, 153+x)
+            p.setScale(0.2)
+        #nodo_flatten.flattenStrong()
 
     def _cargar_terreno(self):
         # terreno

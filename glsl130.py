@@ -8,9 +8,9 @@ from glsl import *
 STRUCT_LUZ_P3D="""
 uniform struct {
     vec4 color;
-    //vec4 ambient;
-    //vec4 diffuse;
-    //vec4 specular;
+    vec4 ambient;
+    vec4 diffuse;
+    vec4 specular;
     vec4 position;
     vec3 spotDirection;
     float spotExponent;
@@ -23,8 +23,17 @@ uniform struct {
 STRUCT_LUZ_PUNTUAL="""
 uniform struct {
     vec4 color;
+    vec4 ambient;
+    vec4 diffuse;
+    vec4 specular;
     vec4 position;
+    vec3 spotDirection;
+    float spotExponent;
+    float spotCutoff;
+    float spotCosCutoff;
     vec3 attenuation;
+    samplerCube shadowMap;
+    mat4 shadowViewMatrix;
 } """
 
 #
