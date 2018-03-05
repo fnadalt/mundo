@@ -112,7 +112,7 @@ in vec4 Position; // cielo
 FS_POS_VIEW="""
 in vec4 PositionV; // luz, fog
 in vec3 Normal;
-uniform mat4 p3d_ModelViewMatrix;
+uniform mat4 p3d_ModelViewMatrix; // sin uso?
 """
 FS_POS_PROJ="""
 in vec4 PositionP; // agua

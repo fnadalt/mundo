@@ -22,7 +22,8 @@ class Aplicacion(ShowBase):
         loadPrcFileData('', 'gl-coordinate-system default') # ? indicado para usar trans_world_to_clip_of_light
         #loadPrcFileData('', 'sync-video 0')
         #loadPrcFileData('', 'notify-level debug')
-        loadPrcFileData('', 'dump-generated-shaders 1')
+        loadPrcFileData('', 'gl-debug #t')
+        loadPrcFileData('', 'dump-generated-shaders #t')
         #
         self.disableMouse()
         self.setFrameRateMeter(True)

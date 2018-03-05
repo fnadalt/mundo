@@ -174,7 +174,7 @@ class Objetos:
                         instancia.setBillboardAxis()
                     modelo=self.pool_modelos[nombre_modelo]
                     modelo.instanceTo(instancia)
-                    if not instancia.hasBillboard():
+                    if i_lod==0: #if not instancia.hasBillboard():
                         d.generar_deltas()
                         altitud_suelo=self.sistema.obtener_altitud_suelo(d.posicion_global+d.delta_pos)
                         instancia.setPos(parcela_node_path, d.posicion_parcela+d.delta_pos)
@@ -448,14 +448,14 @@ class DatosLocalesObjetos:
         self.tipo_terreno=tipo_terreno
         self.datos_objeto=None
         self.factor_ruido=0.0
-        self.delta_pos=Vec3()
-        self.delta_hpr=Vec3()
+        self.delta_pos=Vec3(0.0, 0.0, 0.0)
+        self.delta_hpr=Vec3(0.0, 0.0, 0.0)
     
     def generar_deltas(self):
         random.seed(Objetos.ParamsRuido[1]) # a cada llamado?!
         self.delta_pos.setX(0.75*(random.random()*2.0-1.0))
         self.delta_pos.setY(0.75*(random.random()*2.0-1.0))
-        self.delta_hpr.setX(90.0*(random.random()*2.0-1.0))
+        self.delta_hpr.setX(180.0*(random.random()*2.0-1.0))
         self.delta_hpr.setY(3.50*(random.random()*2.0-1.0))
     
     def __str__(self):

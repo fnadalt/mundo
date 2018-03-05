@@ -243,11 +243,11 @@ vec4 tex_terreno(bool normal_map)
     vec2 distancias=vec2(fracc_rnd.x-fracc.x,fracc_rnd.y-fracc.y);
     float distancia;
     if(abs(distancias.x)>abs(distancias.y)){
-        float fracc_rnd_op=(int(fracc_rnd.x)+1)%%2;
+        float fracc_rnd_op=mod((int(fracc_rnd.x)+1),2);
         idx_tabla_1.x=entero.x+fracc_rnd_op;
         distancia=abs(distancias.x);
     } else {
-        float fracc_rnd_op=(int(fracc_rnd.y)+1)%%2;
+        float fracc_rnd_op=mod((int(fracc_rnd.y)+1),2);
         idx_tabla_1.y=entero.y+fracc_rnd_op;
         distancia=abs(distancias.y);
     }

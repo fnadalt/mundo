@@ -1,4 +1,39 @@
 from glsl import *
+#
+#
+#
+#
+#
+STRUCT_LUZ_P3D="""
+uniform struct {
+    vec4 color;
+    vec4 ambient;
+    vec4 diffuse;
+    vec4 specular;
+    vec4 position;
+    vec3 spotDirection;
+    float spotExponent;
+    float spotCutoff;
+    float spotCosCutoff;
+    vec3 attenuation;
+    sampler2DShadow shadowMap;
+    mat4 shadowViewMatrix;
+} """
+STRUCT_LUZ_PUNTUAL="""
+uniform struct {
+    vec4 color;
+    vec4 ambient;
+    vec4 diffuse;
+    vec4 specular;
+    vec4 position;
+    vec3 spotDirection;
+    float spotExponent;
+    float spotCutoff;
+    float spotCosCutoff;
+    vec3 attenuation;
+    samplerCube shadowMap;
+    mat4 shadowViewMatrix;
+} """
 
 #
 #
@@ -26,30 +61,19 @@ varying vec4 PositionV; // luz, fog
 varying vec3 Normal;
 """
 VS_SOMBRA="""
-uniform struct {
-    vec4 color;
-    vec4 ambient;
-    vec4 diffuse;
-    vec4 specular;
-    vec4 position;
-    vec3 spotDirection;
-    float spotExponent;
-    float spotCutoff;
-    float spotCosCutoff;
-    vec3 attenuation;
-    sampler2DShadow shadowMap;
-    mat4 shadowViewMatrix;
-} p3d_LightSource[8];
-varying vec4 sombra[8];
-"""
+%(STRUCT_LUZ_P3D)s p3d_LightSource[4];
+varying vec4 sombra[4];
+"""%{"STRUCT_LUZ_P3D":STRUCT_LUZ_P3D}
 VS_POS_PROJ="""
 varying vec4 PositionP; // agua
 """
+VS_NORMAL_MAP="""
+attribute vec4 p3d_Tangent;
+varying vec4 tangent;
+"""
 VS_TIPO_TERRENO="""
 attribute vec3 info_tipo_terreno;
-attribute vec4 Tangent;
 varying vec3 info_tipo;
-varying vec4 tangent;
 """
 VS_TERRENO_COLOR_DEBUG="""
 attribute vec4 Color;
@@ -87,6 +111,7 @@ varying vec4 Position; // cielo
 FS_POS_VIEW="""
 varying vec4 PositionV; // luz, fog
 varying vec3 Normal;
+uniform mat4 p3d_ModelViewMatrix; // sin uso?
 """
 FS_POS_PROJ="""
 varying vec4 PositionP; // agua
@@ -106,24 +131,14 @@ uniform struct {
     float metallic;
     float refractiveIndex;
 } p3d_Material;
-uniform struct {
-    vec4 color;
-    vec4 ambient;
-    vec4 diffuse;
-    vec4 specular;
-    vec4 position;
-    vec3 spotDirection;
-    float spotExponent;
-    float spotCutoff;
-    float spotCosCutoff;
-    vec3 attenuation;
-    sampler2DShadow shadowMap;
-    mat4 shadowViewMatrix;
-} p3d_LightSource[8];
-varying vec4 sombra[8];
-"""
+%(STRUCT_LUZ_P3D)s p3d_LightSource[4];
+%(STRUCT_LUZ_PUNTUAL)s luz_puntual[4];
+varying vec4 sombra[4];
+"""%{"STRUCT_LUZ_P3D":STRUCT_LUZ_P3D, "STRUCT_LUZ_PUNTUAL":STRUCT_LUZ_PUNTUAL}
 FS_TERRENO="""
 varying vec3 info_tipo;
+"""
+FS_NORMAL_MAP="""
 varying vec4 tangent;
 """
 FS_TERRENO_COLOR_DEBUG="""
