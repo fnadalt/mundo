@@ -13,7 +13,9 @@ _default_config={
         "shader":       {
                         "phong":True, 
                         "sombras":False, 
-                        "fog":False
+                        "fog":False, 
+                        "tamano_sombras":512, 
+                        "fov_sombras":30
                         }, 
         "sistema":      {
                         "radio_expansion_parcelas":2
@@ -48,6 +50,22 @@ def archivo_modificado():
 def valbool(variable):
     valor=val(variable).lower()
     return True if valor=="true" else False
+
+def valint(variable):
+    try:
+        valor=int(val(variable))
+    except Exception as e:
+        log.exception(str(e))
+        return 0
+    return valor
+
+def valfloat(variable):
+    try:
+        valor=float(val(variable))
+    except Exception as e:
+        log.exception(str(e))
+        return 0
+    return valor
 
 def vallist(variable, separador=" "):
     valor=val(variable)

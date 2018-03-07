@@ -11,6 +11,7 @@
   <Scalar> minfilter { linear_mipmap_linear }
   <Scalar> magfilter { linear_mipmap_linear }
   <Scalar> envtype { modulate }
+  <Scalar> alpha { ms }
 }
 <Texture> corteza_n {
   "/home/flaco/panda3d/mundo/objetos/texturas/quebracho_corteza_n.png"

@@ -19,7 +19,7 @@ uniform struct {
     sampler2DShadow shadowMap;
     mat4 shadowViewMatrix;
 } """
-STRUCT_LUZ_PUNTUAL="""
+STRUCT_LUZ_OMNI="""
 uniform struct {
     vec4 color;
     vec4 ambient;
@@ -132,9 +132,9 @@ uniform struct {
     float refractiveIndex;
 } p3d_Material;
 %(STRUCT_LUZ_P3D)s p3d_LightSource[4];
-%(STRUCT_LUZ_PUNTUAL)s luz_puntual[4];
+%(STRUCT_LUZ_OMNI)s luz_omni[4];
 varying vec4 sombra[4];
-"""%{"STRUCT_LUZ_P3D":STRUCT_LUZ_P3D, "STRUCT_LUZ_PUNTUAL":STRUCT_LUZ_PUNTUAL}
+"""%{"STRUCT_LUZ_P3D":STRUCT_LUZ_P3D, "STRUCT_LUZ_OMNI":STRUCT_LUZ_OMNI}
 FS_TERRENO="""
 varying vec3 info_tipo;
 """

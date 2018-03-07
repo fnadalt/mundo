@@ -80,9 +80,9 @@ class GestorShader:
         nodo.setShaderInput("plano_recorte_agua", _plano_recorte_agua, priority=prioridad)
         if config.valbool("shader.phong"):
             for i in range(4): # parametrizar?
-                pl=PointLight("luz_puntual_dummy_%i"%i)
+                pl=PointLight("luz_omni_dummy_%i"%i)
                 pl.setColor(Vec4(0, 0, 0, 0))
-                nodo.setShaderInput("luz_puntual[%i]"%i, NodePath(pl), priority=prioridad)
+                nodo.setShaderInput("luz_omni[%i]"%i, NodePath(pl), priority=prioridad)
         if config.valbool("shader.fog"):
             nodo.setShaderInput("distancia_fog_minima", 70.0, priority=prioridad)
             nodo.setShaderInput("distancia_fog_maxima", 120.0, priority=prioridad)

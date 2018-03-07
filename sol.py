@@ -50,7 +50,9 @@ class Sol:
         self.luz.node().setColor(Vec4(1.0, 1.0, 0.7, 1.0))
         #
         if config.valbool("shader.sombras"):
-            self.luz.node().setShadowCaster(True, 512, 512)
+            tamano=config.valint("shader.tamano_sombras")
+            self.luz.node().setShadowCaster(True, tamano, tamano)
+            self.luz.node().getLens().setFov(config.valint("shader.fov_sombras"))
         # init:
         self._establecer_shaders()
 

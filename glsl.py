@@ -114,22 +114,22 @@ vec4 ds_generico(int iLightSource, vec3 normal)
     }
     return color;
 }
-vec4 ds_puntual(int i_luz_puntual, vec3 normal)
+vec4 ds_puntual(int i_luz_omni, vec3 normal)
 {
     vec4 color;
-    vec4 luz_p_v=luz_puntual[i_luz_puntual].position;
+    vec4 luz_p_v=luz_omni[i_luz_omni].position;
     vec3 s=luz_p_v.xyz-PositionV.xyz;
     vec3 l=%(FUNC_LIGHT_VEC_TRANSFORM)s
-    vec4 diffuse=clamp(p3d_Material.diffuse*luz_puntual[i_luz_puntual].diffuse*max(dot(normal,l),0),0,1);
+    vec4 diffuse=clamp(p3d_Material.diffuse*luz_omni[i_luz_omni].diffuse*max(dot(normal,l),0),0,1);
     color=diffuse;
     if(p3d_Material.specular!=vec3(0,0,0)){
         vec3 v=normalize(-PositionV.xyz);
         vec3 r=normalize(-reflect(l, normal));
-        color+=vec4(p3d_Material.specular,1.0) * luz_puntual[i_luz_puntual].specular * pow(max(dot(r,v),0),p3d_Material.shininess);
+        color+=vec4(p3d_Material.specular,1.0) * luz_omni[i_luz_omni].specular * pow(max(dot(r,v),0),p3d_Material.shininess);
     }
-    if(luz_puntual[i_luz_puntual].attenuation!=vec3(0,0,0)){
+    if(luz_omni[i_luz_omni].attenuation!=vec3(0,0,0)){
         float distancia=length(s);
-        float atenuacion=1.0/(luz_puntual[i_luz_puntual].attenuation.x+luz_puntual[i_luz_puntual].attenuation.y*distancia+luz_puntual[i_luz_puntual].attenuation.z*distancia*distancia);
+        float atenuacion=1.0/(luz_omni[i_luz_omni].attenuation.x+luz_omni[i_luz_omni].attenuation.y*distancia+luz_omni[i_luz_omni].attenuation.z*distancia*distancia);
         color*=atenuacion;
     }
     return color;
@@ -437,10 +437,10 @@ FS_MAIN_LUZ="""
                 color+=ds_generico(i,_normal);
             }
         }
-        int cantidad_luces_puntuales=luz_puntual.length();
+        int cantidad_luces_puntuales=luz_omni.length();
         for(int i=0; i<cantidad_luces_puntuales; ++i)
         {
-            if(luz_puntual[i].color.a!=0.0)
+            if(luz_omni[i].color.a!=0.0)
             {
                 color+=ds_puntual(i,_normal);
             }

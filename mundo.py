@@ -170,11 +170,11 @@ class Mundo:
         self.palo.setR(-85.0)
         self.palo.setScale(10.0)
         #
-        luz_puntual=self.nodo.attachNewNode(PointLight("luz_puntual"))
-        luz_puntual.setPos(Vec3(0, -2, 152.5))
-        luz_puntual.node().setColor(Vec4(1, 0, 0, 1))
-        luz_puntual.node().setAttenuation(Vec3(0, 1, 0))
-        self.nodo.setShaderInput("luz_puntual[0]", luz_puntual, priority=4)
+        luz_omni=self.nodo.attachNewNode(PointLight("luz_omni"))
+        luz_omni.setPos(Vec3(0, -2, 152.5))
+        luz_omni.node().setColor(Vec4(1, 0, 0, 1))
+        luz_omni.node().setAttenuation(Vec3(0, 1, 0))
+        self.nodo.setShaderInput("luz_omni[0]", luz_omni, priority=4)
         #
         self.spot_light=self.nodo.attachNewNode(Spotlight("spot_light"))
         self.spot_light.setPos(self.hombre.cuerpo.getPos()+Vec3(0, -5, 6))
