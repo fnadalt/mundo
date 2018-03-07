@@ -23,8 +23,6 @@ log=logging.getLogger(__name__)
 
 class Mundo:
 
-    PosInicialFoco=Vec3(600, -54, 1) # |(-937,-323,1)
-
     def __init__(self, base):
         # referencias:
         self.base=base
@@ -266,7 +264,7 @@ class Mundo:
         #info+=self.input_mapper.obtener_info()+"\n"
         #info+=self.cielo.obtener_info()
         #info+=self.sol.obtener_info()+"\n"
-        #self.texto1.setText(info)
+        self.texto1.setText(info)
         # tiempo
         dt=self.base.taskMgr.globalClock.getDt()
         # input
