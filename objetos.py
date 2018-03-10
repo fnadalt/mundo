@@ -113,7 +113,7 @@ class Objetos:
     def update(self, forzar=False):
         #
         idx_pos=self.sistema.obtener_indice_parcela(self.sistema.posicion_cursor)
-        #log.debug("idx_pos=%s"%(str(idx_pos)))
+        log.debug("idx_pos=%s"%(str(idx_pos)))
         if forzar or idx_pos!=self.idx_pos_parcela_actual:
             self.idx_pos_parcela_actual=idx_pos
             #
@@ -159,6 +159,7 @@ class Objetos:
         for i_lod in range(len(self._lods)):
             lod.addSwitch(self._lods[i_lod][0], self._lods[i_lod][1])
             concentrador_lod=lod_np.attachNewNode("concentrador_lod%i"%i_lod)
+            concentrador_lod.setTwoSided(True) # aqui? asi?
             concentradores_lod.append(concentrador_lod)
         for fila in datos_parcela:
             for d in fila:
@@ -184,6 +185,8 @@ class Objetos:
                         instancia.setPos(parcela_node_path, d.posicion_parcela)
                     #log.debug("se coloco un '%s' en posicion_parcela=%s..."%(d.datos_objeto[11], str(d.posicion_parcela)))
                     cntr_objs+=1
+        # flattenStrong()?
+        parcela_node_path.flattenStrong()
         # agregar a parcelas
         self.parcelas[idx_pos]=parcela_node_path
 
@@ -217,7 +220,7 @@ class Objetos:
                 if ambiente not in ambientes:
                     ambientes.append(ambiente)
                 if ambiente not in indexado_objetos.keys():
-                    #log.debug("agregando indexado_objetos[%i]"%ambiente)
+                    log.debug("agregando indexado_objetos[%i]"%ambiente)
                     indexado_objetos[ambiente]=dict()
                 # tipo terreno
                 tipo_terreno0, tipo_terreno1, factor_transicion=self.sistema.obtener_tipo_terreno(_pos_global)
@@ -225,7 +228,7 @@ class Objetos:
                 if not tipo_terreno in tipos_terreno:
                     tipos_terreno.append(tipo_terreno)
                 if not tipo_terreno in indexado_objetos[ambiente]:
-                    #log.debug("agregando indexado_objetos[%i][%i]"%(ambiente, tipo_terreno))
+                    log.debug("agregando indexado_objetos[%i][%i]"%(ambiente, tipo_terreno))
                     indexado_objetos[ambiente][tipo_terreno]=GrupoObjetosLocaciones(cantidad_total_locaciones)
                 # temperatura anual media
                 tam=self.sistema.obtener_temperatura_anual_media_norm(_pos_global, altitud_suelo)
@@ -286,7 +289,7 @@ class Objetos:
             #log.debug(str(grupo_objetos_locaciones))
             for tipo_objeto in grupo_objetos_locaciones.tipos_objeto:
                 cant_obj_remanentes=grupo_objetos_locaciones.cantidades_tipos_objeto[tipo_objeto[2]]
-                log.debug("colocar %i objetos '%s' en ambiente=%i y tipo_terreno=%i"%(cant_obj_remanentes, tipo_objeto[11], tipo_objeto[1], tipo_objeto[6]))
+                #log.debug("colocar %i objetos '%s' en ambiente=%i y tipo_terreno=%i"%(cant_obj_remanentes, tipo_objeto[11], tipo_objeto[1], tipo_objeto[6]))
                 for d in grupo_objetos_locaciones.locaciones_disponibles:
                     if cant_obj_remanentes>0 and \
                        self._chequear_espacio_disponible(d.posicion_parcela, tipo_objeto[4], tipo_objeto[5], datos_locales):
@@ -335,15 +338,17 @@ class Objetos:
                     radio_inferior_vecino=datos_objeto[4]
                     radio_superior_vecino=datos_objeto[5]
                     #log.debug("_chequear_espacio_disponible: radios_maximos_totales(i/s)=(%.1f,%.1f) \n candidato _pos_parcela=%s radios(i/s)=(%.1f,%.1f)\n vecino _pos_parcela=%s radios(i/s)=(%.1f,%.1f)\n" \
-                    #          %(radio_maximo_total_inferior, radio_maximo_total_superior,  \
+                    #          %(0.0, radio_maximo_total_superior,  \
                     #            str(_pos_parcela), radio_inferior, radio_superior, \
                     #            str(vecino.posicion_parcela), radio_inferior_vecino, radio_superior_vecino))
                     dmin=dx if dx<dy else dy
                     radios_inferiores=(radio_inferior+radio_inferior_vecino)
-                    radios_superiores=(radio_superior+radio_superior_vecino)
-                    if radios_inferiores>(radios_inferiores*dmin) or \
-                       radios_superiores>(radios_superiores*dmin):
+                    if radio_inferior>(radios_inferiores*dmin):
                         return False
+                    elif radio_superior>0.0:
+                        radios_superiores=(radio_superior+radio_superior_vecino)
+                        if radio_superior>(radios_superiores*dmin):
+                            return False
         #
         return True
         
@@ -485,14 +490,14 @@ class GrupoObjetosLocaciones:
     def determinar_cantidades_tipos_objeto(self):
         cantidad_tipos_objeto=len(self.tipos_objeto)
         cantidad_locaciones_disponibles=len(self.locaciones_disponibles)
-        #log.debug("determinar_cantidades_tipos_objeto cantidad_tipos_objeto=%i cantidad_locaciones_disponibles=%i cantidad_total_locaciones=%i" \
-        #        %(cantidad_tipos_objeto, cantidad_locaciones_disponibles, self.cantidad_total_locaciones))
+        log.debug("determinar_cantidades_tipos_objeto cantidad_tipos_objeto=%i cantidad_locaciones_disponibles=%i cantidad_total_locaciones=%i" \
+                %(cantidad_tipos_objeto, cantidad_locaciones_disponibles, self.cantidad_total_locaciones))
         for fila in self.tipos_objeto:
             tipo_objeto=fila[2]
             densidad=fila[3]/cantidad_tipos_objeto
-            cantidad=densidad*(self.cantidad_total_locaciones/cantidad_locaciones_disponibles)#cantidad_locaciones_disponibles/self.cantidad_total_locaciones)
+            cantidad=densidad*cantidad_locaciones_disponibles#(self.cantidad_total_locaciones/cantidad_locaciones_disponibles)#cantidad_locaciones_disponibles/self.cantidad_total_locaciones)
             if tipo_objeto in self.cantidades_tipos_objeto:
                 log.error("el tipo de objeto %i ya se encuentra en self.cantidades_tipos_objeto"%tipo_objeto)
                 continue
-            #log.debug("cantidad de objetos '%s' a colocar: %i"%(fila[11], cantidad))
+            log.debug("cantidad de objetos '%s' a colocar: %i"%(fila[11], cantidad))
             self.cantidades_tipos_objeto[tipo_objeto]=int(cantidad)

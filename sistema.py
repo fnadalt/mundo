@@ -1,5 +1,6 @@
 from panda3d.core import *
 import math
+import datetime
 
 import config
 
@@ -206,10 +207,13 @@ class Sistema:
             log.info("cargar_parametros_iniciales por defecto")
             self.posicion_cursor=Vec3(16, 16, 0) # transicion desierto Vec3(32, -2700, 0) # selva pura:Vec3(-374, 2176, 0)
             self.radio_expansion_parcelas=int(config.val("sistema.radio_expansion_parcelas"))
-            self.duracion_dia_segundos=1800
+            self.duracion_dia_segundos=3600.0 * 24
             self.ano=0
             self.dia=0
-            self._segundos_transcurridos_dia=0.60*self.duracion_dia_segundos
+            ahora=datetime.datetime.now()
+            ahora_hn=self.calcular_hora_normalizada(ahora.hour, ahora.minute, ahora.second)
+            #ahora_hn=0.60
+            self._segundos_transcurridos_dia=ahora_hn*self.duracion_dia_segundos
         else:
             log.info("cargar_parametros_iniciales desde configuracion")
             # leer de archivo
@@ -599,6 +603,13 @@ class Sistema:
                 hn+=1.0
         offset=(hn-hora1)/(hora2-hora1)
         return offset
+
+    def calcular_hora_normalizada(self, hora, minutos, segundos):
+        hn=(segundos + 60.0 * minutos + 3600.0 * hora)/86400
+        hn+=0.2
+        if hn>1.0:
+            hn-=1.0
+        return hn
 
     def obtener_hora(self):
         _hn=self.hora_normalizada

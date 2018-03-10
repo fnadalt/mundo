@@ -44,7 +44,7 @@ class Sol:
         self.nodo.setX(300.0) # |400.0
         self.nodo.setScale(20.0)
         self.nodo.setColor((1.0, 1.0, 0.7, 1.0))
-        self.nodo.node().adjustDrawMask(DrawMask(7), DrawMask(0), DrawMask(0))
+        self.nodo.node().adjustDrawMask(DrawMask(8), DrawMask(7), DrawMask(0))
         # luz direccional
         self.luz=self.nodo.attachNewNode(DirectionalLight("luz_solar"))
         self.luz.node().setColor(Vec4(1.0, 1.0, 0.7, 1.0))
@@ -153,6 +153,7 @@ class Sol:
         tempnode.setShaderInput("plano_recorte_agua", Vec4(0, 0, 1, self._altitud_agua), priority=4)
         tempnode.setShaderInput("posicion_sol", Vec3(0, 0, 0), priority=4)
         self.glow_camera = self.base.makeCamera(self.glow_buffer, lens=self.base.cam.node().getLens())
+        self.glow_camera.node().setCameraMask(DrawMask(8))
         self.glow_camera.node().setInitialState(tempnode.getState())
         # blur shaders
         self.blur_x_buffer=self._generar_buffer_filtro(self.glow_buffer, "blur_x", -2, "blur_x")

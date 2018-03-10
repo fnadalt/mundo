@@ -33,7 +33,9 @@ _default_config={
                         "sombras":True
                         }, 
         "objetos":      {
-                        "lod0":"75.0 0.0"
+                        "lod0":"65.0 0.0", 
+                        "lod1":"130.0 65.0", 
+                        "lod2":"500.0 130.0"
                         }
         }
 
