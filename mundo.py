@@ -245,7 +245,7 @@ class Mundo:
         # sol
         self.sol=Sol(self.base, sistema.Sistema.TopoAltitudOceano-20.0)
         self.sol.pivot.reparentTo(self.nodo) # self.cielo.nodo
-        self.sol.mostrar_camaras()
+        #self.sol.mostrar_camaras()
         self.nodo.setLight(self.sol.luz)
         # agua
         self.agua=Agua(self.base, sistema.Sistema.TopoAltitudOceano)

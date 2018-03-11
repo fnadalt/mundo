@@ -159,10 +159,12 @@ class Objetos:
         ruta_archivo_cache=os.path.join(self.directorio_cache, "%s.bin"%nombre)
         datos_parcela=None
         if not os.path.exists(ruta_archivo_cache):
+            log.info(" generar parcela por primera vez -> %s"%ruta_archivo_cache)
             datos_parcela=self._generar_datos_parcela(pos, idx_pos)
             with open(ruta_archivo_cache, "wb") as arch:
                 pickle.dump(datos_parcela, arch)
         else:
+            log.info(" cargar parcela desde cache <- %s"%ruta_archivo_cache)
             with open(ruta_archivo_cache, "rb") as arch:
                 datos_parcela=pickle.load(arch)
         # lod
@@ -198,6 +200,7 @@ class Objetos:
                         instancia.setPos(parcela_node_path, d.posicion_parcela+d.delta_pos)
                         instancia.setZ(parcela_node_path, altitud_suelo)
                         instancia.setHpr(d.delta_hpr)
+                        instancia.setScale(d.delta_scl)
                     else:
                         instancia.setPos(parcela_node_path, d.posicion_parcela)
                     #log.debug("se coloco un '%s' en posicion_parcela=%s..."%(d.datos_objeto[11], str(d.posicion_parcela)))
@@ -215,6 +218,7 @@ class Objetos:
         del self.parcelas[idx_pos]
 
     def _generar_datos_parcela(self, pos, idx_pos):
+        random.seed(Objetos.ParamsRuido[1])
         # obtener informacion de terreno
         cantidad_total_locaciones=sistema.Sistema.TopoTamanoParcela**2
         indexado_objetos=dict() # {ambiente:{tipo_terreno:GrupoObjetosLocaciones,...},...}
@@ -237,7 +241,7 @@ class Objetos:
                 if ambiente not in ambientes:
                     ambientes.append(ambiente)
                 if ambiente not in indexado_objetos.keys():
-                    log.debug("agregando indexado_objetos[%i]"%ambiente)
+                    #log.debug("agregando indexado_objetos[%i]"%ambiente)
                     indexado_objetos[ambiente]=dict()
                 # tipo terreno
                 tipo_terreno0, tipo_terreno1, factor_transicion=self.sistema.obtener_tipo_terreno(_pos_global)
@@ -245,7 +249,7 @@ class Objetos:
                 if not tipo_terreno in tipos_terreno:
                     tipos_terreno.append(tipo_terreno)
                 if not tipo_terreno in indexado_objetos[ambiente]:
-                    log.debug("agregando indexado_objetos[%i][%i]"%(ambiente, tipo_terreno))
+                    #log.debug("agregando indexado_objetos[%i][%i]"%(ambiente, tipo_terreno))
                     indexado_objetos[ambiente][tipo_terreno]=GrupoObjetosLocaciones(cantidad_total_locaciones)
                 # temperatura anual media
                 tam=self.sistema.obtener_temperatura_anual_media_norm(_pos_global, altitud_suelo)
@@ -354,19 +358,22 @@ class Objetos:
                         continue
                     radio_inferior_vecino=datos_objeto[4]
                     radio_superior_vecino=datos_objeto[5]
-                    #log.debug("_chequear_espacio_disponible: radios_maximos_totales(i/s)=(%.1f,%.1f) \n candidato _pos_parcela=%s radios(i/s)=(%.1f,%.1f)\n vecino _pos_parcela=%s radios(i/s)=(%.1f,%.1f)\n" \
+                    #log.debug("_chequear_espacio_disponible: radios_maximos_totales(i/s)=(%.1f,%.1f) \n candidato _pos_parcela=%s radios(i/s)=(%.1f,%.1f)\n vecino _pos_parcela=%s radios(i/s)=(%.1f,%.1f)" \
                     #          %(0.0, radio_maximo_total_superior,  \
                     #            str(_pos_parcela), radio_inferior, radio_superior, \
                     #            str(vecino.posicion_parcela), radio_inferior_vecino, radio_superior_vecino))
-                    dmin=dx if dx<dy else dy
+                    dmax=dx if dx>dy else dy
                     radios_inferiores=(radio_inferior+radio_inferior_vecino)
-                    if radio_inferior>(radios_inferiores*dmin):
+                    if dmax>(radios_inferiores):
+                    #    log.debug("False\n")
                         return False
                     elif radio_superior>0.0:
                         radios_superiores=(radio_superior+radio_superior_vecino)
-                        if radio_superior>(radios_superiores*dmin):
+                        if dmax>(radios_superiores):
+                    #        log.debug("False\n")
                             return False
         #
+        #log.debug("True\n")
         return True
         
 
@@ -472,13 +479,17 @@ class DatosLocalesObjetos:
         self.factor_ruido=0.0
         self.delta_pos=Vec3(0.0, 0.0, 0.0)
         self.delta_hpr=Vec3(0.0, 0.0, 0.0)
+        self.delta_scl=Vec3(0.0, 0.0, 0.0)
     
     def generar_deltas(self):
-        random.seed(Objetos.ParamsRuido[1]) # a cada llamado?!
         self.delta_pos.setX(0.75*(random.random()*2.0-1.0))
         self.delta_pos.setY(0.75*(random.random()*2.0-1.0))
         self.delta_hpr.setX(180.0*(random.random()*2.0-1.0))
         self.delta_hpr.setY(3.50*(random.random()*2.0-1.0))
+        self.delta_scl.setX(0.85+0.15*random.random())
+        self.delta_scl.setY(0.85+0.15*random.random())
+        self.delta_scl.setZ(0.75+0.25*random.random())
+        #log.debug("generar_deltas dpos=%s dhpr=%s dscl=%s"%(str(self.delta_pos), str(self.delta_hpr), str(self.delta_scl)))
     
     def __str__(self):
         return "DatosLocalesObjetos: _pg=%s _pp=%s a=%i t=%i fr=%.3f %s" \
@@ -507,8 +518,8 @@ class GrupoObjetosLocaciones:
     def determinar_cantidades_tipos_objeto(self):
         cantidad_tipos_objeto=len(self.tipos_objeto)
         cantidad_locaciones_disponibles=len(self.locaciones_disponibles)
-        log.debug("determinar_cantidades_tipos_objeto cantidad_tipos_objeto=%i cantidad_locaciones_disponibles=%i cantidad_total_locaciones=%i" \
-                %(cantidad_tipos_objeto, cantidad_locaciones_disponibles, self.cantidad_total_locaciones))
+        #log.debug("determinar_cantidades_tipos_objeto cantidad_tipos_objeto=%i cantidad_locaciones_disponibles=%i cantidad_total_locaciones=%i" \
+        #        %(cantidad_tipos_objeto, cantidad_locaciones_disponibles, self.cantidad_total_locaciones))
         for fila in self.tipos_objeto:
             tipo_objeto=fila[2]
             densidad=fila[3]/cantidad_tipos_objeto
@@ -516,5 +527,5 @@ class GrupoObjetosLocaciones:
             if tipo_objeto in self.cantidades_tipos_objeto:
                 log.error("el tipo de objeto %i ya se encuentra en self.cantidades_tipos_objeto"%tipo_objeto)
                 continue
-            log.debug("cantidad de objetos '%s' a colocar: %i"%(fila[11], cantidad))
+            #log.debug("cantidad de objetos '%s' a colocar: %i"%(fila[11], cantidad))
             self.cantidades_tipos_objeto[tipo_objeto]=int(cantidad)

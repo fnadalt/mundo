@@ -411,6 +411,7 @@ class Terreno:
         #
         ts0=TextureStage("ts_terreno")
         textura_terreno=self.base.loader.loadTexture("texturas/terreno2.png")
+        #textura_terreno.setMinfilter(SamplerState.FT_linear_mipmap_linear)
         self.nodo_parcelas.setTexture(ts0, textura_terreno, priority=2)
         #
         ts1=TextureStage("ts_ruido")
