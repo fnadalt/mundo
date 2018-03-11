@@ -56,7 +56,7 @@ class Mundo:
         #
         self._cargar_terreno()
         self._cargar_hombre()
-        self._cargar_objetos()
+        #self._cargar_objetos()
         self._cargar_obj_voxel()
         # gui:
         self._cargar_debug_info()
@@ -141,7 +141,7 @@ class Mundo:
     def _cargar_debug_info(self):
         Negro=Vec4(0.0, 0.0, 0.0, 1.0)
         #Blanco=Vec4(1.0, 1.0, 1.0, 1.0)
-        self.texto1=OnscreenText(text="info?", pos=(-1.2, 0.9), scale=0.045, align=TextNode.ALeft, fg=Negro, mayChange=True)
+        self.texto1=OnscreenText(text="mundo", pos=(-1.2, 0.9), scale=0.045, align=TextNode.ALeft, fg=Negro, mayChange=True)
 
     def _cargar_gui(self):
         self.lblHora=DirectLabel(text="00:00", text_fg=(0.15, 0.15, 0.9, 1.0), text_bg=(1.0, 1.0, 1.0, 1.0), scale=0.1, pos=(1.2, 0.0, -0.8), color=(1, 1, 1, 1))
@@ -264,7 +264,7 @@ class Mundo:
         #info+=self.input_mapper.obtener_info()+"\n"
         #info+=self.cielo.obtener_info()
         #info+=self.sol.obtener_info()+"\n"
-        self.texto1.setText(info)
+        #self.texto1.setText(info)
         # tiempo
         dt=self.base.taskMgr.globalClock.getDt()
         # input

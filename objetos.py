@@ -189,7 +189,7 @@ class Objetos:
                     nombre_modelo="%s.lod%i"%(d.datos_objeto[11], i_lod)
                     if nombre_modelo not in self.pool_modelos:
                         continue
-                    instancia=concentradores_lod[i_lod].attachNewNode("instancia_%s_%i_lod%i"%(nombre_modelo, cntr_objs, i_lod))
+                    instancia=concentradores_lod[i_lod].attachNewNode("instancia_%s_%i"%(nombre_modelo, cntr_objs))
                     if i_lod>0:
                         instancia.setBillboardAxis()
                     modelo=self.pool_modelos[nombre_modelo]
