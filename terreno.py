@@ -409,14 +409,17 @@ class Terreno:
                     imagen_ruido.setXel(x, y, a, a, a)
             imagen_ruido.write(ruta_tex_ruido)
         #
-        ts0=TextureStage("ts_terreno")
-        textura_terreno=self.base.loader.loadTexture("texturas/terreno2.png")
-        #textura_terreno.setMinfilter(SamplerState.FT_linear_mipmap_linear)
-        self.nodo_parcelas.setTexture(ts0, textura_terreno, priority=2)
+        ts0=TextureStage("ts_terreno_lod0")
+        textura_terreno_lod0=self.base.loader.loadTexture("texturas/terreno2.png")
+        self.nodo_parcelas.setTexture(ts0, textura_terreno_lod0, priority=2)
         #
-        ts1=TextureStage("ts_ruido")
+        ts1=TextureStage("ts_terreno_lod1")
+        textura_terreno_lod1=self.base.loader.loadTexture("texturas/terreno4.png")
+        self.nodo_parcelas.setTexture(ts1, textura_terreno_lod1, priority=2)
+        #
+        ts2=TextureStage("ts_ruido")
         textura_ruido=self.base.loader.loadTexture(ruta_tex_ruido)
-        self.nodo_parcelas.setTexture(ts1, textura_ruido, priority=2)
+        self.nodo_parcelas.setTexture(ts2, textura_ruido, priority=2)
         #
         GestorShader.aplicar(self.nodo_parcelas, GestorShader.ClaseTerreno, 2)
 
