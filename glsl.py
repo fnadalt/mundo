@@ -228,7 +228,7 @@ vec4 tex_terreno_0()
     return color;
 }
 */
-vec4 tex_terreno(bool normal_map)
+vec4 tex_terreno(sampler2D textura, bool normal_map)
 {
     //
     vec2 pos=vec2(((info_tipo.x-0.2)/0.8)*3,info_tipo.y*2);
@@ -252,20 +252,20 @@ vec4 tex_terreno(bool normal_map)
         distancia=abs(distancias.y);
     }
     //
-    float factor_ruido=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,vec2(texcoord.s,-texcoord.t)).r;
+    float factor_ruido=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture2,vec2(texcoord.s,-texcoord.t)).r;
     //
     vec4 color0;
     //
     TiposTerreno tipos0=tipos_terreno[int(idx_tabla_0.y*4+idx_tabla_0.x)];
     float f0=clamp(0.2+distancia-(factor_ruido*2.0-1.0),0.0,1.0);
     if(f0<0.40){
-        color0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0,obtener_texcoord_terreno(tipos0.base,normal_map));
+        color0=%(FS_FUNC_TEX_LOOK_UP)s(textura,obtener_texcoord_terreno(tipos0.base,normal_map));
     } else if(f0>0.50){
-        color0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0,obtener_texcoord_terreno(tipos0.superficie,normal_map));
+        color0=%(FS_FUNC_TEX_LOOK_UP)s(textura,obtener_texcoord_terreno(tipos0.superficie,normal_map));
     } else {
         f0=(f0-0.40)/(0.50-0.40);
-        vec4 color00=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0,obtener_texcoord_terreno(tipos0.base,normal_map));
-        vec4 color01=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0,obtener_texcoord_terreno(tipos0.superficie,normal_map));
+        vec4 color00=%(FS_FUNC_TEX_LOOK_UP)s(textura,obtener_texcoord_terreno(tipos0.base,normal_map));
+        vec4 color01=%(FS_FUNC_TEX_LOOK_UP)s(textura,obtener_texcoord_terreno(tipos0.superficie,normal_map));
         color0=mix(color00,color01,f0);
     }
     //
@@ -278,13 +278,13 @@ vec4 tex_terreno(bool normal_map)
         float f1=clamp(0.2+distancia-(factor_ruido*2.0-1.0),0.0,1.0);
         vec4 color1;
         if(f1<0.40){
-            color1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0,obtener_texcoord_terreno(tipos1.base,normal_map));
+            color1=%(FS_FUNC_TEX_LOOK_UP)s(textura,obtener_texcoord_terreno(tipos1.base,normal_map));
         } else if(f1>0.50){
-            color1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0,obtener_texcoord_terreno(tipos1.superficie,normal_map));
+            color1=%(FS_FUNC_TEX_LOOK_UP)s(textura,obtener_texcoord_terreno(tipos1.superficie,normal_map));
         } else {
             f1=(f1-0.40)/(0.50-0.40);
-            vec4 color10=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0,obtener_texcoord_terreno(tipos1.base,normal_map));
-            vec4 color11=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0,obtener_texcoord_terreno(tipos1.superficie,normal_map));
+            vec4 color10=%(FS_FUNC_TEX_LOOK_UP)s(textura,obtener_texcoord_terreno(tipos1.base,normal_map));
+            vec4 color11=%(FS_FUNC_TEX_LOOK_UP)s(textura,obtener_texcoord_terreno(tipos1.superficie,normal_map));
             color1=mix(color10,color11,f1);
         }
         //
@@ -459,7 +459,11 @@ FS_MAIN_TEX_GENERICO="""
 """
 FS_MAIN_TEX_TERRENO="""
         // textura: terreno
-        color*=tex_terreno(false);
+        if(abs(PositionV.z)<20.0){
+            color*=tex_terreno(p3d_Texture0, false);
+        } else {
+            color*=tex_terreno(p3d_Texture1, false);
+        }
 """
 FS_MAIN_TEX_TERRENO_COLOR_DEBUG="""
         color=color_vtx; // terreno color debug
