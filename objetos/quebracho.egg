@@ -13,20 +13,6 @@
   <Scalar> envtype { modulate }
   <Scalar> alpha { ms }
 }
-<Texture> corteza_n {
-  "/home/flaco/panda3d/mundo/objetos/texturas/quebracho_corteza_n.png"
-  <Scalar> wrap { repeat }
-  <Scalar> minfilter { linear_mipmap_linear }
-  <Scalar> magfilter { linear_mipmap_linear }
-  <Scalar> envtype { normal }
-}
-<Texture> corteza_bm {
-  "/home/flaco/panda3d/mundo/objetos/texturas/quebracho_corteza_bm.png"
-  <Scalar> wrap { repeat }
-  <Scalar> minfilter { linear_mipmap_linear }
-  <Scalar> magfilter { linear_mipmap_linear }
-  <Scalar> envtype { normal }
-}
 <Texture> corteza {
   "/home/flaco/panda3d/mundo/objetos/texturas/quebracho_corteza.png"
   <Scalar> wrap { repeat }
@@ -7982,1536 +7968,1152 @@
   <Polygon> {
     <Normal> { -0.996371 0 0.085115 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 0 1 2 3 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.997062 0 -0.076596 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 4 5 6 7 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.498457 -0.863353 0.078494 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 8 9 1 0 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.49997 0.865973 0.01099 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 3 2 10 11 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.498775 0.863903 -0.069961 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 11 10 5 4 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.499999 -0.866023 -0.002387 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 7 6 12 13 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.499542 -0.865232 0.042792 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 14 15 16 17 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.49862 -0.863635 -0.074251 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 15 7 13 16 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.49904 0.864362 -0.061955 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 18 19 20 21 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.497188 0.861155 0.105905 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 19 11 4 20 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.499976 0.865984 -0.009777 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 22 23 19 18 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.496879 0.86062 0.111551 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 23 3 11 19 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.497753 -0.862133 0.094701 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 24 25 26 27 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.498824 -0.863988 -0.068548 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 25 8 0 26 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.999361 0 -0.035747 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 21 20 15 14 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.999914 0 0.013149 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 20 4 7 15 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.99764 0 0.068662 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 27 26 23 22 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.999696 0 0.024637 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 26 0 3 23 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.523408 -0.832837 -0.180077 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 28 29 30 31 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.784149 -0.568458 0.248929 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 32 33 34 35 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.357752 0.895928 0.263299 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 36 37 38 39 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.960184 -0.011688 -0.279125 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 40 41 29 28 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.957713 -0.012591 0.287451 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 35 34 38 37 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.548657 0.829883 -0.101341 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 36 39 41 40 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.516298 -0.807305 0.285824 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 42 43 44 45 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.95452 -0.033594 -0.296247 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 46 47 48 49 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.300979 0.943244 0.140365 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 50 51 52 53 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.45548 -0.886621 -0.08026 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 54 55 47 46 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.461195 0.876487 -0.138094 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 49 48 52 51 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.916249 -0.008479 0.400519 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 50 53 43 42 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.99604 0.027927 0.084404 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 56 50 42 57 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.509092 -0.827332 0.237374 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 58 54 46 59 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.425639 -0.847048 0.318343 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 57 42 45 60 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.999062 -0.039525 -0.017685 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 59 46 49 61 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.665601 0.727264 0.167519 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 62 63 64 65 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.473409 0.856616 -0.205166 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 61 49 51 66 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.737949 0.672111 -0.060817 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 56 66 51 50 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.981856 0.055419 -0.181349 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 67 68 69 70 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.616616 -0.767531 -0.17516 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 70 69 71 72 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.360921 0.932422 -0.018053 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 67 65 64 68 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.540967 -0.840052 0.04083 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 73 74 75 76 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.715665 -0.690157 0.10727 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 76 75 63 62 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.507536 -0.861544 0.012209 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 77 78 79 80 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.34316 -0.10932 0.932894 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 81 82 78 77 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.050586 -0.499855 -0.86463 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 83 84 85 86 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.430747 0.869616 0.241298 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 81 87 88 82 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.534967 0.840233 -0.088418 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 87 89 90 88 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.460135 0.31598 -0.829718 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 86 85 90 89 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.114985 0.771623 -0.625601 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 91 86 89 92 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.501361 0.823315 -0.266061 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 93 92 89 87 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.836619 0.512423 0.193625 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 94 93 87 81 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.902032 -0.068083 -0.426266 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 95 83 86 91 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.392505 -0.447315 0.803648 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 94 81 77 96 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.856219 -0.51661 -0.001673 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 96 77 80 97 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.850751 -0.022509 0.525087 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 98 99 100 101 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.387349 0.888203 -0.247093 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 102 103 104 105 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.514953 -0.807516 -0.287648 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 106 107 108 109 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.265097 0.953034 0.14646 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 102 98 101 103 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.121395 -0.987207 0.10337 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 110 111 100 99 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.859549 0.024311 -0.510475 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 105 104 107 106 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.935062 -0.041986 -0.351988 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 112 113 114 115 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.635278 -0.745056 0.203259 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 116 117 118 119 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.780236 0.625445 0.007054 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 120 121 122 123 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.649691 -0.740797 0.170651 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 115 114 124 125 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.421897 0.726912 -0.541851 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 120 123 113 112 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.923662 0.044683 0.380595 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 121 119 118 122 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.738379 -0.065047 -0.671241 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 113 105 106 114 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.032875 -0.958473 0.283282 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 117 110 99 118 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.334497 0.942149 0.021598 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 123 122 98 102 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.497136 -0.846265 -0.191551 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 114 106 109 124 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.267555 0.819323 -0.507073 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 123 102 105 113 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.730932 0.065793 0.679272 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 122 118 99 98 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.249078 0.805172 -0.538199 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 126 127 128 129 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.064992 0.1098 0.991827 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 130 131 132 133 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.203062 0.938314 0.27988 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 131 126 129 132 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.063217 -0.083024 -0.99454 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 134 135 128 127 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.161603 -0.831915 -0.53085 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 136 137 135 134 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.251526 -0.937089 0.24207 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 130 133 138 139 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.736092 -0.67594 0.035682 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 140 141 142 143 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.415803 -0.900094 0.130151 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 141 130 139 142 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.541075 -0.769939 -0.338277 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 144 145 146 147 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.086229 -0.84822 -0.522577 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 145 136 134 146 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.96706 -0.056994 -0.248087 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 147 146 148 149 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.595165 -0.111541 -0.795825 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 146 134 127 148 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.414043 0.889958 0.19116 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 150 151 152 153 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.197631 0.930376 0.308777 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 153 152 126 131 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.951214 0.043499 0.305451 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 140 150 153 141 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.528961 0.120684 0.840021 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 141 153 131 130 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.624732 0.774931 0.095871 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 151 149 148 152 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.574367 0.76621 -0.28814 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 152 148 127 126 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.380868 -0.73853 0.556339 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 154 155 156 157 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.938324 -0.044549 -0.342875 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 158 159 160 161 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.133551 -0.68761 0.713692 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 162 158 161 163 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.860379 0.498129 -0.107779 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 164 165 166 167 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.760023 0.291862 -0.580674 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 164 167 160 159 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.92557 0.015633 0.378254 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 157 156 166 165 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.673644 -0.718119 -0.174667 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 168 169 170 171 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.994344 -0.102373 0.028272 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 172 173 174 175 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.728105 0.677774 0.102399 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 176 177 178 179 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.410354 -0.90126 -0.139065 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 180 181 173 172 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.972713 0.232012 0.000209 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 176 179 169 168 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.439543 0.87964 0.181759 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 175 174 178 177 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.503943 0.858159 0.098006 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 182 183 184 185 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.490614 0.827159 0.274056 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 183 175 177 184 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.78488 0.110448 0.609724 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 186 187 188 189 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.958958 0.163933 0.231355 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 187 176 168 188 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.483329 -0.632491 -0.605268 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 190 191 192 193 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.439503 -0.787683 -0.431732 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 191 180 172 192 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.142059 0.825059 0.546898 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 186 185 184 187 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.532059 0.733394 0.423138 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 187 184 177 176 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.738994 -0.246914 -0.626834 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 193 192 183 182 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.951919 -0.179132 -0.248519 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 192 172 175 183 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.626683 -0.769181 0.125014 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 189 188 194 195 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.679594 -0.706279 -0.198298 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 188 168 171 194 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.001698 0.913744 0.406287 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 196 197 198 199 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.260683 0.796638 -0.545354 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 200 196 199 201 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.273692 -0.156075 0.94907 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 202 203 198 197 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.297344 0.173108 -0.938946 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 204 200 201 205 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.088932 -0.810257 -0.579287 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 206 204 205 207 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.196902 -0.91314 0.356939 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 208 209 203 202 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.48684 -0.802022 0.346045 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 210 208 202 211 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.18523 -0.891186 -0.414097 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 212 213 204 206 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.696368 0.179488 -0.694879 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 213 214 200 204 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.68487 -0.162084 0.710409 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 211 202 197 215 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.459898 0.841423 -0.283729 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 214 216 196 200 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.161559 0.895979 0.413666 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 216 215 197 196 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.258024 0.965422 0.037201 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 217 218 219 220 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.165577 0.824267 0.54145 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 221 217 220 222 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.146762 0.095472 -0.984554 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 218 223 224 219 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.08538 -0.715678 -0.693192 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 223 225 226 224 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.122786 -0.130468 0.98382 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 221 222 227 228 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.243652 -0.84149 0.482211 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 228 227 229 230 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.439311 0.862059 -0.252704 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 231 232 233 234 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.147218 -0.907594 -0.393192 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 235 236 237 238 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.639984 -0.063163 -0.765788 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 236 231 234 237 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.045915 0.926225 0.374163 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 232 239 240 233 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.551057 -0.659958 0.510678 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 241 242 243 244 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.611966 0.05417 0.789027 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 239 241 244 240 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.364072 0.097411 0.926263 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 245 246 241 239 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.395745 -0.696786 0.598227 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 246 247 242 241 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.119443 0.955857 0.268459 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 248 245 239 232 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.440207 -0.00821 -0.897859 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 249 250 231 236 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.070879 -0.872092 -0.484182 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 251 249 236 235 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.368724 0.868794 -0.330515 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 250 248 232 231 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.103049 0.428756 0.897524 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 252 253 254 255 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.431553 -0.890946 0.141344 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 256 252 255 257 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.384619 0.555508 -0.73721 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 258 259 260 261 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.317531 0.783286 0.534451 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 262 263 254 253 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.386419 0.558672 -0.73387 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 258 261 263 262 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.199555 -0.680936 -0.704631 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 259 264 265 260 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.80129 -0.56467 -0.197691 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 266 267 268 269 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.761152 0.627863 0.16259 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 270 271 272 273 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.761009 -0.282544 -0.583982 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 266 269 274 275 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.368221 0.308407 -0.877096 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 275 274 272 271 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.777441 0.457071 0.432056 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 276 270 273 277 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.151954 -0.403857 0.902114 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 267 278 279 268 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.439923 0.718626 0.538557 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 280 281 282 283 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.472768 -0.829355 0.297759 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 284 285 286 287 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.47242 0.762684 -0.441738 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 288 289 281 280 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.026255 -0.069356 -0.997246 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 288 290 291 289 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.419652 -0.732989 -0.535369 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 290 292 293 291 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.129163 0.192829 0.972694 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 285 283 282 286 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.563233 -0.722488 -0.400973 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 294 295 296 297 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.636516 -0.015961 -0.771098 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 297 296 298 299 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.01324 -0.918437 0.395346 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 294 300 301 295 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.591505 -0.046469 0.804961 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 302 303 304 305 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.38291 0.911917 0.147606 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 303 306 307 304 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.182003 0.825365 -0.534461 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 306 299 298 307 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.049746 0.82716 -0.559761 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 308 309 299 306 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.305342 0.937748 0.165512 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 310 308 306 303 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.424146 0.180161 0.887492 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 311 310 303 302 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.181496 -0.957872 0.222576 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 312 313 300 294 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.465038 -0.236224 -0.853193 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 314 297 299 309 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.426659 -0.779699 -0.458293 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 312 294 297 314 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.495381 -0.650739 0.575445 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 315 316 317 318 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.375404 -0.004562 -0.92685 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 319 320 321 322 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.375401 0.004571 0.926851 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 323 318 317 324 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.459974 0.832221 -0.309568 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 320 325 326 321 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.332313 0.937038 0.107364 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 325 323 324 326 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.084281 -0.805318 -0.586822 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 327 319 322 328 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.299522 -0.107949 0.947963 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 329 330 331 332 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.49715 -0.755431 0.426808 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 333 334 335 336 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.582296 0.7894 -0.194368 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 337 329 332 338 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.332648 0.111169 -0.936476 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 333 339 340 334 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.388517 -0.71342 0.58317 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 330 341 342 331 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.146473 0.582153 -0.799777 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 339 337 338 340 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.52955 0.623826 -0.57482 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 343 344 337 339 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.251756 -0.761679 0.597045 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 345 346 341 330 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.967766 0.125671 -0.218257 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 347 343 339 333 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.590445 0.67424 -0.443593 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 344 348 329 337 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.070729 -0.750594 0.656968 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 347 333 336 349 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.961723 -0.124639 0.244037 }
     <TRef> { corteza }
-    <TRef> { corteza_n }
-    <TRef> { corteza_bm }
     <MRef> { corteza }
     <VertexRef> { 348 345 330 329 <Ref> { tronco } }
   }

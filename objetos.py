@@ -66,8 +66,9 @@ class Objetos:
         self.sistema=None
         # componentes:
         self.nodo=self.base.render.attachNewNode("objetos")
-        self.nodo_parcelas=self.nodo.attachNewNode("parcelas")
-        self.parcelas={} # {idx_pos:parcela_node_path,...}
+        self.nodo_parcelas_vegetacion=self.nodo.attachNewNode("parcelas_vegetacion")
+        self.nodo_parcelas_yuyos=self.nodo.attachNewNode("parcelas_yuyos")
+        self.parcelas={} # {idx_pos:(parcela_vegetacion_node_path,parcela_yuyos_node_path),...}
         self.db=None
         self.pool_modelos=dict() # {id:Model,...}; id="nombre_archivo" <- hashear!!!
         self.ruido_perlin=PerlinNoise2(Objetos.ParamsRuido[0], Objetos.ParamsRuido[0], 256, Objetos.ParamsRuido[1])
@@ -152,9 +153,6 @@ class Objetos:
         altitud_suelo=self.sistema.obtener_altitud_suelo(pos)
         nombre="parcela_objetos_%i_%i"%(int(idx_pos[0]), int(idx_pos[1]))
         log.info("_generar_parcela idx_pos=%s pos=%s nombre=%s"%(str(idx_pos), str(pos), nombre))
-        # nodo
-        parcela_node_path=self.nodo_parcelas.attachNewNode(nombre)
-        parcela_node_path.setPos(pos[0], pos[1], 0.0)
         # datos de parcela
         ruta_archivo_cache=os.path.join(self.directorio_cache, "%s.bin"%nombre)
         datos_parcela=None
@@ -167,24 +165,53 @@ class Objetos:
             log.info(" cargar parcela desde cache <- %s"%ruta_archivo_cache)
             with open(ruta_archivo_cache, "rb") as arch:
                 datos_parcela=pickle.load(arch)
-        # lod
-        lod=LODNode("%s_lod"%nombre)
-        lod_np=NodePath(lod)
-        lod_np.reparentTo(parcela_node_path)
-        lod_np.setPos(0.0, 0.0, altitud_suelo)
+        # nodo vegetacion
+        parcela_vegetacion_node_path=self.nodo_parcelas_vegetacion.attachNewNode("%s_vegetacion"%nombre)
+        parcela_vegetacion_node_path.setPos(pos[0], pos[1], 0.0)
+        # nodo yuyos
+        parcela_yuyos_node_path=self.nodo_parcelas_yuyos.attachNewNode("%s_yuyos"%nombre)
+        parcela_yuyos_node_path.setPos(pos[0], pos[1], 0.0)
+        # lod vegetacion
+        lod_vegetacion=LODNode("%s_vegetacion_lod"%nombre)
+        lod_vegetacion_np=NodePath(lod_vegetacion)
+        lod_vegetacion_np.reparentTo(parcela_vegetacion_node_path)
+        lod_vegetacion_np.setPos(0.0, 0.0, altitud_suelo)
+        # lod yuyos
+        lod_yuyos=LODNode("%s_yuyos_lod"%nombre)
+        lod_yuyos_np=NodePath(lod_yuyos)
+        lod_yuyos_np.reparentTo(parcela_yuyos_node_path)
+        lod_yuyos_np.setPos(0.0, 0.0, altitud_suelo)
         # colocar objetos
         cntr_objs=0
-        concentradores_lod=list()
+        # nodos lod vegetacion
+        concentradores_lod_vegetacion=list()
         for i_lod in range(len(self._lods)):
-            lod.addSwitch(self._lods[i_lod][0], self._lods[i_lod][1])
-            concentrador_lod=lod_np.attachNewNode("concentrador_lod%i"%i_lod)
+            lod_vegetacion.addSwitch(self._lods[i_lod][0], self._lods[i_lod][1])
+            concentrador_lod=lod_vegetacion_np.attachNewNode("concentrador_lod%i_vegetacion"%i_lod)
             concentrador_lod.setTwoSided(True) # aqui? asi?
-            concentradores_lod.append(concentrador_lod)
+            concentradores_lod_vegetacion.append(concentrador_lod)
+        # nodos lod yuyos
+        concentradores_lod_yuyos=list()
+        for i_lod in range(len(self._lods)):
+            lod_vegetacion.addSwitch(self._lods[i_lod][0], self._lods[i_lod][1])
+            concentrador_lod=lod_vegetacion_np.attachNewNode("concentrador_lod%i_yuyos"%i_lod)
+            concentrador_lod.setTwoSided(True) # aqui? asi?
+            concentradores_lod_yuyos.append(concentrador_lod)
+        #
         for fila in datos_parcela:
             for d in fila:
                 if not d.datos_objeto:
                     continue
                 #log.debug(d)
+                concentradores_lod=None
+                parcela_node_path=None
+                if d.datos_objeto[2]==Objetos.TipoObjetoYuyo:
+                    concentradores_lod=concentradores_lod_yuyos
+                    parcela_node_path=parcela_yuyos_node_path
+                else:
+                    concentradores_lod=concentradores_lod_vegetacion
+                    parcela_node_path=parcela_vegetacion_node_path
+                #
                 for i_lod in range(len(self._lods)):
                     nombre_modelo="%s.lod%i"%(d.datos_objeto[11], i_lod)
                     if nombre_modelo not in self.pool_modelos:
@@ -194,7 +221,7 @@ class Objetos:
                         instancia.setBillboardAxis()
                     modelo=self.pool_modelos[nombre_modelo]
                     modelo.instanceTo(instancia)
-                    if i_lod==0: #if not instancia.hasBillboard():
+                    if i_lod==0:
                         d.generar_deltas()
                         altitud_suelo=self.sistema.obtener_altitud_suelo(d.posicion_global+d.delta_pos)
                         instancia.setPos(parcela_node_path, d.posicion_parcela+d.delta_pos)
@@ -206,15 +233,18 @@ class Objetos:
                     #log.debug("se coloco un '%s' en posicion_parcela=%s..."%(d.datos_objeto[11], str(d.posicion_parcela)))
                     cntr_objs+=1
         # flattenStrong()?
-        parcela_node_path.flattenStrong()
+        parcela_vegetacion_node_path.flattenStrong()
+        parcela_yuyos_node_path.flattenStrong()
         # agregar a parcelas
-        self.parcelas[idx_pos]=parcela_node_path
+        self.parcelas[idx_pos]=(parcela_vegetacion_node_path, parcela_yuyos_node_path)
 
     def _descargar_parcela(self, idx_pos):
         log.info("_descargar_parcela %s"%str(idx_pos))
         #
-        parcela=self.parcelas[idx_pos]
-        parcela.removeNode()
+        parcela_vegetacion=self.parcelas[idx_pos][0]
+        parcela_yuyos=self.parcelas[idx_pos][1]
+        parcela_vegetacion.removeNode()
+        parcela_yuyos.removeNode()
         del self.parcelas[idx_pos]
 
     def _generar_datos_parcela(self, pos, idx_pos):
@@ -280,7 +310,7 @@ class Objetos:
         try:
             db_cursor=self.db.execute(sql)
         except Exception as e:
-            log.exception(str(e))
+            #log.exception(str(e)) # !!!
             return list()
         filas_tipos_objeto=db_cursor.fetchall()
         #log.debug(str(filas_tipos_objeto))
@@ -379,7 +409,8 @@ class Objetos:
 
     def _establecer_shader(self):
         #
-        GestorShader.aplicar(self.nodo_parcelas, GestorShader.ClaseGenerico, 2)
+        GestorShader.aplicar(self.nodo_parcelas_vegetacion, GestorShader.ClaseGenerico, 2)
+        GestorShader.aplicar(self.nodo_parcelas_yuyos, GestorShader.ClaseYuyo, 2)
 
     def _iniciar_db(self):
         log.info("_iniciar_db")

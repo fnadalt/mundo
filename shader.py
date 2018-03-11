@@ -28,6 +28,8 @@ class GestorShader:
     ClaseCielo="cielo"
     ClaseSol="sol"
     ClaseSombra="sombra"
+    ClaseVegetacion="vegetacion"
+    ClaseYuyo="yuyo"
 
     @staticmethod
     def iniciar(base, altitud_agua, plano_recorte_agua):
@@ -99,6 +101,12 @@ class GestorShader:
     def generar(self):
         if self._clase==GestorShader.ClaseDebug:
             shader=Shader.load(Shader.SL_GLSL, vertex="shaders/debug.v.glsl", fragment="shaders/debug.f.glsl")
+            return shader
+        elif self._clase==GestorShader.ClaseVegetacion:
+            shader=Shader.load(Shader.SL_GLSL, vertex="shaders/vegetacion.v.glsl", fragment="shaders/vegetacion.f.glsl")
+            return shader
+        elif self._clase==GestorShader.ClaseYuyo:
+            shader=Shader.load(Shader.SL_GLSL, vertex="shaders/yuyo.v.glsl", fragment="shaders/yuyo.f.glsl")
             return shader
         #
         glsl=None
