@@ -173,6 +173,7 @@ class Sistema:
         self.ano=0
         self.dia=0
         # variables externas:
+        self.directorio_cache="cache"
         self.estacion=Sistema.EstacionVerano
         self.periodo_dia_actual=Sistema.DiaPeriodoAtardecer
         self.periodo_dia_anterior=Sistema.DiaPeriodoDia
@@ -226,6 +227,11 @@ class Sistema:
     
     def iniciar(self):
         log.info("iniciar")
+        #
+        self.directorio_cache=config.val("sistema.dir_cache")
+        if not os.path.exists(self.directorio_cache):
+            log.warning("se crea directorio_cache: %s"%self.directorio_cache)
+            os.mkdir(self.directorio_cache)
         #
         self.hora_normalizada=self._segundos_transcurridos_dia/self.duracion_dia_segundos
         if self.hora_normalizada>Sistema.DiaPeriodoAtardecer and self.hora_normalizada<Sistema.DiaPeriodoNoche:

@@ -5,6 +5,7 @@ from shader import GestorShader
 import sistema, config
 
 import math
+import pickle
 
 import logging
 log=logging.getLogger(__name__)
@@ -13,6 +14,8 @@ log=logging.getLogger(__name__)
 # TERRENO
 #
 class Terreno:
+    
+    DirectorioCache="terreno"
     
     def __init__(self, base, bullet_world):
         # referencias:
@@ -25,6 +28,7 @@ class Terreno:
         #self.nodo.setRenderModeWireframe()
         self.parcelas={} # {idx_pos:parcela_node_path,...}
         # variables externas:
+        self.directorio_cache="cache/terreno"
         self.idx_pos_parcela_actual=None # (x,y)
         # debug
         self.dibujar_normales=False # cada update
@@ -33,6 +37,11 @@ class Terreno:
         log.info("iniciar")
         #
         self.sistema=sistema.obtener_instancia()
+        #
+        self.directorio_cache=os.path.join(self.sistema.directorio_cache, Terreno.DirectorioCache)
+        if not os.path.exists(self.directorio_cache):
+            log.warning("se crea directorio_cache: %s"%self.directorio_cache)
+            os.mkdir(self.directorio_cache)
         #
         self._establecer_shader()
         #
@@ -94,7 +103,15 @@ class Terreno:
         parcela_node_path=self.nodo_parcelas.attachNewNode(nombre)
         parcela_node_path.setPos(pos[0], pos[1], 0.0)
         # datos de parcela
-        datos_parcela=self._generar_datos_parcela(pos, idx_pos)
+        ruta_archivo_cache=os.path.join(self.directorio_cache, "%s.bin"%nombre)
+        datos_parcela=None
+        if not os.path.exists(ruta_archivo_cache):
+            datos_parcela=self._generar_datos_parcela(pos, idx_pos)
+            with open(ruta_archivo_cache, "wb") as arch:
+                pickle.dump(datos_parcela, arch)
+        else:
+            with open(ruta_archivo_cache, "rb") as arch:
+                datos_parcela=pickle.load(arch)
         # geometria
         geom_node=self._generar_nodo_parcela(nombre, idx_pos, pos, datos_parcela, config.valbool("terreno.color_debug"))
         parcela_node_path.attachNewNode(geom_node)

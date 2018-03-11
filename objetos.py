@@ -1,6 +1,6 @@
 from panda3d.core import *
 import sqlite3
-import csv
+import pickle, csv
 import os, os.path
 import random
 
@@ -17,6 +17,9 @@ log=logging.getLogger(__name__)
 #
 class Objetos:
 
+    #
+    DirectorioCache="objetos"
+    
     # tipos de objeto
     TipoObjetoNulo=0
     TipoObjetoArbol=1
@@ -69,6 +72,7 @@ class Objetos:
         self.pool_modelos=dict() # {id:Model,...}; id="nombre_archivo" <- hashear!!!
         self.ruido_perlin=PerlinNoise2(Objetos.ParamsRuido[0], Objetos.ParamsRuido[0], 256, Objetos.ParamsRuido[1])
         # variables externas:
+        self.directorio_cache="cache/objetos"
         self.idx_pos_parcela_actual=None # (x,y)
         # variables internas
         self._lods=list()
@@ -77,6 +81,11 @@ class Objetos:
         log.info("iniciar")
         # sistema
         self.sistema=sistema.obtener_instancia()
+        #
+        self.directorio_cache=os.path.join(self.sistema.directorio_cache, Objetos.DirectorioCache)
+        if not os.path.exists(self.directorio_cache):
+            log.warning("se crea directorio_cache: %s"%self.directorio_cache)
+            os.mkdir(self.directorio_cache)
         # config
         for i_lod in range(len(Objetos.LODs)):
             config_lod=config.vallist("objetos.lod%i"%i_lod)
@@ -147,7 +156,15 @@ class Objetos:
         parcela_node_path=self.nodo_parcelas.attachNewNode(nombre)
         parcela_node_path.setPos(pos[0], pos[1], 0.0)
         # datos de parcela
-        datos_parcela=self._generar_datos_parcela(pos, idx_pos)
+        ruta_archivo_cache=os.path.join(self.directorio_cache, "%s.bin"%nombre)
+        datos_parcela=None
+        if not os.path.exists(ruta_archivo_cache):
+            datos_parcela=self._generar_datos_parcela(pos, idx_pos)
+            with open(ruta_archivo_cache, "wb") as arch:
+                pickle.dump(datos_parcela, arch)
+        else:
+            with open(ruta_archivo_cache, "rb") as arch:
+                datos_parcela=pickle.load(arch)
         # lod
         lod=LODNode("%s_lod"%nombre)
         lod_np=NodePath(lod)

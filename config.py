@@ -18,7 +18,8 @@ _default_config={
                         "fov_sombras":30
                         }, 
         "sistema":      {
-                        "radio_expansion_parcelas":2
+                        "radio_expansion_parcelas":2, 
+                        "dir_cache":"cache"
                         }, 
         "generico":     {
                         "sombras":True, 
