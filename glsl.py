@@ -334,44 +334,49 @@ FS_FUNC_AGUA="""
 vec4 agua()
 {
     vec4 color=vec4(0,0,0,0);
-    //
+    // ndc:
     vec2 ndc=(PositionP.xy/PositionP.w)/2.0+0.5;
-    vec2 texcoord_reflejo=vec2(ndc.x,1.0-ndc.y);
-    vec2 texcoord_refraccion=ndc;
-    //
+    // texcoords con distorsion: dudv map:
     vec2 tc=texcoord.st*75.0;
-    vec2 distorted_texcoords=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture2,vec2(tc.s+move_factor, tc.t)).rg*0.1;
+    vec2 distorted_texcoords=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0,vec2(tc.s+move_factor, tc.t)).rg*0.1;
     distorted_texcoords=tc.st+vec2(distorted_texcoords.x,distorted_texcoords.y+move_factor);
-    vec2 total_distortion=(%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture2,distorted_texcoords).rg*2.0-1.0)*0.01;
-    //
-    texcoord_reflejo+=total_distortion;
-    texcoord_reflejo=clamp(texcoord_reflejo,0.001,0.999);
-    texcoord_refraccion+=total_distortion;
-    texcoord_refraccion=clamp(texcoord_refraccion,0.001,0.999);
-    //
-    vec4 color_reflection=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0, texcoord_reflejo);
-    vec4 color_refraction=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1, texcoord_refraccion);
-    // ok so far
-    vec3 view_vector=normalize(cam_pos-PositionV.xyz);
-    float refractive_factor=dot(view_vector,vec3(0.0,0.0,1.0)); // abs()? esto era no más, parece
-    refractive_factor=pow(abs(refractive_factor),0.9); // renderiza negro ante ciertos desplazamientos de la superficie de agua, habria que corregir. abs()!
-    //
-    vec4 color_normal=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture3,distorted_texcoords*1.5);
+    vec2 total_distortion=(%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0,distorted_texcoords).rg*2.0-1.0)*0.01;
+    // normal map:
+    vec4 color_normal=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,distorted_texcoords*1.5);
     vec3 normal=vec3(color_normal.r*2.0-1.0,color_normal.g*2.0-1.0,color_normal.b);
     normal=normalize(normal);
-    //
+    // view vector:
+    vec3 view_vector=normalize(cam_pos-PositionV.xyz);
+    %(FS_FUNC_AGUA_REFL_REFR)s
+    // specular:
     //vec3 reflected_light=reflect(normalize(posicion_sol-PositionW.xyz),normal);
     vec3 s=normalize(posicion_sol-PositionW.xyz);
     vec3 reflected_light=(2.0*dot(s,normal)*normal)-s;
     float specular=max(dot(reflected_light,view_vector), 0.0);
     specular=pow(specular,shine_damper);
     vec3 specular_highlights=vec4(1,1,1,1).rgb * specular * reflectivity;
-    //
-    color=mix(color_reflection,color_refraction,refractive_factor);
-    color=mix(color, vec4(0.0,0.3,0.5,1.0),0.2) + vec4(specular_highlights,0.0);
+    // color final:
+    color=mix(color, vec4(0.0,0.3,0.5,1.0),0.4) + vec4(specular_highlights,0.0);
     //
     return color;
 }
+"""
+FS_FUNC_AGUA_REFL_REFR="""
+    // reflejo y refraccion:
+    vec2 texcoord_reflejo=vec2(ndc.x,1.0-ndc.y);
+    vec2 texcoord_refraccion=ndc;
+    texcoord_reflejo+=total_distortion;
+    texcoord_reflejo=clamp(texcoord_reflejo,0.001,0.999);
+    texcoord_refraccion+=total_distortion;
+    texcoord_refraccion=clamp(texcoord_refraccion,0.001,0.999);
+    //
+    vec4 color_reflection=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture2, texcoord_reflejo);
+    vec4 color_refraction=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture3, texcoord_refraccion);
+    //
+    float refractive_factor=dot(view_vector,vec3(0.0,0.0,1.0)); // abs()? esto era no más, parece
+    refractive_factor=pow(abs(refractive_factor),0.9); // renderiza negro ante ciertos desplazamientos de la superficie de agua, habria que corregir. abs()!
+    //
+    color=mix(color_reflection,color_refraction,refractive_factor);
 """
 FS_FUNC_CIELO="""
 // cielo y fog

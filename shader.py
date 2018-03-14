@@ -180,11 +180,16 @@ class GestorShader:
                 texto_fs+=glsl.FS_NORMAL_MAP
             if self._clase==GestorShader.ClaseAgua:
                 texto_fs+=glsl.FS_TEX_1
-                texto_fs+=glsl.FS_TEX_2
-                texto_fs+=glsl.FS_TEX_3
+                fs_func_agua_refl_refr=""
+                if config.valbool("shader.agua_reflejo_refraccion"):
+                    texto_fs+=glsl.FS_TEX_2
+                    texto_fs+=glsl.FS_TEX_3
+                    fs_func_agua_refl_refr=glsl.FS_FUNC_AGUA_REFL_REFR%{"FS_FUNC_TEX_LOOK_UP":glsl.FS_FUNC_TEX_LOOK_UP}
                 texto_fs+=glsl.FS_POS_PROJ
                 texto_fs+=glsl.FS_AGUA
-                texto_fs+=glsl.FS_FUNC_AGUA%{"FS_FUNC_TEX_LOOK_UP":glsl.FS_FUNC_TEX_LOOK_UP}
+                texto_fs+=glsl.FS_FUNC_AGUA%{"FS_FUNC_TEX_LOOK_UP":glsl.FS_FUNC_TEX_LOOK_UP, 
+                                             "FS_FUNC_AGUA_REFL_REFR":fs_func_agua_refl_refr
+                                            }
             if self._clase==GestorShader.ClaseSombra:
                 texto_fs+=glsl.FS_POS_PROJ
             if self._clase==GestorShader.ClaseTerreno or self._clase==GestorShader.ClaseGenerico:

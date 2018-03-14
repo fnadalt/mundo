@@ -15,7 +15,9 @@ _default_config={
                         "sombras":False, 
                         "fog":False, 
                         "tamano_sombras":512, 
-                        "fov_sombras":30
+                        "fov_sombras":30, 
+                        "agua_reflejo_refraccion":True, 
+                        "sol_blur":True
                         }, 
         "sistema":      {
                         "radio_expansion_parcelas":2, 

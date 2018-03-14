@@ -238,6 +238,7 @@ class Mundo:
         self.objetos.iniciar()
         self.objetos.nodo.reparentTo(self.nodo)
         self.objetos.update()
+        self.objetos.nodo.hide()#
         # cielo
         self.cielo=Cielo(self.base, sistema.Sistema.TopoAltitudOceano-20.0)
         self.cielo.nodo.reparentTo(self.nodo)
