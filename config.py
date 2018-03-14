@@ -14,11 +14,12 @@ _default_config={
                         "phong":True, 
                         "sombras":False, 
                         "fog":False, 
-                        "tamano_sombras":512, 
-                        "fov_sombras":30, 
+                        "sombras_tamano_buffer":512, 
+                        "sombras_fov":30, 
                         "agua_reflejo_refraccion":True, 
                         "agua_tamano_buffer":512, 
-                        "sol_blur":True
+                        "sol_blur":True, 
+                        "sol_tamano_buffer":512
                         }, 
         "sistema":      {
                         "radio_expansion_parcelas":2, 

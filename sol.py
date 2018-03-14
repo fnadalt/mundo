@@ -22,6 +22,7 @@ class Sol:
         self.pivot=None
         self.nodo=None
         self.luz=None
+        self.glow_camera=None
         self.blur_x_buffer=None
         self.blur_y_buffer=None
         self.buffer_sombra=None
@@ -50,9 +51,9 @@ class Sol:
         self.luz.node().setColor(Vec4(1.0, 1.0, 0.7, 1.0))
         #
         if config.valbool("shader.sombras"):
-            tamano=config.valint("shader.tamano_sombras")
+            tamano=config.valint("shader.sombras_tamano_buffer")
             self.luz.node().setShadowCaster(True, tamano, tamano)
-            self.luz.node().getLens().setFov(config.valint("shader.fov_sombras"))
+            self.luz.node().getLens().setFov(config.valint("shader.sombras_fov"))
         # init:
         self._establecer_shaders()
 
@@ -65,8 +66,9 @@ class Sol:
         if self.buffer_sombra:
             self.base.graphicsEngine.removeWindow(self.buffer_sombra)
         #
-        self.glow_camera.removeNode()
-        self.glow_camera=None
+        if self.glow_camera:
+            self.glow_camera.removeNode()
+            self.glow_camera=None
         
     def obtener_info(self):
             info="Sol pos=%s roll=%.2f p=%i ci=%s cf=%s c=%s"%(str(self.nodo.getPos(self.base.render)), self.pivot.getR(), self._periodo_actual, str(self._color_inicial), str(self._color_final), str(self.luz.node().getColor()))
@@ -74,14 +76,17 @@ class Sol:
 
     def mostrar_camaras(self):
         #
-        DirectLabel(text="glow_map", pos=LVector3f(1.0, 0.8), scale=0.05)
-        DirectFrame(image=self.glow_buffer.getTexture(0), scale=0.25, pos=LVector3f(0.85, 0.5))
+        if self.glow_buffer:
+            DirectLabel(text="glow_map", pos=LVector3f(1.0, 0.8), scale=0.05)
+            DirectFrame(image=self.glow_buffer.getTexture(0), scale=0.25, pos=LVector3f(0.85, 0.5))
         #
-        DirectLabel(text="blur_x_buffer", pos=LVector3f(1.0, 0.2), scale=0.05)
-        DirectFrame(image=self.blur_x_buffer.getTexture(0), scale=0.25, pos=LVector3f(0.85, -0.1))
+        if self.blur_x_buffer:
+            DirectLabel(text="blur_x_buffer", pos=LVector3f(1.0, 0.2), scale=0.05)
+            DirectFrame(image=self.blur_x_buffer.getTexture(0), scale=0.25, pos=LVector3f(0.85, -0.1))
         #
-        DirectLabel(text="blur_y_buffer", pos=LVector3f(1.0, -0.4), scale=0.05)
-        DirectFrame(image=self.blur_y_buffer.getTexture(0), scale=0.25, pos=LVector3f(0.85, -0.7))
+        if self.blur_y_buffer:
+            DirectLabel(text="blur_y_buffer", pos=LVector3f(1.0, -0.4), scale=0.05)
+            DirectFrame(image=self.blur_y_buffer.getTexture(0), scale=0.25, pos=LVector3f(0.85, -0.7))
         #
         #DirectLabel(text="shadow", pos=LVector3f(0.5, -0.4), scale=0.05)
         #DirectFrame(image=self.buffer_sombra.getTexture(0), scale=0.25, pos=LVector3f(0.30, -0.7))
@@ -143,28 +148,32 @@ class Sol:
     def _establecer_shaders(self):
         # glow shader
         GestorShader.aplicar(self.nodo, GestorShader.ClaseSol, 2)
-        # glow buffer
-        self.glow_buffer = base.win.makeTextureBuffer("escena_glow", 512, 512)
-        self.glow_buffer.setSort(-3)
-        self.glow_buffer.setClearColor(LVector4(0, 0, 0, 1))
-        # glow camera
-        tempnode = self.base.render.attachNewNode(PandaNode("temp_node"))
-        tempnode.setShader(self.nodo.getShader(), priority=4)
-        tempnode.setShaderInput("plano_recorte_agua", Vec4(0, 0, 1, self._altitud_agua), priority=4)
-        tempnode.setShaderInput("posicion_sol", Vec3(0, 0, 0), priority=4)
-        self.glow_camera = self.base.makeCamera(self.glow_buffer, lens=self.base.cam.node().getLens())
-        self.glow_camera.node().setCameraMask(DrawMask(8))
-        self.glow_camera.node().setInitialState(tempnode.getState())
-        # blur shaders
-        self.blur_x_buffer=self._generar_buffer_filtro(self.glow_buffer, "blur_x", -2, "blur_x")
-        self.blur_y_buffer= self._generar_buffer_filtro(self.blur_x_buffer, "blur_y", -1, "blur_y")
-        finalcard = self.blur_y_buffer.getTextureCard()
-        finalcard.reparentTo(self.base.render2d)
-        finalcard.setAttrib(ColorBlendAttrib.make(ColorBlendAttrib.MAdd))
-        #finalcard.hide()
+        #
+        if config.valbool("shader.sol_blur"):
+            # glow buffer
+            tamano=config.valint("shader.sol_tamano_buffer")
+            self.glow_buffer = base.win.makeTextureBuffer("escena_glow", tamano, tamano)
+            self.glow_buffer.setSort(-3)
+            self.glow_buffer.setClearColor(LVector4(0, 0, 0, 1))
+            # glow camera
+            tempnode = self.base.render.attachNewNode(PandaNode("sol_temp_node"))
+            tempnode.setShader(self.nodo.getShader(), priority=4)
+            tempnode.setShaderInput("plano_recorte_agua", Vec4(0, 0, 1, self._altitud_agua), priority=4)
+            tempnode.setShaderInput("posicion_sol", Vec3(0, 0, 0), priority=4)
+            self.glow_camera = self.base.makeCamera(self.glow_buffer, lens=self.base.cam.node().getLens())
+            self.glow_camera.node().setCameraMask(DrawMask(8))
+            self.glow_camera.node().setInitialState(tempnode.getState())
+            # blur shaders
+            self.blur_x_buffer=self._generar_buffer_filtro(self.glow_buffer, "blur_x", -2, "blur_x")
+            self.blur_y_buffer= self._generar_buffer_filtro(self.blur_x_buffer, "blur_y", -1, "blur_y")
+            finalcard = self.blur_y_buffer.getTextureCard()
+            finalcard.reparentTo(self.base.render2d)
+            finalcard.setAttrib(ColorBlendAttrib.make(ColorBlendAttrib.MAdd))
+            #finalcard.hide()
 
     def _generar_buffer_filtro(self, buffer_base, nombre, orden, nombre_base_arch_shader):
-        blur_buffer = self.base.win.makeTextureBuffer(nombre, 512, 512)
+        tamano=config.valint("shader.sol_tamano_buffer")
+        blur_buffer = self.base.win.makeTextureBuffer(nombre, tamano, tamano)
         blur_buffer.setSort(orden)
         blur_buffer.setClearColor(LVector4(0, 0, 0, 1))
         blur_camera = self.base.makeCamera2d(blur_buffer)
