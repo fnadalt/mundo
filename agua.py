@@ -158,7 +158,7 @@ class Agua:
         #
         if self.camera2:
             self.camera2.setPos(self.base.render, cam_pos)
-            self.camera2.setZ(self.base.render, sup_pos.getZ()-(posicion_camara.getZ()-sup_pos.getZ()))
+            self.camera2.setZ(self.base.render, sup_pos.getZ()-(cam_pos.getZ()-sup_pos.getZ()))
             self.camera2.setH(self.base.render, cam_hpr.getX())
             self.camera2.setP(self.base.render, -cam_hpr.getY())
             self.camera2.setR(self.base.render, -cam_hpr.getZ())
