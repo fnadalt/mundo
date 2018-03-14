@@ -43,7 +43,8 @@ class Agua:
 
     def configurar_reflejo(self):
         #
-        self.reflection_buffer=self.base.win.makeTextureBuffer('reflection_buffer', 512, 512)
+        tamano=config.valint("shader.agua_tamano_buffer")
+        self.reflection_buffer=self.base.win.makeTextureBuffer('reflection_buffer', tamano, tamano)
         self.reflection_buffer.setClearColor(Vec4(0, 0, 0, 1))
         self.camera2=self.base.makeCamera(self.reflection_buffer)
         self.camera2.reparentTo(self.superficie)
@@ -61,7 +62,8 @@ class Agua:
         
     def configurar_refraccion(self):
         #
-        self.refraction_buffer=self.base.win.makeTextureBuffer('refraction_buffer', 512, 512)
+        tamano=config.valint("shader.agua_tamano_buffer")
+        self.refraction_buffer=self.base.win.makeTextureBuffer('refraction_buffer', tamano, tamano)
         self.refraction_buffer.setClearColor(Vec4(0, 0, 0, 1))
         self.camera3=self.base.makeCamera(self.refraction_buffer)
         self.camera3.reparentTo(self.superficie)

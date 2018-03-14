@@ -17,6 +17,7 @@ _default_config={
                         "tamano_sombras":512, 
                         "fov_sombras":30, 
                         "agua_reflejo_refraccion":True, 
+                        "agua_tamano_buffer":512, 
                         "sol_blur":True
                         }, 
         "sistema":      {
