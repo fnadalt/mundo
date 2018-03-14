@@ -105,9 +105,11 @@ class GestorShader:
             shader=Shader.load(Shader.SL_GLSL, vertex="shaders/debug.v.glsl", fragment="shaders/debug.f.glsl")
             return shader
         elif self._clase==GestorShader.ClaseVegetacion:
+            log.warning("shader vegetacion!")
             shader=Shader.load(Shader.SL_GLSL, vertex="shaders/vegetacion.v.glsl", fragment="shaders/vegetacion.f.glsl")
             return shader
         elif self._clase==GestorShader.ClaseYuyo:
+            log.warning("shader yuyo!")
             shader=Shader.load(Shader.SL_GLSL, vertex="shaders/yuyo.v.glsl", fragment="shaders/yuyo.f.glsl")
             return shader
         #

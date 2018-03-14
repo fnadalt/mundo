@@ -193,8 +193,8 @@ class Objetos:
         # nodos lod yuyos
         concentradores_lod_yuyos=list()
         for i_lod in range(len(self._lods)):
-            lod_vegetacion.addSwitch(self._lods[i_lod][0], self._lods[i_lod][1])
-            concentrador_lod=lod_vegetacion_np.attachNewNode("concentrador_lod%i_yuyos"%i_lod)
+            lod_yuyos.addSwitch(self._lods[i_lod][0], self._lods[i_lod][1])
+            concentrador_lod=lod_yuyos_np.attachNewNode("concentrador_lod%i_yuyos"%i_lod)
             concentrador_lod.setTwoSided(True) # aqui? asi?
             concentradores_lod_yuyos.append(concentrador_lod)
         #
@@ -220,7 +220,7 @@ class Objetos:
                     if i_lod>0:
                         instancia.setBillboardAxis()
                     modelo=self.pool_modelos[nombre_modelo]
-                    modelo.instanceTo(instancia)
+                    modelo.copyTo(instancia)
                     if i_lod==0:
                         d.generar_deltas()
                         altitud_suelo=self.sistema.obtener_altitud_suelo(d.posicion_global+d.delta_pos)
@@ -232,9 +232,11 @@ class Objetos:
                         instancia.setPos(parcela_node_path, d.posicion_parcela)
                     #log.debug("se coloco un '%s' en posicion_parcela=%s..."%(d.datos_objeto[11], str(d.posicion_parcela)))
                     cntr_objs+=1
-        # flattenStrong()?
-        parcela_vegetacion_node_path.flattenStrong()
-        parcela_yuyos_node_path.flattenStrong()
+        #
+        for concentrador_lod in concentradores_lod_vegetacion:
+            concentrador_lod.flattenStrong()
+        for concentrador_lod in concentradores_lod_yuyos:
+            concentrador_lod.flattenStrong()
         # agregar a parcelas
         self.parcelas[idx_pos]=(parcela_vegetacion_node_path, parcela_yuyos_node_path)
 
@@ -409,8 +411,8 @@ class Objetos:
 
     def _establecer_shader(self):
         #
-        GestorShader.aplicar(self.nodo_parcelas_vegetacion, GestorShader.ClaseGenerico, 2)
-        GestorShader.aplicar(self.nodo_parcelas_yuyos, GestorShader.ClaseYuyo, 2)
+        GestorShader.aplicar(self.nodo_parcelas_vegetacion, GestorShader.ClaseGenerico, 3)
+        GestorShader.aplicar(self.nodo_parcelas_yuyos, GestorShader.ClaseYuyo, 3)
 
     def _iniciar_db(self):
         log.info("_iniciar_db")
@@ -473,6 +475,8 @@ class Objetos:
             cursor=self.db.execute(sql)
             filas=cursor.fetchall()
             for fila in filas:
+                #if fila[11]=="yuyo":
+                #    continue
                 ids_modelos=list()
                 for i_lod in range(len(self._lods)):
                     ids_modelos.append("%s.lod%i"%(fila[11], i_lod))
@@ -485,6 +489,7 @@ class Objetos:
                     if not ids_modelos[i_lod] in self.pool_modelos:
                         log.info("-cargar %s"%ruta_archivo_modelo)
                         modelo=self.base.loader.loadModel(ruta_archivo_modelo)
+                        modelo.clearModelNodes()
                         self.pool_modelos[ids_modelos[i_lod]]=modelo
 
     def _terminar_pool_modelos(self):

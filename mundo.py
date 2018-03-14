@@ -102,7 +102,7 @@ class Mundo:
     def _establecer_shader(self):
         log.info("_establecer_shader")
         GestorShader.iniciar(self.base, sistema.Sistema.TopoAltitudOceano, Vec4(0, 0, 1, sistema.Sistema.TopoAltitudOceano))
-        GestorShader.aplicar(self.nodo, GestorShader.ClaseGenerico, 1) # quitarlo, optimizacion? si
+        GestorShader.aplicar(self.nodo, GestorShader.ClaseGenerico, 1) # quitarlo, optimizacion?
         #GestorShader.aplicar(self, GestorShader.ClaseDebug, 1000)
 
     def _cargar_obj_voxel(self):
@@ -257,10 +257,10 @@ class Mundo:
         self.agua.nodo.reparentTo(self.nodo) # estaba self.base.render
         self.agua.generar()
         # objetos
-#        self.objetos=Objetos(self.base)
-#        self.objetos.iniciar()
-#        self.objetos.nodo.reparentTo(self.nodo)
-#        self.objetos.update()
+        self.objetos=Objetos(self.base)
+        self.objetos.iniciar()
+        self.objetos.nodo.reparentTo(self.nodo)
+        self.objetos.update()
         #
         self.controlador_camara.altitud_agua=sistema.Sistema.TopoAltitudOceano
 
@@ -303,11 +303,6 @@ class Mundo:
         if self.sol:
             self.sol.update(pos_pivot_camara, self.sistema.hora_normalizada, self.sistema.periodo_dia_actual, offset_periodo)
             self.nodo.setShaderInput("posicion_sol", self.sol.nodo.getPos(self.nodo), priority=10)
-        # agua
-        if self.agua:
-            self.agua.nodo.setX(self.controlador_camara.target_node_path.getPos().getX())
-            self.agua.nodo.setY(self.controlador_camara.target_node_path.getPos().getY())
-            self.agua.update(dt, self.sol.luz.getPos(self.cielo.nodo), self.sol.luz.node().getColor())
         # personajes
         for _personaje in self._personajes:
             _altitud_suelo=self.sistema.obtener_altitud_suelo(_personaje.cuerpo.getPos())
@@ -324,6 +319,11 @@ class Mundo:
             # gui
             self.lblHora["text"]=self.sistema.obtener_hora()
             self.lblTemperatura["text"]="%.0fº"%self.sistema.obtener_temperatura_actual_grados()
+        # agua
+        if self.agua:
+            self.agua.nodo.setX(self.controlador_camara.target_node_path.getPos().getX())
+            self.agua.nodo.setY(self.controlador_camara.target_node_path.getPos().getY())
+            self.agua.update(dt, self.sol.luz.getPos(self.cielo.nodo), self.sol.luz.node().getColor())
         #
         self._counter+=1
         return task.cont
