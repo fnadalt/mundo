@@ -156,8 +156,8 @@ vec4 agua()
     vec2 texcoord_reflejo=vec2(ndc.x,1.0-ndc.y);
     vec2 texcoord_refraccion=ndc;
     //
-    vec2 distorted_texcoords=texture2D(p3d_Texture2,vec2(gl_TexCoord[0].s+move_factor, gl_TexCoord[0].t)).rg*0.1;
-    distorted_texcoords=gl_TexCoord[0].st+vec2(distorted_texcoords.x,distorted_texcoords.y+move_factor);
+    vec2 distorted_texcoords=texture2D(p3d_Texture2,vec2(gl_TexCoord[0].s+factor_movimiento_agua, gl_TexCoord[0].t)).rg*0.1;
+    distorted_texcoords=gl_TexCoord[0].st+vec2(distorted_texcoords.x,distorted_texcoords.y+factor_movimiento_agua);
     vec2 total_distortion=(texture2D(p3d_Texture2,distorted_texcoords).rg*2.0-1.0)*0.01;
     //
     texcoord_reflejo+=total_distortion;
@@ -168,7 +168,7 @@ vec4 agua()
     vec4 color_reflection=texture2D(p3d_Texture0, texcoord_reflejo);
     vec4 color_refraction=texture2D(p3d_Texture1, texcoord_refraccion);
     // ok so far
-    vec3 view_vector=normalize(cam_pos);
+    vec3 view_vector=normalize(posicion_camara);
     float refractive_factor=dot(view_vector,vec3(0.0,0.0,1.0)); // abs()? esto era no más, parece
     refractive_factor=pow(refractive_factor,0.9); // renderiza negro ante ciertos desplazamientos de la superficie de agua, habria que corregir. abs()!
     //

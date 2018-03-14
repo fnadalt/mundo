@@ -80,6 +80,8 @@ class GestorShader:
         nodo.setShaderInput("color_halo_sol_inicial", Vec4(0, 0, 0, 0), priority=prioridad)
         nodo.setShaderInput("color_halo_sol_final", Vec4(0, 0, 0, 0), priority=prioridad)
         nodo.setShaderInput("plano_recorte_agua", _plano_recorte_agua, priority=prioridad)
+        nodo.setShaderInput("factor_movimiento_agua", 0.0, priority=prioridad)
+        nodo.setShaderInput("posicion_camara", Vec3(0, 0, 0), priority=prioridad)
         if config.valbool("shader.phong"):
             for i in range(4): # parametrizar?
                 pl=PointLight("luz_omni_dummy_%i"%i)

@@ -72,6 +72,9 @@ class Cielo:
         self.offset_periodo=_offset_corregido
         self._offset_periodo_anterior=offset_periodo
     
+    def terminar(self):
+        log.info("terminar")
+    
     def obtener_info(self):
         info="Cielo color_luz=%s\n"%(str(self.color_luz_ambiental))
         return info

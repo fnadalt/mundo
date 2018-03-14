@@ -65,8 +65,8 @@ uniform float distancia_fog_maxima;
 uniform vec4 tinte_fog;
 """
 FS_AGUA="""
-uniform float move_factor;
-uniform vec3 cam_pos;
+uniform float factor_movimiento_agua;
+uniform vec3 posicion_camara;
 const float shine_damper=20.0;
 const float reflectivity=0.6;
 """
@@ -190,44 +190,6 @@ vec2 obtener_texcoord_terreno(float tipo_terreno, bool normal_map)
     //
     return _texcoord;
 }
-/*
-vec4 tex_terreno_0()
-{
-    //
-    vec2 pos=vec2(info_tipo.x*4,info_tipo.y*3);
-    vec2 celda0=vec2(int(pos.x),int(pos.y));
-    vec2 punto_medio0=vec2(celda0.x+0.5,celda0.y+0.5);
-    vec2 distancia0=pos-punto_medio0;
-    ivec2 delta_celda0=ivec2((distancia0.x<0?-1:1),(distancia0.y<0?-1:1));
-    vec2 celda1;
-    float distancia;
-    float factor_transicion=0.0;
-    if(abs(distancia0.x)>abs(distancia0.y)){
-        celda1=vec2(clamp(celda0.x+delta_celda0.x,0,3),celda0.y);
-        distancia=abs(distancia0.x);
-    } else {
-        celda1=vec2(celda0.y,clamp(celda0.y+delta_celda0.y,0,2));
-        distancia=abs(distancia0.y);
-    }
-    //
-    TiposTerreno tipos0=tipos_terreno[int(celda0.y*4+celda0.x)];
-    float tipo0=tipos0.base;
-    //
-    vec4 color0=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0,obtener_texcoord_terreno(tipo0,false));
-    //
-    vec4 color=color0;
-    //
-    if(distancia>0.3){
-        TiposTerreno tipos1=tipos_terreno[int(celda1.y*4+celda1.x)];
-        float tipo1=tipos1.base;
-        vec4 color1=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0,obtener_texcoord_terreno(tipo1,false));
-        factor_transicion=(distancia-0.3)/((0.5-0.3)*2.0);
-        color=mix(color0,color1,factor_transicion);
-    }
-    //
-    return color;
-}
-*/
 vec4 tex_terreno(sampler2D textura, bool normal_map)
 {
     //
@@ -300,8 +262,7 @@ vec4 tex_terreno(sampler2D textura, bool normal_map)
         //color=(color0*(1.0-factor_transicion))+(color1*factor_transicion);
     }
     //
-    //color=vec4(factor_ruido,factor_ruido,factor_ruido,1.0);
-    //if(f0==-1) color=vec4(1,0,0,1);
+
     return color;
 }
 """
@@ -337,16 +298,16 @@ vec4 agua()
     // ndc:
     vec2 ndc=(PositionP.xy/PositionP.w)/2.0+0.5;
     // texcoords con distorsion: dudv map:
-    vec2 tc=texcoord.st*75.0;
-    vec2 distorted_texcoords=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0,vec2(tc.s+move_factor, tc.t)).rg*0.1;
-    distorted_texcoords=tc.st+vec2(distorted_texcoords.x,distorted_texcoords.y+move_factor);
+    vec2 tc=texcoord.st*300.0;
+    vec2 distorted_texcoords=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0,vec2(tc.s+factor_movimiento_agua, tc.t)).rg*0.1;
+    distorted_texcoords=tc.st+vec2(distorted_texcoords.x,distorted_texcoords.y+factor_movimiento_agua);
     vec2 total_distortion=(%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0,distorted_texcoords).rg*2.0-1.0)*0.01;
     // normal map:
     vec4 color_normal=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,distorted_texcoords*1.5);
     vec3 normal=vec3(color_normal.r*2.0-1.0,color_normal.g*2.0-1.0,color_normal.b);
     normal=normalize(normal);
     // view vector:
-    vec3 view_vector=normalize(cam_pos-PositionV.xyz);
+    vec3 view_vector=normalize(posicion_camara-PositionV.xyz);
     %(FS_FUNC_AGUA_REFL_REFR)s
     // specular:
     //vec3 reflected_light=reflect(normalize(posicion_sol-PositionW.xyz),normal);

@@ -20,10 +20,9 @@ class Agua:
         self.reflection_buffer=None
         self.refraction_buffer=None
         #
-        self.superficie=self.base.loader.loadModel("objetos/plano_agua")
-        self.superficie.setZ(self.altitud)
-        self.superficie.node().adjustDrawMask(DrawMask(5), DrawMask(2), DrawMask(0))
-        #self.superficie.hide()
+        self.nodo=self.base.loader.loadModel("objetos/plano_agua")
+        self.nodo.setZ(self.altitud)
+        self.nodo.node().adjustDrawMask(DrawMask(5), DrawMask(2), DrawMask(0))
 
     def terminar(self):
         if self.reflection_buffer:
@@ -38,8 +37,8 @@ class Agua:
         if config.valbool("shader.agua_reflejo_refraccion"):
             self.configurar_reflejo()
             self.configurar_refraccion()
-        self.move_factor=0.0
-        self.shader=GestorShader.aplicar(self.superficie, GestorShader.ClaseAgua, 2)
+        self.factor_movimiento_agua=0.0
+        self.shader=GestorShader.aplicar(self.nodo, GestorShader.ClaseAgua, 2)
 
     def configurar_reflejo(self):
         #
@@ -47,7 +46,7 @@ class Agua:
         self.reflection_buffer=self.base.win.makeTextureBuffer('reflection_buffer', tamano, tamano)
         self.reflection_buffer.setClearColor(Vec4(0, 0, 0, 1))
         self.camera2=self.base.makeCamera(self.reflection_buffer)
-        self.camera2.reparentTo(self.superficie)
+        self.camera2.reparentTo(self.nodo)
         self.camera2.node().getLens().setFov(self.camera.find("+Camera").node().getLens().getFov())
         dummy_reflection=self.base.render.attachNewNode("dummy_reflection")
         dummy_reflection.setShaderInput("plano_recorte_agua", Vec4(0, 0, 1, self.altitud), priority=3)
@@ -58,7 +57,7 @@ class Agua:
         tex2=self.reflection_buffer.getTexture()
         tex2.setWrapU(Texture.WMClamp)
         tex2.setWrapV(Texture.WMClamp)
-        self.superficie.setTexture(ts2, tex2)
+        self.nodo.setTexture(ts2, tex2)
         
     def configurar_refraccion(self):
         #
@@ -66,7 +65,7 @@ class Agua:
         self.refraction_buffer=self.base.win.makeTextureBuffer('refraction_buffer', tamano, tamano)
         self.refraction_buffer.setClearColor(Vec4(0, 0, 0, 1))
         self.camera3=self.base.makeCamera(self.refraction_buffer)
-        self.camera3.reparentTo(self.superficie)
+        self.camera3.reparentTo(self.nodo)
         self.camera3.node().getLens().setFov(self.camera.find("+Camera").node().getLens().getFov())
         dummy_refraction=NodePath("dummy_refraction")
         dummy_refraction.setShaderInput("plano_recorte_agua", Vec4(0, 0, -1, -self.altitud), priority=4)
@@ -77,41 +76,41 @@ class Agua:
         tex3=self.refraction_buffer.getTexture()
         tex3.setWrapU(Texture.WMClamp)
         tex3.setWrapV(Texture.WMClamp)
-        self.superficie.setTexture(ts3, tex3)
+        self.nodo.setTexture(ts3, tex3)
     
     def configurar_dudv(self):
         ts0=TextureStage("tsBuffer_dudv")
         tex0=self.base.loader.loadTexture("texturas/agua_dudv.png")
         tex0.setWrapU(Texture.WMRepeat)
         tex0.setWrapV(Texture.WMRepeat)
-        self.superficie.setTexture(ts0, tex0)
+        self.nodo.setTexture(ts0, tex0)
     
     def configurar_normal(self):
         ts1=TextureStage("tsBuffer_normal")
         tex1=self.base.loader.loadTexture("texturas/agua_normal.png")
         tex1.setWrapU(Texture.WMRepeat)
         tex1.setWrapV(Texture.WMRepeat)
-        self.superficie.setTexture(ts1, tex1)
+        self.nodo.setTexture(ts1, tex1)
     
     def update(self, dt, pos_luz, color_luz):
         #self._posicionar_camaras()
         self._posicionar_camaras_2()
         #
-        self.move_factor+=0.02*dt
-        self.move_factor%=1
-        ref=self.superficie # self.superficie|self.base.render
-        self.superficie.setShaderInput("move_factor", self.move_factor)
-        self.superficie.setShaderInput("cam_pos", self.camera.getPos(ref))
+        self.factor_movimiento_agua+=0.02*dt
+        self.factor_movimiento_agua%=1
+        ref=self.nodo # self.nodo|self.base.render
+        self.nodo.setShaderInput("factor_movimiento_agua", self.factor_movimiento_agua, priority=2)
+        self.nodo.setShaderInput("posicion_camara", self.camera.getPos(ref), priority=2)
 
     def obtener_info(self):
-        _dot=self.superficie.getPos(self.base.render)-self.camera.getPos(self.base.render)
+        _dot=self.nodo.getPos(self.base.render)-self.camera.getPos(self.base.render)
         _dot=_dot.dot(Vec3(0, 1, 0))
         info="Agua:\n"
-        info+="plano l:%s|%s\n"%(str(self.superficie.getPos()), str(self.superficie.getHpr()))
-        info+="      r:%s|%s\n"%(str(self.superficie.getPos(self.base.render)), str(self.superficie.getHpr(self.base.render)))
+        info+="plano l:%s|%s\n"%(str(self.nodo.getPos()), str(self.nodo.getHpr()))
+        info+="      r:%s|%s\n"%(str(self.nodo.getPos(self.base.render)), str(self.nodo.getHpr(self.base.render)))
         info+="cam l:%s|%s\n"%(str(self.camera.getPos()), str(self.camera.getHpr()))
         info+="    r:%s|%s\n"%(str(self.camera.getPos(self.base.render)), str(self.camera.getHpr(self.base.render)))
-        info+="    s:%s|%s\n"%(str(self.camera.getPos(self.superficie)), str(self.camera.getHpr(self.superficie)))
+        info+="    s:%s|%s\n"%(str(self.camera.getPos(self.nodo)), str(self.camera.getHpr(self.nodo)))
         info+="    dot: %s\n"%(str(_dot))
         if self.camera2:
             info+="cam2 l:%s|%s\n"%(str(self.camera2.getPos()), str(self.camera2.getHpr()))
@@ -137,29 +136,29 @@ class Agua:
 
     def _posicionar_camaras(self):
         #
-        cam_pos=self.camera.getPos(self.superficie)
-        cam_hpr=self.camera.getHpr(self.superficie)
+        cam_pos=self.camera.getPos(self.nodo)
+        cam_hpr=self.camera.getHpr(self.nodo)
         #
         if self.camera2:
-            self.camera2.setPos(self.superficie, cam_pos)
-            self.camera2.setZ(self.superficie, -cam_pos.getZ())
-            self.camera2.setH(self.superficie, cam_hpr.getX())
-            self.camera2.setP(self.superficie, -cam_hpr.getY())
-            self.camera2.setR(self.superficie, -cam_hpr.getZ())
+            self.camera2.setPos(self.nodo, cam_pos)
+            self.camera2.setZ(self.nodo, -cam_pos.getZ())
+            self.camera2.setH(self.nodo, cam_hpr.getX())
+            self.camera2.setP(self.nodo, -cam_hpr.getY())
+            self.camera2.setR(self.nodo, -cam_hpr.getZ())
         #
         if self.camera3:
-            self.camera3.setPos(self.superficie, cam_pos)
-            self.camera3.setHpr(self.superficie, cam_hpr)
+            self.camera3.setPos(self.nodo, cam_pos)
+            self.camera3.setHpr(self.nodo, cam_hpr)
 
     def _posicionar_camaras_2(self):
         #
         cam_pos=self.camera.getPos(self.base.render)
         cam_hpr=self.camera.getHpr(self.base.render)
-        sup_pos=self.superficie.getPos(self.base.render)
+        sup_pos=self.nodo.getPos(self.base.render)
         #
         if self.camera2:
             self.camera2.setPos(self.base.render, cam_pos)
-            self.camera2.setZ(self.base.render, sup_pos.getZ()-(cam_pos.getZ()-sup_pos.getZ()))
+            self.camera2.setZ(self.base.render, sup_pos.getZ()-(posicion_camara.getZ()-sup_pos.getZ()))
             self.camera2.setH(self.base.render, cam_hpr.getX())
             self.camera2.setP(self.base.render, -cam_hpr.getY())
             self.camera2.setR(self.base.render, -cam_hpr.getZ())

@@ -31,6 +31,11 @@ class Mundo:
         self.nodo=self.base.render.attachNewNode("mundo")
         self.input_mapper=None
         self.controlador_camara=None
+        self.terreno=None
+        self.cielo=None
+        self.sol=None
+        self.agua=None
+        self.objetos=None
         # variables internas:
         self._counter=50 # forzar terreno.update antes de hombre.update
         self._personajes=[]
@@ -46,7 +51,7 @@ class Mundo:
         # fisica:
         self._configurar_fisica()
         # mundo:
-        self._establecer_material()
+        self._establecer_material() # quitarlo, optimizacion? no, al reves!
         self._establecer_shader()
         # componentes:
         self.input_mapper=InputMapper(self.base)
@@ -54,10 +59,10 @@ class Mundo:
         self.controlador_camara=ControladorCamara(self.base)
         self.controlador_camara.input_mapper=self.input_mapper
         #
-        self._cargar_terreno()
-        self._cargar_hombre()
+        self._cargar_terreno()#
+        self._cargar_hombre()#
         #self._cargar_objetos()
-        self._cargar_obj_voxel()
+        #self._cargar_obj_voxel()
         # gui:
         self._cargar_debug_info()
         self._cargar_gui()
@@ -70,9 +75,16 @@ class Mundo:
     def terminar(self):
         log.info("terminar")
         #
-        self.agua.terminar()
-        self.sol.terminar()
-        self.terreno.terminar()
+        if self.objetos:
+            self.objetos.terminar()
+        if self.agua:
+            self.agua.terminar()
+        if self.sol:
+            self.sol.terminar()
+        if self.cielo:
+            self.cielo.terminar()
+        if self.terreno:
+            self.terreno.terminar()
         #
         self.sistema=None
         sistema.remover_instancia()
@@ -90,11 +102,10 @@ class Mundo:
     def _establecer_shader(self):
         log.info("_establecer_shader")
         GestorShader.iniciar(self.base, sistema.Sistema.TopoAltitudOceano, Vec4(0, 0, 1, sistema.Sistema.TopoAltitudOceano))
-        GestorShader.aplicar(self.nodo, GestorShader.ClaseGenerico, 1)
+        GestorShader.aplicar(self.nodo, GestorShader.ClaseGenerico, 1) # quitarlo, optimizacion? si
         #GestorShader.aplicar(self, GestorShader.ClaseDebug, 1000)
 
     def _cargar_obj_voxel(self):
-        return
         hm=HeightMap(id=66)
         N=64
         self.obj=voxels.Objeto("volumen", N, N, N, 0)
@@ -115,6 +126,7 @@ class Mundo:
 
     def _configurar_fisica(self):
         self.bullet_world=BulletWorld()
+        return
         #
         debug_fisica=BulletDebugNode("debug_fisica")
         debug_fisica.showNormals(True)
@@ -233,26 +245,22 @@ class Mundo:
         self.terreno.iniciar()
         self.terreno.nodo.reparentTo(self.nodo)
         self.terreno.update()
-        #
-        self.objetos=Objetos(self.base)
-        self.objetos.iniciar()
-        self.objetos.nodo.reparentTo(self.nodo)
-        self.objetos.update()
-        self.objetos.nodo.hide()#
         # cielo
         self.cielo=Cielo(self.base, sistema.Sistema.TopoAltitudOceano-20.0)
         self.cielo.nodo.reparentTo(self.nodo)
-#        self.nodo.setLight(self.cielo.luz) reemplazado por shader input
         # sol
         self.sol=Sol(self.base, sistema.Sistema.TopoAltitudOceano-20.0)
         self.sol.pivot.reparentTo(self.nodo) # self.cielo.nodo
-        #self.sol.mostrar_camaras()
         self.nodo.setLight(self.sol.luz)
         # agua
         self.agua=Agua(self.base, sistema.Sistema.TopoAltitudOceano)
-        self.agua.superficie.reparentTo(self.nodo) # estaba self.base.render
+        self.agua.nodo.reparentTo(self.nodo) # estaba self.base.render
         self.agua.generar()
-        #self.agua.mostrar_camaras()
+        # objetos
+#        self.objetos=Objetos(self.base)
+#        self.objetos.iniciar()
+#        self.objetos.nodo.reparentTo(self.nodo)
+#        self.objetos.update()
         #
         self.controlador_camara.altitud_agua=sistema.Sistema.TopoAltitudOceano
 
@@ -276,44 +284,46 @@ class Mundo:
         self.controlador_camara.altitud_suelo=self.sistema.obtener_altitud_suelo(self.controlador_camara.pos_camara.getXy())
         self.controlador_camara.update(dt)
         pos_pivot_camara=self.controlador_camara.pivot.getPos(self.nodo)
+        self.nodo.setShaderInput("pos_pivot_camara", pos_pivot_camara, priority=10)
         # sistema
         self.sistema.update(dt, pos_pivot_camara)
-        # ciclo dia/noche, cielo, sol
-        offset_periodo=self.sistema.calcular_offset_periodo_dia()
-        self.cielo.nodo.setX(self.controlador_camara.target_node_path.getPos().getX())
-        self.cielo.nodo.setY(self.controlador_camara.target_node_path.getPos().getY())
-        self.cielo.update(pos_pivot_camara, self.sistema.hora_normalizada, self.sistema.periodo_dia_actual, offset_periodo)
-        self.sol.update(pos_pivot_camara, self.sistema.hora_normalizada, self.sistema.periodo_dia_actual, offset_periodo)
+        # cielo
+        if self.cielo:
+            offset_periodo=self.sistema.calcular_offset_periodo_dia()
+            self.cielo.nodo.setX(self.controlador_camara.target_node_path.getPos().getX())
+            self.cielo.nodo.setY(self.controlador_camara.target_node_path.getPos().getY())
+            self.cielo.update(pos_pivot_camara, self.sistema.hora_normalizada, self.sistema.periodo_dia_actual, offset_periodo)
+            self.nodo.setShaderInput("color_luz_ambiental", self.cielo.color_luz_ambiental, priority=10)
+            self.nodo.setShaderInput("offset_periodo_cielo", self.cielo.offset_periodo, priority=10)
+            self.nodo.setShaderInput("color_cielo_base_inicial", self.cielo.color_cielo_base_inicial, priority=10)
+            self.nodo.setShaderInput("color_cielo_base_final", self.cielo.color_cielo_base_final, priority=10)
+            self.nodo.setShaderInput("color_halo_sol_inicial", self.cielo.color_halo_sol_inicial, priority=10)
+            self.nodo.setShaderInput("color_halo_sol_final", self.cielo.color_halo_sol_final, priority=10)
+        # sol
+        if self.sol:
+            self.sol.update(pos_pivot_camara, self.sistema.hora_normalizada, self.sistema.periodo_dia_actual, offset_periodo)
+            self.nodo.setShaderInput("posicion_sol", self.sol.nodo.getPos(self.nodo), priority=10)
+        # agua
+        if self.agua:
+            self.agua.nodo.setX(self.controlador_camara.target_node_path.getPos().getX())
+            self.agua.nodo.setY(self.controlador_camara.target_node_path.getPos().getY())
+            self.agua.update(dt, self.sol.luz.getPos(self.cielo.nodo), self.sol.luz.node().getColor())
         # personajes
         for _personaje in self._personajes:
             _altitud_suelo=self.sistema.obtener_altitud_suelo(_personaje.cuerpo.getPos())
             _personaje.altitud_suelo=_altitud_suelo
             _personaje.update(dt)
-        # agua
-        self.agua.superficie.setX(self.controlador_camara.target_node_path.getPos().getX())
-        self.agua.superficie.setY(self.controlador_camara.target_node_path.getPos().getY())
-        self.agua.update(dt, self.sol.luz.getPos(self.cielo.nodo), self.sol.luz.node().getColor())
         # contador 1/50
         if self._counter==50:
             self._counter=0
             #
-            self.terreno.update(pos_pivot_camara)#self.controlador_camara.target_node_path.getPos()) ?
-            self.objetos.update(pos_pivot_camara)
+            if self.terreno:
+                self.terreno.update(pos_pivot_camara)#self.controlador_camara.target_node_path.getPos()) ?
+            if self.objetos:
+                self.objetos.update(pos_pivot_camara)
             # gui
             self.lblHora["text"]=self.sistema.obtener_hora()
             self.lblTemperatura["text"]="%.0fº"%self.sistema.obtener_temperatura_actual_grados()
-        # mundo
-        #log.debug("_update posicion_sol %s"%(str(self.sol.nodo.getPos(self.nodo))))
-        self.nodo.setShaderInput("color_luz_ambiental", self.cielo.color_luz_ambiental, priority=10)
-        self.nodo.setShaderInput("pos_pivot_camara", pos_pivot_camara, priority=10)
-        self.nodo.setShaderInput("posicion_sol", self.sol.nodo.getPos(self.nodo), priority=10)
-        self.nodo.setShaderInput("offset_periodo_cielo", self.cielo.offset_periodo, priority=10)
-        self.nodo.setShaderInput("color_cielo_base_inicial", self.cielo.color_cielo_base_inicial, priority=10)
-        self.nodo.setShaderInput("color_cielo_base_final", self.cielo.color_cielo_base_final, priority=10)
-        self.nodo.setShaderInput("color_halo_sol_inicial", self.cielo.color_halo_sol_inicial, priority=10)
-        self.nodo.setShaderInput("color_halo_sol_final", self.cielo.color_halo_sol_final, priority=10)
-        #
-        #self.point_light.setPos(self.point_light, Vec3(0.01, 0, 0))
         #
         self._counter+=1
         return task.cont
