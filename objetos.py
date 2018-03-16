@@ -412,7 +412,7 @@ class Objetos:
     def _establecer_shader(self):
         #
         GestorShader.aplicar(self.nodo_parcelas_vegetacion, GestorShader.ClaseGenerico, 3)
-        GestorShader.aplicar(self.nodo_parcelas_yuyos, GestorShader.ClaseYuyo, 3)
+        GestorShader.aplicar(self.nodo_parcelas_yuyos, GestorShader.ClaseGenerico, 3)
 
     def _iniciar_db(self):
         log.info("_iniciar_db")

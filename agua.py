@@ -48,7 +48,7 @@ class Agua:
         self.camera2=self.base.makeCamera(self.reflection_buffer)
         self.camera2.reparentTo(self.nodo)
         self.camera2.node().getLens().setFov(self.camera.find("+Camera").node().getLens().getFov())
-        dummy_reflection=self.base.render.attachNewNode("dummy_reflection")
+        dummy_reflection=self.base.render.attachNewNode("dummy_reflection") # antes, base.render.attachNewNode
         dummy_reflection.setShaderInput("plano_recorte_agua", Vec4(0, 0, 1, self.altitud), priority=3)
         self.camera2.node().setCameraMask(DrawMask(2))
         self.camera2.node().setInitialState(dummy_reflection.getState())
@@ -67,7 +67,7 @@ class Agua:
         self.camera3=self.base.makeCamera(self.refraction_buffer)
         self.camera3.reparentTo(self.nodo)
         self.camera3.node().getLens().setFov(self.camera.find("+Camera").node().getLens().getFov())
-        dummy_refraction=NodePath("dummy_refraction")
+        dummy_refraction=self.base.render.attachNewNode("dummy_refraction")
         dummy_refraction.setShaderInput("plano_recorte_agua", Vec4(0, 0, -1, -self.altitud), priority=4)
         self.camera3.node().setCameraMask(DrawMask(2))
         self.camera3.node().setInitialState(dummy_refraction.getState())

@@ -256,6 +256,7 @@ class Mundo:
         self.agua=Agua(self.base, sistema.Sistema.TopoAltitudOceano)
         self.agua.nodo.reparentTo(self.nodo) # estaba self.base.render
         self.agua.generar()
+        self.agua.mostrar_camaras()
         # objetos
         self.objetos=Objetos(self.base)
         self.objetos.iniciar()
