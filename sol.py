@@ -23,6 +23,7 @@ class Sol:
         self.nodo=None
         self.luz=None
         self.glow_camera=None
+        self.glow_buffer=None
         self.blur_x_buffer=None
         self.blur_y_buffer=None
         self.buffer_sombra=None
@@ -158,7 +159,7 @@ class Sol:
             # glow camera
             tempnode = self.base.render.attachNewNode(PandaNode("sol_temp_node"))
             tempnode.setShader(self.nodo.getShader(), priority=4)
-            tempnode.setShaderInput("plano_recorte_agua", Vec4(0, 0, 1, self._altitud_agua), priority=4)
+            #tempnode.setShaderInput("plano_recorte_agua", Vec4(0, 0, 1, self._altitud_agua), priority=4)
             tempnode.setShaderInput("posicion_sol", Vec3(0, 0, 0), priority=4)
             self.glow_camera = self.base.makeCamera(self.glow_buffer, lens=self.base.cam.node().getLens())
             self.glow_camera.node().setCameraMask(DrawMask(8))

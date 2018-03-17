@@ -252,22 +252,27 @@ class Mundo:
         self.sol=Sol(self.base, sistema.Sistema.TopoAltitudOceano-20.0)
         self.sol.pivot.reparentTo(self.nodo) # self.cielo.nodo
         self.nodo.setLight(self.sol.luz)
-        # agua
-        self.agua=Agua(self.base, sistema.Sistema.TopoAltitudOceano)
-        self.agua.nodo.reparentTo(self.nodo) # estaba self.base.render
-        self.agua.generar()
-        self.agua.mostrar_camaras()
         # objetos
         self.objetos=Objetos(self.base)
         self.objetos.iniciar()
         self.objetos.nodo.reparentTo(self.nodo)
         self.objetos.update()
+        # agua
+        self.agua=Agua(self.base, sistema.Sistema.TopoAltitudOceano)
+        self.agua.nodo.reparentTo(self.nodo) # estaba self.base.render
+        self.agua.generar()
+        #
+        #self.cielo.nodo.setBin("background", 0)
+        #self.sol.nodo.setBin("background", 1)
+        #self.agua.nodo.setBin("background", 2)
+        #self.terreno.nodo.setBin("opaque", 0)
+        #self.objetos.nodo.setBin("transparent", 0)
         #
         self.controlador_camara.altitud_agua=sistema.Sistema.TopoAltitudOceano
 
     def _update(self, task):
-        info=""
-        info+=self.sistema.obtener_info()+"\n"
+        #info=""
+        #info+=self.sistema.obtener_info()+"\n"
         #info+=self.terreno.obtener_info()+"\n"
         #info+=self.hombre.obtener_info()+"\n"
         #info+=self.agua.obtener_info()+"\n"
@@ -325,6 +330,8 @@ class Mundo:
             self.agua.nodo.setX(self.controlador_camara.target_node_path.getPos().getX())
             self.agua.nodo.setY(self.controlador_camara.target_node_path.getPos().getY())
             self.agua.update(dt, self.sol.luz.getPos(self.cielo.nodo), self.sol.luz.node().getColor())
+        #
+        #self.nodo.setShaderInput("altitud_agua", 150.0, 0.0, 0.0, 0.0, priority=10)
         #
         self._counter+=1
         return task.cont

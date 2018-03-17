@@ -296,12 +296,12 @@ vec4 agua()
 {
     vec4 color=vec4(0,0,0,0);
     // ndc:
-    vec2 ndc=(PositionP.xy/PositionP.w)/2.0+0.5;
+    vec2 ndc=(PositionP.xy/PositionP.w)*0.5+0.5;
     // texcoords con distorsion: dudv map:
-    vec2 tc=texcoord.st*300.0;
-    vec2 distorted_texcoords=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0,vec2(tc.s+factor_movimiento_agua, tc.t)).rg*0.1;
-    distorted_texcoords=tc.st+vec2(distorted_texcoords.x,distorted_texcoords.y+factor_movimiento_agua);
-    vec2 total_distortion=(%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture0,distorted_texcoords).rg*2.0-1.0)*0.01;
+    vec2 tc=texcoord.st*150.0;
+    vec2 distorted_texcoords=texture(p3d_Texture0,vec2(tc.s+factor_movimiento_agua, tc.t)).rg;
+    distorted_texcoords=tc.st+vec2(distorted_texcoords.s,distorted_texcoords.t+factor_movimiento_agua);
+    vec2 total_distortion=(texture(p3d_Texture0,distorted_texcoords).rg*2.0-1.0)*0.01;
     // normal map:
     vec4 color_normal=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,distorted_texcoords*1.5);
     vec3 normal=vec3(color_normal.r*2.0-1.0,color_normal.g*2.0-1.0,color_normal.b);
@@ -388,8 +388,11 @@ void main()
     vec4 color=vec4(0,0,0,0);
 """
 FS_MAIN_CLIP_INICIO="""
-    if (PositionW.x*plano_recorte_agua.x + PositionW.y*plano_recorte_agua.y + PositionW.z*plano_recorte_agua.z - plano_recorte_agua.w <= 0) {
+    //if (PositionW.x*plano_recorte_agua.x + PositionW.y*plano_recorte_agua.y + PositionW.z*plano_recorte_agua.z - plano_recorte_agua.w <= 0) {
+    //if ((plano_recorte_agua.w>0.0 && plano_recorte_agua.w<PositionW.z) || (plano_recorte_agua.w<0.0 && plano_recorte_agua.w>=PositionW.z)) {
+    if ((altitud_agua>=0 && PositionW.z<=altitud_agua) || (altitud_agua<0 && PositionW.z>abs(altitud_agua))){
         discard;
+        //color=vec4(1,0,0,1);
     } else {
 """
 FS_MAIN_LUZ="""
