@@ -46,7 +46,7 @@ class Agua:
         self.reflection_buffer=self.base.win.makeTextureBuffer('reflection_buffer', tamano, tamano)
         self.reflection_buffer.setClearColor(Vec4(0, 0, 0, 1)) # quitar?
         self.camera2=self.base.makeCamera(self.reflection_buffer)
-        #self.camera2.reparentTo(self.nodo)
+        self.camera2.reparentTo(self.nodo)
         self.camera2.node().getLens().setFov(self.camera.find("+Camera").node().getLens().getFov())
         dummy_reflection=NodePath("dummy_reflection") # antes, base.render.attachNewNode
         #dummy_reflection.setShaderInput("plano_recorte_agua", Vec4(0, 0, 1, self.altitud), priority=3)
@@ -66,7 +66,7 @@ class Agua:
         self.refraction_buffer=self.base.win.makeTextureBuffer('refraction_buffer', tamano, tamano)
         self.refraction_buffer.setClearColor(Vec4(0, 0, 0, 1))
         self.camera3=self.base.makeCamera(self.refraction_buffer)
-        #self.camera3.reparentTo(self.nodo)
+        self.camera3.reparentTo(self.nodo)
         self.camera3.node().getLens().setFov(self.camera.find("+Camera").node().getLens().getFov())
         dummy_refraction=NodePath("dummy_refraction")
         #dummy_refraction.setShaderInput("plano_recorte_agua", Vec4(0, 0, -1, -self.altitud), priority=4)
@@ -82,14 +82,14 @@ class Agua:
     
     def configurar_dudv(self):
         ts0=TextureStage("tsBuffer_dudv")
-        tex0=self.base.loader.loadTexture("texturas/agua_dudv.png")
+        tex0=self.base.loader.loadTexture("texturas/agua_dudv2.png")
         tex0.setWrapU(Texture.WMRepeat)
         tex0.setWrapV(Texture.WMRepeat)
         self.nodo.setTexture(ts0, tex0)
     
     def configurar_normal(self):
         ts1=TextureStage("tsBuffer_normal")
-        tex1=self.base.loader.loadTexture("texturas/agua_normal.png")
+        tex1=self.base.loader.loadTexture("texturas/agua_normal2.png")
         tex1.setWrapU(Texture.WMRepeat)
         tex1.setWrapV(Texture.WMRepeat)
         self.nodo.setTexture(ts1, tex1)

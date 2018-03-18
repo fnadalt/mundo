@@ -88,8 +88,9 @@ class GestorShader:
                 pl.setColor(Vec4(0, 0, 0, 0))
                 nodo.setShaderInput("luz_omni[%i]"%i, NodePath(pl), priority=prioridad)
         if config.valbool("shader.fog"):
-            nodo.setShaderInput("distancia_fog_minima", 70.0, priority=prioridad)
-            nodo.setShaderInput("distancia_fog_maxima", 120.0, priority=prioridad)
+            fog_distancias=config.vallist("shader.fog_rango_distancias")
+            nodo.setShaderInput("distancia_fog_minima", int(fog_distancias[0]), priority=prioridad)
+            nodo.setShaderInput("distancia_fog_maxima", int(fog_distancias[1]), priority=prioridad)
             nodo.setShaderInput("tinte_fog", Vec4(1, 1, 1, 1), priority=prioridad)
 
     def __init__(self, clase):
@@ -230,10 +231,12 @@ class GestorShader:
         if self._clase!=GestorShader.ClaseAgua and self._clase!=GestorShader.ClaseCielo:
             texto_fs+=glsl.FS_MAIN_CLIP_INICIO
         if self._clase!=GestorShader.ClaseSol and self._clase!=GestorShader.ClaseSombra:
-            texto_fs+=glsl.FS_MAIN_CIELO_FOG
+            texto_fs+=glsl.FS_MAIN_COLOR_CIELO
         if self._clase==GestorShader.ClaseCielo:
             texto_fs+=glsl.FS_MAIN_CIELO
         else:
+            if self._clase!=GestorShader.ClaseSol and self._clase!=GestorShader.ClaseSombra and config.valbool("shader.fog"):
+                texto_fs+=glsl.FS_FUNC_FOG_INICIO
             if self._clase==GestorShader.ClaseGenerico or self._clase==GestorShader.ClaseTerreno:
                 if config.valbool("shader.phong"):
                     if self._clase==GestorShader.ClaseTerreno and config.valbool("terreno.normal_map"):
@@ -257,11 +260,10 @@ class GestorShader:
                 texto_fs+=glsl.FS_MAIN_SOL
             elif self._clase==GestorShader.ClaseSombra:
                 texto_fs+=glsl.FS_MAIN_SOMBRA
-            if self._clase!=GestorShader.ClaseSol and self._clase!=GestorShader.ClaseSombra:
-                if config.valbool("shader.fog"):
-                    texto_fs+=glsl.FS_MAIN_FOG_FACTOR
+            if self._clase!=GestorShader.ClaseSol and self._clase!=GestorShader.ClaseSombra and config.valbool("shader.fog"):
+                texto_fs+=glsl.FS_MAIN_FOG_FACTOR
             if self._clase==GestorShader.ClaseAgua and config.valbool("shader.fog"):
-                texto_fs+=glsl.FS_MAIN_ALPHA_AGUA
+                texto_fs+=glsl.FS_MAIN_FOG_COLOR #FS_MAIN_ALPHA_AGUA
             else:
                 if self._clase!=GestorShader.ClaseSol and self._clase!=GestorShader.ClaseSombra:
                     if config.valbool("shader.fog"):
@@ -273,6 +275,8 @@ class GestorShader:
                     texto_fs+=glsl.FS_MAIN_ALPHA_TEX_GENERICO
                 else:
                     texto_fs+=glsl.FS_MAIN_ALPHA
+            if self._clase!=GestorShader.ClaseSol and self._clase!=GestorShader.ClaseSombra and config.valbool("shader.fog"):
+                texto_fs+=glsl.FS_MAIN_FOG_FIN
         texto_fs+=glsl.FS_MAIN_COLOR
         if self._clase!=GestorShader.ClaseAgua and self._clase!=GestorShader.ClaseCielo:
             texto_fs+=glsl.FS_MAIN_CLIP_FIN

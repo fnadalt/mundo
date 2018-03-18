@@ -449,16 +449,27 @@ FS_MAIN_SOMBRA="""
         // sombra
         color=sombra();
 """
-FS_MAIN_CIELO_FOG="""
+FS_MAIN_COLOR_CIELO="""
         // cielo y fog
         vec4 color_cielo=cielo();
 """
+FS_FUNC_FOG_INICIO="""
+        if(PositionV.z>distancia_fog_maxima){
+            color=color_cielo;
+        } else {
+"""
+FS_MAIN_FOG_FIN="""
+        } // fog
+"""
 FS_MAIN_FOG_FACTOR="""
         // fog: generico, terreno y agua
-        float fog_factor=clamp((distancia_fog_maxima-abs(PositionV.z))/(distancia_fog_maxima-distancia_fog_minima),0.0,1.0);
+        // agua deberia tambien confundirse con cielo
+        if(abs(PositionV.z)>distancia_fog_minima){
+            float fog_factor=clamp((distancia_fog_maxima-abs(PositionV.z))/(distancia_fog_maxima-distancia_fog_minima),0.0,1.0);
 """
 FS_MAIN_FOG_COLOR="""
-        color=mix(color_cielo*tinte_fog,color,fog_factor);
+            color=mix(color_cielo*tinte_fog,color,fog_factor);
+        }
 """
 FS_MAIN_CIELO="""
         color=color_cielo;

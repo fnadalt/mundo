@@ -14,6 +14,7 @@ _default_config={
                         "phong":True, 
                         "sombras":False, 
                         "fog":False, 
+                        "fog_rango_distancias":"70 120", 
                         "sombras_tamano_buffer":512, 
                         "sombras_fov":30, 
                         "agua_reflejo_refraccion":True, 
