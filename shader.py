@@ -227,7 +227,7 @@ class GestorShader:
                     texto_fs+=glsl.FS_FOG
         if self._clase!=GestorShader.ClaseSol and self._clase!=GestorShader.ClaseSombra:
             texto_fs+=glsl.FS_FUNC_CIELO
-        texto_fs+=glsl.FS_MAIN_INICIO
+        texto_fs+=glsl.FS_MAIN_INICIO%{"FS_MAIN_INICIO_COLOR":glsl.FS_MAIN_INICIO_COLOR}
         if self._clase!=GestorShader.ClaseAgua and self._clase!=GestorShader.ClaseCielo:
             texto_fs+=glsl.FS_MAIN_CLIP_INICIO
         if self._clase!=GestorShader.ClaseSol and self._clase!=GestorShader.ClaseSombra:
@@ -277,7 +277,7 @@ class GestorShader:
                     texto_fs+=glsl.FS_MAIN_ALPHA
             if self._clase!=GestorShader.ClaseSol and self._clase!=GestorShader.ClaseSombra and config.valbool("shader.fog"):
                 texto_fs+=glsl.FS_MAIN_FOG_FIN
-        texto_fs+=glsl.FS_MAIN_COLOR
+        texto_fs+=glsl.FS_MAIN_COLOR%{"FS_MAIN_COLOR":glsl.FS_MAIN_COLOR}
         if self._clase!=GestorShader.ClaseAgua and self._clase!=GestorShader.ClaseCielo:
             texto_fs+=glsl.FS_MAIN_CLIP_FIN
         texto_fs+=glsl.FS_MAIN_FIN

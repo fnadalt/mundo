@@ -144,6 +144,10 @@ varying vec4 tangent;
 FS_TERRENO_COLOR_DEBUG="""
 varying vec4 color_vtx;
 """
+FS_MAIN_INICIO_COLOR="vec4 color=vec4(0,0,0,1);"
+FS_MAIN_COLOR="""
+        gl_FragColor=color;
+"""
 
 #
 #
