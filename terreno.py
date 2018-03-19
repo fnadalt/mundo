@@ -25,7 +25,8 @@ class Terreno:
         # componentes:
         self.nodo=self.base.render.attachNewNode("terreno")
         self.nodo_parcelas=self.nodo.attachNewNode("parcelas")
-        #self.nodo.setRenderModeWireframe()
+        if config.valbool("terreno.wireframe"):
+            self.nodo.setRenderModeWireframe()
         self.parcelas={} # {idx_pos:parcela_node_path,...}
         # variables externas:
         self.directorio_cache="cache/terreno"
@@ -113,7 +114,7 @@ class Terreno:
             with open(ruta_archivo_cache, "rb") as arch:
                 datos_parcela=pickle.load(arch)
         # geometria
-        geom_node=self._generar_nodo_parcela(nombre, idx_pos, pos, datos_parcela, config.valbool("terreno.color_debug"))
+        geom_node=self._generar_geometria_parcela(nombre, idx_pos, pos, datos_parcela, 2, config.valbool("terreno.color_debug"))
         parcela_node_path.attachNewNode(geom_node)
         # generar textura guia de terreno
 #        ts2=TextureStage("ts_parcela") # para metodo de interpolacion de texturas
@@ -319,7 +320,7 @@ class Terreno:
         #
         return data
 
-    def _generar_nodo_parcela(self, nombre, idx_pos, posicion, datos_parcela, con_color=False):
+    def _generar_geometria_parcela(self, nombre, idx_pos, posicion, datos_parcela, lod, con_color=False):
         # formato
         co_info_tipo_terreno=InternalName.make("info_tipo_terreno")
         if con_color: co_color=InternalName.make("Color") # debug
@@ -344,11 +345,14 @@ class Terreno:
         wrt_tng=GeomVertexWriter(vdata, InternalName.getTangent())
         if con_color: wrt_c=GeomVertexWriter(vdata, co_color) # debug
         # llenar datos de vertices
+        paso=2**lod
+        tamano=int(sistema.Sistema.TopoTamanoParcela/paso)
+        #log.debug("_generar_geometria_parcela tamano=%i paso=%i"%(tamano, paso))
         i_vertice=0
-        for x in range(sistema.Sistema.TopoTamanoParcela+1):
-            for y in range(sistema.Sistema.TopoTamanoParcela+1):
+        for x in range(tamano+1):
+            for y in range(tamano+1):
                 # data
-                d=datos_parcela[x+1][y+1]
+                d=datos_parcela[paso*x+1][paso*y+1]
                 #print("x,y=%s %s"%(str((x, y)), str(d)))
                 d.index=i_vertice # aqui se define el indice
                 # llenar vertex data
@@ -371,13 +375,13 @@ class Terreno:
         #    for _d in fila:
         #        log.debug(str(_d))
         # llenar datos de primitivas
-        for x in range(sistema.Sistema.TopoTamanoParcela):
-            for y in range(sistema.Sistema.TopoTamanoParcela):
+        for x in range(tamano):
+            for y in range(tamano):
                 # vertices
-                i0=datos_parcela[x+1][y+1].index
-                i1=datos_parcela[x+2][y+1].index
-                i2=datos_parcela[x+1][y+2].index
-                i3=datos_parcela[x+2][y+2].index
+                i0=datos_parcela[paso*x+1][paso*y+1].index
+                i1=datos_parcela[paso*x+1+paso][paso*y+1].index
+                i2=datos_parcela[paso*x+1][paso*y+1+paso].index
+                i3=datos_parcela[paso*x+1+paso][paso*y+1+paso].index
                 # primitivas
                 prim.addVertex(i0)
                 prim.addVertex(i1)

@@ -36,7 +36,8 @@ _default_config={
                         "debug_info":"terreno",  # [terreno|bioma]
                         "normal_map":False, 
                         "dibujar_normales":False, 
-                        "sombras":True
+                        "sombras":True, 
+                        "wireframe":False
                         }, 
         "objetos":      {
                         "lod0":"65.0 0.0", 
