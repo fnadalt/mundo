@@ -390,9 +390,9 @@ void main()
 FS_MAIN_CLIP_INICIO="""
     //if (PositionW.x*plano_recorte_agua.x + PositionW.y*plano_recorte_agua.y + PositionW.z*plano_recorte_agua.z - plano_recorte_agua.w <= 0) {
     //if ((plano_recorte_agua.w>0.0 && plano_recorte_agua.w<PositionW.z) || (plano_recorte_agua.w<0.0 && plano_recorte_agua.w>=PositionW.z)) {
-    if ((altitud_agua>=0 && PositionW.z<=altitud_agua) || (altitud_agua<0 && PositionW.z>abs(altitud_agua))){
+    if ((altitud_agua>=0 && abs(PositionW.z)<=altitud_agua) || (altitud_agua<0 && abs(PositionW.z)>abs(altitud_agua))){
         discard;
-        //color=vec4(1,0,0,1);
+        //gl_FragColor=vec4(1,0,0,1);
     } else {
 """
 FS_MAIN_LUZ="""

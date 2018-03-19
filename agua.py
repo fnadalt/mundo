@@ -45,7 +45,7 @@ class Agua:
         tamano=config.valint("shader.agua_tamano_buffer")
         self.reflection_buffer=self.base.win.makeTextureBuffer('reflection_buffer', tamano, tamano)
         self.reflection_buffer.setClearColor(Vec4(0, 0, 0, 1)) # quitar?
-        self.camera2=self.base.makeCamera(self.reflection_buffer)
+        self.camera2=self.base.makeCamera(self.reflection_buffer, camName="cam_reflejo")
         self.camera2.reparentTo(self.nodo)
         self.camera2.node().getLens().setFov(self.camera.find("+Camera").node().getLens().getFov())
         dummy_reflection=NodePath("dummy_reflection") # antes, base.render.attachNewNode
@@ -65,7 +65,7 @@ class Agua:
         tamano=config.valint("shader.agua_tamano_buffer")
         self.refraction_buffer=self.base.win.makeTextureBuffer('refraction_buffer', tamano, tamano)
         self.refraction_buffer.setClearColor(Vec4(0, 0, 0, 1))
-        self.camera3=self.base.makeCamera(self.refraction_buffer)
+        self.camera3=self.base.makeCamera(self.refraction_buffer, camName="cam_refraccion")
         self.camera3.reparentTo(self.nodo)
         self.camera3.node().getLens().setFov(self.camera.find("+Camera").node().getLens().getFov())
         dummy_refraction=NodePath("dummy_refraction")

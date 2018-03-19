@@ -102,7 +102,11 @@ class Mundo:
     def _establecer_shader(self):
         log.info("_establecer_shader")
         GestorShader.iniciar(self.base, sistema.Sistema.TopoAltitudOceano, Vec4(0, 0, 1, sistema.Sistema.TopoAltitudOceano))
-        GestorShader.aplicar(self.nodo, GestorShader.ClaseGenerico, 1) # quitarlo, optimizacion?
+        #
+        # ¿esto habra solucionado el problema del clipping caprichoso?
+        self.nodo.setShaderInput("altitud_agua", sistema.Sistema.TopoAltitudOceano, 0.0, 0.0, 0.0, priority=1)
+        #
+        #GestorShader.aplicar(self.nodo, GestorShader.ClaseGenerico, 1) # quitarlo, optimizacion?
         #GestorShader.aplicar(self, GestorShader.ClaseDebug, 1000)
 
     def _cargar_obj_voxel(self):
@@ -167,6 +171,8 @@ class Mundo:
         self.hombre.construir(self.nodo, self.bullet_world)
         self.hombre.cuerpo.setPos(self.sistema.posicion_cursor)
         self.hombre.cuerpo.setZ(self.sistema.obtener_altitud_suelo_cursor()+0.5)
+        #
+        GestorShader.aplicar(self.hombre.actor, GestorShader.ClaseGenerico, 2)
         #
         self._personajes.append(self.hombre)
         #
@@ -331,8 +337,6 @@ class Mundo:
             self.agua.nodo.setX(self.controlador_camara.target_node_path.getPos().getX())
             self.agua.nodo.setY(self.controlador_camara.target_node_path.getPos().getY())
             self.agua.update(dt, self.sol.luz.getPos(self.cielo.nodo), self.sol.luz.node().getColor())
-        #
-        #self.nodo.setShaderInput("altitud_agua", 150.0, 0.0, 0.0, 0.0, priority=10)
         #
         self._counter+=1
         return task.cont

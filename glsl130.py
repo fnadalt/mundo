@@ -146,7 +146,7 @@ in vec4 tangent;
 FS_TERRENO_COLOR_DEBUG="""
 in vec4 color_vtx;
 """
-FS_MAIN_INICIO_COLOR="color=vec4(0,0,0,1);"
+FS_MAIN_INICIO_COLOR="color=vec4(0,0,0,0);"
 FS_MAIN_COLOR="""
 """
 
