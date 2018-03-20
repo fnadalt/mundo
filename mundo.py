@@ -61,7 +61,7 @@ class Mundo:
         #
         self._cargar_terreno()#
         self._cargar_hombre()#
-        #self._cargar_objetos()
+        self._cargar_objetos()#
         #self._cargar_obj_voxel()
         # gui:
         self._cargar_debug_info()
@@ -240,10 +240,22 @@ class Mundo:
         nodo_flatten=self.nodo.attachNewNode("nodo_flatten")
         for x in range(4):
             p=self.base.loader.loadModel("objetos/pelota.egg")
+            p.clearModelNodes()
             p.reparentTo(nodo_flatten)
             p.setPos(6, 0, 153+x)
             p.setScale(0.2)
-        #nodo_flatten.flattenStrong()
+        nodo_flatten.flattenStrong()
+        #
+        prisma=self.base.loader.loadModel("objetos/prisma_tri.egg")
+        prisma_geomnode=prisma.find("**/+GeomNode")
+        prisma_geom=prisma_geomnode.node().getGeom(0)
+        copia_geomnode=GeomNode("copia_geomnode")
+        copia_geom=prisma_geom.makeCopy()
+        copia_geom.transformVertices(LMatrix4f.rotateMat(45.0, Vec3(0, 1, 0), CS_zup_right))
+        copia_geomnode.addGeom(copia_geom)
+        nodo_prismas=self.nodo.attachNewNode("nodo_prismas")
+        nodo_prismas.setPos(20, 6, 2+self.sistema.obtener_altitud_suelo((20, 6, 0)))
+        nodo_prismas.attachNewNode(copia_geomnode)
 
     def _cargar_terreno(self):
         # terreno
@@ -278,15 +290,15 @@ class Mundo:
         self.controlador_camara.altitud_agua=sistema.Sistema.TopoAltitudOceano
 
     def _update(self, task):
-        #info=""
-        #info+=self.sistema.obtener_info()+"\n"
+        info=""
+        info+=self.sistema.obtener_info()+"\n"
         #info+=self.terreno.obtener_info()+"\n"
         #info+=self.hombre.obtener_info()+"\n"
         #info+=self.agua.obtener_info()+"\n"
         #info+=self.input_mapper.obtener_info()+"\n"
         #info+=self.cielo.obtener_info()
         #info+=self.sol.obtener_info()+"\n"
-        #self.texto1.setText(info)
+        self.texto1.setText(info)
         # tiempo
         dt=self.base.taskMgr.globalClock.getDt()
         # input
