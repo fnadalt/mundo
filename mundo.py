@@ -61,7 +61,7 @@ class Mundo:
         #
         self._cargar_terreno()#
         self._cargar_hombre()#
-        self._cargar_objetos()#
+        #self._cargar_objetos()
         #self._cargar_obj_voxel()
         # gui:
         self._cargar_debug_info()
@@ -246,16 +246,42 @@ class Mundo:
             p.setScale(0.2)
         nodo_flatten.flattenStrong()
         #
+        cant=3
         prisma=self.base.loader.loadModel("objetos/prisma_tri.egg")
         prisma_geomnode=prisma.find("**/+GeomNode")
-        prisma_geom=prisma_geomnode.node().getGeom(0)
-        copia_geomnode=GeomNode("copia_geomnode")
-        copia_geom=prisma_geom.makeCopy()
-        copia_geom.transformVertices(LMatrix4f.rotateMat(45.0, Vec3(0, 1, 0), CS_zup_right))
-        copia_geomnode.addGeom(copia_geom)
-        nodo_prismas=self.nodo.attachNewNode("nodo_prismas")
-        nodo_prismas.setPos(20, 6, 2+self.sistema.obtener_altitud_suelo((20, 6, 0)))
-        nodo_prismas.attachNewNode(copia_geomnode)
+        for i_geom in range(prisma_geomnode.node().getNumGeoms()):
+            prisma_geom=prisma_geomnode.node().getGeom(i_geom)
+            ##
+            prisma_vdata=prisma_geom.getVertexData()
+            consolidado_prismas_vdata=GeomVertexData("vertex_data", prisma_vdata.getFormat(), Geom.UHStatic)
+            consolidado_prismas_vdata.setNumRows(cant * prisma_vdata.getNumRows())
+            offset=prisma_vdata.getNumRows()
+            ##
+            prisma_prims=list()
+            consolidado_prismas_prims=list()
+            for i_prim in range(prisma_geom.getNumPrimitives()):
+                prim=prisma_geom.getPrimitive(i_prim).decompose()
+                prisma_prims.append(prim)
+                consolidado_prismas_prim=GeomTriangles(Geom.UHStatic)
+                consolidado_prismas_prims.append(consolidado_prismas_prim)
+            for i_cant in range(cant):
+                vdata=GeomVertexData(prisma_vdata)
+                vdata.transformVertices(LMatrix4f.translateMat(3*i_cant, 0.0, 0.0))
+                for i_row in range(vdata.getNumRows()):
+                    consolidado_prismas_vdata.copyRowFrom(i_cant*offset+i_row, vdata, i_row, Thread.getCurrentThread())
+                for i_prim in range(len(prisma_prims)):
+                    consolidado_prismas_prim=consolidado_prismas_prims[i_prim]
+                    prim_verts=prisma_prims[i_prim].getVertexList()
+                    for vert in prim_verts:
+                        consolidado_prismas_prim.addVertex(vert+i_cant*offset)
+            consolidado_prismas_geom=Geom(consolidado_prismas_vdata)
+            consolidado_prismas_geom.addPrimitive(consolidado_prismas_prim)
+            ##
+            consolidado_prismas_geomnode=GeomNode("copia_geomnode")
+            consolidado_prismas_geomnode.addGeom(consolidado_prismas_geom)
+            self.nodo_prismas=self.nodo.attachNewNode("nodo_prismas")
+            self.nodo_prismas.setPos(20, 6, 2+self.sistema.obtener_altitud_suelo((20, 6, 0)))
+            self.nodo_prismas.attachNewNode(consolidado_prismas_geomnode)
 
     def _cargar_terreno(self):
         # terreno
