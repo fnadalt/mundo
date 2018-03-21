@@ -20,16 +20,6 @@ class Objetos:
     #
     DirectorioCache="objetos"
     
-    # tipos de objeto
-    TipoObjetoNulo=0
-    TipoObjetoArbol=1
-    TipoObjetoArbusto=2
-    TipoObjetoPlanta=3
-    TipoObjetoYuyo=4
-    TipoObjetoRocaPequena=5
-    TipoObjetoRocaMediana=6
-    TipoObjetoRocaGrande=7
-
     # radio maximo
     RadioMaximoInferior=1
     RadioMaximoSuperior=3
@@ -203,7 +193,7 @@ class Objetos:
                 #log.debug(d)
                 concentradores_lod=None
                 parcela_node_path=None
-                if d.datos_objeto[2]==Objetos.TipoObjetoYuyo:
+                if d.datos_objeto[2]==sistema.Sistema.ObjetoTipoYuyo:
                     concentradores_lod=concentradores_lod_yuyos
                     parcela_node_path=parcela_yuyos_node_path
                 else:

@@ -127,13 +127,16 @@ class Sistema:
                 [BiomaDesiertoPolar, BiomaTundra, BiomaBosqueMediterraneo, BiomaSavannah],  \
                 [BiomaDesiertoPolar, BiomaTaiga,  BiomaBosqueCaducifolio,  BiomaSelva] \
                 ] # tabla(temperatura_anual_media,precipitacion_frecuencia). Se repiten en los bordes para facilitar calculos.
-    # vegetacion
-    VegetacionTipoNulo=0
-    VegetacionTipoYuyo=1
-    VegetacionTipoPlanta=2
-    VegetacionTipoArbusto=3
-    VegetacionTipoArbol=4
-    VegetacionPerlinNoiseParams=(64.0, 9106) # (escala, semilla)
+    # objetos
+    ObjetoTipoNulo=0
+    ObjetoTipoArbol=1
+    ObjetoTipoArbusto=2
+    ObjetoTipoPlanta=3
+    ObjetoTipoYuyo=4
+    ObjetoTipoRocaPequena=5
+    ObjetoTipoRocaMediana=6
+    ObjetoTipoRocaGrande=7
+    ObjetosNoiseParams=(32.0, 345) # (escala, semilla)
 
     # colores
     ColoresTipoTerreno={TerrenoTipoNulo:Vec4(0, 0, 0, 255), # negro
@@ -165,7 +168,7 @@ class Sistema:
         self.ruido_temperatura=None
         self.ruido_precipitacion=None
         self.ruido_nubosidad=None
-        self.ruido_vegetacion=None
+        self.ruido_objetos=None
         # parametros:
         self.posicion_cursor=Vec3(0, 0, 0)
         self.radio_expansion_parcelas=2
@@ -173,6 +176,8 @@ class Sistema:
         self.ano=0
         self.dia=0
         # variables externas:
+        self.idx_pos_parcela_actual=None
+        self.parcelas=dict() # {idx_pos:DatosParcela,...}
         self.directorio_cache="cache"
         self.estacion=Sistema.EstacionVerano
         self.periodo_dia_actual=Sistema.DiaPeriodoAtardecer
@@ -206,7 +211,9 @@ class Sistema:
         #
         if defecto:
             log.info("cargar_parametros_iniciales por defecto")
-            self.posicion_cursor=Vec3(14, 14, 0) # transicion desierto Vec3(32, -2700, 0) # selva pura:Vec3(-374, 2176, 0)
+            # parametros:
+            _pos_inicial_cursor=[float(n) for n in config.vallist("sistema.pos_cursor_inicial")]
+            self.posicion_cursor=Vec3(_pos_inicial_cursor[0], _pos_inicial_cursor[1], 0)
             self.radio_expansion_parcelas=int(config.val("sistema.radio_expansion_parcelas"))
             self.duracion_dia_segundos=3600.0 * 24
             self.ano=0
@@ -260,18 +267,25 @@ class Sistema:
         log.info("terminar")
     
     def update(self, dt, posicion_cursor):
+        #
         self.posicion_cursor=posicion_cursor
+        #
         self._establecer_fecha_hora_estacion(dt)
         self._establecer_temperatura_actual_norm(dt)
         self._establecer_precipitacion(dt)
+        #
+        _idx_pos_parcela_actual=self.obtener_indice_parcela(self.posicion_cursor)
+        if _idx_pos_parcela_actual!=self.idx_pos_parcela_actual:
+            self.idx_pos_parcela_actual=_idx_pos_parcela_actual
+            self._establecer_datos_parcelas_rango(self.posicion_cursor, self.idx_pos_parcela_actual)
 
     def obtener_descriptor_locacion(self, posicion):
-        desc=TopoDescriptorLocacion(posicion)
-        desc.altitud_suelo=self.obtener_altitud_suelo(posicion)
+        altitud_suelo=self.obtener_altitud_suelo(posicion)
+        desc=TopoDescriptorLocacion((posicion[0], posicion[1], altitud_suelo))
         desc.altitud_tope=self.obtener_altitud_tope(posicion)
         desc.ambiente=self.obtener_ambiente(posicion)
         desc.latitud=self.obtener_latitud(posicion)
-        desc.bioma=self.obtener_bioma_transicion(posicion)
+        desc.tipo_terreno=self.obtener_tipo_terreno(posicion)
         self.precipitacion_frecuencia=self.obtener_precipitacion_frecuencia_anual(posicion)
         self.inclinacion_solar_anual_media=None
         self.vegetacion=None
@@ -595,9 +609,9 @@ class Sistema:
         _semilla=Sistema.PrecipitacionNubosidadPerlinNoiseParams[1]
         self.ruido_nubosidad=PerlinNoise2(_escala, _escala, 256, _semilla)
         # vegetacion
-        _escala=Sistema.VegetacionPerlinNoiseParams[0]
-        _semilla=Sistema.VegetacionPerlinNoiseParams[1]
-        self.ruido_vegetacion=PerlinNoise2(_escala, _escala, 256, _semilla)
+        _escala=Sistema.ObjetosNoiseParams[0]
+        _semilla=Sistema.ObjetosNoiseParams[1]
+        self.ruido_objetos=PerlinNoise2(_escala, _escala, 256, _semilla)
         
     def calcular_offset_periodo_dia(self):
         hora1=Sistema.DiaPeriodosHorariosN[self.periodo_dia_actual]
@@ -688,6 +702,69 @@ class Sistema:
             if self.precipitacion_actual_t>self.precipitacion_actual_duracion:
                 self.precipitacion_actual_tipo=Sistema.PrecipitacionIntensidadNula
 
+    def _establecer_datos_parcelas_rango(self, pos, idx_pos):
+        r=self.radio_expansion_parcelas
+        #
+        idxs_necesarios=list()
+        idxs_a_cargar=list()
+        idxs_a_descargar=list()
+        for x in range(2*r+1):
+            for y in range(2*r+1):
+                idx=(x-r, y-r)
+                idxs_necesarios.append(idx)
+        for idx in idxs_necesarios:
+            if idx not in self.parcelas:
+                idxs_a_cargar.append(idx)
+        for idx in idxs_necesarios:
+            if idx in self.parcelas:
+                idxs_a_descargar.append(idx)
+        #
+        for idx in idxs_a_descargar:
+            self._descargar_datos_parcela(idx)
+        for idx in idxs_a_cargar:
+            parcela=self._cargar_datos_parcela(idx)
+            self.parcelas[idx]=parcela
+
+    def _cargar_datos_parcela(self, idx_pos):
+        log.info("_cargar_datos_parcela idx_pos=%s"%(str(idx_pos)))
+        tamano=Sistema.TopoTamanoParcela
+        datos_parcela=DatosParcela(tamano)
+        for x in range(tamano):
+            for y in range(tamano):
+                #
+                posicion=[self.posicion_cursor[0]+x, self.posicion_cursor[1]+y, 0]
+                altitud_suelo=self.obtener_altitud_suelo(posicion)
+                posicion[2]=altitud_suelo
+                #
+                loc=TopoDescriptorLocacion(posicion)
+                loc.ambiente=self.obtener_ambiente(posicion)
+                loc.latitud=self.obtener_latitud(posicion)
+                loc.tipo_terreno=self.obtener_tipo_terreno(posicion)
+                loc.temperatura_anual_media=self.obtener_temperatura_anual_media_norm(posicion)
+                loc.precipitacion_frecuencia=self.obtener_precipitacion_frecuencia_anual(posicion)
+                #
+                datos_parcela.datos[x][y]=loc
+        return datos_parcela
+
+    def _descargar_datos_parcela(self, idx_pos):
+        log.info("_descargar_datos_parcela idx_pos=%s"%(str(idx_pos)))
+        self.parcelas[idx_pos]=None
+        del self.parcelas[idx_pos]
+
+#
+#
+# DatosParcela
+#
+#
+class DatosParcela:
+    
+    def __init__(self, tamano):
+        self.datos=list() # [x][y]->[[TopoDescriptorLocacion,...], ...]
+        for x in range(tamano):
+            self.datos.append(list())
+            for y in range(tamano):
+                self.datos[x].append(None)
+
 #
 #
 # TopoDescriptorLocacion
@@ -698,25 +775,23 @@ class TopoDescriptorLocacion:
     def __init__(self, posicion):
         # 3d
         self.posicion=posicion
-        self.altitud_suelo=None
         self.altitud_tope=None # para implementar cuevas?
         self.ambiente=None
         # 2d
         self.latitud=None
-        self.bioma=None # (bioma_a,bioma_b,bioma_c,bioma_d)
-        self.temperatura_anual_media=None # smooth noise
-        self.precipitacion_frecuencia=None # smooth noise
-        self.inclinacion_solar_anual_media=None
+        self.tipo_terreno=None
+        self.temperatura_anual_media=None
+        self.precipitacion_frecuencia=None
         # objetos; XOR
-        self.vegetacion=None # DescriptorVegetacion
-        self.roca=None # id_roca?
+        self.factor_ruido=0.0
+        self.datos_objeto=None
     
 #
 #
-# DescriptorVegetacion
+# DescriptorObjeto
 #
 #
-class DescriptorVegetacion:
+class DescriptorObjeto:
     
     def __init__(self):
         self.tipo=Sistema.VegetacionTipoNulo

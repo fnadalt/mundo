@@ -23,6 +23,7 @@ _default_config={
                         "sol_tamano_buffer":512
                         }, 
         "sistema":      {
+                        "pos_cursor_inicial":"14.0 14.0", 
                         "radio_expansion_parcelas":2, 
                         "dir_cache":"cache"
                         }, 
