@@ -3,6 +3,7 @@ import math, random
 import datetime
 import sqlite3
 import csv
+import pickle
 
 import config
 
@@ -44,6 +45,9 @@ def remover_instancia():
 # bioma(temperatura_anual_media,precipitacion_frecuencia)
 # vegetacion(temperatura_anual_media,precipitacion_frecuencia) ?
 class Sistema:
+
+    # cache
+    DirectorioCache="sistema"
 
     # db
     NombreArchivoDB="objetos.sql"
@@ -203,7 +207,8 @@ class Sistema:
         # variables externas:
         self.idx_pos_parcela_actual=None
         self.parcelas=dict() # {idx_pos:DatosParcela,...}
-        self.directorio_cache="cache"
+        self.directorio_general_cache="cache"
+        self.directorio_cache=os.path.join(self.directorio_general_cache, "sistema")
         self.estacion=Sistema.EstacionVerano
         self.periodo_dia_actual=Sistema.DiaPeriodoAtardecer
         self.periodo_dia_anterior=Sistema.DiaPeriodoDia
@@ -259,8 +264,12 @@ class Sistema:
     
     def iniciar(self):
         log.info("iniciar")
-        #
-        self.directorio_cache=config.val("sistema.dir_cache")
+        # directorio general de cache
+        self.directorio_general_cache=config.val("sistema.dir_cache")
+        if not os.path.exists(self.directorio_general_cache):
+            log.warning("se crea directorio_general_cache: %s"%self.directorio_general_cache)
+            os.mkdir(self.directorio_general_cache)
+        # directorio de cache de datos de sistema
         if not os.path.exists(self.directorio_cache):
             log.warning("se crea directorio_cache: %s"%self.directorio_cache)
             os.mkdir(self.directorio_cache)
@@ -356,7 +365,7 @@ class Sistema:
         _idx_pos=idx_pos if idx_pos!=None else self.obtener_indice_parcela(posicion)
         if _idx_pos in self.parcelas:
             datos_parcela=self.parcelas[_idx_pos]
-            x=int(posicion[0]%Sistema.TopoTamanoParcela)
+            x=int(posicion[0]%Sistema.TopoTamanoParcela) # o %datos_parcela.tamano)?
             y=int(posicion[1]%Sistema.TopoTamanoParcela)
             loc=datos_parcela.datos[x][y]
             altitud=loc.posicion[2]
@@ -745,6 +754,8 @@ class Sistema:
                 self.precipitacion_actual_tipo=Sistema.PrecipitacionIntensidadNula
 
     def _establecer_datos_parcelas_rango(self, pos, idx_pos):
+        log.info("_establecer_datos_parcelas_rango idx_pos=%s"%(str(idx_pos)))
+        #
         r=self.radio_expansion_parcelas
         #
         idxs_necesarios=list()
@@ -752,33 +763,44 @@ class Sistema:
         idxs_a_descargar=list()
         for x in range(2*r+1):
             for y in range(2*r+1):
-                idx=(x-r, y-r)
+                idx=(idx_pos[0]+x-r, idx_pos[1]+y-r)
                 idxs_necesarios.append(idx)
         for idx in idxs_necesarios:
             if idx not in self.parcelas:
                 idxs_a_cargar.append(idx)
-        for idx in idxs_necesarios:
-            if idx in self.parcelas:
+        for idx in self.parcelas:
+            if idx not in idxs_necesarios:
                 idxs_a_descargar.append(idx)
         #
         for idx in idxs_a_cargar:
-            # datos primarios
-            datos_parcela=self._generar_datos_primarios_parcela(idx)
-            self.parcelas[idx]=datos_parcela
-            # datos secundarios
-            gend_terreno=GeneradorDatosTerreno(self)
-            gend_terreno.generar(idx_pos)
-            #
-            gend_objetos=GeneradorDatosObjeto(self)
-            gend_objetos.generar(idx_pos)
-            #
+            ruta_archivo_cache=os.path.join(self.directorio_cache, "parcela_%i_%i.bin"%(idx[0], idx[1]))
+            datos_parcela=None
+            if os.path.exists(ruta_archivo_cache):
+                log.info("cargar desde cache <- %s"%ruta_archivo_cache)
+                with open(ruta_archivo_cache, "rb") as arch:
+                    datos_parcela=pickle.load(arch)
+                    self.parcelas[idx]=datos_parcela
+            else:
+                log.info("cargar por primera vez -> %s"%ruta_archivo_cache)
+                # datos primarios
+                datos_parcela=self._generar_datos_primarios_parcela(idx)
+                self.parcelas[idx]=datos_parcela
+                # datos secundarios
+                gend_terreno=GeneradorDatosTerreno(self)
+                gend_terreno.generar(idx)
+                #
+                gend_objetos=GeneradorDatosObjeto(self)
+                gend_objetos.generar(idx)
+                #
+                with open(ruta_archivo_cache, "wb") as arch:
+                    pickle.dump(datos_parcela, arch)
         for idx in idxs_a_descargar:
             self._remover_datos_parcela(idx)
 
     def _generar_datos_primarios_parcela(self, idx_pos):
         log.info("_generar_datos_primarios_parcela idx_pos=%s"%(str(idx_pos)))
-        posicion=self.obtener_indice_parcela(idx_pos)
-        tamano=Sistema.TopoTamanoParcela
+        posicion=self.obtener_pos_parcela(idx_pos)
+        tamano=Sistema.TopoTamanoParcela+1
         datos_parcela=DatosParcela(tamano)
         # datos generales
         for x in range(tamano):
@@ -861,12 +883,13 @@ class DatosParcela:
     
     def __init__(self, tamano):
         self.datos=list() # [x][y]->[[DescriptorLocacion,...], ...]
+        self.tamano=tamano
         for x in range(tamano):
             self.datos.append(list())
             for y in range(tamano):
                 self.datos[x].append(None)
 
-    def __index__(self, idx):
+    def __getitem__(self, idx):
         return self.datos[idx]
     
 #
@@ -920,15 +943,14 @@ class GeneradorDatosTerreno:
     def generar(self, idx_pos):
         #
         datos_parcela=self.sistema.parcelas[idx_pos]
-        tamano=Sistema.TopoTamanoParcela
         tc_x, tc_y=0.0, 0.0
-        frac_tc=1/Sistema.TopoTamanoParcela
-        for x in range(tamano):
+        frac_tc=1/datos_parcela.tamano # o /Sistema.TopoTamanoParcela?
+        for x in range(datos_parcela.tamano):
             if x==1: # 1, en vez de 0?
                 tc_x=0.0
             else:
                 tc_x=x*frac_tc
-            for y in range(tamano):
+            for y in range(datos_parcela.tamano):
                 if y==1: # 1, en vez de 0?
                     tc_y=0.0
                 else:
@@ -1092,8 +1114,8 @@ class GeneradorDatosObjeto:
         #
         datos_parcela=self.sistema.parcelas[idx_pos]
         #
-        for x in range(Sistema.TopoTamanoParcela):
-            for y in range(Sistema.TopoTamanoParcela):
+        for x in range(datos_parcela.tamano):
+            for y in range(datos_parcela.tamano):
                 #
                 loc=datos_parcela.datos[x][y]
                 # ambiente

@@ -364,7 +364,7 @@ class Mundo:
             self._counter=0
             #
             if self.terreno:
-                self.terreno.update(pos_pivot_camara)#self.controlador_camara.target_node_path.getPos()) ?
+                self.terreno.update()#pos_pivot_camara)#self.controlador_camara.target_node_path.getPos()) ?
             if self.objetos:
                 self.objetos.update(pos_pivot_camara)
             # gui

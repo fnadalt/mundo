@@ -73,7 +73,7 @@ class Objetos:
         # sistema
         self.sistema=sistema.obtener_instancia()
         #
-        self.directorio_cache=os.path.join(self.sistema.directorio_cache, Objetos.DirectorioCache)
+        self.directorio_cache=os.path.join(self.sistema.directorio_general_cache, Objetos.DirectorioCache)
         if not os.path.exists(self.directorio_cache):
             log.warning("se crea directorio_cache: %s"%self.directorio_cache)
             os.mkdir(self.directorio_cache)
@@ -113,7 +113,6 @@ class Objetos:
     def update(self, forzar=False):
         #
         idx_pos=self.sistema.obtener_indice_parcela(self.sistema.posicion_cursor)
-        log.debug("idx_pos=%s"%(str(idx_pos)))
         if forzar or idx_pos!=self.idx_pos_parcela_actual:
             self.idx_pos_parcela_actual=idx_pos
             #

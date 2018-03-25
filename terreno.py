@@ -5,7 +5,6 @@ from shader import GestorShader
 import sistema, config
 
 import math
-import pickle
 
 import logging
 log=logging.getLogger(__name__)
@@ -27,10 +26,10 @@ class Terreno:
         self.nodo_parcelas=self.nodo.attachNewNode("parcelas")
         if config.valbool("terreno.wireframe"):
             self.nodo.setRenderModeWireframe()
-        self.parcelas={} # {idx_pos:parcela_node_path,...}
+        self.parcelas={} # {idx_pos_lod:parcela_node_path,...}
         # variables externas:
         self.directorio_cache="cache/terreno"
-        self.idx_pos_parcela_actual=None # (x,y)
+        self.idx_pos_parcela_actual=None # (x,y) # ELIMINAR
         # debug
         self.dibujar_normales=False # cada update
 
@@ -39,7 +38,7 @@ class Terreno:
         #
         self.sistema=sistema.obtener_instancia()
         #
-        self.directorio_cache=os.path.join(self.sistema.directorio_cache, Terreno.DirectorioCache)
+        self.directorio_cache=os.path.join(self.sistema.directorio_general_cache, Terreno.DirectorioCache)
         if not os.path.exists(self.directorio_cache):
             log.warning("se crea directorio_cache: %s"%self.directorio_cache)
             os.mkdir(self.directorio_cache)
@@ -55,186 +54,79 @@ class Terreno:
         self.sistema=None
     
     def obtener_info(self):
-        pos_parcela_actual=None
-        tam, prec_f=0.0, 0.0
-        if len(self.parcelas)>0:
-            parcela_actual=self.parcelas[self.idx_pos_parcela_actual]
-            pos_parcela_actual=parcela_actual.getPos() 
-            tam=self.sistema.obtener_temperatura_anual_media_norm(pos_parcela_actual.getXy())
-            prec_f=self.sistema.obtener_precipitacion_frecuencia_anual(pos_parcela_actual.getXy())
-        #
         info="Terreno\n"
-        info+="idx_pos_parcela_actual=%s pos=%s radio_exp=%i\n"%(str(self.idx_pos_parcela_actual), str(pos_parcela_actual), self.sistema.radio_expansion_parcelas)
-        info+="altitud=%.2f tam=%.3f prec_f=%.3f\n"%(self.sistema.obtener_altitud_suelo_cursor(), tam, prec_f)
         return info
 
-    def update(self, forzar=False):
+    def update(self):
         #
-        idx_pos=self.sistema.obtener_indice_parcela(self.sistema.posicion_cursor)
-        #log.debug("idx_pos=%s"%(str(idx_pos)))
-        if forzar or idx_pos!=self.idx_pos_parcela_actual:
-            self.idx_pos_parcela_actual=idx_pos
+        parcelas_sistema=list(self.sistema.parcelas.keys())
+        idxs_necesarias=list()
+        idxs_cargar=list()
+        idxs_descargar=list()
+        #
+        for idx_pos in parcelas_sistema:
+            # lod
+            dx=abs(self.sistema.idx_pos_parcela_actual[0]-idx_pos[0])
+            dy=abs(self.sistema.idx_pos_parcela_actual[1]-idx_pos[1])
+            dist=dx if dx>dy else dy
+            lod=0
+            if dist>=2:
+                lod=dist-1
+                if lod>3:
+                    lod=3
             #
-            idxs_pos_parcelas_obj=[]
-            idxs_pos_parcelas_cargar=[]
-            idxs_pos_parcelas_descargar=[]
-            # determinar parcelas que deben estar cargadas
-            for idx_pos_x in range(idx_pos[0]-self.sistema.radio_expansion_parcelas, idx_pos[0]+self.sistema.radio_expansion_parcelas+1):
-                for idx_pos_y in range(idx_pos[1]-self.sistema.radio_expansion_parcelas, idx_pos[1]+self.sistema.radio_expansion_parcelas+1):
-                    idxs_pos_parcelas_obj.append((idx_pos_x, idx_pos_y))
-            # crear listas de parcelas a descargar y a cargar
-            for idx_pos in self.parcelas.keys():
-                if idx_pos not in idxs_pos_parcelas_obj:
-                    idxs_pos_parcelas_descargar.append(idx_pos)
-            for idx_pos in idxs_pos_parcelas_obj:
-                if idx_pos not in self.parcelas:
-                    idxs_pos_parcelas_cargar.append(idx_pos)
-            # descarga y carga de parcelas
-            for idx_pos in idxs_pos_parcelas_descargar:
-                self._descargar_parcela(idx_pos)
-            for idx_pos in idxs_pos_parcelas_cargar:
-                self._generar_parcela(idx_pos)
+            idx=(idx_pos[0], idx_pos[1], lod)
+            idxs_necesarias.append(idx)
+        #
+        for idx in idxs_necesarias:
+            if idx not in self.parcelas:
+                idxs_cargar.append(idx)
+        for idx in self.parcelas:
+            if idx not in idxs_necesarias:
+                idxs_descargar.append(idx)
+        #
+        for idx in idxs_cargar:
+            self._generar_parcela(idx)
+        for idx in idxs_descargar:
+            self._descargar_parcela(idx)
 
-    def _generar_parcela(self, idx_pos):
-        # posicion y nombre
-        pos=self.sistema.obtener_pos_parcela(idx_pos)
-        nombre="parcela_terreno_%i_%i"%(int(idx_pos[0]), int(idx_pos[1]))
-        log.info("_generar_parcela idx_pos=%s pos=%s nombre=%s"%(str(idx_pos), str(pos), nombre))
-        # nodo
-        parcela_node_path=self.nodo_parcelas.attachNewNode(nombre)
-        parcela_node_path.setPos(pos[0], pos[1], 0.0)
+    def _generar_parcela(self, idx):
+        # nombre
+        nombre="parcela_terreno_%i_%i_%i"%(int(idx[0]), int(idx[1]), int(idx[2]))
+        log.info("_generar_parcela idx=%s nombre=%s"%(str(idx), nombre))
         # datos de parcela
-        ruta_archivo_cache=os.path.join(self.directorio_cache, "%s.bin"%nombre)
-        datos_parcela=None
+        idx_pos=(idx[0], idx[1])
+        datos_parcela=self.sistema.parcelas[idx_pos]
+        # nodo
+        lod=idx[2]
+        parcela_node_path=None
+        ruta_archivo_cache=os.path.join(self.directorio_cache, "%s_lod%i.bam"%(nombre, lod))
         if not os.path.exists(ruta_archivo_cache):
-            datos_parcela=self._generar_datos_parcela(pos, idx_pos)
-            with open(ruta_archivo_cache, "wb") as arch:
-                pickle.dump(datos_parcela, arch)
+            log.info("generar por primera vez -> %s"%ruta_archivo_cache)
+            geom_node=self._generar_geometria_parcela(nombre, idx_pos, datos_parcela, lod, config.valbool("terreno.color_debug"))
+            parcela_node_path=self.nodo_parcelas.attachNewNode(nombre)
+            parcela_node_path.attachNewNode(geom_node)
+            parcela_node_path.writeBamFile(ruta_archivo_cache)
         else:
-            with open(ruta_archivo_cache, "rb") as arch:
-                datos_parcela=pickle.load(arch)
-        # geometria
-        geom_node=self._generar_geometria_parcela(nombre, idx_pos, pos, datos_parcela, 2, config.valbool("terreno.color_debug"))
-        parcela_node_path.attachNewNode(geom_node)
-        # generar textura guia de terreno
-#        ts2=TextureStage("ts_parcela") # para metodo de interpolacion de texturas
-#        textura_parcela=self._obtener_textura_parcela(nombre, datos_parcela, pos)
-#        parcela_node_path.setTexture(ts2, textura_parcela, priority=3)
+            log.info("cargar desde cache <- %s"%ruta_archivo_cache)
+            parcela_node_path=self.base.loader.loadModel(ruta_archivo_cache)
+            parcela_node_path.reparentTo(self.nodo_parcelas)
         # debug: normales
         if self.dibujar_normales:
-            geom_node_normales=self._generar_lineas_normales("normales_%i_%i"%(int(pos[0]), int(pos[1])), geom_node)
+            geom_node_normales=self._generar_lineas_normales("normales_%i_%i"%(int(idx_pos[0]), int(idx_pos[1])), geom_node)
             geom_node_normales.reparentTo(parcela_node_path)
         # agregar a parcelas
-        self.parcelas[idx_pos]=parcela_node_path
-        #
-        if idx_pos==(0, 0): # debug
-            #parcela_node_path.writeBamFile("parcela.bam")
-            #log.info("se escribio parcela.bam")
-            pass
+        self.parcelas[idx]=parcela_node_path
 
-    def _descargar_parcela(self, idx_pos):
-        log.info("_descargar_parcela %s"%str(idx_pos))
+    def _descargar_parcela(self, idx):
+        log.info("_descargar_parcela idx=%s"%str(idx))
         #
-        parcela=self.parcelas[idx_pos]
+        parcela=self.parcelas[idx]
         parcela.removeNode()
-        del self.parcelas[idx_pos]
-    
-    def _obtener_textura_parcela(self, nombre, datos_parcela, pos):
-        #
-        if not os.path.exists("texturas/terreno"): # esto deberia ir en inicio!!!
-            os.mkdir("texturas/terreno")
-        #
-        ruta_archivo_textura=os.path.join("texturas/terreno", "%s.png"%nombre)
-        if not os.path.exists(ruta_archivo_textura):
-            log.info("_obtener_textura_parcela se genera archivo de textura de parcela '%s'"%ruta_archivo_textura)
-            tamano_imagen=int(sistema.Sistema.TopoTamanoParcela/4)
-            imagen=PNMImage(tamano_imagen, tamano_imagen)
-            tamano_area=sistema.Sistema.TopoTamanoParcela
-            for x in range(tamano_imagen):
-                for y in range(tamano_imagen):
-                    d=datos_parcela[1+int(x*tamano_area/tamano_imagen)][1+int(y*tamano_area/tamano_imagen)]
-                    imagen.setXelA(x, y, d.tipo[0]/10.0, d.tipo[1]/10.0, d.tipo[2], d.precipitacion_frecuencia)
-            imagen.write(ruta_archivo_textura)
-#            for x in range(tamano_area):
-#                for y in range(tamano_area):
-#                    print("x,y=%s %s"%(str((x, y)), str(imagen.getXel(x, y))))
-        #
-        tex0=self.base.loader.loadTexture(ruta_archivo_textura)
-        return tex0
-    
+        del self.parcelas[idx]
+
+    # ELIMINAR
     def _calcular_tangente(self, v0, v1, v2, tc0, tc1, tc2, n0):
-        """
-        Lengyel, Eric. “Computing Tangent Space Basis Vectors for an Arbitrary Mesh”. Terathon Software, 2001. http://terathon.com/code/tangent.html
-        //
-        struct Triangle
-        {
-            unsigned short  index[3];
-        };
-        void CalculateTangentArray(long vertexCount, const Point3D *vertex, const Vector3D *normal,
-                const Point2D *texcoord, long triangleCount, const Triangle *triangle, Vector4D *tangent)
-        {
-            Vector3D *tan1 = new Vector3D[vertexCount * 2];
-            Vector3D *tan2 = tan1 + vertexCount;
-            ZeroMemory(tan1, vertexCount * sizeof(Vector3D) * 2);
-            
-            for (long a = 0; a < triangleCount; a++)
-            {
-                long i1 = triangle->index[0];
-                long i2 = triangle->index[1];
-                long i3 = triangle->index[2];
-                
-                const Point3D& v1 = vertex[i1];
-                const Point3D& v2 = vertex[i2];
-                const Point3D& v3 = vertex[i3];
-                
-                const Point2D& w1 = texcoord[i1];
-                const Point2D& w2 = texcoord[i2];
-                const Point2D& w3 = texcoord[i3];
-                
-                float x1 = v2.x - v1.x;
-                float x2 = v3.x - v1.x;
-                float y1 = v2.y - v1.y;
-                float y2 = v3.y - v1.y;
-                float z1 = v2.z - v1.z;
-                float z2 = v3.z - v1.z;
-                
-                float s1 = w2.x - w1.x;
-                float s2 = w3.x - w1.x;
-                float t1 = w2.y - w1.y;
-                float t2 = w3.y - w1.y;
-                
-                float r = 1.0F / (s1 * t2 - s2 * t1);
-                Vector3D sdir((t2 * x1 - t1 * x2) * r, (t2 * y1 - t1 * y2) * r,
-                        (t2 * z1 - t1 * z2) * r);
-                Vector3D tdir((s1 * x2 - s2 * x1) * r, (s1 * y2 - s2 * y1) * r,
-                        (s1 * z2 - s2 * z1) * r);
-                
-                tan1[i1] += sdir;
-                tan1[i2] += sdir;
-                tan1[i3] += sdir;
-                
-                tan2[i1] += tdir;
-                tan2[i2] += tdir;
-                tan2[i3] += tdir;
-                
-                triangle++;
-            }
-            
-            for (long a = 0; a < vertexCount; a++)
-            {
-                const Vector3D& n = normal[a];
-                const Vector3D& t = tan1[a];
-                
-                // Gram-Schmidt orthogonalize
-                tangent[a] = (t - n * Dot(n, t)).Normalize();
-                
-                // Calculate handedness
-                tangent[a].w = (Dot(Cross(n, t), tan2[a]) < 0.0F) ? -1.0F : 1.0F;
-            }
-            
-            delete[] tan1;
-        }
-        """
         #
         x1=v1[0]-v0[0]
         x2=v2[0]-v0[0]
@@ -258,8 +150,9 @@ class Terreno:
         t=(tan1-n0*Vec3.dot(n0, tan1)).normalized()
         th=-1.0 if (Vec3.dot(Vec3.cross(n0, tan1), tan2)<0.0) else 1.0
         #bn=Vec3.cross(n0, t)*th
-        return Vec4(t[0], t[1], t[2], th) #bn.normalized()
+        return Vec4(t[0], t[1], t[2], th) #, bn.normalized())
     
+    # ELIMINAR
     def _generar_datos_parcela(self, pos, idx_pos):
         # matriz de DatosLocalesTerreno; x,y->TamanoParcela +/- 1
         data=list() # x,y: [[n, ...], ...]
@@ -320,7 +213,7 @@ class Terreno:
         #
         return data
 
-    def _generar_geometria_parcela(self, nombre, idx_pos, posicion, datos_parcela, lod, con_color=False):
+    def _generar_geometria_parcela(self, nombre, idx_pos, datos_parcela, lod, con_color=False):
         # formato
         co_info_tipo_terreno=InternalName.make("info_tipo_terreno")
         if con_color: co_color=InternalName.make("Color") # debug
@@ -352,20 +245,20 @@ class Terreno:
         for x in range(tamano+1):
             for y in range(tamano+1):
                 # data
-                d=datos_parcela[paso*x+1][paso*y+1]
+                d=datos_parcela[paso*x][paso*y]
                 #print("x,y=%s %s"%(str((x, y)), str(d)))
-                d.index=i_vertice # aqui se define el indice
+                d.index=i_vertice # aqui se define el indice, hacer array aparte
                 # llenar vertex data
-                wrt_v.addData3(d.pos)
+                wrt_v.addData3(d.posicion)
                 wrt_n.addData3(d.normal)
-                wrt_t.addData2(d.tc)
-                wrt_i.addData3(d.tipo)
-                wrt_tng.addData4(d.tangent)
+                wrt_t.addData2(d.texcoord)
+                wrt_i.addData3(Vec3(d.temperatura_anual_media, d.precipitacion_frecuencia, 0))
+                wrt_tng.addData4(d.tangente)
                 if con_color: # debug
                     if config.val("terreno.debug_info")=="bioma":
-                        color=self.sistema.calcular_color_bioma_debug((posicion[0]+x, posicion[1]+y, 0.0))
+                        color=self.sistema.calcular_color_bioma_debug((d.posicion[0], d.posicion[1], 0.0))
                     elif config.val("terreno.debug_info")=="terreno":
-                        color=self.sistema.calcular_color_terreno_debug((posicion[0]+x, posicion[1]+y, 0.0))
+                        color=self.sistema.calcular_color_terreno_debug((d.posicion[0], d.posicion[1], 0.0))
                     else:
                         log.error("valor erroneo de configuracion en terreno.debug_info: "+config.val("terreno.debug_info"))
                     wrt_c.addData4(color)
@@ -378,10 +271,10 @@ class Terreno:
         for x in range(tamano):
             for y in range(tamano):
                 # vertices
-                i0=datos_parcela[paso*x+1][paso*y+1].index
-                i1=datos_parcela[paso*x+1+paso][paso*y+1].index
-                i2=datos_parcela[paso*x+1][paso*y+1+paso].index
-                i3=datos_parcela[paso*x+1+paso][paso*y+1+paso].index
+                i0=datos_parcela[paso*x     ][paso*y     ].index
+                i1=datos_parcela[paso*x+paso][paso*y     ].index
+                i2=datos_parcela[paso*x     ][paso*y+paso].index
+                i3=datos_parcela[paso*x+paso][paso*y+paso].index
                 # primitivas
                 prim.addVertex(i0)
                 prim.addVertex(i1)
@@ -427,6 +320,7 @@ class Terreno:
         #
         GestorShader.aplicar(self.nodo_parcelas, GestorShader.ClaseTerreno, 2)
 
+    # ELIMINAR
     def _calcular_normal(self, v0, v1, v2):
         U=v1-v0
         V=v2-v0
@@ -506,6 +400,7 @@ class Tester(ShowBase):
         #
         config.iniciar()
         self.sistema=sistema.Sistema()
+        self.sistema.radio_expansion_parcelas=2
         self.sistema.iniciar()
         sistema.establecer_instancia(self.sistema)
         #
@@ -608,6 +503,7 @@ class Tester(ShowBase):
     def _actualizar_terreno(self):
         log.info("_actualizar_terreno pos=%s"%(str(self.sistema.posicion_cursor)))
         #
+        self.sistema.update(0, self.sistema.posicion_cursor)
         self.terreno.update()
         if self.escribir_archivo:
             log.info("escribir_archivo")
@@ -871,7 +767,6 @@ class Tester(ShowBase):
 if __name__=="__main__":
     logging.basicConfig(level=logging.DEBUG)
     PStatClient.connect()
-    self.sistema.radio_expansion_parcelas=0
     tester=Tester()
     tester.terreno.dibujar_normales=False
     tester.escribir_archivo=False
