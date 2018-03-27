@@ -110,6 +110,39 @@ class Objetos:
         info="Objetos\n"
         return info
 
+    def _update(self):
+        #
+        parcelas_sistema=list(self.sistema.parcelas.keys())
+        idxs_necesarias=list()
+        idxs_cargar=list()
+        idxs_descargar=list()
+        #
+        for idx_pos in parcelas_sistema:
+            # lod
+            dx=abs(self.sistema.idx_pos_parcela_actual[0]-idx_pos[0])
+            dy=abs(self.sistema.idx_pos_parcela_actual[1]-idx_pos[1])
+            dist=dx if dx>dy else dy
+            lod=0
+            if dist>=2:
+                lod=dist-1
+                if lod>3:
+                    lod=3
+            #
+            idx=(idx_pos[0], idx_pos[1], lod)
+            idxs_necesarias.append(idx)
+        #
+        for idx in idxs_necesarias:
+            if idx not in self.parcelas:
+                idxs_cargar.append(idx)
+        for idx in self.parcelas:
+            if idx not in idxs_necesarias:
+                idxs_descargar.append(idx)
+        #
+        for idx in idxs_cargar:
+            self._generar_parcela(idx)
+        for idx in idxs_descargar:
+            self._descargar_parcela(idx)
+
     def update(self, forzar=False):
         #
         idx_pos=self.sistema.obtener_indice_parcela(self.sistema.posicion_cursor)
@@ -143,17 +176,18 @@ class Objetos:
         nombre="parcela_objetos_%i_%i"%(int(idx_pos[0]), int(idx_pos[1]))
         log.info("_generar_parcela idx_pos=%s pos=%s nombre=%s"%(str(idx_pos), str(pos), nombre))
         # datos de parcela
-        ruta_archivo_cache=os.path.join(self.directorio_cache, "%s.bin"%nombre)
-        datos_parcela=None
-        if not os.path.exists(ruta_archivo_cache):
-            log.info(" generar parcela por primera vez -> %s"%ruta_archivo_cache)
-            datos_parcela=self._generar_datos_parcela(pos, idx_pos)
-            with open(ruta_archivo_cache, "wb") as arch:
-                pickle.dump(datos_parcela, arch)
-        else:
-            log.info(" cargar parcela desde cache <- %s"%ruta_archivo_cache)
-            with open(ruta_archivo_cache, "rb") as arch:
-                datos_parcela=pickle.load(arch)
+#        ruta_archivo_cache=os.path.join(self.directorio_cache, "%s.bin"%nombre)
+#        datos_parcela=None
+#        if not os.path.exists(ruta_archivo_cache):
+#            log.info(" generar parcela por primera vez -> %s"%ruta_archivo_cache)
+#            datos_parcela=self._generar_datos_parcela(pos, idx_pos)
+#            with open(ruta_archivo_cache, "wb") as arch:
+#                pickle.dump(datos_parcela, arch)
+#        else:
+#            log.info(" cargar parcela desde cache <- %s"%ruta_archivo_cache)
+#            with open(ruta_archivo_cache, "rb") as arch:
+#                datos_parcela=pickle.load(arch)
+        datos_parcela=self.sistema.parcelas[idx_pos]
         # nodo vegetacion
         parcela_vegetacion_node_path=self.nodo_parcelas_vegetacion.attachNewNode("%s_vegetacion"%nombre)
         parcela_vegetacion_node_path.setPos(pos[0], pos[1], 0.0)
@@ -209,8 +243,8 @@ class Objetos:
                     modelo=self.pool_modelos[nombre_modelo]
                     modelo.copyTo(instancia)
                     if i_lod==0:
-                        d.generar_deltas()
-                        altitud_suelo=self.sistema.obtener_altitud_suelo(d.posicion_global+d.delta_pos)
+                        #d.generar_deltas()
+                        altitud_suelo=self.sistema.obtener_altitud_suelo(d.posicion+d.delta_pos)
                         instancia.setPos(parcela_node_path, d.posicion_parcela+d.delta_pos)
                         instancia.setZ(parcela_node_path, altitud_suelo)
                         instancia.setHpr(d.delta_hpr)
