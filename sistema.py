@@ -227,14 +227,16 @@ class Sistema:
 
     def obtener_info(self):
         idx_pos=self.obtener_indice_parcela(self.posicion_cursor)
-        tam=self.obtener_temperatura_anual_media_norm(self.posicion_cursor)
-        prec_f=self.obtener_precipitacion_frecuencia_anual(self.posicion_cursor)
         bioma=self.obtener_bioma_transicion(self.posicion_cursor)
-        tipo_terreno=self.obtener_tipo_terreno(self.posicion_cursor)
         info="Sistema posicion_cursor=(%.3f,%.3f,%.3f) idx_pos=(%i,%i)\n"%(self.posicion_cursor[0], self.posicion_cursor[1], self.posicion_cursor[2], idx_pos[0], idx_pos[1])
-        info+="geo: tam=%.4f prec_f=%.4f\nbioma=(%s) tipo_terreno=(%s)\n"%(tam, prec_f, bioma, tipo_terreno)
         info+="era: año=%i estacion=%i dia=%i hora=%.2f(%.2f/%i) periodo_dia_actual=%i\n"%(self.ano, self.estacion, self.dia, self.hora_normalizada, self._segundos_transcurridos_dia, self.duracion_dia_segundos, self.periodo_dia_actual)
-        info+="temp=%.2f nubosidad=%.2f precipitacion=[tipo=%i intens=%i t=(%.2f/%2.f)]\n"%(self.temperatura_actual_norm, self.nubosidad, self.precipitacion_actual_tipo, self.precipitacion_actual_intensidad, self.precipitacion_actual_t, self.precipitacion_actual_duracion)
+        info+="temp=%.2f nubosidad=%.2f precipitacion=[tipo=%i intens=%i t=(%.2f/%2.f)] bioma=(%s) "%(self.temperatura_actual_norm, self.nubosidad, self.precipitacion_actual_tipo, self.precipitacion_actual_intensidad, self.precipitacion_actual_t, self.precipitacion_actual_duracion, str(bioma))
+        if idx_pos in self.parcelas:
+            x_parcela=int(self.posicion_cursor[0]%Sistema.TopoTamanoParcela)
+            y_parcela=int(self.posicion_cursor[1]%Sistema.TopoTamanoParcela)
+            datos_parcela=self.parcelas[idx_pos]
+            loc=datos_parcela[x_parcela][y_parcela]
+            info+=str(loc)
         return info
 
     def cargar_parametros_iniciales(self, defecto=True):
@@ -317,18 +319,18 @@ class Sistema:
             self.idx_pos_parcela_actual=_idx_pos_parcela_actual
             self._establecer_datos_parcelas_rango(self.posicion_cursor, self.idx_pos_parcela_actual)
 
-    def obtener_descriptor_locacion(self, posicion):
-        altitud_suelo=self.obtener_altitud_suelo(posicion)
-        desc=DescriptorLocacion((posicion[0], posicion[1], altitud_suelo))
-        desc.altitud_tope=self.obtener_altitud_tope(posicion)
-        desc.ambiente=self.obtener_ambiente(posicion)
-        desc.latitud=self.obtener_latitud(posicion)
-        desc.tipo_terreno=self.obtener_tipo_terreno(posicion)
-        self.precipitacion_frecuencia=self.obtener_precipitacion_frecuencia_anual(posicion)
-        self.inclinacion_solar_anual_media=None
-        self.vegetacion=None
-        self.roca=None
-        return desc
+##    def obtener_descriptor_locacion(self, posicion): # ELIMINAR
+#        altitud_suelo=self.obtener_altitud_suelo(posicion)
+#        desc=DescriptorLocacion((posicion[0], posicion[1], altitud_suelo))
+#        desc.altitud_tope=self.obtener_altitud_tope(posicion)
+#        desc.ambiente=self.obtener_ambiente(posicion)
+#        desc.latitud=self.obtener_latitud(posicion)
+#        desc.tipo_terreno=self.obtener_tipo_terreno(posicion)
+#        self.precipitacion_frecuencia=self.obtener_precipitacion_frecuencia_anual(posicion)
+#        self.inclinacion_solar_anual_media=None
+#        self.vegetacion=None
+#        self.roca=None
+#        return desc
     
     def obtener_altitud_suelo(self, posicion):
         #
@@ -902,7 +904,7 @@ class DescriptorLocacion:
     def __init__(self, posicion, x_parcela, y_parcela):
         # primarios:
         self.posicion=posicion
-        self.posicion_parcela=Vec3(x_parcela, y_parcela, posicion[2])
+        self.posicion_rel_parcela=Vec3(x_parcela, y_parcela, posicion[2])
         self.altitud_tope=None # para implementar cuevas?
         self.ambiente=None
         self.latitud=None
@@ -929,6 +931,17 @@ class DescriptorLocacion:
         self.delta_scl.setX(0.85+0.15*random.random())
         self.delta_scl.setY(0.85+0.15*random.random())
         self.delta_scl.setZ(0.75+0.25*random.random())
+
+    def __str__(self):
+        texto ="\nDescriptorLocacion(%.2f,%.2f,%.2f)|(%.2f,%.2f,%.2f):\n"
+        texto+="    amb=%i ztop=%s lat=%2.f tam=%.2f prec_f=%.2f tterr=%s\n"
+        texto+="    n,t,tc=%s %s %s\n"
+        texto+="    o=%s\n"
+        texto+="    fr=%.2f dp=%s dr=%s ds=%s\n"
+        return texto%(self.posicion[0], self.posicion[1], self.posicion[2], self.posicion_rel_parcela[0], self.posicion_rel_parcela[1], self.posicion_rel_parcela[2], \
+                      self.ambiente, self.altitud_tope, self.latitud, self.temperatura_anual_media, self.precipitacion_frecuencia, self.tipo_terreno,  \
+                      self.normal, self.tangente, self.texcoord,  \
+                      str(self.datos_objeto), self.factor_ruido, str(self.delta_pos), str(self.delta_hpr), str(self.delta_scl))
 
 #
 #
@@ -1187,17 +1200,17 @@ class GeneradorDatosObjeto:
                 #log.debug("colocar %i objetos '%s' en ambiente=%i y tipo_terreno=%i"%(cant_obj_remanentes, tipo_objeto[11], tipo_objeto[1], tipo_objeto[6]))
                 for loc in grupo_objetos_locaciones.locaciones_disponibles:
                     if cant_obj_remanentes>0 and \
-                       self._chequear_espacio_disponible(loc.posicion_parcela, tipo_objeto[4], tipo_objeto[5], datos_parcela):
+                       self._chequear_espacio_disponible(loc.posicion_rel_parcela, tipo_objeto[4], tipo_objeto[5], datos_parcela):
                         cant_obj_remanentes-=1
                         loc.datos_objeto=tipo_objeto
 
-    def _obtener_vecino(self, datos_parcela, posicion_parcela, dx, dy):
-        if (posicion_parcela[0]==0 and dx<0) or \
-           (posicion_parcela[0]==(len(datos_parcela.datos[0])-1) and dx>0) or \
-           (posicion_parcela[1]==0 and dy<0) or \
-           (posicion_parcela[1]==(len(datos_parcela.datos[1])-1) and dy>0):
+    def _obtener_vecino(self, datos_parcela, posicion_rel_parcela, dx, dy):
+        if (posicion_rel_parcela[0]==0 and dx<0) or \
+           (posicion_rel_parcela[0]==(len(datos_parcela.datos[0])-1) and dx>0) or \
+           (posicion_rel_parcela[1]==0 and dy<0) or \
+           (posicion_rel_parcela[1]==(len(datos_parcela.datos[1])-1) and dy>0):
                return None
-        return datos_parcela.datos[int(posicion_parcela[0])+dx][int(posicion_parcela[1])+dy]
+        return datos_parcela.datos[int(posicion_rel_parcela[0])+dx][int(posicion_rel_parcela[1])+dy]
 
     def _chequear_espacio_disponible(self, _pos_parcela, radio_inferior, radio_superior, datos_locales):
         radio_maximo=radio_superior if radio_superior>radio_inferior else radio_inferior
@@ -1232,7 +1245,7 @@ class GeneradorDatosObjeto:
                     #log.debug("_chequear_espacio_disponible: radios_maximos_totales(i/s)=(%.1f,%.1f) \n candidato _pos_parcela=%s radios(i/s)=(%.1f,%.1f)\n vecino _pos_parcela=%s radios(i/s)=(%.1f,%.1f)" \
                     #          %(0.0, radio_maximo_total_superior,  \
                     #            str(_pos_parcela), radio_inferior, radio_superior, \
-                    #            str(vecino.posicion_parcela), radio_inferior_vecino, radio_superior_vecino))
+                    #            str(vecino.posicion_rel_parcela), radio_inferior_vecino, radio_superior_vecino))
                     dmax=dx if dx>dy else dy
                     radios_inferiores=(radio_inferior+radio_inferior_vecino)
                     if dmax>(radios_inferiores):

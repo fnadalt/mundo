@@ -70,6 +70,8 @@ class Mundo:
         self.base.cam.node().setCameraMask(DrawMask(5))
         self.base.render.node().adjustDrawMask(DrawMask(7), DrawMask(0), DrawMask(0))
         #
+        self.base.accept("l-up", self._log_debug_info)
+        #
         self.base.taskMgr.add(self._update, "mundo_update")
 
     def terminar(self):
@@ -88,6 +90,9 @@ class Mundo:
         #
         self.sistema=None
         sistema.remover_instancia()
+
+    def _log_debug_info(self):
+        log.debug(self.sistema.obtener_info())
 
     def _establecer_material(self):
         log.info("_establecer_material")
@@ -316,15 +321,16 @@ class Mundo:
         self.controlador_camara.altitud_agua=sistema.Sistema.TopoAltitudOceano
 
     def _update(self, task):
-        info=""
-        info+=self.sistema.obtener_info()+"\n"
-        #info+=self.terreno.obtener_info()+"\n"
-        #info+=self.hombre.obtener_info()+"\n"
-        #info+=self.agua.obtener_info()+"\n"
-        #info+=self.input_mapper.obtener_info()+"\n"
-        #info+=self.cielo.obtener_info()
-        #info+=self.sol.obtener_info()+"\n"
-        self.texto1.setText(info)
+        if self._counter==50:
+            info=""
+            #info+=self.sistema.obtener_info()+"\n"
+            #info+=self.terreno.obtener_info()+"\n"
+            #info+=self.hombre.obtener_info()+"\n"
+            #info+=self.agua.obtener_info()+"\n"
+            #info+=self.input_mapper.obtener_info()+"\n"
+            #info+=self.cielo.obtener_info()
+            #info+=self.sol.obtener_info()+"\n"
+            self.texto1.setText(info)
         # tiempo
         dt=self.base.taskMgr.globalClock.getDt()
         # input
@@ -366,7 +372,7 @@ class Mundo:
             if self.terreno:
                 self.terreno.update()#pos_pivot_camara)#self.controlador_camara.target_node_path.getPos()) ?
             if self.objetos:
-                self.objetos.update(pos_pivot_camara)
+                self.objetos.update()#pos_pivot_camara)
             # gui
             self.lblHora["text"]=self.sistema.obtener_hora()
             self.lblTemperatura["text"]="%.0fº"%self.sistema.obtener_temperatura_actual_grados()

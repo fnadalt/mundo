@@ -58,16 +58,21 @@ class Terreno:
         return info
 
     def update(self):
+        if self.idx_pos_parcela_actual==self.sistema.idx_pos_parcela_actual:
+            return
+        self.idx_pos_parcela_actual=self.sistema.idx_pos_parcela_actual
+        #
+        log.debug("update")
         #
         parcelas_sistema=list(self.sistema.parcelas.keys())
         idxs_necesarias=list()
         idxs_cargar=list()
         idxs_descargar=list()
         #
-        for idx_pos in parcelas_sistema:
+        for idx in parcelas_sistema:
             # lod
-            dx=abs(self.sistema.idx_pos_parcela_actual[0]-idx_pos[0])
-            dy=abs(self.sistema.idx_pos_parcela_actual[1]-idx_pos[1])
+            dx=abs(self.sistema.idx_pos_parcela_actual[0]-idx[0])
+            dy=abs(self.sistema.idx_pos_parcela_actual[1]-idx[1])
             dist=dx if dx>dy else dy
             lod=0
             if dist>=2:
@@ -75,7 +80,7 @@ class Terreno:
                 if lod>3:
                     lod=3
             #
-            idx=(idx_pos[0], idx_pos[1], lod)
+            idx=(idx[0], idx[1], lod)
             idxs_necesarias.append(idx)
         #
         for idx in idxs_necesarias:
