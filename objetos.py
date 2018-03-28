@@ -157,6 +157,9 @@ class Objetos:
         self.parcelas[idx]=(parcela_vegetacion_node_path, parcela_yuyos_node_path)
         # colocar objetos
         cntr_objs=0
+        # unificadores
+        unificadores_vegetacion=[None for i_lod in range(len(self._lods))]
+        unificadores_yuyo=[None for i_lod in range(len(self._lods))]
         # nodos lod vegetacion
         concentradores_lod_vegetacion=list()
         for i_lod in range(len(self._lods)):
@@ -164,6 +167,8 @@ class Objetos:
             lod_vegetacion.setCenter(Vec3(sistema.Sistema.TopoTamanoParcela/2, sistema.Sistema.TopoTamanoParcela/2, 0.0))
             concentrador_lod=lod_vegetacion_np.attachNewNode("concentrador_lod%i_vegetacion"%i_lod)
             concentradores_lod_vegetacion.append(concentrador_lod)
+            if i_lod>=0: # !!!
+                unificadores_vegetacion[i_lod]=Unificador(concentrador_lod)
         # nodos lod yuyos
         concentradores_lod_yuyos=list()
         for i_lod in range(len(self._lods)):
@@ -171,23 +176,28 @@ class Objetos:
             lod_yuyos.setCenter(Vec3(sistema.Sistema.TopoTamanoParcela/2, sistema.Sistema.TopoTamanoParcela/2, 0.0))
             concentrador_lod=lod_yuyos_np.attachNewNode("concentrador_lod%i_yuyos"%i_lod)
             concentradores_lod_yuyos.append(concentrador_lod)
+            if i_lod>=0: # !!!
+                unificadores_yuyo[i_lod]=Unificador(concentrador_lod)
         #
         for fila in datos_parcela:
             for loc in fila:
                 if not loc.datos_objeto:
                     continue
                 concentradores_lod=None
+                unificadores=None
                 parcela_node_path=None
                 if loc.datos_objeto[2]==sistema.Sistema.ObjetoTipoYuyo:
                     concentradores_lod=concentradores_lod_yuyos
+                    unificadores=unificadores_yuyo
                     parcela_node_path=parcela_yuyos_node_path
                 else:
                     concentradores_lod=concentradores_lod_vegetacion
+                    unificadores=unificadores_vegetacion
                     parcela_node_path=parcela_vegetacion_node_path
                 #
                 for i_lod in range(len(self._lods)):
                     if i_lod>0:
-                        break
+                        pass#break
                     nombre_modelo="%s.lod%i"%(loc.datos_objeto[11], i_lod)
                     if nombre_modelo not in self.pool_modelos:
                         continue
@@ -199,6 +209,8 @@ class Objetos:
                     instancia.setZ(parcela_node_path, altitud_suelo)
                     instancia.setHpr(loc.delta_hpr)
                     instancia.setScale(loc.delta_scl)
+                    if unificadores[i_lod]:
+                        unificadores[i_lod].agregar_objeto(loc.datos_objeto[11], instancia, modelo)
                     if i_lod>1:
                         instancia.setBillboardAxis()
                     #log.debug("se coloco un '%s' en posicion_rel_parcela=%s..."%(loc.datos_objeto[11], str(loc.posicion_rel_parcela)))
@@ -206,10 +218,11 @@ class Objetos:
         #
         for concentrador_lod in concentradores_lod_vegetacion:
             pass#concentrador_lod.flattenStrong()
-            #self._unificar_geometria(concentrador_lod)
         for concentrador_lod in concentradores_lod_yuyos:
             pass#concentrador_lod.flattenStrong()
-            self._unificar_geometria(concentrador_lod)
+        #
+        [u.ejecutar() for u in unificadores_vegetacion]
+        [u.ejecutar() for u in unificadores_yuyo]
 
     def _descargar_parcela(self, idx):
         log.info("_descargar_parcela %s"%str(idx))
@@ -220,61 +233,12 @@ class Objetos:
         parcela_yuyos.removeNode()
         del self.parcelas[idx]
 
-    def _unificar_geometria(self, node_path):
-        #
-        geoms_consolidadas=dict() # {nombre:[Geom,vdata,prim,RenderState],...}
-        sum_idxs=dict() # {nombre:cant,...}
-        for objeto in node_path.findAllMatches("**/copia_*"):
-            geom_nodes=objeto.findAllMatches("**/+GeomNode")
-            for geom_node in geom_nodes:
-                nombre=geom_node.getName()
-                geom=geom_node.node().getGeom(0)
-                if geom.getNumPrimitives()>1:
-                    log.warning("_unificar_geometria %s num_prims=%i"%(nombre, geom.getNumPrimitives()))
-                #
-                if nombre not in geoms_consolidadas:
-                    formato=geom.getVertexData().getFormat()
-                    geoms_consolidadas[nombre]=list()
-                    geoms_consolidadas[nombre].append(None)
-                    geoms_consolidadas[nombre].append(GeomVertexData("vdata", formato, Geom.UHStatic))
-                    geoms_consolidadas[nombre].append(GeomTriangles(Geom.UHStatic))
-                    geoms_consolidadas[nombre].append(objeto.getState())
-                    sum_idxs[nombre]=0
-                #
-                geom_consolidada=geoms_consolidadas[nombre]
-                vdata=GeomVertexData(geom.getVertexData())
-                #mat=LMatrix4f.rotateMatNormaxis(objeto.getH(), Vec3(0, 0, 1))
-                mat=LMatrix4f.translateMat(objeto.getPos())#Vec3(14, 14, 0))
-                #mat.transposeInPlace()
-                log.debug("OBJ %s MAT %s"%(str(objeto.getPos()), str(mat)))
-                vdata.transformVertices(mat)
-                prim_vidxs=geom.getPrimitive(0).decompose().getVertexList()
-                sum=0
-                for i_row in range(vdata.getNumRows()):
-                    geom_consolidada[1].copyRowFrom(sum_idxs[nombre]+i_row, vdata, i_row, Thread.getCurrentThread())
-                    sum+=1
-                for vidx in prim_vidxs:
-                    geom_consolidada[2].addVertex(sum_idxs[nombre]+vidx)
-                sum_idxs[nombre]+=sum
-        #
-        node_path.node().removeAllChildren()
-        for nombre, data in geoms_consolidadas.items():
-            data[0]=Geom(data[1])
-            log.debug(str(data[1].getNumRows()))
-            data[0].addPrimitive(data[2])
-            geom_node=GeomNode(nombre)
-            geom_node.addGeom(data[0])
-            geom_node.setState(data[3])
-            node_path.attachNewNode(geom_node)
-        #
-        return node_path
-
     def _establecer_shader(self):
         #
         #GestorShader.aplicar(self.nodo_parcelas_vegetacion, GestorShader.ClaseGenerico, 2)
         #GestorShader.aplicar(self.nodo_parcelas_yuyos, GestorShader.ClaseGenerico, 2)
         #
-        self.nodo.setTwoSided(True)
+        #self.nodo.setTwoSided(True)
         GestorShader.aplicar(self.nodo, GestorShader.ClaseGenerico, 2)
 
     def _iniciar_pool_modelos(self):
@@ -314,4 +278,69 @@ class Objetos:
             modelo.removeNode()
         for id in [id for id in self.pool_modelos.keys()]:
             del self.pool_modelos[id]
+
+
+#
+#
+# Unificador
+#
+#
+class Unificador:
+    
+    def __init__(self, node_path):
+        self.node_path=node_path
+        self.clases=dict() # {nombre_clase:{nombre_geom:[Geom,vata,prim,RenderState,sum_idxs],...},...}
+    
+    def agregar_objeto(self, nombre_clase, objeto, modelo):
+        # recolectar GeomNodes
+        geom_nodes=modelo.findAllMatches("**/+GeomNode")
+        # asegurar estructura de datos de clase
+        if nombre_clase not in self.clases:
+            clase=dict()
+            self.clases[nombre_clase]=clase
+            for geom_node in geom_nodes:
+                nombre_geom=geom_node.getName()
+                geom=geom_node.node().getGeom(0)
+                formato=geom.getVertexData().getFormat()
+                clase[nombre_geom]=list()
+                clase[nombre_geom].append(None)
+                clase[nombre_geom].append(GeomVertexData("vdata", formato, Geom.UHStatic))
+                clase[nombre_geom].append(GeomTriangles(Geom.UHStatic))
+                clase[nombre_geom].append(geom_node.node().getGeomState(0))
+                #clase[nombre_geom].append(RenderState.makeEmpty())
+                clase[nombre_geom].append(0)
+        # llenar vdatas y primitivas
+        clase=self.clases[nombre_clase]
+        for geom_node in geom_nodes:
+            nombre=geom_node.getName()
+            geom=geom_node.node().getGeom(0)
+            if geom.getNumPrimitives()>1:
+                log.warning("agregar_objeto %s num_prims=%i"%(nombre, geom.getNumPrimitives()))
+            #
+            vdata=GeomVertexData(geom.getVertexData())
+            #mat=LMatrix4f.rotateMatNormaxis(objeto.getH(), Vec3(0, 0, 1))
+            mat=LMatrix4f.translateMat(objeto.getPos())#Vec3(14, 14, 0))
+            #mat.transposeInPlace()
+#            log.debug("OBJ %s MAT %s"%(str(objeto.getPos()), str(mat)))
+            vdata.transformVertices(mat)
+            prim_vidxs=geom.getPrimitive(0).decompose().getVertexList()
+            sum=0
+            for i_row in range(vdata.getNumRows()):
+                clase[nombre][1].copyRowFrom(clase[nombre][4]+i_row, vdata, i_row, Thread.getCurrentThread())
+                sum+=1
+            for vidx in prim_vidxs:
+                clase[nombre][2].addVertex(clase[nombre][4]+vidx)
+            clase[nombre][4]+=sum
+    
+    def ejecutar(self):
+        self.node_path.node().removeAllChildren()
+        for nombre_clase, data_clase in self.clases.items():
+            for nombre_geom, data_geom in data_clase.items():
+                geom_node=GeomNode("%s_%s"%(nombre_clase, nombre_geom))
+                data_geom[0]=Geom(data_geom[1])
+                data_geom[0].addPrimitive(data_geom[2])
+                geom_node.addGeom(data_geom[0])
+                geom_node.setState(data_geom[3])
+                self.node_path.attachNewNode(geom_node)
+        return self.node_path
 
