@@ -80,9 +80,9 @@ class Objetos:
 
     def _log_debug_info(self):
         texto=self.obtener_info()
+        log.debug(texto)
         self.nodo.analyze()
         #self.nodo.ls()
-        log.debug(texto)
 
     def update(self):
         if self.idx_pos_parcela_actual==self.sistema.idx_pos_parcela_actual:
@@ -142,52 +142,29 @@ class Objetos:
             # nodo
             parcela_node_path=self.nodo.attachNewNode("%s"%nombre)
             parcela_node_path.setPos(pos[0], pos[1], 0.0)
-            # lod vegetacion
-            lod_vegetacion=LODNode("%s_vegetacion_lod"%nombre)
-            lod_vegetacion_np=NodePath(lod_vegetacion)
-            lod_vegetacion_np.reparentTo(parcela_node_path)
-            lod_vegetacion_np.setPos(0.0, 0.0, altitud_suelo)
-            # lod yuyos
-            lod_yuyos=LODNode("%s_yuyos_lod"%nombre)
-            lod_yuyos_np=NodePath(lod_yuyos)
-            lod_yuyos_np.reparentTo(parcela_node_path)
-            lod_yuyos_np.setPos(0.0, 0.0, altitud_suelo)
+            # lod
+            lod=LODNode("%s_lod"%nombre)
+            lod_np=NodePath(lod)
+            lod_np.reparentTo(parcela_node_path)
+            lod_np.setPos(0.0, 0.0, altitud_suelo)
             # colocar objetos
             cntr_objs=0
             # unificadores
-            unificadores_vegetacion=[None for i_lod in range(len(self._lods))]
-            unificadores_yuyo=[None for i_lod in range(len(self._lods))]
+            unificadores=[None for i_lod in range(len(self._lods))]
             # nodos lod vegetacion
-            concentradores_lod_vegetacion=list()
+            concentradores_lod=list()
             for i_lod in range(len(self._lods)):
-                lod_vegetacion.addSwitch(self._lods[i_lod][0], self._lods[i_lod][1])
-                lod_vegetacion.setCenter(Vec3(sistema.Sistema.TopoTamanoParcela/2, sistema.Sistema.TopoTamanoParcela/2, 0.0))
-                concentrador_lod=lod_vegetacion_np.attachNewNode("concentrador_lod%i_vegetacion"%i_lod)
-                concentradores_lod_vegetacion.append(concentrador_lod)
+                lod.addSwitch(self._lods[i_lod][0], self._lods[i_lod][1])
+                lod.setCenter(Vec3(sistema.Sistema.TopoTamanoParcela/2, sistema.Sistema.TopoTamanoParcela/2, 0.0))
+                concentrador_lod=lod_np.attachNewNode("concentrador_lod%i"%i_lod)
+                concentradores_lod.append(concentrador_lod)
                 if i_lod>=0: # !!!
-                    unificadores_vegetacion[i_lod]=Unificador(concentrador_lod)
-            # nodos lod yuyos
-            concentradores_lod_yuyos=list()
-            for i_lod in range(len(self._lods)):
-                lod_yuyos.addSwitch(self._lods[i_lod][0], self._lods[i_lod][1])
-                lod_yuyos.setCenter(Vec3(sistema.Sistema.TopoTamanoParcela/2, sistema.Sistema.TopoTamanoParcela/2, 0.0))
-                concentrador_lod=lod_yuyos_np.attachNewNode("concentrador_lod%i_yuyos"%i_lod)
-                concentradores_lod_yuyos.append(concentrador_lod)
-                if i_lod>=0: # !!!
-                    unificadores_yuyo[i_lod]=Unificador(concentrador_lod)
+                    unificadores[i_lod]=Unificador(concentrador_lod)
             #
             for fila in datos_parcela:
                 for loc in fila:
                     if not loc.datos_objeto:
                         continue
-                    concentradores_lod=None
-                    unificadores=None
-                    if loc.datos_objeto[2]==sistema.Sistema.ObjetoTipoYuyo:
-                        concentradores_lod=concentradores_lod_yuyos
-                        unificadores=unificadores_yuyo
-                    else:
-                        concentradores_lod=concentradores_lod_vegetacion
-                        unificadores=unificadores_vegetacion
                     #
                     for i_lod in range(len(self._lods)):
                         if i_lod>0:
@@ -210,13 +187,7 @@ class Objetos:
                         #log.debug("se coloco un '%s' en posicion_rel_parcela=%s..."%(loc.datos_objeto[11], str(loc.posicion_rel_parcela)))
                         cntr_objs+=1
             #
-            for concentrador_lod in concentradores_lod_vegetacion:
-                pass#concentrador_lod.flattenStrong()
-            for concentrador_lod in concentradores_lod_yuyos:
-                pass#concentrador_lod.flattenStrong()
-            #
-            [u.ejecutar() for u in unificadores_vegetacion]
-            [u.ejecutar() for u in unificadores_yuyo]
+            [u.ejecutar() for u in unificadores]
             #
             log.info("generar por primera vez -> %s"%ruta_archivo_cache)
             parcela_node_path.writeBamFile(ruta_archivo_cache)
@@ -235,7 +206,7 @@ class Objetos:
         #GestorShader.aplicar(self.nodo_parcelas_vegetacion, GestorShader.ClaseGenerico, 2)
         #GestorShader.aplicar(self.nodo_parcelas_yuyos, GestorShader.ClaseGenerico, 2)
         #
-        #self.nodo.setTwoSided(True)
+        self.nodo.setTwoSided(True)
         GestorShader.aplicar(self.nodo, GestorShader.ClaseGenerico, 2)
 
     def _iniciar_pool_modelos(self):
