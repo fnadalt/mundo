@@ -26,9 +26,7 @@ class Objetos:
         self.sistema=None
         # componentes:
         self.nodo=self.base.render.attachNewNode("objetos")
-        self.nodo_parcelas_vegetacion=None
-        self.nodo_parcelas_yuyos=None
-        self.parcelas={} # {idx_pos_lod:(parcela_vegetacion_node_path,parcela_yuyos_node_path),...} # {idx_pos:(parcela_vegetacion_node_path,parcela_yuyos_node_path),...}
+        self.parcelas={} # {idx_pos_lod:parcela_node_path,...} # {idx_pos:(parcela_vegetacion_node_path,parcela_yuyos_node_path),...}
         self.pool_modelos=dict() # {id:Model,...}; id="nombre_archivo" <- hashear!!!
         # variables externas:
         self.directorio_cache="cache/objetos"
@@ -59,10 +57,6 @@ class Objetos:
         # db
         # self.pool_modelos
         self._iniciar_pool_modelos()
-        #
-        self.nodo_parcelas_vegetacion=self.nodo.attachNewNode("parcelas_vegetacion")
-        self.nodo_parcelas_yuyos=self.nodo.attachNewNode("parcelas_yuyos")
-        #self.nodo_parcelas_yuyos.node().adjustDrawMask(DrawMask(0), DrawMask(8), DrawMask(0))
         #
         self._establecer_shader()
         #
@@ -133,104 +127,107 @@ class Objetos:
         idx_pos, lod=(idx[0], idx[1]), idx[2]
         pos=self.sistema.obtener_pos_parcela(idx_pos)
         altitud_suelo=self.sistema.obtener_altitud_suelo(pos)
-        nombre="parcela_objetos_%i_%i"%(int(idx_pos[0]), int(idx_pos[1]))
+        nombre="parcela_objetos_%i_%i_lod%i"%(int(idx_pos[0]), int(idx_pos[1]), lod)
         log.info("_generar_parcela idx=%s pos=%s lod=%i nombre=%s"%(str(idx), str(pos), lod,  nombre))
         # datos de parcela
         datos_parcela=self.sistema.parcelas[idx_pos]
-        # nodo vegetacion
-        parcela_vegetacion_node_path=self.nodo_parcelas_vegetacion.attachNewNode("%s_vegetacion"%nombre)
-        parcela_vegetacion_node_path.setPos(pos[0], pos[1], 0.0)
-        # nodo yuyos
-        parcela_yuyos_node_path=self.nodo_parcelas_yuyos.attachNewNode("%s_yuyos"%nombre)
-        parcela_yuyos_node_path.setPos(pos[0], pos[1], 0.0)
-        # lod vegetacion
-        lod_vegetacion=LODNode("%s_vegetacion_lod"%nombre)
-        lod_vegetacion_np=NodePath(lod_vegetacion) # reparentTo(self.nodo_parcelas_vegetacion)?!
-        lod_vegetacion_np.reparentTo(parcela_vegetacion_node_path)
-        lod_vegetacion_np.setPos(0.0, 0.0, altitud_suelo)
-        # lod yuyos
-        lod_yuyos=LODNode("%s_yuyos_lod"%nombre)
-        lod_yuyos_np=NodePath(lod_yuyos)
-        lod_yuyos_np.reparentTo(parcela_yuyos_node_path) # reparentTo(self.nodo_parcelas_yuyos)?!
-        lod_yuyos_np.setPos(0.0, 0.0, altitud_suelo)
-        # agregar a parcelas
-        self.parcelas[idx]=(parcela_vegetacion_node_path, parcela_yuyos_node_path)
-        # colocar objetos
-        cntr_objs=0
-        # unificadores
-        unificadores_vegetacion=[None for i_lod in range(len(self._lods))]
-        unificadores_yuyo=[None for i_lod in range(len(self._lods))]
-        # nodos lod vegetacion
-        concentradores_lod_vegetacion=list()
-        for i_lod in range(len(self._lods)):
-            lod_vegetacion.addSwitch(self._lods[i_lod][0], self._lods[i_lod][1])
-            lod_vegetacion.setCenter(Vec3(sistema.Sistema.TopoTamanoParcela/2, sistema.Sistema.TopoTamanoParcela/2, 0.0))
-            concentrador_lod=lod_vegetacion_np.attachNewNode("concentrador_lod%i_vegetacion"%i_lod)
-            concentradores_lod_vegetacion.append(concentrador_lod)
-            if i_lod>=0: # !!!
-                unificadores_vegetacion[i_lod]=Unificador(concentrador_lod)
-        # nodos lod yuyos
-        concentradores_lod_yuyos=list()
-        for i_lod in range(len(self._lods)):
-            lod_yuyos.addSwitch(self._lods[i_lod][0], self._lods[i_lod][1])
-            lod_yuyos.setCenter(Vec3(sistema.Sistema.TopoTamanoParcela/2, sistema.Sistema.TopoTamanoParcela/2, 0.0))
-            concentrador_lod=lod_yuyos_np.attachNewNode("concentrador_lod%i_yuyos"%i_lod)
-            concentradores_lod_yuyos.append(concentrador_lod)
-            if i_lod>=0: # !!!
-                unificadores_yuyo[i_lod]=Unificador(concentrador_lod)
         #
-        for fila in datos_parcela:
-            for loc in fila:
-                if not loc.datos_objeto:
-                    continue
-                concentradores_lod=None
-                unificadores=None
-                parcela_node_path=None
-                if loc.datos_objeto[2]==sistema.Sistema.ObjetoTipoYuyo:
-                    concentradores_lod=concentradores_lod_yuyos
-                    unificadores=unificadores_yuyo
-                    parcela_node_path=parcela_yuyos_node_path
-                else:
-                    concentradores_lod=concentradores_lod_vegetacion
-                    unificadores=unificadores_vegetacion
-                    parcela_node_path=parcela_vegetacion_node_path
-                #
-                for i_lod in range(len(self._lods)):
-                    if i_lod>0:
-                        pass#break
-                    nombre_modelo="%s.lod%i"%(loc.datos_objeto[11], i_lod)
-                    if nombre_modelo not in self.pool_modelos:
+        ruta_archivo_cache=os.path.join(self.directorio_cache, "%s.bam"%nombre)
+        if os.path.exists(ruta_archivo_cache):
+            log.info("cargar desde cache <- %s"%ruta_archivo_cache)
+            parcela_node_path=self.base.loader.loadModel(ruta_archivo_cache)
+            parcela_node_path.reparentTo(self.nodo)
+            parcela_node_path.setPos(pos[0], pos[1], 0.0)
+        else:
+            # nodo
+            parcela_node_path=self.nodo.attachNewNode("%s"%nombre)
+            parcela_node_path.setPos(pos[0], pos[1], 0.0)
+            # lod vegetacion
+            lod_vegetacion=LODNode("%s_vegetacion_lod"%nombre)
+            lod_vegetacion_np=NodePath(lod_vegetacion)
+            lod_vegetacion_np.reparentTo(parcela_node_path)
+            lod_vegetacion_np.setPos(0.0, 0.0, altitud_suelo)
+            # lod yuyos
+            lod_yuyos=LODNode("%s_yuyos_lod"%nombre)
+            lod_yuyos_np=NodePath(lod_yuyos)
+            lod_yuyos_np.reparentTo(parcela_node_path)
+            lod_yuyos_np.setPos(0.0, 0.0, altitud_suelo)
+            # colocar objetos
+            cntr_objs=0
+            # unificadores
+            unificadores_vegetacion=[None for i_lod in range(len(self._lods))]
+            unificadores_yuyo=[None for i_lod in range(len(self._lods))]
+            # nodos lod vegetacion
+            concentradores_lod_vegetacion=list()
+            for i_lod in range(len(self._lods)):
+                lod_vegetacion.addSwitch(self._lods[i_lod][0], self._lods[i_lod][1])
+                lod_vegetacion.setCenter(Vec3(sistema.Sistema.TopoTamanoParcela/2, sistema.Sistema.TopoTamanoParcela/2, 0.0))
+                concentrador_lod=lod_vegetacion_np.attachNewNode("concentrador_lod%i_vegetacion"%i_lod)
+                concentradores_lod_vegetacion.append(concentrador_lod)
+                if i_lod>=0: # !!!
+                    unificadores_vegetacion[i_lod]=Unificador(concentrador_lod)
+            # nodos lod yuyos
+            concentradores_lod_yuyos=list()
+            for i_lod in range(len(self._lods)):
+                lod_yuyos.addSwitch(self._lods[i_lod][0], self._lods[i_lod][1])
+                lod_yuyos.setCenter(Vec3(sistema.Sistema.TopoTamanoParcela/2, sistema.Sistema.TopoTamanoParcela/2, 0.0))
+                concentrador_lod=lod_yuyos_np.attachNewNode("concentrador_lod%i_yuyos"%i_lod)
+                concentradores_lod_yuyos.append(concentrador_lod)
+                if i_lod>=0: # !!!
+                    unificadores_yuyo[i_lod]=Unificador(concentrador_lod)
+            #
+            for fila in datos_parcela:
+                for loc in fila:
+                    if not loc.datos_objeto:
                         continue
-                    instancia=concentradores_lod[i_lod].attachNewNode("copia_%s_%i"%(nombre_modelo, cntr_objs))
-                    modelo=self.pool_modelos[nombre_modelo]
-                    modelo.copyTo(instancia)
-                    altitud_suelo=self.sistema.obtener_altitud_suelo(loc.posicion+loc.delta_pos)
-                    instancia.setPos(parcela_node_path, loc.posicion_rel_parcela+loc.delta_pos)
-                    instancia.setZ(parcela_node_path, altitud_suelo)
-                    instancia.setHpr(loc.delta_hpr)
-                    instancia.setScale(loc.delta_scl)
-                    if unificadores[i_lod]:
-                        unificadores[i_lod].agregar_objeto(loc.datos_objeto[11], instancia, modelo)
-                    if i_lod>1:
-                        instancia.setBillboardAxis()
-                    #log.debug("se coloco un '%s' en posicion_rel_parcela=%s..."%(loc.datos_objeto[11], str(loc.posicion_rel_parcela)))
-                    cntr_objs+=1
-        #
-        for concentrador_lod in concentradores_lod_vegetacion:
-            pass#concentrador_lod.flattenStrong()
-        for concentrador_lod in concentradores_lod_yuyos:
-            pass#concentrador_lod.flattenStrong()
-        #
-        [u.ejecutar() for u in unificadores_vegetacion]
-        [u.ejecutar() for u in unificadores_yuyo]
+                    concentradores_lod=None
+                    unificadores=None
+                    if loc.datos_objeto[2]==sistema.Sistema.ObjetoTipoYuyo:
+                        concentradores_lod=concentradores_lod_yuyos
+                        unificadores=unificadores_yuyo
+                    else:
+                        concentradores_lod=concentradores_lod_vegetacion
+                        unificadores=unificadores_vegetacion
+                    #
+                    for i_lod in range(len(self._lods)):
+                        if i_lod>0:
+                            pass#break
+                        nombre_modelo="%s.lod%i"%(loc.datos_objeto[11], i_lod)
+                        if nombre_modelo not in self.pool_modelos:
+                            continue
+                        instancia=concentradores_lod[i_lod].attachNewNode("copia_%s_%i"%(nombre_modelo, cntr_objs))
+                        modelo=self.pool_modelos[nombre_modelo]
+                        modelo.copyTo(instancia)
+                        altitud_suelo=self.sistema.obtener_altitud_suelo(loc.posicion+loc.delta_pos)
+                        instancia.setPos(parcela_node_path, loc.posicion_rel_parcela+loc.delta_pos)
+                        instancia.setZ(parcela_node_path, altitud_suelo)
+                        instancia.setHpr(loc.delta_hpr)
+                        instancia.setScale(loc.delta_scl)
+                        if unificadores[i_lod]:
+                            unificadores[i_lod].agregar_objeto(loc.datos_objeto[11], instancia, modelo)
+                        if i_lod>1:
+                            instancia.setBillboardAxis()
+                        #log.debug("se coloco un '%s' en posicion_rel_parcela=%s..."%(loc.datos_objeto[11], str(loc.posicion_rel_parcela)))
+                        cntr_objs+=1
+            #
+            for concentrador_lod in concentradores_lod_vegetacion:
+                pass#concentrador_lod.flattenStrong()
+            for concentrador_lod in concentradores_lod_yuyos:
+                pass#concentrador_lod.flattenStrong()
+            #
+            [u.ejecutar() for u in unificadores_vegetacion]
+            [u.ejecutar() for u in unificadores_yuyo]
+            #
+            log.info("generar por primera vez -> %s"%ruta_archivo_cache)
+            parcela_node_path.writeBamFile(ruta_archivo_cache)
+        # agregar a parcelas
+        self.parcelas[idx]=parcela_node_path
 
     def _descargar_parcela(self, idx):
         log.info("_descargar_parcela %s"%str(idx))
         #
-        parcela_vegetacion=self.parcelas[idx][0]
-        parcela_yuyos=self.parcelas[idx][1]
-        parcela_vegetacion.removeNode()
-        parcela_yuyos.removeNode()
+        parcela=self.parcelas[idx]
+        parcela.removeNode()
         del self.parcelas[idx]
 
     def _establecer_shader(self):

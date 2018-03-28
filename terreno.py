@@ -29,7 +29,7 @@ class Terreno:
         self.parcelas={} # {idx_pos_lod:parcela_node_path,...}
         # variables externas:
         self.directorio_cache="cache/terreno"
-        self.idx_pos_parcela_actual=None # (x,y) # ELIMINAR
+        self.idx_pos_parcela_actual=None # (x,y)
         # debug
         self.dibujar_normales=False # cada update
 
@@ -74,9 +74,9 @@ class Terreno:
             dx=abs(self.sistema.idx_pos_parcela_actual[0]-idx[0])
             dy=abs(self.sistema.idx_pos_parcela_actual[1]-idx[1])
             dist=dx if dx>dy else dy
-            lod=0
-            if dist>=2:
-                lod=dist-1
+            lod=1
+            if dist>=1:
+                lod=dist+1#-1
                 if lod>3:
                     lod=3
             #
@@ -103,7 +103,7 @@ class Terreno:
         idx_pos=(idx[0], idx[1])
         datos_parcela=self.sistema.parcelas[idx_pos]
         # nodo
-        lod=idx[2]
+        lod=2#idx[2]
         parcela_node_path=None
         ruta_archivo_cache=os.path.join(self.directorio_cache, "%s_lod%i.bam"%(nombre, lod))
         if not os.path.exists(ruta_archivo_cache):
@@ -130,93 +130,93 @@ class Terreno:
         parcela.removeNode()
         del self.parcelas[idx]
 
-    # ELIMINAR
-    def _calcular_tangente(self, v0, v1, v2, tc0, tc1, tc2, n0):
-        #
-        x1=v1[0]-v0[0]
-        x2=v2[0]-v0[0]
-        y1=v1[1]-v0[1]
-        y2=v2[1]-v0[1]
-        z1=v1[2]-v0[2]
-        z2=v2[2]-v0[2]
-        #
-        s1=tc1[0]-tc0[0]
-        s2=tc2[0]-tc0[0]
-        t1=tc1[1]-tc0[1]
-        t2=tc2[1]-tc0[1]
-        #
-        r_div=(s1*t2-s2*t1)
-        r=1.0/r_div if r_div>0.0 else 0.0
-        sdir=Vec3((t2 * x1 - t1 * x2) * r, (t2 * y1 - t1 * y2) * r, (t2 * z1 - t1 * z2) * r);
-        tdir=Vec3((s1 * x2 - s2 * x1) * r, (s1 * y2 - s2 * y1) * r, (s1 * z2 - s2 * z1) * r);
-        tan1=sdir
-        tan2=tdir
-        #
-        t=(tan1-n0*Vec3.dot(n0, tan1)).normalized()
-        th=-1.0 if (Vec3.dot(Vec3.cross(n0, tan1), tan2)<0.0) else 1.0
-        #bn=Vec3.cross(n0, t)*th
-        return Vec4(t[0], t[1], t[2], th) #, bn.normalized())
-    
-    # ELIMINAR
-    def _generar_datos_parcela(self, pos, idx_pos):
-        # matriz de DatosLocalesTerreno; x,y->TamanoParcela +/- 1
-        data=list() # x,y: [[n, ...], ...]
-        _pos=(0, 0)
-        tc_x, tc_y=0.0, 0.0
-        for x in range(sistema.Sistema.TopoTamanoParcela+3):
-            if x==1: # 1, en vez de 0
-                tc_x=0.0
-            else:
-                tc_x=x/(sistema.Sistema.TopoTamanoParcela+1)
-            data.append(list())
-            for y in range(sistema.Sistema.TopoTamanoParcela+3):
-                if y==1: # 1, en vez de 0
-                    tc_y=0.0
-                else:
-                    tc_y=y/(sistema.Sistema.TopoTamanoParcela+1)
-                d=DatosLocalesTerreno()
-                #data.index=None # no establecer en esta instancia
-                _pos=(pos[0]+x-1, pos[1]+y-1)
-                precipitacion_frecuencia=self.sistema.obtener_precipitacion_frecuencia_anual(_pos)
-                d.pos=Vec3(x-1, y-1, self.sistema.obtener_altitud_suelo(_pos))
-                d.tc=Vec2(tc_x, tc_y)
-                d.tipo=Vec3(self.sistema.obtener_temperatura_anual_media_norm(_pos), self.sistema.obtener_precipitacion_frecuencia_anual(_pos), 0.0)
-                d.precipitacion_frecuencia=precipitacion_frecuencia
-                data[x].append(d)
-        # calcular normales
-        for x in range(sistema.Sistema.TopoTamanoParcela+1):
-            for y in range(sistema.Sistema.TopoTamanoParcela+1):
-                v0=data[x+1][y+1].pos
-                v1=data[x+2][y+1].pos
-                v2=data[x+1][y+2].pos
-                v3=data[x+2][y].pos
-                v4=data[x][y+2].pos
-                v5=data[x][y+1].pos
-                v6=data[x+1][y].pos
-                n0=self._calcular_normal(v0, v1, v2)
-                n1=self._calcular_normal(v0, v3, v1)
-                n2=self._calcular_normal(v0, v2, v4)
-                n3=self._calcular_normal(v0, v5, v6)
-                n_avg=(n0+n1+n2+n3)/4.0
-                data[x+1][y+1].normal=n_avg
-        # calcular tangent & binormal
-        for x in range(sistema.Sistema.TopoTamanoParcela+1):
-            for y in range(sistema.Sistema.TopoTamanoParcela+1):
-                v0, tc0, n0=data[x+1][y+1].pos, data[x+1][y+1].tc, data[x+1][y+1].normal
-                v1, tc1=data[x+2][y+1].pos, data[x+2][y+1].tc
-                v2, tc2=data[x+1][y+2].pos, data[x+1][y+2].tc
-                v3, tc3=data[x+2][y].pos, data[x+2][y].tc
-                v4, tc4=data[x][y+2].pos, data[x][y+2].tc
-                v5, tc5=data[x][y+1].pos, data[x][y+1].tc
-                v6, tc6=data[x+1][y].pos, data[x+1][y].tc
-                t0=self._calcular_tangente(v0, v1, v2, tc0, tc1, tc2, n0)
-                t1=self._calcular_tangente(v0, v3, v1, tc0, tc3, tc1, n0)
-                t2=self._calcular_tangente(v0, v2, v4, tc0, tc2, tc4, n0)
-                t3=self._calcular_tangente(v0, v5, v6, tc0, tc5, tc6, n0)
-                t_avg=(t0+t1+t2+t3)/4.0
-                data[x+1][y+1].tangent=t_avg
-        #
-        return data
+##    # ELIMINAR
+#    def _calcular_tangente(self, v0, v1, v2, tc0, tc1, tc2, n0):
+#        #
+#        x1=v1[0]-v0[0]
+#        x2=v2[0]-v0[0]
+#        y1=v1[1]-v0[1]
+#        y2=v2[1]-v0[1]
+#        z1=v1[2]-v0[2]
+#        z2=v2[2]-v0[2]
+#        #
+#        s1=tc1[0]-tc0[0]
+#        s2=tc2[0]-tc0[0]
+#        t1=tc1[1]-tc0[1]
+#        t2=tc2[1]-tc0[1]
+#        #
+#        r_div=(s1*t2-s2*t1)
+#        r=1.0/r_div if r_div>0.0 else 0.0
+#        sdir=Vec3((t2 * x1 - t1 * x2) * r, (t2 * y1 - t1 * y2) * r, (t2 * z1 - t1 * z2) * r);
+#        tdir=Vec3((s1 * x2 - s2 * x1) * r, (s1 * y2 - s2 * y1) * r, (s1 * z2 - s2 * z1) * r);
+#        tan1=sdir
+#        tan2=tdir
+#        #
+#        t=(tan1-n0*Vec3.dot(n0, tan1)).normalized()
+#        th=-1.0 if (Vec3.dot(Vec3.cross(n0, tan1), tan2)<0.0) else 1.0
+#        #bn=Vec3.cross(n0, t)*th
+#        return Vec4(t[0], t[1], t[2], th) #, bn.normalized())
+#    
+###    # ELIMINAR
+#    def _generar_datos_parcela(self, pos, idx_pos):
+#        # matriz de DatosLocalesTerreno; x,y->TamanoParcela +/- 1
+#        data=list() # x,y: [[n, ...], ...]
+#        _pos=(0, 0)
+#        tc_x, tc_y=0.0, 0.0
+#        for x in range(sistema.Sistema.TopoTamanoParcela+3):
+#            if x==1: # 1, en vez de 0
+#                tc_x=0.0
+#            else:
+#                tc_x=x/(sistema.Sistema.TopoTamanoParcela+1)
+#            data.append(list())
+#            for y in range(sistema.Sistema.TopoTamanoParcela+3):
+#                if y==1: # 1, en vez de 0
+#                    tc_y=0.0
+#                else:
+#                    tc_y=y/(sistema.Sistema.TopoTamanoParcela+1)
+#                d=DatosLocalesTerreno()
+#                #data.index=None # no establecer en esta instancia
+#                _pos=(pos[0]+x-1, pos[1]+y-1)
+#                precipitacion_frecuencia=self.sistema.obtener_precipitacion_frecuencia_anual(_pos)
+#                d.pos=Vec3(x-1, y-1, self.sistema.obtener_altitud_suelo(_pos))
+#                d.tc=Vec2(tc_x, tc_y)
+#                d.tipo=Vec3(self.sistema.obtener_temperatura_anual_media_norm(_pos), self.sistema.obtener_precipitacion_frecuencia_anual(_pos), 0.0)
+#                d.precipitacion_frecuencia=precipitacion_frecuencia
+#                data[x].append(d)
+#        # calcular normales
+#        for x in range(sistema.Sistema.TopoTamanoParcela+1):
+#            for y in range(sistema.Sistema.TopoTamanoParcela+1):
+#                v0=data[x+1][y+1].pos
+#                v1=data[x+2][y+1].pos
+#                v2=data[x+1][y+2].pos
+#                v3=data[x+2][y].pos
+#                v4=data[x][y+2].pos
+#                v5=data[x][y+1].pos
+#                v6=data[x+1][y].pos
+#                n0=self._calcular_normal(v0, v1, v2)
+#                n1=self._calcular_normal(v0, v3, v1)
+#                n2=self._calcular_normal(v0, v2, v4)
+#                n3=self._calcular_normal(v0, v5, v6)
+#                n_avg=(n0+n1+n2+n3)/4.0
+#                data[x+1][y+1].normal=n_avg
+#        # calcular tangent & binormal
+#        for x in range(sistema.Sistema.TopoTamanoParcela+1):
+#            for y in range(sistema.Sistema.TopoTamanoParcela+1):
+#                v0, tc0, n0=data[x+1][y+1].pos, data[x+1][y+1].tc, data[x+1][y+1].normal
+#                v1, tc1=data[x+2][y+1].pos, data[x+2][y+1].tc
+#                v2, tc2=data[x+1][y+2].pos, data[x+1][y+2].tc
+#                v3, tc3=data[x+2][y].pos, data[x+2][y].tc
+#                v4, tc4=data[x][y+2].pos, data[x][y+2].tc
+#                v5, tc5=data[x][y+1].pos, data[x][y+1].tc
+#                v6, tc6=data[x+1][y].pos, data[x+1][y].tc
+#                t0=self._calcular_tangente(v0, v1, v2, tc0, tc1, tc2, n0)
+#                t1=self._calcular_tangente(v0, v3, v1, tc0, tc3, tc1, n0)
+#                t2=self._calcular_tangente(v0, v2, v4, tc0, tc2, tc4, n0)
+#                t3=self._calcular_tangente(v0, v5, v6, tc0, tc5, tc6, n0)
+#                t_avg=(t0+t1+t2+t3)/4.0
+#                data[x+1][y+1].tangent=t_avg
+#        #
+#        return data
 
     def _generar_geometria_parcela(self, nombre, idx_pos, datos_parcela, lod, con_color=False):
         # formato
@@ -315,9 +315,9 @@ class Terreno:
         textura_terreno_lod0=self.base.loader.loadTexture("texturas/terreno4.png")
         self.nodo_parcelas.setTexture(ts0, textura_terreno_lod0, priority=2)
         #
-        ts1=TextureStage("ts_terreno_lod1")
-        textura_terreno_lod1=self.base.loader.loadTexture("texturas/terreno4.png")
-        self.nodo_parcelas.setTexture(ts1, textura_terreno_lod1, priority=2)
+#        ts1=TextureStage("ts_terreno_lod1")
+#        textura_terreno_lod1=self.base.loader.loadTexture("texturas/terreno4.png")
+#        self.nodo_parcelas.setTexture(ts1, textura_terreno_lod1, priority=2)
         #
         ts2=TextureStage("ts_ruido")
         textura_ruido=self.base.loader.loadTexture(ruta_tex_ruido)
@@ -325,11 +325,11 @@ class Terreno:
         #
         GestorShader.aplicar(self.nodo_parcelas, GestorShader.ClaseTerreno, 2)
 
-    # ELIMINAR
-    def _calcular_normal(self, v0, v1, v2):
-        U=v1-v0
-        V=v2-v0
-        return U.cross(V)
+##    # ELIMINAR
+#    def _calcular_normal(self, v0, v1, v2):
+#        U=v1-v0
+#        V=v2-v0
+#        return U.cross(V)
     
     def _generar_lineas_normales(self, nombre, geom_node_parcela):
         #
