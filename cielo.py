@@ -27,7 +27,7 @@ class Cielo:
         self.modelo.setMaterialOff(1)
         self.modelo.setTextureOff(1)
         self.modelo.setLightOff(1)
-        self.modelo.node().adjustDrawMask(DrawMask(3), DrawMask(4), DrawMask(0))
+        self.modelo.node().adjustDrawMask(DrawMask(3), DrawMask(2), DrawMask(0))
         # luz
 #        self.luz=self.nodo.attachNewNode(AmbientLight("luz_ambiental"))
 #        self.luz.node().setColor(Cielo.ColorNoche)

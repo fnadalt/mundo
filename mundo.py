@@ -67,21 +67,22 @@ class Mundo:
         self._cargar_debug_info()
         self._cargar_gui()
         # ShowBase
-        self.base.cam.node().setCameraMask(DrawMask(5))
-        self.base.render.node().adjustDrawMask(DrawMask(7), DrawMask(0), DrawMask(0))
+        self.base.cam.node().setCameraMask(DrawMask(1))
+        self.base.render.node().adjustDrawMask(DrawMask(5), DrawMask(0), DrawMask(0))
         #
-        self.base.accept("l-up", self._log_debug_info, [0])
-        self.base.accept("m-up", self._log_debug_info, [1])
+        self.base.accept("l-up", self._hacer, [0])
+        self.base.accept("m-up", self._hacer, [1])
+        self.base.accept("v-up", self._hacer, [2])
         #
         self.base.taskMgr.add(self._update, "mundo_update")
         #
-        #self.base.bufferViewer.toggleEnable()
 
     def terminar(self):
         log.info("terminar")
         #
         self.base.ignore("l-up")
         self.base.ignore("m-up")
+        self.base.ignore("v-up")
         #
         if self.objetos:
             self.objetos.terminar()
@@ -97,11 +98,13 @@ class Mundo:
         self.sistema=None
         sistema.remover_instancia()
 
-    def _log_debug_info(self, que):
+    def _hacer(self, que):
         if que==0:
             log.debug(self.sistema.obtener_info())
         elif que==1:
             self.nodo.analyze()
+        elif que==2:
+            self.base.bufferViewer.toggleEnable()
 
     def _establecer_material(self):
         log.info("_establecer_material")

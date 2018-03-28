@@ -22,7 +22,7 @@ class Agua:
         #
         self.nodo=self.base.loader.loadModel("objetos/plano_agua")
         self.nodo.setZ(self.altitud)
-        self.nodo.node().adjustDrawMask(DrawMask(5), DrawMask(2), DrawMask(0))
+        self.nodo.node().adjustDrawMask(DrawMask(1), DrawMask(2), DrawMask(0))
 
     def terminar(self):
         if self.reflection_buffer:
