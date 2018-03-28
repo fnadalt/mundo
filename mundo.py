@@ -70,12 +70,18 @@ class Mundo:
         self.base.cam.node().setCameraMask(DrawMask(5))
         self.base.render.node().adjustDrawMask(DrawMask(7), DrawMask(0), DrawMask(0))
         #
-        self.base.accept("l-up", self._log_debug_info)
+        self.base.accept("l-up", self._log_debug_info, [0])
+        self.base.accept("m-up", self._log_debug_info, [1])
         #
         self.base.taskMgr.add(self._update, "mundo_update")
+        #
+        #self.base.bufferViewer.toggleEnable()
 
     def terminar(self):
         log.info("terminar")
+        #
+        self.base.ignore("l-up")
+        self.base.ignore("m-up")
         #
         if self.objetos:
             self.objetos.terminar()
@@ -91,8 +97,11 @@ class Mundo:
         self.sistema=None
         sistema.remover_instancia()
 
-    def _log_debug_info(self):
-        log.debug(self.sistema.obtener_info())
+    def _log_debug_info(self, que):
+        if que==0:
+            log.debug(self.sistema.obtener_info())
+        elif que==1:
+            self.nodo.analyze()
 
     def _establecer_material(self):
         log.info("_establecer_material")
@@ -300,6 +309,7 @@ class Mundo:
         # sol
         self.sol=Sol(self.base, sistema.Sistema.TopoAltitudOceano-20.0)
         self.sol.pivot.reparentTo(self.nodo) # self.cielo.nodo
+#        self.sol.mostrar_camaras()
         self.nodo.setLight(self.sol.luz)
         # objetos
         self.objetos=Objetos(self.base)
@@ -310,7 +320,7 @@ class Mundo:
         self.agua=Agua(self.base, sistema.Sistema.TopoAltitudOceano)
         self.agua.nodo.reparentTo(self.nodo) # estaba self.base.render
         self.agua.generar()
-        self.agua.mostrar_camaras()
+#        self.agua.mostrar_camaras()
         #
         #self.cielo.nodo.setBin("background", 0)
         #self.sol.nodo.setBin("background", 1)
@@ -319,6 +329,7 @@ class Mundo:
         #self.objetos.nodo.setBin("transparent", 0)
         #
         self.controlador_camara.altitud_agua=sistema.Sistema.TopoAltitudOceano
+        #
 
     def _update(self, task):
         if self._counter==50:
