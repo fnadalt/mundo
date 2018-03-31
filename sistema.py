@@ -252,7 +252,7 @@ class Sistema:
             self.dia=0
             ahora=datetime.datetime.now()
             ahora_hn=self.calcular_hora_normalizada(ahora.hour, ahora.minute, ahora.second)
-            #ahora_hn=0.56
+            #ahora_hn=0.65
             self._segundos_transcurridos_dia=ahora_hn*self.duracion_dia_segundos
         else:
             log.info("cargar_parametros_iniciales desde configuracion")

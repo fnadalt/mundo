@@ -61,7 +61,7 @@ class Mundo:
         #
         self._cargar_terreno()#
         self._cargar_hombre()#
-        #self._cargar_objetos()
+        self._cargar_objetos()#
         #self._cargar_obj_voxel()
         # gui:
         self._cargar_debug_info()
@@ -206,16 +206,22 @@ class Mundo:
         luz_omni=self.nodo.attachNewNode(PointLight("luz_omni"))
         luz_omni.setPos(Vec3(0, -2, 152.5))
         luz_omni.node().setColor(Vec4(1, 0, 0, 1))
-        luz_omni.node().setAttenuation(Vec3(0, 1, 0))
+        luz_omni.node().setAttenuation(Vec3(0, 1.1, 0))
         self.nodo.setShaderInput("luz_omni[0]", luz_omni, priority=4)
+#        luz_omni.reparentTo(self.palo)
+#        luz_omni.setPos(0, 0, 1)
         #
         self.spot_light=self.nodo.attachNewNode(Spotlight("spot_light"))
         self.spot_light.setPos(self.hombre.cuerpo.getPos()+Vec3(0, -5, 6))
-        self.spot_light.node().setColor((0, 0, 1, 1))
-        self.spot_light.node().setAttenuation(Vec3(1, 0, 0))
+        self.spot_light.node().setColor((1, 1, 0.7, 1))
+        self.spot_light.node().setAttenuation(Vec3(0.04,0.025,0.01))
         self.spot_light.node().setLens(PerspectiveLens())
+        self.spot_light.node().setShadowCaster(True, 256, 256)
         self.spot_light.lookAt(self.hombre.cuerpo)
-        #self.nodo.setLight(self.spot_light)
+        self.nodo.setLight(self.spot_light)
+        self.spot_light.reparentTo(self.palo)
+        self.spot_light.setPos(0, 0, 1)
+        self.spot_light.setHpr(0, 75, 0)
         #
         self.nubes=self.base.loader.loadModel("objetos/plano")
         self.nubes.reparentTo(self.nodo)
