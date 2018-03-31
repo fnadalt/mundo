@@ -103,8 +103,9 @@ class Personaje:
         self.actor.setScale(0.06)
         self.actor.setZ(-0.5)
         # partes
-        self.actor.makeSubpart("torso", ["hips"], ["thigh.L", "thigh.R"])
-        self.actor.makeSubpart("pelvis", ["thigh.L", "thigh.R"])
+        self.actor.makeSubpart("torso", ["spine"], ["shoulder.R", "thigh.L", "thigh.R"])
+        self.actor.makeSubpart("pelvis", ["hips"], ["spine"])
+        self.actor.makeSubpart("brazo.R", ["shoulder.R"])
         # joints
         self.handR=self.actor.exposeJoint(None,"modelRoot", "hand.R")        
         # establecer estado inicial
@@ -201,16 +202,23 @@ class Personaje:
     def _cambio_estado(self, idx_capa, estado_previo, estado_nuevo):
         #log.info("%s: cambio de estado en capa %i, de %s a %s"%(self.clase, idx_capa, str(estado_previo), str(estado_nuevo)))
         # capa 0
+        self.actor.stop()
         if estado_nuevo==Personaje.EstadoQuieto:
             self._velocidad_lineal=LVector3(0.0, 0.0, 0.0)
             self._velocidad_angular=LVector3(0.0, 0.0, 0.0)
-            self.actor.loop("quieto")
+            self.actor.pose("sostener", 0, partName="brazo.R")
+            self.actor.loop("quieto", partName="torso")
+            self.actor.loop("quieto", partName="pelvis")
         elif estado_nuevo==Personaje.EstadoCaminando:
             #self.actor.setPlayRate(1.0, "caminar") # |4.0
-            self.actor.loop("caminar")
+            self.actor.pose("sostener", 0, partName="brazo.R")
+            self.actor.loop("caminar", partName="torso")
+            self.actor.loop("caminar", partName="pelvis")
         elif estado_nuevo==Personaje.EstadoCorriendo:
             self.actor.setPlayRate(1.5, "correr")
-            self.actor.loop("correr")
+            self.actor.pose("sostener", 0, partName="brazo.R")
+            self.actor.loop("correr", partName="torso")
+            self.actor.loop("correr", partName="pelvis")
         # capa 1
         #
 

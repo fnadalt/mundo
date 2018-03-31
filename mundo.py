@@ -216,12 +216,12 @@ class Mundo:
         self.spot_light.node().setColor((1, 1, 0.7, 1))
         self.spot_light.node().setAttenuation(Vec3(0.04,0.025,0.01))
         self.spot_light.node().setLens(PerspectiveLens())
-        self.spot_light.node().setShadowCaster(True, 256, 256)
+        #self.spot_light.node().setShadowCaster(True, 256, 256)
         self.spot_light.lookAt(self.hombre.cuerpo)
         self.nodo.setLight(self.spot_light)
         self.spot_light.reparentTo(self.palo)
         self.spot_light.setPos(0, 0, 1)
-        self.spot_light.setHpr(0, 75, 0)
+        self.spot_light.setHpr(0, 15, 0)
         #
         self.nubes=self.base.loader.loadModel("objetos/plano")
         self.nubes.reparentTo(self.nodo)
@@ -305,6 +305,10 @@ class Mundo:
             self.nodo_prismas=self.nodo.attachNewNode("nodo_prismas")
             self.nodo_prismas.setPos(20, 6, 2+self.sistema.obtener_altitud_suelo((20, 6, 0)))
             self.nodo_prismas.attachNewNode(consolidado_prismas_geomnode)
+        #
+        self.moto=self.base.loader.loadModel("objetos/Nave.egg")
+        self.moto.reparentTo(self.nodo)
+        self.moto.setPos(0, -4, self.sistema.obtener_altitud_suelo((0, -4, 0)))
 
     def _cargar_terreno(self):
         # terreno
