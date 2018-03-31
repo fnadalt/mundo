@@ -10,7 +10,8 @@ from sol import Sol
 from terreno import Terreno
 from objetos import Objetos
 from agua import Agua
-from personaje import *
+from hombre import *
+from nave import *
 from camara import ControladorCamara
 from input import InputMapper
 from shader import GestorShader
@@ -36,6 +37,8 @@ class Mundo:
         self.sol=None
         self.agua=None
         self.objetos=None
+        self.hombre=None
+        self.nave=None
         # variables internas:
         self._counter=50 # forzar terreno.update antes de hombre.update
         self._personajes=[]
@@ -47,6 +50,7 @@ class Mundo:
         self.sistema=sistema.Sistema()
         self.sistema.iniciar()
         self.sistema.cargar_parametros_iniciales()
+        self.sistema.update(0.0, self.sistema.posicion_cursor)
         sistema.establecer_instancia(self.sistema)
         # fisica:
         self._configurar_fisica()
@@ -73,6 +77,7 @@ class Mundo:
         self.base.accept("l-up", self._hacer, [0])
         self.base.accept("m-up", self._hacer, [1])
         self.base.accept("v-up", self._hacer, [2])
+        self.base.accept("n-up", self._hacer, [3])
         #
         self.base.taskMgr.add(self._update, "mundo_update")
         #
@@ -83,7 +88,10 @@ class Mundo:
         self.base.ignore("l-up")
         self.base.ignore("m-up")
         self.base.ignore("v-up")
+        self.base.ignore("n-up")
         #
+        for _personaje in self._personajes:
+            _personaje.terminar()
         if self.objetos:
             self.objetos.terminar()
         if self.agua:
@@ -105,6 +113,20 @@ class Mundo:
             self.nodo.analyze()
         elif que==2:
             self.base.bufferViewer.toggleEnable()
+        elif que==3:
+            if not self.nave:
+                return
+            if not self.hombre.conduciendo:
+                self.nave.setPos(self.sistema.posicion_cursor)
+                self.hombre.cuerpo.reparentTo(self.nave.cuerpo)
+                self.hombre.setPos(Vec3(0, 0, -0.5))
+                self.hombre.conduciendo=True
+                self.controlador_camara.seguir(self.nave.cuerpo)
+            else:
+                self.hombre.cuerpo.reparentTo(self.nodo)
+                self.hombre.setPos(self.sistema.posicion_cursor)
+                self.hombre.conduciendo=False
+                self.controlador_camara.seguir(self.hombre.cuerpo)
 
     def _establecer_material(self):
         log.info("_establecer_material")
@@ -147,7 +169,7 @@ class Mundo:
 
     def _configurar_fisica(self):
         self.bullet_world=BulletWorld()
-        return
+        #return
         #
         debug_fisica=BulletDebugNode("debug_fisica")
         debug_fisica.showNormals(True)
@@ -182,12 +204,11 @@ class Mundo:
 
     def _cargar_hombre(self):
         #
-        self.hombre=Personaje()
+        self.hombre=Hombre()
         self.hombre.altitud_agua=sistema.Sistema.TopoAltitudOceano
         self.hombre.input_mapper=self.input_mapper
         self.hombre.construir(self.nodo, self.bullet_world)
-        self.hombre.cuerpo.setPos(self.sistema.posicion_cursor)
-        self.hombre.cuerpo.setZ(self.sistema.obtener_altitud_suelo_cursor()+0.5)
+        self.hombre.setPos(self.sistema.posicion_cursor)
         #
         GestorShader.aplicar(self.hombre.actor, GestorShader.ClaseGenerico, 2)
         #
@@ -299,16 +320,19 @@ class Mundo:
                         consolidado_prismas_prim.addVertex(vert+i_cant*offset)
             consolidado_prismas_geom=Geom(consolidado_prismas_vdata)
             consolidado_prismas_geom.addPrimitive(consolidado_prismas_prim)
-            ##
+            #
             consolidado_prismas_geomnode=GeomNode("copia_geomnode")
             consolidado_prismas_geomnode.addGeom(consolidado_prismas_geom)
             self.nodo_prismas=self.nodo.attachNewNode("nodo_prismas")
             self.nodo_prismas.setPos(20, 6, 2+self.sistema.obtener_altitud_suelo((20, 6, 0)))
             self.nodo_prismas.attachNewNode(consolidado_prismas_geomnode)
         #
-        self.moto=self.base.loader.loadModel("objetos/Nave.egg")
-        self.moto.reparentTo(self.nodo)
-        self.moto.setPos(0, -4, self.sistema.obtener_altitud_suelo((0, -4, 0)))
+        self.nave=Nave()
+        self.nave.construir(self.nodo, self.bullet_world)
+        pos=self.sistema.posicion_cursor+Vec3(-3, -3, 0)
+        self.nave.setPos(Vec3(pos[0], pos[1], self.sistema.obtener_altitud_suelo(pos)))
+        self.nave.input_mapper=self.input_mapper
+        self._personajes.append(self.nave)
 
     def _cargar_terreno(self):
         # terreno

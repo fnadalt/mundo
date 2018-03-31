@@ -203,11 +203,8 @@ class Objetos:
 
     def _establecer_shader(self):
         #
-        #GestorShader.aplicar(self.nodo_parcelas_vegetacion, GestorShader.ClaseGenerico, 2)
-        #GestorShader.aplicar(self.nodo_parcelas_yuyos, GestorShader.ClaseGenerico, 2)
-        #
         self.nodo.setTwoSided(True)
-        GestorShader.aplicar(self.nodo, GestorShader.ClaseGenerico, 2)
+        GestorShader.aplicar(self.nodo, GestorShader.ClaseVegetacion, 2)
 
     def _iniciar_pool_modelos(self):
         log.info("_iniciar_pool_modelos")

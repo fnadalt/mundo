@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-5.1.dtd">
 <!-- eric project file for project mundo -->
-<!-- Saved: 2018-03-19, 15:50:27 -->
+<!-- Saved: 2018-03-31, 11:34:28 -->
 <!-- Copyright (C) 2018 Fernando Nadal Testa, fnt2006@gmail.com -->
 <Project version="5.1">
   <Language>en_US</Language>
@@ -28,6 +28,7 @@
     <Source>input.py</Source>
     <Source>main.py</Source>
     <Source>mundo.py</Source>
+    <Source>nave.py</Source>
     <Source>objetos.csv</Source>
     <Source>objetos.py</Source>
     <Source>personaje.py</Source>

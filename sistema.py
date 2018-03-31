@@ -309,6 +309,7 @@ class Sistema:
     def update(self, dt, posicion_cursor):
         #
         self.posicion_cursor=posicion_cursor
+        self.posicion_cursor[2]=self.obtener_altitud_suelo_datos_parcela(posicion_cursor) # poco eficiente?
         #
         self._establecer_fecha_hora_estacion(dt)
         self._establecer_temperatura_actual_norm(dt)

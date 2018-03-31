@@ -30,6 +30,7 @@ class GestorShader:
     ClaseSombra="sombra"
     ClaseVegetacion="vegetacion"
     ClaseYuyo="yuyo"
+    ClasePersonaje="personaje"
 
     @staticmethod
     def iniciar(base, altitud_agua, plano_recorte_agua):
@@ -53,12 +54,16 @@ class GestorShader:
 
     @staticmethod
     def aplicar(nodo, clase, prioridad):
+        log.info("aplicar shader %s"%(clase))
         #
         if _altitud_agua==None:
             raise Exception("GestorShader: no se especifico _altitud_agua")
         #
         global shaders
         shader=None
+        if clase==GestorShader.ClaseVegetacion or clase==GestorShader.ClaseYuyo or clase==GestorShader.ClasePersonaje:
+            clase=GestorShader.ClaseGenerico
+            log.warning("mapeado a %s"%clase)
         if not clase in shaders:
             log.info("cargar shader clase %s"%clase)
             generador=GestorShader(clase)
