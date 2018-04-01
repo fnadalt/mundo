@@ -5,12 +5,6 @@ log=logging.getLogger(__name__)
 
 class ControladorCamara:
     
-    # estados
-    EstadoNulo=100
-    EstadoAcercando=101
-    EstadoAlejando=102
-    EstadoMirarAdelante=103
-
     # modo
     ModoTerceraPersona=0
     ModoPrimeraPersona=1
@@ -28,9 +22,31 @@ class ControladorCamara:
         self.altitud_suelo=0
         self.altitud_agua=0
         # componentes
-        self.camara=self.base.camera
+        self.camara=None
         self.target_node_path=None
         self.pivot=None
+        
+    def iniciar(self):
+        log.info("iniciar")
+        #
+        self.camara=self.base.camera
+        #
+        self.base.accept("wheel_up", self._acercar)
+        self.base.accept("wheel_down", self._alejar)
+        self.base.accept("mouse1-up", self._mirar_adelante)
+    
+    def terminar(self):
+        log.info("terminar")
+        #
+        self.base.ignore("wheel_up")
+        self.base.ignore("wheel_down")
+        self.base.ignore("mouse1-up")
+        #
+        self.camara=None
+        self.target_node_path=None
+        if self.pivot!=None:
+            self.pivot.removeNode()
+            self.pivot=None
     
     def seguir(self, target_node_path):
         #
@@ -46,13 +62,6 @@ class ControladorCamara:
         self.camara.lookAt(self.pivot)
     
     def update(self, dt):
-        # input
-        if self.input_mapper.chequear_falsear(ControladorCamara.EstadoAcercando):
-            self._acercar()
-        elif self.input_mapper.chequear_falsear(ControladorCamara.EstadoAlejando):
-            self._alejar()
-        elif self.input_mapper.chequear_falsear(ControladorCamara.EstadoMirarAdelante):
-            self._mirar_adelante()
         # procesar movimiento del mouse
         pos_mouse=None
         if self.base.mouseWatcherNode.hasMouse():
@@ -71,7 +80,7 @@ class ControladorCamara:
             self._ajustando_altitud=True
         elif self._ajustando_altitud:
             pos_mouse[1]=-0.75
-            if altura>1.2: #|0.75
+            if altura>1.0: #|1.2|0.75
                 self._ajustando_altitud=False
         #
         if abs(pos_mouse[0])>0.4:
