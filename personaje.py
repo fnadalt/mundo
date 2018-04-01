@@ -77,7 +77,8 @@ class Personaje:
         self.cuerpo=None
         self.actor=None
     
-    def construir(self, parent_node_path, bullet_world, partes=list()):
+    def iniciar(self, parent_node_path, bullet_world, partes=list()):
+        log.info("iniciar")
         # recursos
         ruta_dir=os.path.join(os.getcwd(), self.directorio_recursos, self.clase)
         if not os.path.exists(ruta_dir):
@@ -117,6 +118,7 @@ class Personaje:
         GestorShader.aplicar(self.actor, GestorShader.ClasePersonaje, 2)
     
     def terminar(self):
+        log.info("terminar")
         self.actor.delete()
         self.bullet_world.remove(self.cuerpo.node())
         self.actor=None
@@ -205,6 +207,10 @@ class Personaje:
             elif estado_actual==Personaje.EstadoCayendo:
                 if self._suelo!=Personaje.SueloNulo:
                     estado_nuevo=Personaje.EstadoQuieto
+            # (cualquier estado)
+            else:
+                pass
+            #
             # sin suelo
             if self._suelo==Personaje.SueloNulo:
                 estado_nuevo=Personaje.EstadoCayendo
