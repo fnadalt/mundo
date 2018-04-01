@@ -59,12 +59,11 @@ class Mundo:
         self._establecer_shader()
         # componentes:
         self.input_mapper=InputMapper(self.base)
-        self.input_mapper.ligar_eventos()
         self.controlador_camara=ControladorCamara(self.base)
-        self.controlador_camara.input_mapper=self.input_mapper
+        self.controlador_camara.iniciar()
         #
         self._cargar_terreno()#
-        self._cargar_hombre()#
+        self._cargar_personajes()#
         self._cargar_objetos()#
         #self._cargar_obj_voxel()
         # gui:
@@ -77,7 +76,6 @@ class Mundo:
         self.base.accept("l-up", self._hacer, [0])
         self.base.accept("m-up", self._hacer, [1])
         self.base.accept("v-up", self._hacer, [2])
-        self.base.accept("n-up", self._hacer, [3])
         #
         self.base.taskMgr.add(self._update, "mundo_update")
         #
@@ -88,7 +86,8 @@ class Mundo:
         self.base.ignore("l-up")
         self.base.ignore("m-up")
         self.base.ignore("v-up")
-        self.base.ignore("n-up")
+        #
+        self.controlador_camara.terminar()
         #
         for _personaje in self._personajes:
             _personaje.terminar()
@@ -160,7 +159,7 @@ class Mundo:
                     self.obj.establecer_valor(x+1, y+1, z+1, 255)
         model_root=ModelRoot("volumen")
         self.objN=self.nodo.attachNewNode(model_root)
-        self.objN.attachNewNode(self.obj.construir_smooth())
+        self.objN.attachNewNode(self.obj.iniciar_smooth())
         self.objN.setColor(0.4, 0.4, 0.4, 1)
         self.objN.setTwoSided(True, 1)
         self.objN.setShaderAuto()
@@ -202,17 +201,22 @@ class Mundo:
         self.lblHora=DirectLabel(text="00:00", text_fg=(0.15, 0.15, 0.9, 1.0), text_bg=(1.0, 1.0, 1.0, 1.0), scale=0.1, pos=(1.2, 0.0, -0.8), color=(1, 1, 1, 1))
         self.lblTemperatura=DirectLabel(text="0º", text_fg=(0.15, 0.15, 0.9, 1.0), text_bg=(1.0, 1.0, 1.0, 1.0), scale=0.1, pos=(1.2, 0.0, -0.93), color=(1, 1, 1, 1))
 
-    def _cargar_hombre(self):
-        #
+    def _cargar_personajes(self):
+        # personajes
         self.hombre=Hombre()
-        self.hombre.altitud_agua=sistema.Sistema.TopoAltitudOceano
-        self.hombre.input_mapper=self.input_mapper
-        self.hombre.construir(self.nodo, self.bullet_world)
-        self.hombre.setPos(self.sistema.posicion_cursor)
-        #
-        GestorShader.aplicar(self.hombre.actor, GestorShader.ClaseGenerico, 2)
-        #
         self._personajes.append(self.hombre)
+        # nave
+        self.nave=Nave()
+        self._personajes.append(self.nave)
+        #
+        for _personaje in self._personajes:
+            _personaje.input_mapper=self.input_mapper
+            _personaje.altitud_agua=sistema.Sistema.TopoAltitudOceano
+            _personaje.iniciar(self.nodo, self.bullet_world)
+        # posicionar
+        self.hombre.setPos(self.sistema.posicion_cursor)
+        pos=self.sistema.posicion_cursor+Vec3(-3, -3, 0)
+        self.nave.setPos(Vec3(pos[0], pos[1], self.sistema.obtener_altitud_suelo(pos)))
         #
         self.controlador_camara.seguir(self.hombre.cuerpo)
 
@@ -327,12 +331,7 @@ class Mundo:
             self.nodo_prismas.setPos(20, 6, 2+self.sistema.obtener_altitud_suelo((20, 6, 0)))
             self.nodo_prismas.attachNewNode(consolidado_prismas_geomnode)
         #
-        self.nave=Nave()
-        self.nave.construir(self.nodo, self.bullet_world)
-        pos=self.sistema.posicion_cursor+Vec3(-3, -3, 0)
-        self.nave.setPos(Vec3(pos[0], pos[1], self.sistema.obtener_altitud_suelo(pos)))
-        self.nave.input_mapper=self.input_mapper
-        self._personajes.append(self.nave)
+
 
     def _cargar_terreno(self):
         # terreno
