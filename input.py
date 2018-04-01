@@ -1,4 +1,3 @@
-from camara import ControladorCamara
 from personaje import Personaje
 from panda3d.core import KeyboardButton
 
@@ -18,10 +17,6 @@ class InputMapper:
         self.param_estado=Personaje.ParamEstadoNulo
         #
         self._teclas=list() # ["tecla", ...]
-        # camara
-        self.estado[ControladorCamara.EstadoAcercando]=False
-        self.estado[ControladorCamara.EstadoAlejando]=False
-        self.estado[ControladorCamara.EstadoMirarAdelante]=False
         # personaje
         self.estado[Personaje.EstadoCaminando]=False
         self.estado[Personaje.EstadoCorriendo]=False
@@ -30,24 +25,6 @@ class InputMapper:
         self.estado[Personaje.EstadoFlotando]=False
         self.estado[Personaje.EstadoAgarrando]=False
 
-    def chequear_falsear(self, estado):
-        flag=self.estado[estado]
-        self.estado[estado]=False
-        return flag
-
-    def ligar_eventos(self):
-        # toggles
-        # self._ligar_toggle() reemplazado por polling interface para teclado, self.update()
-        #
-        # "one shot"
-        self._ligar_one_shot("wheel_up", ControladorCamara.EstadoAcercando)
-        self._ligar_one_shot("wheel_down", ControladorCamara.EstadoAlejando)
-        self._ligar_one_shot("mouse1-up", ControladorCamara.EstadoMirarAdelante)
-
-    def desligar_eventos(self):
-        for tecla in self._teclas:
-            self.base.ignore(tecla)
-    
     def obtener_info(self):
         info="InputMapper:\nestado:%s\nparams:%s"%(str(self.estado), str(self.param_estado))
         return info
@@ -71,29 +48,4 @@ class InputMapper:
             self.param_estado|=Personaje.ParamEstadoGirando | Personaje.ParamEstadoIzquierda
         if self._isKeyDown(KeyboardButton.asciiKey(b"e")):
             self.param_estado|=Personaje.ParamEstadoGirando | Personaje.ParamEstadoDerecha
-
-    def _establecer_estado(self, flag, estado, param_estado):
-        if flag:
-            self.estado[estado]=True
-            self.param_estado+=param_estado
-        else:
-            self.param_estado-=param_estado
-            if self.param_estado<0:
-                self.param_estado=0
-            if self.param_estado==0:
-                self.estado[estado]=False
-    
-    def _ligar_toggle(self, tecla, estado, param_estado=Personaje.ParamEstadoNulo):
-        #
-        self.base.accept(tecla, self._establecer_estado, [True, estado, param_estado])
-        self.base.accept(tecla+"-up", self._establecer_estado, [False, estado, param_estado])
-        #
-        self._teclas.append(tecla)
-        self._teclas.append(tecla+"-up")
-
-    def _ligar_one_shot(self, tecla, estado, param_estado=Personaje.ParamEstadoNulo):
-        #
-        self.base.accept(tecla, self._establecer_estado, [True, estado, param_estado])
-        #
-        self._teclas.append(tecla)
 
