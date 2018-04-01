@@ -283,10 +283,11 @@ class Unificador:
                 log.warning("agregar_objeto %s num_prims=%i"%(nombre, geom.getNumPrimitives()))
             #
             vdata=GeomVertexData(geom.getVertexData())
-            #mat=LMatrix4f.rotateMatNormaxis(objeto.getH(), Vec3(0, 0, 1))
-            mat=LMatrix4f.translateMat(objeto.getPos())#Vec3(14, 14, 0))
-            #mat.transposeInPlace()
-#            log.debug("OBJ %s MAT %s"%(str(objeto.getPos()), str(mat)))
+            mat=LMatrix4f.rotateMat(objeto.getH(), Vec3(0, 0, 1), CS_zup_right)
+            mat*=LMatrix4f.rotateMat(objeto.getP(), Vec3(1, 0, 0), CS_zup_right)
+            mat*=LMatrix4f.rotateMat(objeto.getR(), Vec3(0, 1, 0), CS_zup_right)
+            mat*=LMatrix4f.scaleMat(objeto.getScale())
+            mat*=LMatrix4f.translateMat(objeto.getPos())
             vdata.transformVertices(mat)
             prim_vidxs=geom.getPrimitive(0).decompose().getVertexList()
             sum=0
