@@ -13,7 +13,7 @@ from agua import Agua
 from hombre import *
 from nave import *
 from camara import ControladorCamara
-from input import InputMapper
+from input import InputMapperTecladoMouse
 from shader import GestorShader
 
 #import voxels
@@ -58,7 +58,7 @@ class Mundo:
         self._establecer_material() # quitarlo, optimizacion? no, al reves!
         self._establecer_shader()
         # componentes:
-        self.input_mapper=InputMapper(self.base)
+        self.input_mapper=InputMapperTecladoMouse(self.base)
         self.controlador_camara=ControladorCamara(self.base)
         self.controlador_camara.iniciar()
         #
@@ -374,7 +374,7 @@ class Mundo:
             #info+=self.terreno.obtener_info()+"\n"
             #info+=self.hombre.obtener_info()+"\n"
             #info+=self.agua.obtener_info()+"\n"
-            #info+=self.input_mapper.obtener_info()+"\n"
+            info+=self.input_mapper.obtener_info()+"\n"
             #info+=self.cielo.obtener_info()
             #info+=self.sol.obtener_info()+"\n"
             self.texto1.setText(info)

@@ -3,6 +3,7 @@ from panda3d.bullet import *
 from panda3d.core import *
 import os, os.path
 
+from input import InputMapper
 from shader import GestorShader
 
 import logging
@@ -15,10 +16,11 @@ log=logging.getLogger(__name__)
 #
 class Personaje:
     
-    # ambiente
-    AmbienteNulo=0
-    AmbienteAire=1
-    AmbienteAgua=2
+##    ELIMINAR
+#    # ambiente
+#    AmbienteNulo=0
+#    AmbienteAire=1
+#    AmbienteAgua=2
     
     # suelo
     SueloNulo=0
@@ -36,6 +38,7 @@ class Personaje:
     EstadoSaltando=4
     EstadoFlotando=5
     EstadoCayendo=6
+    EstadoConduciendo=7
     # capa 1
     EstadoAgachado=16
     EstadoAgarrando=17
@@ -52,7 +55,7 @@ class Personaje:
 
     def __init__(self, clase):
         # variables internas
-        self._ambiente=self.AmbienteNulo
+#        self._ambiente=self.AmbienteNulo ELIMINAR
         self._suelo=self.SueloNulo
         self._partes_actor=list() # [] | [nombre_parte, ...]
         self._estado_capa=[self.EstadoNulo, self.EstadoNulo] # [estado,estado,estado]
@@ -138,7 +141,7 @@ class Personaje:
     
     def update(self, dt):
         # definir ambiente y suelo
-        self._definir_ambiente()
+        #self._definir_ambiente() ELIMINAR
         self._definir_suelo()
         # definir estados
         for idx_capa in range(len(self._estado_capa)):
@@ -148,7 +151,7 @@ class Personaje:
                 self._cambio_estado(idx_capa, self._estado_capa[idx_capa], estado_nuevo)
                 self._estado_capa[idx_capa]=estado_nuevo
         # verificar cambio de parametros
-        param_estado_nuevo=self.input_mapper.param_estado
+        param_estado_nuevo=self.input_mapper.parametros
         if self._params_estado!=param_estado_nuevo:
             # procesar cambio en parametros
             self._cambio_params(self._params_estado, param_estado_nuevo)
@@ -166,9 +169,10 @@ class Personaje:
         info+="estado=%s params=%s\n"%(str(self._estado_capa), str(self._params_estado))
         return info
 
-    def _definir_ambiente(self):
-        if self._ambiente != Personaje.AmbienteAire:
-            self._ambiente=Personaje.AmbienteAire
+##    ELIMINAR
+#    def _definir_ambiente(self):
+#        if self._ambiente != Personaje.AmbienteAire:
+#            self._ambiente=Personaje.AmbienteAire
         
     def _definir_suelo(self):
         if self._suelo!=Personaje.SueloNulo and self._altura>0.5:
@@ -185,23 +189,23 @@ class Personaje:
             # quieto
             if estado_actual==Personaje.EstadoQuieto:
                 #->caminar
-                if self.input_mapper.estado[Personaje.EstadoCaminando]:
+                if self.input_mapper.accion==InputMapper.AccionAvanzar:
                     estado_nuevo=Personaje.EstadoCaminando
-                #->correr
-                if self.input_mapper.estado[Personaje.EstadoCorriendo]:
-                    estado_nuevo=Personaje.EstadoCorriendo
+                    #->correr
+                    if self.input_mapper.parametro(InputMapper.ParametroRapido):
+                        estado_nuevo=Personaje.EstadoCorriendo
                 #->saltar
-                elif self.input_mapper.estado[Personaje.EstadoSaltando]:
+                elif self.input_mapper.accion==InputMapper.AccionElevar:
                     estado_nuevo=Personaje.EstadoSaltando
             # caminando,corriendo
             elif estado_actual==Personaje.EstadoCaminando or estado_actual==Personaje.EstadoCorriendo:
                 #caminar<->correr
-                estado_nuevo=Personaje.EstadoCorriendo if self.input_mapper.estado[Personaje.EstadoCorriendo] else Personaje.EstadoCaminando
+                estado_nuevo=Personaje.EstadoCorriendo if self.input_mapper.parametro(InputMapper.ParametroRapido) else Personaje.EstadoCaminando
                 #->quieto
-                if not self.input_mapper.estado[Personaje.EstadoCaminando] and not self.input_mapper.estado[Personaje.EstadoCorriendo]:
+                if self.input_mapper.accion!=InputMapper.AccionAvanzar:
                     estado_nuevo=Personaje.EstadoQuieto
                 #->saltar
-                elif self.input_mapper.estado[Personaje.EstadoSaltando]:
+                if self.input_mapper.accion==InputMapper.AccionElevar:
                     estado_nuevo=Personaje.EstadoSaltando
             # cayendo
             elif estado_actual==Personaje.EstadoCayendo:
