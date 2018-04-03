@@ -1,3 +1,4 @@
+from panda3d.core import *
 from personaje import Personaje
 
 import logging
@@ -24,7 +25,8 @@ class Hombre(Personaje):
     def iniciar(self, parent_node_path, bullet_world):
         Personaje.iniciar(self, parent_node_path, bullet_world, Hombre.Partes)
         # joints
-        self.handR=self.actor.exposeJoint(None, "modelRoot", "hand.R")
+        self.manoD=self.actor.exposeJoint(None, "modelRoot", "hand.R")
+        self.manoI=self.actor.exposeJoint(None, "modelRoot", "hand.L")
         # actor
         self.actor.setScale(0.06)
 
@@ -47,3 +49,6 @@ class Hombre(Personaje):
             self.actor.loop("correr", partName="pelvis")
         # capa 1
         #
+
+    def _contacto_iniciado(self, contacto):
+        pass

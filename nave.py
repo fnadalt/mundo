@@ -16,6 +16,7 @@ class Nave(Personaje):
         shp=self.cuerpo.node().getShape(0)
         self.cuerpo.node().removeShape(shp)
         self.cuerpo.node().addShape(BulletBoxShape(Vec3(0.2,0.75,0.60)))
+        self.cuerpo.node().setStatic(True)
         self.actor.setY(0.15)
     
     def _procesar_estados(self, dt):

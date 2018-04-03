@@ -223,10 +223,8 @@ class Mundo:
     def _cargar_objetos(self):
         #
         self.palo=self.base.loader.loadModel("objetos/palof")
-        self.palo.reparentTo(self.hombre.handR)
-        self.palo.setPos(0.5,0.75,-0.25)
-        self.palo.setR(-85.0)
-        self.palo.setScale(10.0)
+        self.palo.reparentTo(self.nodo)
+        self.palo.setPos(self.sistema.obtener_posicion_3d(Vec3(12, 12, 0)))
         #
         luz_omni=self.nodo.attachNewNode(PointLight("luz_omni"))
         luz_omni.setPos(Vec3(0, -2, 152.5))

@@ -386,6 +386,9 @@ class Sistema:
         altitud/=Sistema.TopoAlturaSobreOceano
         return altitud
 
+    def obtener_posicion_3d(self, posicion2d):
+        return Vec3(posicion2d[0], posicion2d[1], self.obtener_altitud_suelo_datos_parcela(posicion2d))
+
     def obtener_nivel_altitud(self, posicion):
         altitud=posicion[2]
         if altitud<Sistema.AltitudNivelSubacuatico:

@@ -41,7 +41,8 @@ class Personaje:
     EstadoConduciendo=7
     # capa 1
     EstadoAgachado=16
-    EstadoAgarrando=17
+    EstadoAgarrandoDer=17
+    EstadoAgarrandoIzq=18
     
     # parametros de estados
     ParamEstadoNulo=0
@@ -58,7 +59,7 @@ class Personaje:
 #        self._ambiente=self.AmbienteNulo ELIMINAR
         self._suelo=self.SueloNulo
         self._partes_actor=list() # [] | [nombre_parte, ...]
-        self._estado_capa=[self.EstadoNulo, self.EstadoNulo] # [estado,estado,estado]
+        self._estado_capa=[self.EstadoNulo, self.EstadoNulo] # [estado,estado]
         self._params_estado=self.ParamEstadoNulo
         self._altura=0.0
         self._velocidad_lineal=LVector3()
@@ -67,10 +68,13 @@ class Personaje:
         # variables externas
         self.altitud_suelo=0.0
         self.altitud_agua=0.0
+        self.contactos=None # |list [BulletContact,...]
+        self.objetos_estados=dict() # {Estado:BulletContact,...}
         # parametros
         self.directorio_recursos="personajes"
         self.clase=clase
         self.prefijo_cuerpo_suelo="cuerpo_suelo_"
+        self.prefijo_cuerpo_personaje="cuerpo_personaje_"
         self.rapidez_caminar=1.0 # multiplicador
         self.rapidez_correr=2.0 # multiplicador
         # referencias
@@ -99,7 +103,7 @@ class Personaje:
         # cuerpo
         self.bullet_world=bullet_world
         shp=BulletCapsuleShape(0.25, 0.5, ZUp)
-        rb=BulletRigidBodyNode("cuerpo_personaje_%s"%self.clase)
+        rb=BulletRigidBodyNode(self.prefijo_cuerpo_personaje+self.clase)
         rb.setMass(70.0)
         rb.addShape(shp)
         rb.setKinematic(True)
@@ -160,12 +164,14 @@ class Personaje:
         self._procesar_estados(dt)
         # altura desde el suelo (se encuentra al final para ser evaluada en forma porterior)
         self._altura=self.cuerpo.getZ()-self.altitud_suelo-0.5
+        # contactos
+        self._procesar_contactos()
 
     def obtener_info(self):
         info="Personaje:BulletRigidBodyNode vl=%s va=%s\n"%(str(self.cuerpo.node().getLinearVelocity()), str(self.cuerpo.node().getAngularVelocity()))
         info+="velocidad_lineal=%s velocidad_angular=%s\n"%(str(self._velocidad_lineal), str(self._velocidad_angular))
         info+="posicion=%s altitud_suelo=%s altura=%s\n"%(str(self.cuerpo.getPos()), str(self.altitud_suelo), str(self._altura))
-        info+="ambiente=%s suelo=%s\n"%(str(self._ambiente), str(self._suelo))
+        info+="ambiente=? suelo=%s\n"%(str(self._suelo))
         info+="estado=%s params=%s\n"%(str(self._estado_capa), str(self._params_estado))
         return info
 
@@ -213,7 +219,9 @@ class Personaje:
                     estado_nuevo=Personaje.EstadoQuieto
             # (cualquier estado)
             else:
-                pass
+                if self.input_mapper.accion(InputMapper.AccionAgarrar) and self.contactos:
+                    if self._usar(self.contactos[0].getNode1()):
+                        pass
             #
             # sin suelo
             if self._suelo==Personaje.SueloNulo:
@@ -272,3 +280,64 @@ class Personaje:
         if self._estado_capa[0]!=Personaje.EstadoQuieto:
             self.cuerpo.setPos(self.cuerpo, self._velocidad_lineal * dt)
             self.cuerpo.setH(self.cuerpo, self._velocidad_angular.getZ() * dt)
+
+    def _procesar_contactos(self):
+        #
+        test_contactos=self.bullet_world.contactTest(self.cuerpo.node())
+        if test_contactos.getNumContacts()==0:
+            if self.contactos:
+                for contacto in self.contactos:
+                    self._contacto_finalizado(contacto)
+                self.contactos=None
+            return
+        contactos_actuales=test_contactos.getContacts()
+        if not self.contactos:
+            self.contactos=list()
+        #
+        contactos_nuevos=list()
+        for contacto_actual in contactos_actuales:
+            encontrado=False
+            for contacto in self.contactos:
+                if contacto.getNode1()==contacto_actual.getNode1():
+                    encontrado=True
+                    break
+            if not encontrado:
+                contactos_nuevos.append(contacto_actual)
+        #
+        contactos_perdidos=list()
+        for contacto in self.contactos:
+            encontrado=False
+            for contacto_actual in contactos_actuales:
+                if contacto_actual.getNode1()==contacto.getNode1():
+                    encontrado=True
+                    break
+            if not encontrado:
+                contactos_perdidos.append(contacto)
+        #
+        self.contactos=contactos_actuales
+        #
+        for contacto in contactos_nuevos:
+            self._contacto_iniciado(contacto)
+        for contacto in contactos_perdidos:
+            self._contacto_finalizado(contacto)
+        #
+        for contacto in contactos_actuales:
+            nodo=contacto.getNode1()
+            if not nodo.isStatic():
+                continue
+            punto=contacto.getManifoldPoint()
+            normal=punto.getPositionWorldOnB()-punto.getPositionWorldOnA()
+            colisiones=Vec3()
+            dist=punto.getDistance()
+            if dist<0:
+                colisiones-=normal*dist
+            colisiones.setZ(0)
+            self.cuerpo.setPos(self.cuerpo.getPos()+colisiones)            
+
+    def _contacto_iniciado(self, contacto):
+        log.debug("_contacto_iniciado %s %s"%(self.clase, contacto.getNode1().getName()))
+        pass
+    
+    def _contacto_finalizado(self, contacto):
+        log.debug("_contacto_finalizado %s %s"%(self.clase, contacto.getNode1().getName()))
+        pass
