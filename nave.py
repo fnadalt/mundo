@@ -19,5 +19,11 @@ class Nave(Personaje):
         self.cuerpo.node().setStatic(True)
         self.actor.setY(0.15)
     
+    def _definir_estado(self, idx_capa):
+        #
+        estado_actual=self._estado_capa[idx_capa]
+        #
+        return estado_actual
+    
     def _procesar_estados(self, dt):
         pass

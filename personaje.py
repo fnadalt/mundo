@@ -31,7 +31,7 @@ class Personaje:
     
     # estados
     EstadoNulo=0
-    # capa 0
+    # capa 0; un solo estado
     EstadoQuieto=1
     EstadoCaminando=2
     EstadoCorriendo=3
@@ -39,10 +39,10 @@ class Personaje:
     EstadoFlotando=5
     EstadoCayendo=6
     EstadoConduciendo=7
-    # capa 1
-    EstadoAgachado=16
-    EstadoAgarrandoDer=17
-    EstadoAgarrandoIzq=18
+    # capa 1; OR
+    EstadoAgachado=1
+    EstadoAgarrando=2
+    EstadoUsando=4
     
     # parametros de estados
     ParamEstadoNulo=0
@@ -137,10 +137,10 @@ class Personaje:
         _posicion=Vec3(posicion[0], posicion[1], posicion[2]+self._ajuste_altura)
         self.cuerpo.setPos(_posicion)
 
-    def chequear_estado(self, estado):
-        if estado>15: # capa 1
-            return estado==self._estado_capa[1]
-        elif estado>0: # capa 0
+    def chequear_estado(self, estado, idx_capa):
+        if idx_capa==1: # capa 1
+            return (estado & self._estado_capa[1])==estado
+        elif idx_capa==0: # capa 0
             return estado==self._estado_capa[0]
     
     def update(self, dt):
@@ -173,6 +173,10 @@ class Personaje:
         info+="posicion=%s altitud_suelo=%s altura=%s\n"%(str(self.cuerpo.getPos()), str(self.altitud_suelo), str(self._altura))
         info+="ambiente=? suelo=%s\n"%(str(self._suelo))
         info+="estado=%s params=%s\n"%(str(self._estado_capa), str(self._params_estado))
+        if self.contactos:
+            info+="contactos=%s\n"%(str([c.getNode1().getName() for c in self.contactos]))
+        if len(self.objetos_estados)>0:
+            info+="objetos_estados=%s\n"%("; ".join(["%i %s"%(e, np.getName()) for e, np in self.objetos_estados.items()]))
         return info
 
 ##    ELIMINAR
@@ -217,28 +221,33 @@ class Personaje:
             elif estado_actual==Personaje.EstadoCayendo:
                 if self._suelo!=Personaje.SueloNulo:
                     estado_nuevo=Personaje.EstadoQuieto
-            # (cualquier estado)
-            else:
-                if self.input_mapper.accion(InputMapper.AccionAgarrar) and self.contactos:
-                    if self._usar(self.contactos[0].getNode1()):
-                        pass
             #
             # sin suelo
             if self._suelo==Personaje.SueloNulo:
                 estado_nuevo=Personaje.EstadoCayendo
         # capa 1
         elif idx_capa==1:
-            pass
+            if self.contactos:
+                # (cualquiera, con contactos)
+                if self.input_mapper.accion==InputMapper.AccionAgarrar and not Personaje.EstadoAgarrando in self.objetos_estados:
+                    estado_nuevo+=Personaje.EstadoAgarrando
+            # agarrando
+            elif self.chequear_estado(Personaje.EstadoAgarrando, 1):
+                if self.input_mapper.accion==InputMapper.AccionSoltar or Personaje.EstadoAgarrando not in self.objetos_estados:
+                    estado_nuevo-=Personaje.EstadoAgarrando
         return estado_nuevo
     
     def _cambio_estado(self, idx_capa, estado_previo, estado_nuevo):
         #log.info("%s: cambio de estado en capa %i, de %s a %s"%(self.clase, idx_capa, str(estado_previo), str(estado_nuevo)))
+        self.actor.stop() # ???
         # capa 0
-        self.actor.stop()
-        if estado_nuevo==Personaje.EstadoQuieto:
-            self._velocidad_lineal=LVector3(0.0, 0.0, 0.0)
-            self._velocidad_angular=LVector3(0.0, 0.0, 0.0)
+        if idx_capa==0:
+            if estado_nuevo==Personaje.EstadoQuieto:
+                self._velocidad_lineal=LVector3(0.0, 0.0, 0.0)
+                self._velocidad_angular=LVector3(0.0, 0.0, 0.0)
         # capa 1
+        elif idx_capa==1:
+            pass
         #
 
     def _cambio_params(self, params_previos, params_nuevos):
@@ -280,20 +289,46 @@ class Personaje:
         if self._estado_capa[0]!=Personaje.EstadoQuieto:
             self.cuerpo.setPos(self.cuerpo, self._velocidad_lineal * dt)
             self.cuerpo.setH(self.cuerpo, self._velocidad_angular.getZ() * dt)
+        #
+        # capa 1
+        # agarrar, soltar, usar
+        if Personaje.EstadoAgarrando in self.objetos_estados:
+            if not self.chequear_estado(Personaje.EstadoAgarrando, 1):
+                # soltar?
+                self._soltar()
+                del self.objetos_estados[Personaje.EstadoAgarrando]
+            if not Personaje.EstadoUsando in self.objetos_estados and self.chequear_estado(Personaje.EstadoUsando, 1):
+                # usar?
+                nodo_objeto=self.contactos[0].getNode1()
+                if self._usar(nodo_objeto):
+                    self.objetos_estados[Personaje.EstadoUsando]=nodo_objeto
+        else:
+            # agarrar?
+            if self.chequear_estado(Personaje.EstadoAgarrando, 1):
+                nodo_objeto=self.contactos[0].getNode1()
+                if self._agarrar(nodo_objeto):
+                    self.objetos_estados[Personaje.EstadoAgarrando]=nodo_objeto
+        # usando
+        if Personaje.EstadoUsando in self.objetos_estados:
+            if not self.chequear_estado(Personaje.EstadoUsando, 1):
+                del self.objetos_estados[Personaje.EstadoUsando]
 
     def _procesar_contactos(self):
-        #
+        # evaluar contactos actuales
         test_contactos=self.bullet_world.contactTest(self.cuerpo.node())
+        # si no hay, vaciar lista y ejecutar eventos pertinentes
         if test_contactos.getNumContacts()==0:
             if self.contactos:
                 for contacto in self.contactos:
                     self._contacto_finalizado(contacto)
                 self.contactos=None
             return
+        # obtener contactos
         contactos_actuales=test_contactos.getContacts()
+        # crear lista interna de contactos
         if not self.contactos:
             self.contactos=list()
-        #
+        # recopilar contactos nuevos (ineficiente?)
         contactos_nuevos=list()
         for contacto_actual in contactos_actuales:
             encontrado=False
@@ -303,7 +338,7 @@ class Personaje:
                     break
             if not encontrado:
                 contactos_nuevos.append(contacto_actual)
-        #
+        # listar contactos perdidos
         contactos_perdidos=list()
         for contacto in self.contactos:
             encontrado=False
@@ -313,14 +348,14 @@ class Personaje:
                     break
             if not encontrado:
                 contactos_perdidos.append(contacto)
-        #
+        # actualizar lista interna de contactos
         self.contactos=contactos_actuales
-        #
+        # ejecutar eventos
         for contacto in contactos_nuevos:
             self._contacto_iniciado(contacto)
         for contacto in contactos_perdidos:
             self._contacto_finalizado(contacto)
-        #
+        # garantizar inter-impenetrabilidad
         for contacto in contactos_actuales:
             nodo=contacto.getNode1()
             if not nodo.isStatic():
@@ -341,3 +376,16 @@ class Personaje:
     def _contacto_finalizado(self, contacto):
         log.debug("_contacto_finalizado %s %s"%(self.clase, contacto.getNode1().getName()))
         pass
+
+    def _agarrar(self, nodo_objeto):
+        log.debug("_agarrar nodo_objeto=%s no implementado"%(str(nodo_objeto.getName())))
+        return False
+    
+    def _soltar(self):
+        nodo_objeto=self.objetos_estados[Personaje.EstadoAgarrando]
+        log.debug("_soltar nodo_objeto=%s no implementado"%(str(nodo_objeto.getName())))
+        return False
+
+    def _usar(self, nodo_objeto):
+        log.debug("_usar nodo_objeto=%s no implementado"%(str(nodo_objeto.getName())))
+        return False

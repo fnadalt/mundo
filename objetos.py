@@ -304,7 +304,7 @@ class Unificador:
             #log.debug("Unificador -> %s %s %s"%(nombre_clase, nombre_geom, str((objeto.getPos(), objeto.getHpr(), objeto.getScale()))))
             
     def ejecutar(self):
-        log.info("Unificador.ejecutar: %s %s"%(self.node_path.getName(), str(self.clases)))
+#        log.info("Unificador.ejecutar: %s %s"%(self.node_path.getName(), str(self.clases)))
         if len(self.clases)==0:
             return
         for nombre_clase, data_clase in self.clases.items():

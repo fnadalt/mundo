@@ -23,7 +23,7 @@ class Aplicacion(ShowBase):
         #loadPrcFileData('', 'sync-video 0')
         #loadPrcFileData('', 'notify-level debug')
         loadPrcFileData('', 'gl-debug #t')
-        loadPrcFileData('', 'dump-generated-shaders #t')
+        #loadPrcFileData('', 'threading-model Cull/Draw')
         #
         self.disableMouse()
         self.setFrameRateMeter(True)
