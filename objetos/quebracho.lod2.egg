@@ -1,7 +1,7 @@
 <CoordinateSystem> { Z-Up }
 
 <Comment> {
-  "egg-trans -F -o /tmp/quebracho.lod1.egg.tmp /home/flaco/panda3d/mundo/objetos/quebracho.lod1.egg"
+  "egg-trans -F -o /tmp/quebracho.lod2.egg.tmp /home/flaco/panda3d/mundo/objetos/quebracho.lod2.egg"
 }
 <Texture> lod1 {
   "/home/flaco/panda3d/mundo/objetos/texturas/quebracho.lod1.png"
@@ -62,11 +62,49 @@
         <Binormal> { 0 0 1 }
       }
     }
+    <Vertex> 4 {
+      0 -1.725051 0
+      <UV> {
+        0.092602 -0.002543
+        <Tangent> { 0 1 0 }
+        <Binormal> { 0 0 1 }
+      }
+    }
+    <Vertex> 5 {
+      -0 2.838525 0
+      <UV> {
+        1.022259 -0.002543
+        <Tangent> { 0 1 0 }
+        <Binormal> { 0 0 1 }
+      }
+    }
+    <Vertex> 6 {
+      0 2.838525 5.338223
+      <UV> {
+        1.022259 1.017423
+        <Tangent> { 0 1 0 }
+        <Binormal> { 0 0 1 }
+      }
+    }
+    <Vertex> 7 {
+      0 -1.725051 5.338223
+      <UV> {
+        0.092602 1.017423
+        <Tangent> { 0 1 0 }
+        <Binormal> { 0 0 1 }
+      }
+    }
   }
   <Polygon> {
     <Normal> { 0 -1 0 }
     <TRef> { lod1 }
     <MRef> { lod1 }
     <VertexRef> { 0 1 2 3 <Ref> { Plane } }
+  }
+  <Polygon> {
+    <Normal> { 1 0 0 }
+    <TRef> { lod1 }
+    <MRef> { lod1 }
+    <VertexRef> { 4 5 6 7 <Ref> { Plane } }
   }
 }

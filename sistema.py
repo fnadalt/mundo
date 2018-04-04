@@ -65,7 +65,9 @@ class Sistema:
                           temperatura_maxima FLOAT, 
                           precipitacion_minima FLOAT, 
                           precipitacion_maxima FLOAT, 
-                          nombre_archivo VARCHAR(32)
+                          nombre_archivo VARCHAR(32),
+                          lod_unificar INTEGER,
+                          lod_billboard INTEGER
                          );
     """
     
@@ -370,7 +372,7 @@ class Sistema:
             datos_parcela=self.parcelas[_idx_pos]
             x=int(posicion[0]%Sistema.TopoTamanoParcela) # o %datos_parcela.tamano)?
             y=int(posicion[1]%Sistema.TopoTamanoParcela)
-            loc=datos_parcela.datos[x][y]
+            loc=datos_parcela.loc[x][y]
             altitud=loc.posicion[2]
         else:
             altitud=self.obtener_altitud_suelo(posicion)
@@ -825,7 +827,7 @@ class Sistema:
                 #
                 loc.generar_deltas()
                 #
-                datos_parcela.datos[x][y]=loc
+                datos_parcela.loc[x][y]=loc
         return datos_parcela
 
     def _remover_datos_parcela(self, idx_pos):
@@ -857,11 +859,11 @@ class Sistema:
             with open(Sistema.NombreArchivoLlenadoDB, "r") as archivo_csv:
                 lector_csv=csv.DictReader(archivo_csv)
                 for fila in lector_csv:
-                    sql="INSERT INTO %s (ambiente,tipo,densidad,radio_inferior,radio_superior,terreno,temperatura_minima,temperatura_maxima,precipitacion_minima,precipitacion_maxima,nombre_archivo) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'%s')" \
+                    sql="INSERT INTO %s (ambiente,tipo,densidad,radio_inferior,radio_superior,terreno,temperatura_minima,temperatura_maxima,precipitacion_minima,precipitacion_maxima,nombre_archivo,lod_unificar,lod_billboard) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'%s',%s,%s)" \
                        %(fila["tabla"], fila["ambiente"], fila["tipo"], fila["densidad"], \
                          fila["radio_inferior"], fila["radio_superior"], fila["terreno"], fila["temperatura_minima"], \
                          fila["temperatura_maxima"], fila["precipitacion_minima"], fila["precipitacion_maxima"], \
-                         fila["nombre_archivo"])
+                         fila["nombre_archivo"], fila["lod_unificar"], fila["lod_billboard"])
                     con.execute(sql)
             con.commit()
             con.close()
@@ -888,15 +890,15 @@ class Sistema:
 class DatosParcela:
     
     def __init__(self, tamano):
-        self.datos=list() # [x][y]->[[DescriptorLocacion,...], ...]
+        self.loc=list() # [x][y]->[[DescriptorLocacion,...], ...]
         self.tamano=tamano
         for x in range(tamano):
-            self.datos.append(list())
+            self.loc.append(list())
             for y in range(tamano):
-                self.datos[x].append(None)
+                self.loc[x].append(None)
 
     def __getitem__(self, idx):
-        return self.datos[idx]
+        return self.loc[idx]
     
 #
 #
@@ -922,7 +924,7 @@ class DescriptorLocacion:
         self.texcoord=Vec2(0, 0)
         # objetos
         self.factor_ruido=0.0
-        self.datos_objeto=None
+        self.tipo_objeto=None
         self.delta_pos=Vec3(0.0, 0.0, 0.0)
         self.delta_hpr=Vec3(0.0, 0.0, 0.0)
         self.delta_scl=Vec3(0.0, 0.0, 0.0)
@@ -940,12 +942,13 @@ class DescriptorLocacion:
         texto ="\nDescriptorLocacion(%.2f,%.2f,%.2f)|(%.2f,%.2f,%.2f):\n"
         texto+="    amb=%i ztop=%s lat=%2.f tam=%.2f prec_f=%.2f tterr=%s\n"
         texto+="    n,t,tc=%s %s %s\n"
-        texto+="    o=%s\n"
+        texto+="    o=%s \n"
         texto+="    fr=%.2f dp=%s dr=%s ds=%s\n"
         return texto%(self.posicion[0], self.posicion[1], self.posicion[2], self.posicion_rel_parcela[0], self.posicion_rel_parcela[1], self.posicion_rel_parcela[2], \
                       self.ambiente, self.altitud_tope, self.latitud, self.temperatura_anual_media, self.precipitacion_frecuencia, self.tipo_terreno,  \
                       self.normal, self.tangente, self.texcoord,  \
-                      str(self.datos_objeto), self.factor_ruido, str(self.delta_pos), str(self.delta_hpr), str(self.delta_scl))
+                      str(self.tipo_objeto), \
+                      self.factor_ruido, str(self.delta_pos), str(self.delta_hpr), str(self.delta_scl))
 
 #
 #
@@ -972,7 +975,7 @@ class GeneradorDatosTerreno:
                     tc_y=0.0
                 else:
                     tc_y=y*frac_tc
-                loc=datos_parcela.datos[x][y]
+                loc=datos_parcela.loc[x][y]
                 # posicion
                 _x, _y=loc.posicion[0], loc.posicion[1]
                 # normal
@@ -1134,7 +1137,7 @@ class GeneradorDatosObjeto:
         for x in range(datos_parcela.tamano):
             for y in range(datos_parcela.tamano):
                 #
-                loc=datos_parcela.datos[x][y]
+                loc=datos_parcela.loc[x][y]
                 # ambiente
                 if loc.ambiente not in ambientes:
                     ambientes.append(loc.ambiente)
@@ -1206,15 +1209,16 @@ class GeneradorDatosObjeto:
                     if cant_obj_remanentes>0 and \
                        self._chequear_espacio_disponible(loc.posicion_rel_parcela, tipo_objeto[4], tipo_objeto[5], datos_parcela):
                         cant_obj_remanentes-=1
-                        loc.datos_objeto=tipo_objeto
+                        loc.tipo_objeto=tipo_objeto
+#                        log.debug(str(loc.tipo_objeto))
 
     def _obtener_vecino(self, datos_parcela, posicion_rel_parcela, dx, dy):
         if (posicion_rel_parcela[0]==0 and dx<0) or \
-           (posicion_rel_parcela[0]==(len(datos_parcela.datos[0])-1) and dx>0) or \
+           (posicion_rel_parcela[0]==(len(datos_parcela.loc[0])-1) and dx>0) or \
            (posicion_rel_parcela[1]==0 and dy<0) or \
-           (posicion_rel_parcela[1]==(len(datos_parcela.datos[1])-1) and dy>0):
+           (posicion_rel_parcela[1]==(len(datos_parcela.loc[1])-1) and dy>0):
                return None
-        return datos_parcela.datos[int(posicion_rel_parcela[0])+dx][int(posicion_rel_parcela[1])+dy]
+        return datos_parcela.loc[int(posicion_rel_parcela[0])+dx][int(posicion_rel_parcela[1])+dy]
 
     def _chequear_espacio_disponible(self, _pos_parcela, radio_inferior, radio_superior, datos_locales):
         radio_maximo=radio_superior if radio_superior>radio_inferior else radio_inferior
@@ -1241,11 +1245,11 @@ class GeneradorDatosObjeto:
                 for vecino in vecinos:
                     if not vecino:
                         continue
-                    datos_objeto=vecino.datos_objeto
-                    if not datos_objeto:
+                    tipo_objeto=vecino.tipo_objeto
+                    if not tipo_objeto:
                         continue
-                    radio_inferior_vecino=datos_objeto[4]
-                    radio_superior_vecino=datos_objeto[5]
+                    radio_inferior_vecino=tipo_objeto[4]
+                    radio_superior_vecino=tipo_objeto[5]
                     #log.debug("_chequear_espacio_disponible: radios_maximos_totales(i/s)=(%.1f,%.1f) \n candidato _pos_parcela=%s radios(i/s)=(%.1f,%.1f)\n vecino _pos_parcela=%s radios(i/s)=(%.1f,%.1f)" \
                     #          %(0.0, radio_maximo_total_superior,  \
                     #            str(_pos_parcela), radio_inferior, radio_superior, \

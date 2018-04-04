@@ -428,11 +428,11 @@ FS_MAIN_TEX_GENERICO="""
 """
 FS_MAIN_TEX_TERRENO="""
         // textura: terreno
-        //if(abs(PositionV.z)<20.0){
+        if(abs(PositionV.z)<20.0){
             color*=tex_terreno(p3d_Texture0, false);
-        //} else {
-        //    color*=tex_terreno(p3d_Texture1, false);
-        //}
+        } else {
+            color*=tex_terreno(p3d_Texture1, false);
+        }
 """
 FS_MAIN_TEX_TERRENO_COLOR_DEBUG="""
         color=color_vtx; // terreno color debug

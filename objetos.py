@@ -75,7 +75,7 @@ class Objetos:
         self.sistema=None
 
     def obtener_info(self):
-        info="Objetos\n"
+        info="Objetos: idx_pos_parcela_actual=%s lods=%s\n"%(str(self.idx_pos_parcela_actual), str(self._lods))
         return info
 
     def _log_debug_info(self):
@@ -150,7 +150,7 @@ class Objetos:
             # colocar objetos
             cntr_objs=0
             # unificadores
-            unificadores=[None for i_lod in range(len(self._lods))]
+            unificadores=list()
             # nodos lod vegetacion
             concentradores_lod=list()
             for i_lod in range(len(self._lods)):
@@ -158,18 +158,17 @@ class Objetos:
                 lod.setCenter(Vec3(sistema.Sistema.TopoTamanoParcela/2, sistema.Sistema.TopoTamanoParcela/2, 0.0))
                 concentrador_lod=lod_np.attachNewNode("concentrador_lod%i"%i_lod)
                 concentradores_lod.append(concentrador_lod)
-                if i_lod>=0: # !!!
-                    unificadores[i_lod]=Unificador(concentrador_lod)
+                unificadores.append(Unificador(concentrador_lod))
             #
             for fila in datos_parcela:
                 for loc in fila:
-                    if not loc.datos_objeto:
+                    if not loc.tipo_objeto:
                         continue
                     #
                     for i_lod in range(len(self._lods)):
-                        if i_lod>0:
-                            pass#break
-                        nombre_modelo="%s.lod%i"%(loc.datos_objeto[11], i_lod)
+#                        if i_lod>=2:
+#                            continue
+                        nombre_modelo="%s.lod%i"%(loc.tipo_objeto[11], i_lod)
                         if nombre_modelo not in self.pool_modelos:
                             continue
                         instancia=concentradores_lod[i_lod].attachNewNode("copia_%s_%i"%(nombre_modelo, cntr_objs))
@@ -180,14 +179,18 @@ class Objetos:
                         instancia.setZ(parcela_node_path, altitud_suelo)
                         instancia.setHpr(loc.delta_hpr)
                         instancia.setScale(loc.delta_scl)
-                        if unificadores[i_lod]:
-                            unificadores[i_lod].agregar_objeto(loc.datos_objeto[11], instancia, modelo)
-                        if i_lod>1:
+                        if i_lod>=loc.tipo_objeto[13]:
+#                            log.debug("billboardear "+str(i_lod)+">="+str(loc.tipo_objeto[13]))
                             instancia.setBillboardAxis()
-                        #log.debug("se coloco un '%s' en posicion_rel_parcela=%s..."%(loc.datos_objeto[11], str(loc.posicion_rel_parcela)))
+                        elif i_lod>=loc.tipo_objeto[12]:
+#                                log.debug("se agregara %s lod %i %s"%(nombre_modelo, i_lod, str(loc.tipo_objeto)))
+                            unificadores[i_lod].agregar_objeto(nombre_modelo, instancia, modelo) # no pasar: instancia
+                        #log.debug("se coloco un '%s' en posicion_rel_parcela=%s..."%(nombre_modelo, str(loc.posicion_rel_parcela)))
                         cntr_objs+=1
             #
-            [u.ejecutar() for u in unificadores]
+            for u in unificadores:
+                if u!=None:
+                    u.ejecutar()
             #
             log.info("generar por primera vez -> %s"%ruta_archivo_cache)
             parcela_node_path.writeBamFile(ruta_archivo_cache)
@@ -261,26 +264,27 @@ class Unificador:
         geom_nodes=modelo.findAllMatches("**/+GeomNode")
         # asegurar estructura de datos de clase
         if nombre_clase not in self.clases:
-            clase=dict()
-            self.clases[nombre_clase]=clase
+            clase_geoms=dict()
+            self.clases[nombre_clase]=clase_geoms
             for geom_node in geom_nodes:
                 nombre_geom=geom_node.getName()
                 geom=geom_node.node().getGeom(0)
                 formato=geom.getVertexData().getFormat()
-                clase[nombre_geom]=list()
-                clase[nombre_geom].append(None)
-                clase[nombre_geom].append(GeomVertexData("vdata", formato, Geom.UHStatic))
-                clase[nombre_geom].append(GeomTriangles(Geom.UHStatic))
-                clase[nombre_geom].append(geom_node.node().getGeomState(0))
-                #clase[nombre_geom].append(RenderState.makeEmpty())
-                clase[nombre_geom].append(0)
+                self.clases[nombre_clase][nombre_geom]=list()
+                self.clases[nombre_clase][nombre_geom].append(None)
+                self.clases[nombre_clase][nombre_geom].append(GeomVertexData("vdata", formato, Geom.UHStatic))
+                self.clases[nombre_clase][nombre_geom].append(GeomTriangles(Geom.UHStatic))
+                self.clases[nombre_clase][nombre_geom].append(geom_node.node().getGeomState(0))
+                self.clases[nombre_clase][nombre_geom].append(0)
+#                log.debug("Unificador.agregar_objeto : agregar datos geom %s %s"%(nombre_clase, nombre_geom))
         # llenar vdatas y primitivas
         clase=self.clases[nombre_clase]
         for geom_node in geom_nodes:
-            nombre=geom_node.getName()
+            nombre_geom=geom_node.getName()
+            clase_geom=clase[nombre_geom]
             geom=geom_node.node().getGeom(0)
             if geom.getNumPrimitives()>1:
-                log.warning("agregar_objeto %s num_prims=%i"%(nombre, geom.getNumPrimitives()))
+                log.warning("Unificador.agregar_objeto %s %s num_prims=%i"%(nombre_clase, nombre_geom, geom.getNumPrimitives()))
             #
             vdata=GeomVertexData(geom.getVertexData())
             mat=LMatrix4f.rotateMat(objeto.getH(), Vec3(0, 0, 1), CS_zup_right)
@@ -292,15 +296,21 @@ class Unificador:
             prim_vidxs=geom.getPrimitive(0).decompose().getVertexList()
             sum=0
             for i_row in range(vdata.getNumRows()):
-                clase[nombre][1].copyRowFrom(clase[nombre][4]+i_row, vdata, i_row, Thread.getCurrentThread())
+                clase_geom[1].copyRowFrom(clase_geom[4]+i_row, vdata, i_row, Thread.getCurrentThread())
                 sum+=1
             for vidx in prim_vidxs:
-                clase[nombre][2].addVertex(clase[nombre][4]+vidx)
-            clase[nombre][4]+=sum
-    
+                clase_geom[2].addVertex(clase_geom[4]+vidx)
+            clase_geom[4]+=sum
+            #log.debug("Unificador -> %s %s %s"%(nombre_clase, nombre_geom, str((objeto.getPos(), objeto.getHpr(), objeto.getScale()))))
+            
     def ejecutar(self):
-        self.node_path.node().removeAllChildren()
+        log.info("Unificador.ejecutar: %s %s"%(self.node_path.getName(), str(self.clases)))
+        if len(self.clases)==0:
+            return
         for nombre_clase, data_clase in self.clases.items():
+            for np in self.node_path.findAllMatches("**copia_%s_*"%nombre_clase):
+#                log.debug("eliminar %s"%np.getName())
+                np.removeNode()
             for nombre_geom, data_geom in data_clase.items():
                 geom_node=GeomNode("%s_%s"%(nombre_clase, nombre_geom))
                 data_geom[0]=Geom(data_geom[1])

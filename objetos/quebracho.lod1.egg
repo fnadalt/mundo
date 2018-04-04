@@ -50,8 +50,8 @@
   <Scalar> specb { 0 }
   <Scalar> shininess { 12.5 }
 }
-<Group> copa.001 {
-  <VertexPool> copa.001 {
+<Group> copa {
+  <VertexPool> copa {
     <Vertex> 0 {
       0.444209 0.799842 3.328319
       <UV> {
@@ -3090,1139 +3090,1139 @@
     <Normal> { -0.288094 0.478977 -0.829206 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 0 1 2 <Ref> { copa.001 } }
+    <VertexRef> { 0 1 2 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.446634 0.488157 -0.749814 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 2 3 4 <Ref> { copa.001 } }
+    <VertexRef> { 2 3 4 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.916012 -0.150225 -0.371961 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 5 6 7 <Ref> { copa.001 } }
+    <VertexRef> { 5 6 7 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.999187 0.010762 0.038856 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 8 7 9 <Ref> { copa.001 } }
+    <VertexRef> { 8 7 9 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.832659 -0.552249 -0.041237 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 10 8 11 <Ref> { copa.001 } }
+    <VertexRef> { 10 8 11 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.330125 -0.584067 0.741541 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 12 13 14 <Ref> { copa.001 } }
+    <VertexRef> { 12 13 14 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.142828 -0.984621 0.100602 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 15 16 17 <Ref> { copa.001 } }
+    <VertexRef> { 15 16 17 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.504804 0.850882 0.145507 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 18 19 20 <Ref> { copa.001 } }
+    <VertexRef> { 18 19 20 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.048738 0.921704 0.38482 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 21 18 22 <Ref> { copa.001 } }
+    <VertexRef> { 21 18 22 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.309406 0.531434 -0.788572 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 23 24 25 <Ref> { copa.001 } }
+    <VertexRef> { 23 24 25 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.050208 0.313407 -0.948291 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 26 27 25 <Ref> { copa.001 } }
+    <VertexRef> { 26 27 25 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.459809 0.323153 -0.827132 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 25 24 28 <Ref> { copa.001 } }
+    <VertexRef> { 25 24 28 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.557147 0.827784 -0.066032 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 29 30 31 <Ref> { copa.001 } }
+    <VertexRef> { 29 30 31 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.925918 0.375107 0.044393 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 32 29 33 <Ref> { copa.001 } }
+    <VertexRef> { 32 29 33 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.402699 0.848808 -0.342575 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 34 35 36 <Ref> { copa.001 } }
+    <VertexRef> { 34 35 36 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.306728 0.784388 -0.539123 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 36 37 38 <Ref> { copa.001 } }
+    <VertexRef> { 36 37 38 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.998396 -0.052086 0.022168 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 39 40 41 <Ref> { copa.001 } }
+    <VertexRef> { 39 40 41 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.893717 0.446725 -0.041315 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 42 43 44 <Ref> { copa.001 } }
+    <VertexRef> { 42 43 44 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.886518 -0.412376 0.209836 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 45 46 47 <Ref> { copa.001 } }
+    <VertexRef> { 45 46 47 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.727381 0.411042 -0.549511 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 48 49 50 <Ref> { copa.001 } }
+    <VertexRef> { 48 49 50 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.869108 0.461641 -0.177589 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 51 50 52 <Ref> { copa.001 } }
+    <VertexRef> { 51 50 52 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.443236 0.464111 -0.766904 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 53 51 52 <Ref> { copa.001 } }
+    <VertexRef> { 53 51 52 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.058831 -0.088404 -0.994346 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 54 55 56 <Ref> { copa.001 } }
+    <VertexRef> { 54 55 56 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.260365 0.10286 -0.960015 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 57 58 54 <Ref> { copa.001 } }
+    <VertexRef> { 57 58 54 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.176012 0.138728 -0.974564 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 54 56 59 <Ref> { copa.001 } }
+    <VertexRef> { 54 56 59 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.477911 -0.856327 -0.195718 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 60 61 62 <Ref> { copa.001 } }
+    <VertexRef> { 60 61 62 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.81578 -0.553477 0.167828 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 63 60 64 <Ref> { copa.001 } }
+    <VertexRef> { 63 60 64 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.646054 -0.012404 -0.763191 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 65 66 67 <Ref> { copa.001 } }
+    <VertexRef> { 65 66 67 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.369107 -0.129505 -0.92032 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 68 69 65 <Ref> { copa.001 } }
+    <VertexRef> { 68 69 65 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.179206 -0.940072 -0.290085 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 70 71 72 <Ref> { copa.001 } }
+    <VertexRef> { 70 71 72 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.447813 -0.892752 0.049581 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 73 72 74 <Ref> { copa.001 } }
+    <VertexRef> { 73 72 74 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.145791 -0.982599 0.115081 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 75 73 76 <Ref> { copa.001 } }
+    <VertexRef> { 75 73 76 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.390347 -0.242558 -0.888141 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 77 78 79 <Ref> { copa.001 } }
+    <VertexRef> { 77 78 79 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.083136 -0.117796 -0.989552 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 80 81 77 <Ref> { copa.001 } }
+    <VertexRef> { 80 81 77 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.570042 0.734932 0.367324 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 82 83 84 <Ref> { copa.001 } }
+    <VertexRef> { 82 83 84 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.761067 0.641812 -0.094101 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 85 86 87 <Ref> { copa.001 } }
+    <VertexRef> { 85 86 87 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.474136 0.291233 -0.83089 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 88 89 90 <Ref> { copa.001 } }
+    <VertexRef> { 88 89 90 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.135464 0.049096 -0.989565 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 91 92 88 <Ref> { copa.001 } }
+    <VertexRef> { 91 92 88 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.587896 0.75082 0.301076 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 93 94 95 <Ref> { copa.001 } }
+    <VertexRef> { 93 94 95 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.376158 0.916889 -0.133493 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 96 97 98 <Ref> { copa.001 } }
+    <VertexRef> { 96 97 98 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.032386 0.260969 0.964804 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 99 100 101 <Ref> { copa.001 } }
+    <VertexRef> { 99 100 101 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.291395 -0.177548 0.939982 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 102 103 99 <Ref> { copa.001 } }
+    <VertexRef> { 102 103 99 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.470601 -0.759255 -0.449518 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 104 105 106 <Ref> { copa.001 } }
+    <VertexRef> { 104 105 106 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.105088 -0.965052 -0.240066 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 107 106 108 <Ref> { copa.001 } }
+    <VertexRef> { 107 106 108 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.594501 -0.80163 0.062904 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 109 107 110 <Ref> { copa.001 } }
+    <VertexRef> { 109 107 110 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.229369 -0.629109 0.742706 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 111 112 113 <Ref> { copa.001 } }
+    <VertexRef> { 111 112 113 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.405094 -0.126706 0.905453 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 114 111 115 <Ref> { copa.001 } }
+    <VertexRef> { 114 111 115 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.150676 -0.983879 0.096332 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 116 117 118 <Ref> { copa.001 } }
+    <VertexRef> { 116 117 118 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.355754 -0.853781 -0.380129 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 119 120 121 <Ref> { copa.001 } }
+    <VertexRef> { 119 120 121 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.145075 0.464806 -0.873447 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 122 123 124 <Ref> { copa.001 } }
+    <VertexRef> { 122 123 124 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.541669 0.172462 -0.82271 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 124 125 126 <Ref> { copa.001 } }
+    <VertexRef> { 124 125 126 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.928896 0.212181 -0.30353 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 127 128 129 <Ref> { copa.001 } }
+    <VertexRef> { 127 128 129 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.899619 0.432792 0.058105 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 130 129 131 <Ref> { copa.001 } }
+    <VertexRef> { 130 129 131 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.987058 -0.141414 0.075616 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 132 130 133 <Ref> { copa.001 } }
+    <VertexRef> { 132 130 133 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.204165 -0.553164 -0.807667 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 134 135 136 <Ref> { copa.001 } }
+    <VertexRef> { 134 135 136 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.06324 -0.956829 0.283689 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 137 138 139 <Ref> { copa.001 } }
+    <VertexRef> { 137 138 139 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.294961 -0.949996 -0.102501 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 140 141 142 <Ref> { copa.001 } }
+    <VertexRef> { 140 141 142 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.460586 -0.526678 0.714472 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 143 144 145 <Ref> { copa.001 } }
+    <VertexRef> { 143 144 145 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.066337 -0.408248 0.910457 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 146 143 147 <Ref> { copa.001 } }
+    <VertexRef> { 146 143 147 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.434104 0.511639 -0.741471 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 4 148 149 2 <Ref> { copa.001 } }
+    <VertexRef> { 4 148 149 2 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.925312 0.145629 0.350127 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 150 151 152 <Ref> { copa.001 } }
+    <VertexRef> { 150 151 152 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.987514 -0.144567 -0.062576 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 153 154 155 <Ref> { copa.001 } }
+    <VertexRef> { 153 154 155 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.932148 -0.269175 0.242168 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 156 152 157 <Ref> { copa.001 } }
+    <VertexRef> { 156 152 157 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.01648 0.769353 -0.638611 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 158 159 160 <Ref> { copa.001 } }
+    <VertexRef> { 158 159 160 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.184786 0.545068 -0.817774 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 161 162 158 <Ref> { copa.001 } }
+    <VertexRef> { 161 162 158 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.647805 -0.062321 -0.759253 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 163 164 165 <Ref> { copa.001 } }
+    <VertexRef> { 163 164 165 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.359213 0.799537 -0.481359 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 166 165 167 <Ref> { copa.001 } }
+    <VertexRef> { 166 165 167 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.801606 -0.029673 -0.597115 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 167 165 168 <Ref> { copa.001 } }
+    <VertexRef> { 167 165 168 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.661165 -0.464839 -0.588885 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 166 167 169 <Ref> { copa.001 } }
+    <VertexRef> { 166 167 169 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.41759 0.551391 -0.72221 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 2 1 170 <Ref> { copa.001 } }
+    <VertexRef> { 2 1 170 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.997878 -0.059981 -0.025342 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 6 171 9 7 <Ref> { copa.001 } }
+    <VertexRef> { 6 171 9 7 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.067115 0.434089 -0.898366 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 149 0 2 <Ref> { copa.001 } }
+    <VertexRef> { 149 0 2 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.092725 0.89517 -0.435973 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 2 170 3 <Ref> { copa.001 } }
+    <VertexRef> { 2 170 3 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.996218 0.072328 0.048144 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 9 171 172 <Ref> { copa.001 } }
+    <VertexRef> { 9 171 172 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.911787 0.315922 -0.26237 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 7 8 10 173 <Ref> { copa.001 } }
+    <VertexRef> { 7 8 10 173 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.917227 0.061168 -0.393641 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 7 173 174 5 <Ref> { copa.001 } }
+    <VertexRef> { 7 173 174 5 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.195882 0.250084 0.948202 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 175 176 177 178 <Ref> { copa.001 } }
+    <VertexRef> { 175 176 177 178 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.482242 -0.217709 0.848555 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 12 179 13 <Ref> { copa.001 } }
+    <VertexRef> { 12 179 13 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.117614 -0.4871 0.86539 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 180 12 14 <Ref> { copa.001 } }
+    <VertexRef> { 180 12 14 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.01324 -0.262561 0.964825 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 12 180 175 178 <Ref> { copa.001 } }
+    <VertexRef> { 12 180 175 178 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.07389 0.241744 0.967523 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 178 177 181 182 <Ref> { copa.001 } }
+    <VertexRef> { 178 177 181 182 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.418065 0.898382 0.134653 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 183 184 20 19 <Ref> { copa.001 } }
+    <VertexRef> { 183 184 20 19 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.356846 0.094329 -0.929389 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 185 186 187 <Ref> { copa.001 } }
+    <VertexRef> { 185 186 187 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.553709 0.824375 0.117525 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 20 184 188 <Ref> { copa.001 } }
+    <VertexRef> { 20 184 188 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.546153 0.792158 -0.272401 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 19 18 21 189 <Ref> { copa.001 } }
+    <VertexRef> { 19 18 21 189 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.293365 -0.926848 0.234286 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 190 191 17 16 <Ref> { copa.001 } }
+    <VertexRef> { 190 191 17 16 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.521734 0.274529 0.80773 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 192 193 194 195 <Ref> { copa.001 } }
+    <VertexRef> { 192 193 194 195 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.014368 0.554222 -0.832245 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 25 27 23 <Ref> { copa.001 } }
+    <VertexRef> { 25 27 23 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.17882 -0.131061 0.975113 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 196 197 192 195 <Ref> { copa.001 } }
+    <VertexRef> { 196 197 192 195 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.626906 0.010222 0.779028 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 195 194 198 199 <Ref> { copa.001 } }
+    <VertexRef> { 195 194 198 199 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.770225 0.590834 -0.240144 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 200 30 201 202 <Ref> { copa.001 } }
+    <VertexRef> { 200 30 201 202 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.586993 0.802741 -0.105099 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 200 203 31 30 <Ref> { copa.001 } }
+    <VertexRef> { 200 203 31 30 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.503819 0.860479 -0.075784 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 31 203 204 <Ref> { copa.001 } }
+    <VertexRef> { 31 203 204 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.31815 0.84814 -0.423602 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 30 29 32 205 <Ref> { copa.001 } }
+    <VertexRef> { 30 29 32 205 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.556645 0.687427 -0.466467 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 30 205 206 201 <Ref> { copa.001 } }
+    <VertexRef> { 30 205 206 201 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.306039 0.801557 -0.51366 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 38 207 208 36 <Ref> { copa.001 } }
+    <VertexRef> { 38 207 208 36 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.478775 0.859569 -0.178647 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 36 35 209 <Ref> { copa.001 } }
+    <VertexRef> { 36 35 209 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.914564 -0.059755 -0.400003 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 210 211 212 213 <Ref> { copa.001 } }
+    <VertexRef> { 210 211 212 213 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.226073 0.839623 -0.493887 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 208 34 36 <Ref> { copa.001 } }
+    <VertexRef> { 208 34 36 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.007464 0.996535 0.082843 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 36 209 37 <Ref> { copa.001 } }
+    <VertexRef> { 36 209 37 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.955831 0.000153 -0.293917 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 39 41 210 213 <Ref> { copa.001 } }
+    <VertexRef> { 39 41 210 213 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.858376 0.442003 0.26043 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 214 215 216 217 <Ref> { copa.001 } }
+    <VertexRef> { 214 215 216 217 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.955812 -0.292437 -0.030069 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 218 219 41 40 <Ref> { copa.001 } }
+    <VertexRef> { 218 219 41 40 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.314583 0.703474 -0.637308 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 220 221 222 223 <Ref> { copa.001 } }
+    <VertexRef> { 220 221 222 223 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.967276 -0.181241 0.177562 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 47 46 224 <Ref> { copa.001 } }
+    <VertexRef> { 47 46 224 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.681735 0.526142 -0.508342 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 49 225 52 50 <Ref> { copa.001 } }
+    <VertexRef> { 49 225 52 50 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.682168 0.213652 -0.699285 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 222 226 223 <Ref> { copa.001 } }
+    <VertexRef> { 222 226 223 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.642439 0.614343 -0.4581 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 52 225 227 <Ref> { copa.001 } }
+    <VertexRef> { 52 225 227 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.171994 -0.667973 0.724037 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 228 229 230 231 <Ref> { copa.001 } }
+    <VertexRef> { 228 229 230 231 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.252721 -0.150403 -0.955778 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 54 58 55 <Ref> { copa.001 } }
+    <VertexRef> { 54 58 55 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.179372 0.284792 -0.941658 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 59 232 57 54 <Ref> { copa.001 } }
+    <VertexRef> { 59 232 57 54 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.306569 0.426316 -0.851041 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 233 234 59 56 <Ref> { copa.001 } }
+    <VertexRef> { 233 234 59 56 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.765161 -0.610547 -0.204353 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 235 61 236 237 <Ref> { copa.001 } }
+    <VertexRef> { 235 61 236 237 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.523266 -0.82497 -0.213583 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 235 238 62 61 <Ref> { copa.001 } }
+    <VertexRef> { 235 238 62 61 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.428411 -0.873247 -0.232172 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 62 238 239 <Ref> { copa.001 } }
+    <VertexRef> { 62 238 239 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.388898 -0.695189 -0.604542 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 61 60 63 240 <Ref> { copa.001 } }
+    <VertexRef> { 61 60 63 240 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.650127 -0.568837 -0.503745 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 61 240 241 236 <Ref> { copa.001 } }
+    <VertexRef> { 61 240 241 236 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.100486 0.541506 -0.83467 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 242 243 244 65 <Ref> { copa.001 } }
+    <VertexRef> { 242 243 244 65 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.526738 -0.2158 -0.822178 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 65 69 66 <Ref> { copa.001 } }
+    <VertexRef> { 65 69 66 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.368758 0.495566 -0.786405 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 245 242 65 67 <Ref> { copa.001 } }
+    <VertexRef> { 245 242 65 67 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.213548 0.05102 -0.975599 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 244 68 65 <Ref> { copa.001 } }
+    <VertexRef> { 244 68 65 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.369381 -0.929251 0.007131 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 71 246 74 72 <Ref> { copa.001 } }
+    <VertexRef> { 71 246 74 72 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.502982 -0.86324 0.042723 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 74 246 247 <Ref> { copa.001 } }
+    <VertexRef> { 74 246 247 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.619354 -0.718342 -0.316837 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 72 73 75 248 <Ref> { copa.001 } }
+    <VertexRef> { 72 73 75 248 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.384307 -0.83978 -0.383506 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 72 248 249 70 <Ref> { copa.001 } }
+    <VertexRef> { 72 248 249 70 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.351641 0.520649 -0.777994 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 250 251 252 77 <Ref> { copa.001 } }
+    <VertexRef> { 250 251 252 77 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.154661 -0.304064 -0.940013 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 77 81 78 <Ref> { copa.001 } }
+    <VertexRef> { 77 81 78 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.527004 0.310215 -0.791222 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 253 250 77 79 <Ref> { copa.001 } }
+    <VertexRef> { 253 250 77 79 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.08375 0.123665 -0.988784 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 252 80 77 <Ref> { copa.001 } }
+    <VertexRef> { 252 80 77 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.241283 0.958898 0.14932 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 254 255 256 257 <Ref> { copa.001 } }
+    <VertexRef> { 254 255 256 257 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.374012 0.912423 0.166131 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 82 84 254 257 <Ref> { copa.001 } }
+    <VertexRef> { 82 84 254 257 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.056308 -0.855918 -0.514037 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 258 259 260 261 <Ref> { copa.001 } }
+    <VertexRef> { 258 259 260 261 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.351486 -0.763317 -0.542038 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 258 261 262 263 <Ref> { copa.001 } }
+    <VertexRef> { 258 261 262 263 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.273054 0.46744 -0.840798 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 264 265 91 88 <Ref> { copa.001 } }
+    <VertexRef> { 264 265 91 88 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.46881 0.059234 -0.881311 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 88 92 89 <Ref> { copa.001 } }
+    <VertexRef> { 88 92 89 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.022834 0.596721 -0.802124 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 266 264 88 90 <Ref> { copa.001 } }
+    <VertexRef> { 266 264 88 90 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.854166 0.516186 0.062875 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 267 268 269 270 <Ref> { copa.001 } }
+    <VertexRef> { 267 268 269 270 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.777457 0.623118 0.085356 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 93 95 267 270 <Ref> { copa.001 } }
+    <VertexRef> { 93 95 267 270 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.855967 -0.309793 -0.413944 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 271 272 273 274 <Ref> { copa.001 } }
+    <VertexRef> { 271 272 273 274 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.706038 -0.531845 -0.467602 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 271 274 275 276 <Ref> { copa.001 } }
+    <VertexRef> { 271 274 275 276 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.052002 -0.700543 0.711713 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 277 278 279 102 <Ref> { copa.001 } }
+    <VertexRef> { 277 278 279 102 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.319183 0.013684 0.947594 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 99 103 100 <Ref> { copa.001 } }
+    <VertexRef> { 99 103 100 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.141072 0.016242 0.989866 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 280 99 101 <Ref> { copa.001 } }
+    <VertexRef> { 280 99 101 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.10375 -0.266285 0.958295 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 99 280 277 102 <Ref> { copa.001 } }
+    <VertexRef> { 99 280 277 102 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.25965 -0.561858 0.785428 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 102 279 281 103 <Ref> { copa.001 } }
+    <VertexRef> { 102 279 281 103 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.200981 -0.947184 -0.249899 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 105 282 108 106 <Ref> { copa.001 } }
+    <VertexRef> { 105 282 108 106 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.04635 -0.962274 -0.268105 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 108 282 283 <Ref> { copa.001 } }
+    <VertexRef> { 108 282 283 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.006666 -0.770583 -0.637305 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 106 107 109 284 <Ref> { copa.001 } }
+    <VertexRef> { 106 107 109 284 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.308072 0.747243 0.588828 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 285 286 287 288 <Ref> { copa.001 } }
+    <VertexRef> { 285 286 287 288 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.014299 0.323887 0.945988 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 289 290 291 115 <Ref> { copa.001 } }
+    <VertexRef> { 289 290 291 115 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.498565 -0.311894 0.808798 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 111 114 112 <Ref> { copa.001 } }
+    <VertexRef> { 111 114 112 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.069765 -0.476401 0.876456 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 292 111 113 <Ref> { copa.001 } }
+    <VertexRef> { 292 111 113 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.016975 -0.223517 0.974552 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 111 292 289 115 <Ref> { copa.001 } }
+    <VertexRef> { 111 292 289 115 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.240294 0.237641 0.941162 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 115 291 293 114 <Ref> { copa.001 } }
+    <VertexRef> { 115 291 293 114 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.252368 -0.961457 -0.109139 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 119 294 295 296 <Ref> { copa.001 } }
+    <VertexRef> { 119 294 295 296 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.119328 -0.986733 -0.110086 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 116 118 119 296 <Ref> { copa.001 } }
+    <VertexRef> { 116 118 119 296 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.328152 -0.906026 0.26727 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 118 297 120 119 <Ref> { copa.001 } }
+    <VertexRef> { 118 297 120 119 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.034193 -0.964491 0.261892 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 298 297 118 117 <Ref> { copa.001 } }
+    <VertexRef> { 298 297 118 117 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.541409 0.198641 -0.816957 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 126 299 300 124 <Ref> { copa.001 } }
+    <VertexRef> { 126 299 300 124 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.218938 0.588482 -0.778303 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 124 123 301 <Ref> { copa.001 } }
+    <VertexRef> { 124 123 301 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.932231 0.361744 0.009339 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 128 302 131 129 <Ref> { copa.001 } }
+    <VertexRef> { 128 302 131 129 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.031422 0.327408 -0.94436 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 300 122 124 <Ref> { copa.001 } }
+    <VertexRef> { 300 122 124 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.250556 0.782537 -0.569962 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 124 301 125 <Ref> { copa.001 } }
+    <VertexRef> { 124 301 125 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.871333 0.487455 0.056275 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 131 302 303 <Ref> { copa.001 } }
+    <VertexRef> { 131 302 303 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.720669 0.63304 -0.282658 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 129 130 132 304 <Ref> { copa.001 } }
+    <VertexRef> { 129 130 132 304 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.843537 0.39654 -0.362216 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 129 304 305 127 <Ref> { copa.001 } }
+    <VertexRef> { 129 304 305 127 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.222757 0.515587 0.827375 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 306 307 308 309 <Ref> { copa.001 } }
+    <VertexRef> { 306 307 308 309 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.526706 0.400569 -0.74975 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 310 311 312 <Ref> { copa.001 } }
+    <VertexRef> { 310 311 312 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.428903 -0.292819 0.854575 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 313 314 315 <Ref> { copa.001 } }
+    <VertexRef> { 313 314 315 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.358216 -0.011941 0.933562 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 314 313 306 309 <Ref> { copa.001 } }
+    <VertexRef> { 314 313 306 309 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.786955 -0.129425 -0.603283 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 135 134 310 312 <Ref> { copa.001 } }
+    <VertexRef> { 135 134 310 312 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.371638 -0.927792 -0.032978 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 140 316 317 318 <Ref> { copa.001 } }
+    <VertexRef> { 140 316 317 318 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.250992 -0.967908 0.012511 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 137 139 140 318 <Ref> { copa.001 } }
+    <VertexRef> { 137 139 140 318 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.549589 -0.787448 0.279066 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 139 319 141 140 <Ref> { copa.001 } }
+    <VertexRef> { 139 319 141 140 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.285274 -0.881218 0.376928 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 320 319 139 138 <Ref> { copa.001 } }
+    <VertexRef> { 320 319 139 138 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.43397 -0.498792 0.750251 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 146 321 322 143 <Ref> { copa.001 } }
+    <VertexRef> { 146 321 322 143 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.267522 -0.773132 0.575064 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 143 323 144 <Ref> { copa.001 } }
+    <VertexRef> { 143 323 144 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.346757 -0.462348 0.816085 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 147 143 145 <Ref> { copa.001 } }
+    <VertexRef> { 147 143 145 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.314036 -0.672603 0.670065 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 143 322 324 323 <Ref> { copa.001 } }
+    <VertexRef> { 143 322 324 323 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.999948 0.003971 0.009372 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 325 326 153 155 <Ref> { copa.001 } }
+    <VertexRef> { 325 326 153 155 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.973334 0.030528 -0.227352 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 326 327 328 153 <Ref> { copa.001 } }
+    <VertexRef> { 326 327 328 153 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.928592 -0.050361 0.367668 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 329 157 152 151 <Ref> { copa.001 } }
+    <VertexRef> { 329 157 152 151 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.802941 0.546029 -0.239036 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 330 331 332 158 <Ref> { copa.001 } }
+    <VertexRef> { 330 331 332 158 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.033012 0.600226 -0.799149 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 158 162 159 <Ref> { copa.001 } }
+    <VertexRef> { 158 162 159 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.601115 0.757387 -0.255003 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 333 330 158 160 <Ref> { copa.001 } }
+    <VertexRef> { 333 330 158 160 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { 0.444035 0.513701 -0.734128 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 332 161 158 <Ref> { copa.001 } }
+    <VertexRef> { 332 161 158 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.776951 -0.004256 -0.629546 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 164 334 168 165 <Ref> { copa.001 } }
+    <VertexRef> { 164 334 168 165 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.842362 0.058943 -0.535679 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 168 334 335 <Ref> { copa.001 } }
+    <VertexRef> { 168 334 335 <Ref> { copa } }
   }
   <Polygon> {
     <Normal> { -0.543168 -0.019306 -0.839402 }
     <TRef> { rama }
     <MRef> { rama }
-    <VertexRef> { 336 163 165 <Ref> { copa.001 } }
+    <VertexRef> { 336 163 165 <Ref> { copa } }
   }
 }
-<Group> tronco.001 {
-  <VertexPool> tronco.001 {
+<Group> tronco {
+  <VertexPool> tronco {
     <Vertex> 0 {
       0.010326 0.039702 2.257853
       <UV> {
@@ -6055,810 +6055,810 @@
     <Normal> { -0.978322 -0.200112 0.053309 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 0 1 2 <Ref> { tronco.001 } }
+    <VertexRef> { 0 1 2 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.80146 0.594288 -0.066963 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 3 4 5 <Ref> { tronco.001 } }
+    <VertexRef> { 3 4 5 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.43223 0.892822 -0.126675 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 6 7 8 <Ref> { tronco.001 } }
+    <VertexRef> { 6 7 8 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.778445 -0.622762 -0.078681 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 9 2 1 <Ref> { tronco.001 } }
+    <VertexRef> { 9 2 1 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.972475 0.231557 0.025949 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 3 5 6 <Ref> { tronco.001 } }
+    <VertexRef> { 3 5 6 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.539187 -0.806851 -0.241392 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 10 11 12 <Ref> { tronco.001 } }
+    <VertexRef> { 10 11 12 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.976184 -0.039899 0.213244 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 13 14 15 <Ref> { tronco.001 } }
+    <VertexRef> { 13 14 15 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.64224 0.736387 -0.212749 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 16 10 15 <Ref> { tronco.001 } }
+    <VertexRef> { 16 10 15 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.225086 0.965049 0.134229 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 17 18 19 <Ref> { tronco.001 } }
+    <VertexRef> { 17 18 19 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.996873 0.047613 0.063061 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 20 17 21 <Ref> { tronco.001 } }
+    <VertexRef> { 20 17 21 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.543134 -0.83888 0.035865 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 22 23 24 <Ref> { tronco.001 } }
+    <VertexRef> { 22 23 24 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.815162 0.487587 0.312681 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 25 26 27 <Ref> { tronco.001 } }
+    <VertexRef> { 25 26 27 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.044176 -0.780653 0.623401 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 25 27 28 <Ref> { tronco.001 } }
+    <VertexRef> { 25 27 28 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.248808 -0.957709 0.144527 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 29 30 31 <Ref> { tronco.001 } }
+    <VertexRef> { 29 30 31 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.847222 0.108571 -0.520026 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 32 33 34 <Ref> { tronco.001 } }
+    <VertexRef> { 32 33 34 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.023692 -0.861018 -0.508022 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 35 36 37 <Ref> { tronco.001 } }
+    <VertexRef> { 35 36 37 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.576938 0.810929 0.097659 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 38 37 39 <Ref> { tronco.001 } }
+    <VertexRef> { 38 37 39 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.797365 0.231416 -0.557364 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 40 41 42 <Ref> { tronco.001 } }
+    <VertexRef> { 40 41 42 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.129842 -0.914086 -0.384172 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 43 44 45 <Ref> { tronco.001 } }
+    <VertexRef> { 43 44 45 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.712101 0.071077 -0.69847 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 43 46 44 <Ref> { tronco.001 } }
+    <VertexRef> { 43 46 44 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.695612 -0.182919 0.694741 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 47 48 49 <Ref> { tronco.001 } }
+    <VertexRef> { 47 48 49 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.079351 0.18191 0.980108 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 50 51 52 <Ref> { tronco.001 } }
+    <VertexRef> { 50 51 52 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.008604 0.956832 0.290514 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 53 54 55 <Ref> { tronco.001 } }
+    <VertexRef> { 53 54 55 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.462748 -0.179309 -0.868166 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 56 55 57 <Ref> { tronco.001 } }
+    <VertexRef> { 56 55 57 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.076496 -0.818923 -0.568783 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 56 57 58 <Ref> { tronco.001 } }
+    <VertexRef> { 56 57 58 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.404741 0.623679 -0.668736 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 59 60 61 <Ref> { tronco.001 } }
+    <VertexRef> { 59 60 61 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.428098 0.708293 0.561296 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 62 63 64 <Ref> { tronco.001 } }
+    <VertexRef> { 62 63 64 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.405288 -0.700525 0.587372 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 63 65 66 <Ref> { tronco.001 } }
+    <VertexRef> { 63 65 66 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.047388 0.057417 -0.997225 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 67 68 64 <Ref> { tronco.001 } }
+    <VertexRef> { 67 68 64 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.558949 -0.72073 -0.410029 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 69 70 71 <Ref> { tronco.001 } }
+    <VertexRef> { 69 70 71 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.331479 -0.616379 0.714281 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 69 72 70 <Ref> { tronco.001 } }
+    <VertexRef> { 69 72 70 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.516161 0.804478 0.293927 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 73 74 75 <Ref> { tronco.001 } }
+    <VertexRef> { 73 74 75 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.466532 -0.282319 0.838238 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 76 77 78 <Ref> { tronco.001 } }
+    <VertexRef> { 76 77 78 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.47569 0.79247 -0.381721 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 79 80 81 <Ref> { tronco.001 } }
+    <VertexRef> { 79 80 81 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.420539 -0.729159 0.539884 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 82 83 84 <Ref> { tronco.001 } }
+    <VertexRef> { 82 83 84 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.421449 -0.727561 0.541328 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 85 82 84 <Ref> { tronco.001 } }
+    <VertexRef> { 85 82 84 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.476405 0.721997 -0.501756 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 86 87 88 <Ref> { tronco.001 } }
+    <VertexRef> { 86 87 88 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.060411 -0.748589 0.660277 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 89 90 91 <Ref> { tronco.001 } }
+    <VertexRef> { 89 90 91 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.575552 -0.808455 0.123049 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 2 92 0 <Ref> { tronco.001 } }
+    <VertexRef> { 2 92 0 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.537597 -0.843027 -0.017175 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 93 94 5 4 <Ref> { tronco.001 } }
+    <VertexRef> { 93 94 5 4 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.725269 0.686584 -0.05087 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 95 4 3 <Ref> { tronco.001 } }
+    <VertexRef> { 95 4 3 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.404167 -0.91438 -0.023615 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 96 97 7 5 <Ref> { tronco.001 } }
+    <VertexRef> { 96 97 7 5 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.45737 0.878101 0.140541 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 3 6 98 1 <Ref> { tronco.001 } }
+    <VertexRef> { 3 6 98 1 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.352509 -0.934806 -0.043309 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 5 94 96 <Ref> { tronco.001 } }
+    <VertexRef> { 5 94 96 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.248106 0.968658 0.012061 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 98 6 8 <Ref> { tronco.001 } }
+    <VertexRef> { 98 6 8 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.999259 -0.031912 0.021522 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 8 99 1 98 <Ref> { tronco.001 } }
+    <VertexRef> { 8 99 1 98 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.434552 -0.8952 0.098902 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 99 9 1 <Ref> { tronco.001 } }
+    <VertexRef> { 99 9 1 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.978506 0.205891 0.011638 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 7 6 5 <Ref> { tronco.001 } }
+    <VertexRef> { 7 6 5 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.751558 -0.578557 0.31691 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 100 101 17 19 <Ref> { tronco.001 } }
+    <VertexRef> { 100 101 17 19 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.71313 -0.651755 0.258187 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 102 14 13 <Ref> { tronco.001 } }
+    <VertexRef> { 102 14 13 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.514711 0.777069 0.362266 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 15 14 16 <Ref> { tronco.001 } }
+    <VertexRef> { 15 14 16 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.972271 -0.148953 -0.180282 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 16 11 10 <Ref> { tronco.001 } }
+    <VertexRef> { 16 11 10 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.688264 -0.699656 -0.191764 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 103 104 105 106 <Ref> { tronco.001 } }
+    <VertexRef> { 103 104 105 106 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.354045 0.918773 -0.174669 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 17 104 103 18 <Ref> { tronco.001 } }
+    <VertexRef> { 17 104 103 18 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.625779 -0.755 0.195898 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 107 108 105 104 <Ref> { tronco.001 } }
+    <VertexRef> { 107 108 105 104 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.312357 0.944441 0.102299 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 109 24 110 111 <Ref> { tronco.001 } }
+    <VertexRef> { 109 24 110 111 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.869589 -0.419449 0.260534 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 21 17 101 <Ref> { tronco.001 } }
+    <VertexRef> { 21 17 101 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.461767 0.864476 -0.198626 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 20 107 104 17 <Ref> { tronco.001 } }
+    <VertexRef> { 20 107 104 17 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.833442 -0.513454 -0.204302 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 112 109 113 114 <Ref> { tronco.001 } }
+    <VertexRef> { 112 109 113 114 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.516148 -0.85594 0.030953 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 115 27 116 117 <Ref> { tronco.001 } }
+    <VertexRef> { 115 27 116 117 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.671547 0.736956 -0.076942 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 109 111 113 <Ref> { tronco.001 } }
+    <VertexRef> { 109 111 113 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.882708 -0.437315 0.171996 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 23 110 24 <Ref> { tronco.001 } }
+    <VertexRef> { 23 110 24 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.316283 0.805819 0.50062 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 116 27 26 118 <Ref> { tronco.001 } }
+    <VertexRef> { 116 27 26 118 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.435813 0.274032 -0.857306 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 118 26 119 120 <Ref> { tronco.001 } }
+    <VertexRef> { 118 26 119 120 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.571226 0.398447 -0.717594 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 121 122 119 26 <Ref> { tronco.001 } }
+    <VertexRef> { 121 122 119 26 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.252261 0.959439 0.125863 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 32 34 30 123 <Ref> { tronco.001 } }
+    <VertexRef> { 32 34 30 123 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.704991 0.704344 -0.08299 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 25 121 26 <Ref> { tronco.001 } }
+    <VertexRef> { 25 121 26 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.771524 -0.5966 0.220951 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 28 27 115 <Ref> { tronco.001 } }
+    <VertexRef> { 28 27 115 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.809518 -0.265884 0.523438 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 30 29 123 <Ref> { tronco.001 } }
+    <VertexRef> { 30 29 123 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.701567 -0.611062 -0.366616 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 32 124 33 <Ref> { tronco.001 } }
+    <VertexRef> { 32 124 33 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.929714 -0.087938 -0.357629 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 125 126 127 128 <Ref> { tronco.001 } }
+    <VertexRef> { 125 126 127 128 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.729076 0.68323 -0.040563 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 128 127 129 130 <Ref> { tronco.001 } }
+    <VertexRef> { 128 127 129 130 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.114895 -0.851134 0.51222 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 131 130 132 <Ref> { tronco.001 } }
+    <VertexRef> { 131 130 132 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.73695 -0.018715 -0.675688 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 33 125 128 34 <Ref> { tronco.001 } }
+    <VertexRef> { 33 125 128 34 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.771374 -0.364995 0.521307 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 129 132 130 <Ref> { tronco.001 } }
+    <VertexRef> { 129 132 130 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.125694 -0.904231 0.408128 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 130 131 31 30 <Ref> { tronco.001 } }
+    <VertexRef> { 130 131 31 30 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.457177 0.876829 0.148866 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 34 128 130 30 <Ref> { tronco.001 } }
+    <VertexRef> { 34 128 130 30 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.225314 0.32436 -0.918708 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 133 134 36 135 <Ref> { tronco.001 } }
+    <VertexRef> { 133 134 36 135 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.138347 0.253862 0.957295 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 133 136 137 134 <Ref> { tronco.001 } }
+    <VertexRef> { 133 136 137 134 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.716468 -0.58919 -0.373536 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 37 38 138 35 <Ref> { tronco.001 } }
+    <VertexRef> { 37 38 138 35 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.076989 -0.457375 -0.885935 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 136 139 137 <Ref> { tronco.001 } }
+    <VertexRef> { 136 139 137 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.800361 0.595715 -0.067429 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 37 134 140 39 <Ref> { tronco.001 } }
+    <VertexRef> { 37 134 140 39 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.43598 0.899896 0.010451 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 3 1 0 95 <Ref> { tronco.001 } }
+    <VertexRef> { 3 1 0 95 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.947973 -0.110296 0.298632 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 134 137 141 140 <Ref> { tronco.001 } }
+    <VertexRef> { 134 137 141 140 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.870725 -0.47476 0.128224 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 40 142 143 41 <Ref> { tronco.001 } }
+    <VertexRef> { 40 142 143 41 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.386922 0.921326 0.038092 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 37 36 134 <Ref> { tronco.001 } }
+    <VertexRef> { 37 36 134 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.909624 -0.049524 0.412469 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 42 144 145 146 <Ref> { tronco.001 } }
+    <VertexRef> { 42 144 145 146 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.323937 0.768556 -0.551712 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 42 146 40 <Ref> { tronco.001 } }
+    <VertexRef> { 42 146 40 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.824108 -0.53643 -0.181904 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 147 148 149 150 <Ref> { tronco.001 } }
+    <VertexRef> { 147 148 149 150 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.98413 0.171976 0.043742 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 151 152 153 154 <Ref> { tronco.001 } }
+    <VertexRef> { 151 152 153 154 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.494921 0.838936 0.226363 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 151 149 148 152 <Ref> { tronco.001 } }
+    <VertexRef> { 151 149 148 152 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.459005 0.868351 0.187832 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 148 155 156 152 <Ref> { tronco.001 } }
+    <VertexRef> { 148 155 156 152 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.244552 -0.959944 -0.136754 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 153 157 154 <Ref> { tronco.001 } }
+    <VertexRef> { 153 157 154 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.85673 -0.327809 0.39819 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 158 155 148 159 <Ref> { tronco.001 } }
+    <VertexRef> { 158 155 148 159 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.730467 -0.30146 -0.612813 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 152 156 160 161 <Ref> { tronco.001 } }
+    <VertexRef> { 152 156 160 161 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.063721 0.801933 0.594005 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 162 46 48 163 <Ref> { tronco.001 } }
+    <VertexRef> { 162 46 48 163 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.47226 -0.764099 -0.439458 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 161 153 152 <Ref> { tronco.001 } }
+    <VertexRef> { 161 153 152 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.865425 0.367274 0.340808 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 159 148 147 <Ref> { tronco.001 } }
+    <VertexRef> { 159 148 147 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.306552 0.254333 -0.917246 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 162 164 44 46 <Ref> { tronco.001 } }
+    <VertexRef> { 162 164 44 46 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.208123 -0.907245 0.3655 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 48 165 166 163 <Ref> { tronco.001 } }
+    <VertexRef> { 48 165 166 163 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.217797 0.486021 -0.846374 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 167 52 168 169 <Ref> { tronco.001 } }
+    <VertexRef> { 167 52 168 169 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.465537 -0.810922 0.354514 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 165 48 47 <Ref> { tronco.001 } }
+    <VertexRef> { 165 48 47 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.430044 0.85469 -0.290803 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 43 49 46 <Ref> { tronco.001 } }
+    <VertexRef> { 43 49 46 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.160243 0.886655 0.43378 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 49 48 46 <Ref> { tronco.001 } }
+    <VertexRef> { 49 48 46 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.103493 0.687299 0.718964 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 52 167 50 <Ref> { tronco.001 } }
+    <VertexRef> { 52 167 50 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.587879 -0.26469 -0.764419 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 170 171 57 55 <Ref> { tronco.001 } }
+    <VertexRef> { 170 171 57 55 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.146464 -0.8651 -0.47974 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 168 172 169 <Ref> { tronco.001 } }
+    <VertexRef> { 168 172 169 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.211778 -0.937486 0.27617 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 50 173 51 <Ref> { tronco.001 } }
+    <VertexRef> { 50 173 51 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.201194 0.975527 0.088703 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 55 54 170 <Ref> { tronco.001 } }
+    <VertexRef> { 55 54 170 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.397343 -0.526113 0.75188 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 174 53 175 176 <Ref> { tronco.001 } }
+    <VertexRef> { 174 53 175 176 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.550499 -0.685382 0.476657 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 53 174 177 <Ref> { tronco.001 } }
+    <VertexRef> { 53 174 177 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.609459 -0.450022 0.652717 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 53 177 54 <Ref> { tronco.001 } }
+    <VertexRef> { 53 177 54 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.103649 0.936039 0.336285 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 55 178 175 53 <Ref> { tronco.001 } }
+    <VertexRef> { 55 178 175 53 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.418908 -0.904701 0.077674 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 179 180 181 182 <Ref> { tronco.001 } }
+    <VertexRef> { 179 180 181 182 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.325797 0.860739 -0.391133 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 56 178 55 <Ref> { tronco.001 } }
+    <VertexRef> { 56 178 55 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.22509 0.642939 0.732095 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 181 60 182 <Ref> { tronco.001 } }
+    <VertexRef> { 181 60 182 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.359269 0.504077 -0.785387 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 59 61 183 184 <Ref> { tronco.001 } }
+    <VertexRef> { 59 61 183 184 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.756048 -0.65278 -0.047645 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 185 186 187 188 <Ref> { tronco.001 } }
+    <VertexRef> { 185 186 187 188 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.340862 0.791735 0.506921 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 59 182 60 <Ref> { tronco.001 } }
+    <VertexRef> { 59 182 60 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.513458 0.148938 -0.84509 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 189 190 187 186 <Ref> { tronco.001 } }
+    <VertexRef> { 189 190 187 186 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.777694 0.41867 0.468944 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 189 191 192 190 <Ref> { tronco.001 } }
+    <VertexRef> { 189 191 192 190 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.09494 0.951335 -0.293169 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 71 73 193 194 <Ref> { tronco.001 } }
+    <VertexRef> { 71 73 193 194 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.499413 0.808827 0.310459 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 68 62 64 <Ref> { tronco.001 } }
+    <VertexRef> { 68 62 64 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.304005 -0.607138 -0.734142 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 67 195 68 <Ref> { tronco.001 } }
+    <VertexRef> { 67 195 68 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.152114 0.207797 0.966272 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 63 62 65 <Ref> { tronco.001 } }
+    <VertexRef> { 63 62 65 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.640005 -0.505069 -0.579049 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 71 70 73 <Ref> { tronco.001 } }
+    <VertexRef> { 71 70 73 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.268672 -0.498544 0.824178 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 75 196 193 73 <Ref> { tronco.001 } }
+    <VertexRef> { 75 196 193 73 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.415151 -0.803432 -0.426786 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 71 194 197 69 <Ref> { tronco.001 } }
+    <VertexRef> { 71 194 197 69 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.189412 0.890014 0.414727 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 80 79 77 76 <Ref> { tronco.001 } }
+    <VertexRef> { 80 79 77 76 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.030954 -0.768747 -0.638803 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 81 198 199 79 <Ref> { tronco.001 } }
+    <VertexRef> { 81 198 199 79 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.380034 -0.003826 0.924964 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 83 200 87 84 <Ref> { tronco.001 } }
+    <VertexRef> { 83 200 87 84 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.111961 0.542188 -0.832765 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 200 201 90 87 <Ref> { tronco.001 } }
+    <VertexRef> { 200 201 90 87 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.6635 -0.745527 0.062907 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 90 201 202 <Ref> { tronco.001 } }
+    <VertexRef> { 90 201 202 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { 0.778878 0.449711 -0.43716 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 87 90 89 88 <Ref> { tronco.001 } }
+    <VertexRef> { 87 90 89 88 <Ref> { tronco } }
   }
   <Polygon> {
     <Normal> { -0.974354 -0.077119 0.211391 }
     <TRef> { corteza }
     <MRef> { corteza }
-    <VertexRef> { 84 87 86 85 <Ref> { tronco.001 } }
+    <VertexRef> { 84 87 86 85 <Ref> { tronco } }
   }
 }
