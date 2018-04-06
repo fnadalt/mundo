@@ -18,9 +18,9 @@ class InputMapper:
     AccionFlotar=5
     AccionAgarrar=6
     AccionSoltar=7
-    AccionArrojar=7
-    AccionFrenar=8
-    AccionUsar=9
+    AccionArrojar=8
+    AccionFrenar=9
+    AccionUsar=10
     
     # parametros
     ParametroNulo=0

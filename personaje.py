@@ -139,7 +139,8 @@ class Personaje:
 
     def chequear_estado(self, estado, idx_capa):
         if idx_capa==1: # capa 1
-            return (estado & self._estado_capa[1])==estado
+            #log.debug("chequear_estado e1=%s e2=%s"%(str(self._estado_capa[1]), str(estado)))
+            return (self._estado_capa[1]&estado)==estado
         elif idx_capa==0: # capa 0
             return estado==self._estado_capa[0]
     
@@ -230,9 +231,9 @@ class Personaje:
             if self.contactos:
                 # (cualquiera, con contactos)
                 if self.input_mapper.accion==InputMapper.AccionAgarrar and not Personaje.EstadoAgarrando in self.objetos_estados:
-                    estado_nuevo+=Personaje.EstadoAgarrando
+                    estado_nuevo|=Personaje.EstadoAgarrando
             # agarrando
-            elif self.chequear_estado(Personaje.EstadoAgarrando, 1):
+            if self.chequear_estado(Personaje.EstadoAgarrando, 1):
                 if self.input_mapper.accion==InputMapper.AccionSoltar or Personaje.EstadoAgarrando not in self.objetos_estados:
                     estado_nuevo-=Personaje.EstadoAgarrando
         return estado_nuevo

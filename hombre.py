@@ -78,3 +78,6 @@ class Hombre(Personaje):
             self.cuerpo.setPosHpr(0, 0.1, 0.1, 0, 0, 0)
             agarrar=True
         return agarrar
+    
+    def _soltar(self):
+        pass
