@@ -13,8 +13,9 @@ class InputMapper:
     # acciones
     AccionNula=0
     AccionAvanzar=1
-    AccionElevar=2
-    AccionAgachar=3
+    AccionAscender=2
+    AccionDescender=3
+    AccionAgachar=4
     AccionFlotar=5
     AccionAgarrar=6
     AccionSoltar=7
@@ -61,7 +62,7 @@ class InputMapperTecladoMouse(InputMapper):
 
     # teclas accion defecto
     TeclasAccionDefecto={KeyboardButton.enter():InputMapper.AccionArrojar, 
-                        KeyboardButton.space():InputMapper.AccionElevar, 
+                        KeyboardButton.space():InputMapper.AccionAscender, 
                         KeyboardButton.tab():InputMapper.AccionUsar, 
                         KeyboardButton.control():InputMapper.AccionAgachar, 
                         KeyboardButton.alt():InputMapper.AccionAgarrar, 
@@ -72,6 +73,8 @@ class InputMapperTecladoMouse(InputMapper):
                         KeyboardButton.asciiKey(b"a"):InputMapper.AccionAvanzar, 
                         KeyboardButton.asciiKey(b"s"):InputMapper.AccionAvanzar, 
                         KeyboardButton.asciiKey(b"d"):InputMapper.AccionAvanzar, 
+                        KeyboardButton.asciiKey(b"r"):InputMapper.AccionAvanzar, 
+                        KeyboardButton.asciiKey(b"f"):InputMapper.AccionAvanzar
                         }
 
     # teclas parametro defecto

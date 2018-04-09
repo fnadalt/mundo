@@ -31,15 +31,17 @@ class Personaje:
     
     # estados
     EstadoNulo=0
+    EstadoClaseDerivadaBase=100
     # capa 0; un solo estado
     EstadoQuieto=1
     EstadoCaminando=2
     EstadoCorriendo=3
     EstadoSaltando=4
     EstadoFlotando=5
-    EstadoCayendo=6
-    EstadoConduciendo=7
-    # capa 1; OR
+    EstadoDescendiendo=6
+    EstadoCayendo=7
+    EstadoConduciendo=8
+    # capa 1; estado0|estado1|...
     EstadoAgachado=1
     EstadoAgarrando=2
     EstadoUsando=4
@@ -69,7 +71,7 @@ class Personaje:
         self.altitud_suelo=0.0
         self.altitud_agua=0.0
         self.contactos=None # |list [BulletContact,...]
-        self.objetos_estados=dict() # {Estado:BulletContact,...}
+        self.objetos_estados=dict() # {Estado:NodePath,...}
         # parametros
         self.directorio_recursos="personajes"
         self.clase=clase
@@ -164,7 +166,7 @@ class Personaje:
         # procesar estados
         self._procesar_estados(dt)
         # altura desde el suelo (se encuentra al final para ser evaluada en forma porterior)
-        self._altura=self.cuerpo.getZ()-self.altitud_suelo-0.5
+        self._altura=self.cuerpo.getZ()-self.altitud_suelo-self._ajuste_altura#|0.5
         # contactos
         self._procesar_contactos()
 
@@ -206,7 +208,7 @@ class Personaje:
                     if self.input_mapper.parametro(InputMapper.ParametroRapido):
                         estado_nuevo=Personaje.EstadoCorriendo
                 #->saltar
-                elif self.input_mapper.accion==InputMapper.AccionElevar:
+                elif self.input_mapper.accion==InputMapper.AccionAscender:
                     estado_nuevo=Personaje.EstadoSaltando
             # caminando,corriendo
             elif estado_actual==Personaje.EstadoCaminando or estado_actual==Personaje.EstadoCorriendo:
@@ -216,7 +218,7 @@ class Personaje:
                 if self.input_mapper.accion!=InputMapper.AccionAvanzar:
                     estado_nuevo=Personaje.EstadoQuieto
                 #->saltar
-                if self.input_mapper.accion==InputMapper.AccionElevar:
+                if self.input_mapper.accion==InputMapper.AccionAscender:
                     estado_nuevo=Personaje.EstadoSaltando
             # cayendo
             elif estado_actual==Personaje.EstadoCayendo:
@@ -228,18 +230,22 @@ class Personaje:
                 estado_nuevo=Personaje.EstadoCayendo
         # capa 1
         elif idx_capa==1:
+            # (cualquiera, con contactos)
             if self.contactos:
-                # (cualquiera, con contactos)
-                if self.input_mapper.accion==InputMapper.AccionAgarrar and not Personaje.EstadoAgarrando in self.objetos_estados:
-                    estado_nuevo|=Personaje.EstadoAgarrando
+                #->agarrar
+                if self.input_mapper.accion==InputMapper.AccionAgarrar:
+                    if self._agarrar():
+                        estado_nuevo|=Personaje.EstadoAgarrando
             # agarrando
             if self.chequear_estado(Personaje.EstadoAgarrando, 1):
+                #->soltar
                 if self.input_mapper.accion==InputMapper.AccionSoltar or Personaje.EstadoAgarrando not in self.objetos_estados:
-                    estado_nuevo-=Personaje.EstadoAgarrando
+                    if self._soltar():
+                        estado_nuevo-=Personaje.EstadoAgarrando
         return estado_nuevo
     
     def _cambio_estado(self, idx_capa, estado_previo, estado_nuevo):
-        #log.info("%s: cambio de estado en capa %i, de %s a %s"%(self.clase, idx_capa, str(estado_previo), str(estado_nuevo)))
+        log.info("%s: cambio de estado en capa %i, de %s a %s"%(self.clase, idx_capa, str(estado_previo), str(estado_nuevo)))
         self.actor.stop() # ???
         # capa 0
         if idx_capa==0:
@@ -291,28 +297,6 @@ class Personaje:
             self.cuerpo.setPos(self.cuerpo, self._velocidad_lineal * dt)
             self.cuerpo.setH(self.cuerpo, self._velocidad_angular.getZ() * dt)
         #
-        # capa 1
-        # agarrar, soltar, usar
-        if Personaje.EstadoAgarrando in self.objetos_estados:
-            if not self.chequear_estado(Personaje.EstadoAgarrando, 1):
-                # soltar?
-                self._soltar()
-                del self.objetos_estados[Personaje.EstadoAgarrando]
-            if not Personaje.EstadoUsando in self.objetos_estados and self.chequear_estado(Personaje.EstadoUsando, 1):
-                # usar?
-                nodo_objeto=self.contactos[0].getNode1()
-                if self._usar(nodo_objeto):
-                    self.objetos_estados[Personaje.EstadoUsando]=nodo_objeto
-        else:
-            # agarrar?
-            if self.chequear_estado(Personaje.EstadoAgarrando, 1):
-                nodo_objeto=self.contactos[0].getNode1()
-                if self._agarrar(nodo_objeto):
-                    self.objetos_estados[Personaje.EstadoAgarrando]=nodo_objeto
-        # usando
-        if Personaje.EstadoUsando in self.objetos_estados:
-            if not self.chequear_estado(Personaje.EstadoUsando, 1):
-                del self.objetos_estados[Personaje.EstadoUsando]
 
     def _procesar_contactos(self):
         # evaluar contactos actuales
@@ -378,15 +362,16 @@ class Personaje:
         log.debug("_contacto_finalizado %s %s"%(self.clase, contacto.getNode1().getName()))
         pass
 
-    def _agarrar(self, nodo_objeto):
-        log.debug("_agarrar nodo_objeto=%s no implementado"%(str(nodo_objeto.getName())))
+    def _agarrar(self):
+        log.debug("_agarrar no implementado")
         return False
     
     def _soltar(self):
-        nodo_objeto=self.objetos_estados[Personaje.EstadoAgarrando]
-        log.debug("_soltar nodo_objeto=%s no implementado"%(str(nodo_objeto.getName())))
+        log.debug("_soltar no implementado")
+        if Personaje.EstadoAgarrando in self.objetos_estados:
+            del self.objetos_estados[Personaje.EstadoAgarrando]
         return False
 
     def _usar(self, nodo_objeto):
-        log.debug("_usar nodo_objeto=%s no implementado"%(str(nodo_objeto.getName())))
+        log.debug("_usar no implementado")
         return False

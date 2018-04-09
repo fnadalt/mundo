@@ -32,16 +32,22 @@ class Hombre(Personaje):
 
     def _definir_estado(self, idx_capa):
         #
+        estado_actual=self._estado_capa[idx_capa]
         estado_nuevo=Personaje._definir_estado(self, idx_capa)
         #
         if idx_capa==0:
             # quieto
-            if self._estado_capa[idx_capa]==Personaje.EstadoQuieto:
+            if estado_actual==Personaje.EstadoQuieto:
                 if Personaje.EstadoAgarrando in self.objetos_estados:
                     #-> conduciendo
                     nodo_objeto=self.objetos_estados[Personaje.EstadoAgarrando]
                     if nodo_objeto.getName().endswith("_nave"):
                         estado_nuevo=Personaje.EstadoConduciendo
+            # conduciendo
+            elif estado_actual==Personaje.EstadoConduciendo:
+                if not Personaje.EstadoAgarrando in self.objetos_estados:
+                    #-> quieto
+                    estado_nuevo=Personaje.EstadoQuieto
         #
         return estado_nuevo
 
@@ -69,15 +75,23 @@ class Hombre(Personaje):
             pass    
         #
 
-    def _agarrar(self, nodo_objeto):
-        agarrar=False
-        if nodo_objeto.getName().endswith("_nave"):
-            log.debug("_agarrar %s"%(nodo_objeto.getName()))
-            nodo_objeto.setStatic(False)
-            self.cuerpo.reparentTo(NodePath(nodo_objeto))
-            self.cuerpo.setPosHpr(0, 0.1, 0.1, 0, 0, 0)
-            agarrar=True
-        return agarrar
+    def _agarrar(self):
+        if not Personaje.EstadoAgarrando in self.objetos_estados:
+            nodo_objeto=NodePath(self.contactos[0].getNode1())
+            if nodo_objeto.getName().endswith("_nave"):
+                log.debug("_agarrar %s"%(nodo_objeto.getName()))
+                self.objetos_estados[Personaje.EstadoAgarrando]=nodo_objeto
+                return True
+        return False
     
     def _soltar(self):
-        pass
+        if Personaje.EstadoAgarrando in self.objetos_estados:
+            nodo_objeto=self.objetos_estados[Personaje.EstadoAgarrando]
+            if nodo_objeto.getName().endswith("_nave"):
+                log.debug("_soltar %s"%(nodo_objeto.getName()))
+                del self.objetos_estados[Personaje.EstadoAgarrando]
+                self.cuerpo.reparentTo(nodo_objeto.getParent())
+                self.cuerpo.setPos(nodo_objeto.getX(), nodo_objeto.getY(), self.altitud_suelo)
+                self.cuerpo.setHpr(nodo_objeto.getHpr())
+                return True
+        return False
