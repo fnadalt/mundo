@@ -70,71 +70,6 @@ uniform vec3 posicion_camara;
 const float shine_damper=20.0;
 const float reflectivity=0.6;
 """
-FS_FUNC_TRANSFORM_LUZ_NORMAL_MAP="""
-vec3 transform_luz_normal_map(vec3 vec_luz)
-{
-    vec3 binormal=cross(Normal,tangent.xyz)*tangent.w;
-    mat3 M=mat3(tangent.x,binormal.x,Normal.x,
-                tangent.y,binormal.y,Normal.y,
-                tangent.z,binormal.z,Normal.z);
-    return normalize(M*vec_luz);
-}
-"""
-FS_FUNC_LUZ="""
-// generico y terreno
-vec4 amb()
-{
-    return color_luz_ambiental*p3d_Material.ambient;
-}
-vec4 ds_generico(int iLightSource, vec3 normal)
-{
-    vec4 color;
-    vec3 s=p3d_LightSource[iLightSource].position.xyz-(PositionV.xyz*p3d_LightSource[iLightSource].position.w);
-    vec3 l=%(FUNC_LIGHT_VEC_TRANSFORM)s
-    vec4 diffuse=clamp(p3d_Material.diffuse*p3d_LightSource[iLightSource].diffuse*max(dot(normal,l),0),0,1);
-    color=diffuse;
-    if(p3d_Material.specular!=vec3(0,0,0)){
-        vec3 v=normalize(-PositionV.xyz);
-        vec3 r=normalize(-reflect(l, normal)); //(2.0*dot(s, normal)*normal-s)
-        color+=vec4(p3d_Material.specular,1.0) * p3d_LightSource[iLightSource].specular * pow(max(dot(r,v),0),p3d_Material.shininess);
-    }
-    if(p3d_LightSource[iLightSource].spotCosCutoff>0.0){
-        float spotEffect = dot(normalize(p3d_LightSource[iLightSource].spotDirection), -l);
-        if(spotEffect>p3d_LightSource[iLightSource].spotCosCutoff){
-            color*=pow(spotEffect, p3d_LightSource[iLightSource].spotExponent);
-        } else {
-            color=vec4(0,0,0,0);
-        }
-    }
-    %(FS_FUNC_LUZ_SOMBRA)s
-    if(p3d_LightSource[iLightSource].position.w!=0.0){
-        float distancia=length(s);
-        float atenuacion=1.0/(p3d_LightSource[iLightSource].attenuation.x+p3d_LightSource[iLightSource].attenuation.y*distancia+p3d_LightSource[iLightSource].attenuation.z*distancia*distancia);
-        color*=atenuacion;
-    }
-    return color;
-}
-vec4 ds_puntual(int i_luz_omni, vec3 normal)
-{
-    vec4 color;
-    vec4 luz_p_v=luz_omni[i_luz_omni].position;
-    vec3 s=luz_p_v.xyz-PositionV.xyz;
-    vec3 l=%(FUNC_LIGHT_VEC_TRANSFORM)s
-    vec4 diffuse=clamp(p3d_Material.diffuse*luz_omni[i_luz_omni].diffuse*max(dot(normal,l),0),0,1);
-    color=diffuse;
-    if(p3d_Material.specular!=vec3(0,0,0)){
-        vec3 v=normalize(-PositionV.xyz);
-        vec3 r=normalize(-reflect(l, normal));
-        color+=vec4(p3d_Material.specular,1.0) * luz_omni[i_luz_omni].specular * pow(max(dot(r,v),0),p3d_Material.shininess);
-    }
-    if(luz_omni[i_luz_omni].attenuation!=vec3(0,0,0)){
-        float distancia=length(s);
-        float atenuacion=1.0/(luz_omni[i_luz_omni].attenuation.x+luz_omni[i_luz_omni].attenuation.y*distancia+luz_omni[i_luz_omni].attenuation.z*distancia*distancia);
-        color*=atenuacion;
-    }
-    return color;
-}
-"""
 FS_FUNC_LUZ_SOMBRA="color*=shadow2DProj(p3d_LightSource[iLightSource].shadowMap, sombra[iLightSource]);"
 FS_FUNC_TEX_GENERICO="""
 // generico
@@ -395,27 +330,6 @@ FS_MAIN_CLIP_INICIO="""
         //gl_FragColor=vec4(1,0,0,1);
     } else {
 """
-FS_MAIN_LUZ="""
-        // luz: generico y terreno
-        int cantidad_luces_genericas=p3d_LightSource.length();
-        vec3 _normal=%(FUNC_NORMAL_SOURCE)s;
-        for(int i=0; i<cantidad_luces_genericas; ++i)
-        {
-            if(p3d_LightSource[i].color.a!=0.0)
-            {
-                color+=ds_generico(i,_normal);
-            }
-        }
-        int cantidad_luces_puntuales=luz_omni.length();
-        for(int i=0; i<cantidad_luces_puntuales; ++i)
-        {
-            if(luz_omni[i].color.a!=0.0)
-            {
-                color+=ds_puntual(i,_normal);
-            }
-        }
-        color+=amb();
-"""
 FS_MAIN_LUZ_SOMBRA="""
         float factor_sombra=shadow2DProj(textura_sombra_0, sombra_0).r; // 120: shadow2DProj?
         color*=factor_sombra>0.0?factor_sombra:1.0;
@@ -498,11 +412,103 @@ FS_MAIN_FIN="""
 
 #
 #
+# LUZ
+#
+#
+FUNC_LUZ="""
+// generico y terreno
+vec4 amb()
+{
+    return color_luz_ambiental*p3d_Material.ambient;
+}
+vec4 ds_generico(int iLightSource, vec3 normal)
+{
+    vec4 color;
+    vec3 s=p3d_LightSource[iLightSource].position.xyz-(PositionV.xyz*p3d_LightSource[iLightSource].position.w);
+    vec3 l=%(FUNC_LIGHT_VEC_TRANSFORM)s
+    vec4 diffuse=clamp(p3d_Material.diffuse*p3d_LightSource[iLightSource].diffuse*max(dot(normal,l),0),0,1);
+    color=diffuse;
+    if(p3d_Material.specular!=vec3(0,0,0)){
+        vec3 v=normalize(-PositionV.xyz);
+        vec3 r=normalize(-reflect(l, normal)); //(2.0*dot(s, normal)*normal-s)
+        color+=vec4(p3d_Material.specular,1.0) * p3d_LightSource[iLightSource].specular * pow(max(dot(r,v),0),p3d_Material.shininess);
+    }
+    if(p3d_LightSource[iLightSource].spotCosCutoff>0.0){
+        float spotEffect = dot(normalize(p3d_LightSource[iLightSource].spotDirection), -l);
+        if(spotEffect>p3d_LightSource[iLightSource].spotCosCutoff){
+            color*=pow(spotEffect, p3d_LightSource[iLightSource].spotExponent);
+        } else {
+            color=vec4(0,0,0,0);
+        }
+    }
+    //%(FS_FUNC_LUZ_SOMBRA)s
+    if(p3d_LightSource[iLightSource].position.w!=0.0){
+        float distancia=length(s);
+        float atenuacion=1.0/(p3d_LightSource[iLightSource].attenuation.x+p3d_LightSource[iLightSource].attenuation.y*distancia+p3d_LightSource[iLightSource].attenuation.z*distancia*distancia);
+        color*=atenuacion;
+    }
+    return color;
+}
+vec4 ds_puntual(int i_luz_omni, vec3 normal)
+{
+    vec4 color;
+    vec4 luz_p_v=luz_omni[i_luz_omni].position;
+    vec3 s=luz_p_v.xyz-PositionV.xyz;
+    vec3 l=%(FUNC_LIGHT_VEC_TRANSFORM)s
+    vec4 diffuse=clamp(p3d_Material.diffuse*luz_omni[i_luz_omni].diffuse*max(dot(normal,l),0),0,1);
+    color=diffuse;
+    if(p3d_Material.specular!=vec3(0,0,0)){
+        vec3 v=normalize(-PositionV.xyz);
+        vec3 r=normalize(-reflect(l, normal));
+        color+=vec4(p3d_Material.specular,1.0) * luz_omni[i_luz_omni].specular * pow(max(dot(r,v),0),p3d_Material.shininess);
+    }
+    if(luz_omni[i_luz_omni].attenuation!=vec3(0,0,0)){
+        float distancia=length(s);
+        float atenuacion=1.0/(luz_omni[i_luz_omni].attenuation.x+luz_omni[i_luz_omni].attenuation.y*distancia+luz_omni[i_luz_omni].attenuation.z*distancia*distancia);
+        color*=atenuacion;
+    }
+    return color;
+}
+"""
+FUNC_TRANSFORM_LUZ_NORMAL_MAP="""
+vec3 transform_luz_normal_map(vec3 vec_luz)
+{
+    vec3 binormal=cross(Normal,tangent.xyz)*tangent.w;
+    mat3 M=mat3(tangent.x,binormal.x,Normal.x,
+                tangent.y,binormal.y,Normal.y,
+                tangent.z,binormal.z,Normal.z);
+    return normalize(M*vec_luz);
+}
+"""
+MAIN_LUZ="""
+        // luz: generico y terreno
+        int cantidad_luces_genericas=p3d_LightSource.length();
+        vec3 _normal=%(FUNC_NORMAL_SOURCE)s;
+        for(int i=0; i<cantidad_luces_genericas; ++i)
+        {
+            if(p3d_LightSource[i].color.a!=0.0)
+            {
+                color+=ds_generico(i,_normal);
+            }
+        }
+        int cantidad_luces_puntuales=luz_omni.length();
+        for(int i=0; i<cantidad_luces_puntuales; ++i)
+        {
+            if(luz_omni[i].color.a!=0.0)
+            {
+                color+=ds_puntual(i,_normal);
+            }
+        }
+        color+=amb();
+"""
+
+#
+#
 # OTRO
 #
 #
 FUNC_NORMAL_SOURCE_VTX="Normal"
 FUNC_NORMAL_SOURCE_NORMAL_MAP_GENERICO="(tex_generico(p3d_Texture1).rgb*2.0-1.0)"
-FUNC_NORMAL_SOURCE_NORMAL_MAP_TERRENO="(tex_terreno(true).rgb*2.0-1.0)"
+FUNC_NORMAL_SOURCE_NORMAL_MAP_TERRENO="(tex_terreno(p3d_Texture0,true).rgb*2.0-1.0)"
 FUNC_LIGHT_VEC_TRANSFORM_VTX="normalize(s);"
 FUNC_LIGHT_VEC_TRANSFORM_NORMAL_MAP="transform_luz_normal_map(s);"

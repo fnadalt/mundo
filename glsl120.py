@@ -116,7 +116,26 @@ uniform mat4 p3d_ModelViewMatrix; // sin uso?
 FS_POS_PROJ="""
 varying vec4 PositionP; // agua
 """
-FS_LUZ="""
+FS_TERRENO="""
+varying vec3 info_tipo;
+"""
+FS_NORMAL_MAP="""
+varying vec4 tangent;
+"""
+FS_TERRENO_COLOR_DEBUG="""
+varying vec4 color_vtx;
+"""
+FS_MAIN_INICIO_COLOR="vec4 color=vec4(0,0,0,0);"
+FS_MAIN_COLOR="""
+        gl_FragColor=color;
+"""
+
+#
+#
+# LUZ
+#
+#
+LUZ="""
 /*uniform struct {
     vec4 ambient;
 } p3d_LightModel;*/
@@ -135,19 +154,6 @@ uniform struct {
 %(STRUCT_LUZ_OMNI)s luz_omni[4];
 varying vec4 sombra[4];
 """%{"STRUCT_LUZ_P3D":STRUCT_LUZ_P3D, "STRUCT_LUZ_OMNI":STRUCT_LUZ_OMNI}
-FS_TERRENO="""
-varying vec3 info_tipo;
-"""
-FS_NORMAL_MAP="""
-varying vec4 tangent;
-"""
-FS_TERRENO_COLOR_DEBUG="""
-varying vec4 color_vtx;
-"""
-FS_MAIN_INICIO_COLOR="vec4 color=vec4(0,0,0,0);"
-FS_MAIN_COLOR="""
-        gl_FragColor=color;
-"""
 
 #
 #

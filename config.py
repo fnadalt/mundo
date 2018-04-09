@@ -11,7 +11,8 @@ configuracion=None
 _sucio=False
 _default_config={
         "shader":       {
-                        "phong":True, 
+                        "luz":True, 
+                        "phong":False, 
                         "sombras":False, 
                         "fog":False, 
                         "fog_rango_distancias":"70 120", 

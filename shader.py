@@ -87,7 +87,7 @@ class GestorShader:
         nodo.setShaderInput("plano_recorte_agua", _plano_recorte_agua, priority=prioridad)
         nodo.setShaderInput("factor_movimiento_agua", 0.0, priority=prioridad)
         nodo.setShaderInput("posicion_camara", Vec3(0, 0, 0), priority=prioridad)
-        if config.valbool("shader.phong"):
+        if config.valbool("shader.luz"):
             for i in range(4): # parametrizar?
                 pl=PointLight("luz_omni_dummy_%i"%i)
                 pl.setColor(Vec4(0, 0, 0, 0))
@@ -135,8 +135,10 @@ class GestorShader:
             texto_vs+=glsl.VS_TEX
             if self._clase!=GestorShader.ClaseSol and self._clase!=GestorShader.ClaseSombra:
                 texto_vs+=glsl.VS_POS_VIEW
-                if config.valbool("shader.phong") or config.valbool("shader.sombras"):
-                    texto_vs+=glsl.VS_SOMBRA
+                if config.valbool("shader.sombras") and \
+                    ((self._clase==GestorShader.ClaseGenerico and config.valbool("generico.sombras")) or \
+                     (self._clase==GestorShader.ClaseTerreno and config.valbool("terreno.sombras"))):
+                    texto_vs+=glsl.VS_SOMBRA # aparece en generico y terreno, sin luz ni sombra; lo requiere agua... ???
             if self._clase==GestorShader.ClaseAgua or self._clase==GestorShader.ClaseSombra:
                 texto_vs+=glsl.VS_POS_PROJ
             elif self._clase==GestorShader.ClaseTerreno:
@@ -154,7 +156,9 @@ class GestorShader:
             texto_vs+=glsl.VS_MAIN_TEX
             if self._clase!=GestorShader.ClaseSol and self._clase!=GestorShader.ClaseSombra:
                 texto_vs+=glsl.VS_MAIN_VIEW
-                if config.valbool("shader.sombras"):
+                if config.valbool("shader.sombras") and \
+                                ((self._clase==GestorShader.ClaseGenerico and config.valbool("generico.sombras")) or \
+                                 (self._clase==GestorShader.ClaseTerreno and config.valbool("terreno.sombras"))):
                     texto_vs+=glsl.VS_MAIN_SOMBRA
             if self._clase==GestorShader.ClaseTerreno:
                 texto_vs+=glsl.VS_MAIN_TIPO_TERRENO
@@ -203,19 +207,19 @@ class GestorShader:
             if self._clase==GestorShader.ClaseSombra:
                 texto_fs+=glsl.FS_POS_PROJ
             if self._clase==GestorShader.ClaseTerreno or self._clase==GestorShader.ClaseGenerico:
-                if config.valbool("shader.phong"):
-                    texto_fs+=glsl.FS_LUZ
+                if config.valbool("shader.luz"):
+                    texto_fs+=glsl.LUZ
                     fs_func_luz_transform_luz=glsl.FUNC_LIGHT_VEC_TRANSFORM_VTX
                     if (self._clase==GestorShader.ClaseTerreno and config.valbool("terreno.normal_map")) or \
                        (self._clase==GestorShader.ClaseGenerico and config.valbool("generico.normal_map")):
                         fs_func_luz_transform_luz=glsl.FUNC_LIGHT_VEC_TRANSFORM_NORMAL_MAP
-                        texto_fs+=glsl.FS_FUNC_TRANSFORM_LUZ_NORMAL_MAP
+                        texto_fs+=glsl.FUNC_TRANSFORM_LUZ_NORMAL_MAP
                     fs_func_luz_sombra=""
                     if config.valbool("shader.sombras"):
                         if (self._clase==GestorShader.ClaseGenerico and config.valbool("generico.sombras")) or \
                            (self._clase==GestorShader.ClaseTerreno and config.valbool("terreno.sombras")):
                             fs_func_luz_sombra=glsl.FS_FUNC_LUZ_SOMBRA
-                    texto_fs+=glsl.FS_FUNC_LUZ%{"FS_FUNC_LUZ_SOMBRA":fs_func_luz_sombra, 
+                    texto_fs+=glsl.FUNC_LUZ%{"FS_FUNC_LUZ_SOMBRA":fs_func_luz_sombra, 
                                                 "FUNC_LIGHT_VEC_TRANSFORM":fs_func_luz_transform_luz}
                 if self._clase==GestorShader.ClaseTerreno:
                     texto_fs+=glsl.FS_FUNC_TEX_TERRENO%{"FS_FUNC_TEX_LOOK_UP":glsl.FS_FUNC_TEX_LOOK_UP}
@@ -243,15 +247,19 @@ class GestorShader:
             if self._clase!=GestorShader.ClaseSol and self._clase!=GestorShader.ClaseSombra and config.valbool("shader.fog"):
                 texto_fs+=glsl.FS_FUNC_FOG_INICIO
             if self._clase==GestorShader.ClaseGenerico or self._clase==GestorShader.ClaseTerreno:
-                if config.valbool("shader.phong"):
+                if config.valbool("shader.luz"):
                     if self._clase==GestorShader.ClaseTerreno and config.valbool("terreno.normal_map"):
-                        texto_fs+=glsl.FS_MAIN_LUZ%{"FUNC_NORMAL_SOURCE":glsl.FUNC_NORMAL_SOURCE_NORMAL_MAP_TERRENO}
+                        texto_fs+=glsl.MAIN_LUZ%{"FUNC_NORMAL_SOURCE":glsl.FUNC_NORMAL_SOURCE_NORMAL_MAP_TERRENO}
                     elif self._clase==GestorShader.ClaseGenerico and config.valbool("generico.normal_map"):
-                        texto_fs+=glsl.FS_MAIN_LUZ%{"FUNC_NORMAL_SOURCE":glsl.FUNC_NORMAL_SOURCE_NORMAL_MAP_GENERICO}
+                        texto_fs+=glsl.MAIN_LUZ%{"FUNC_NORMAL_SOURCE":glsl.FUNC_NORMAL_SOURCE_NORMAL_MAP_GENERICO}
                     else:
-                        texto_fs+=glsl.FS_MAIN_LUZ%{"FUNC_NORMAL_SOURCE":glsl.FUNC_NORMAL_SOURCE_VTX}
+                        texto_fs+=glsl.MAIN_LUZ%{"FUNC_NORMAL_SOURCE":glsl.FUNC_NORMAL_SOURCE_VTX}
                 else:
-                    texto_fs+=glsl.FS_MAIN_LUZ_BLANCA
+                    texto_fs+=glsl.FS_MAIN_LUZ_BLANCA # y la noche???
+                if config.valbool("shader.sombras") and \
+                    ((self._clase==GestorShader.ClaseGenerico and config.valbool("generico.sombras")) or \
+                     (self._clase==GestorShader.ClaseTerreno and config.valbool("terreno.sombras"))):
+                        texto_fs+=glsl.FS_MAIN_LUZ_SOMBRA
                 if self._clase==GestorShader.ClaseGenerico:
                     texto_fs+=glsl.FS_MAIN_TEX_GENERICO
                 else: # terreno
