@@ -51,6 +51,9 @@ VS_TEX="""
 in vec4 p3d_MultiTexCoord0; // generico, terreno, agua, sol
 out vec4 texcoord; // generico, terreno, agua, sol
 """
+VS_COLOR_VERTEX="""
+out vec4 vcolor;
+"""
 VS_POS_MODELO="""
 out vec4 Position; // fog y cielo
 """
@@ -96,13 +99,14 @@ uniform float altitud_agua;
 uniform vec3 posicion_sol;
 uniform vec4 plano_recorte_agua;
 uniform vec3 pos_pivot_camara;
-uniform vec4 color_luz_ambiental;
 uniform float offset_periodo_cielo;
 uniform vec4 color_cielo_base_inicial;
 uniform vec4 color_cielo_base_final;
 uniform vec4 color_halo_sol_inicial;
 uniform vec4 color_halo_sol_final;
 """
+FS_COLOR_LUZ_AMBIENTAL="uniform vec4 color_luz_ambiental;"
+FS_COLOR_VERTEX="in vec4 vcolor;"
 FS_TEX_0="""
 uniform sampler2D p3d_Texture0; // !cielo
 in vec4 texcoord;
@@ -133,7 +137,7 @@ FS_MAIN_COLOR="""
 
 #
 #
-# OTRO
+# LUZ
 #
 #
 LUZ="""

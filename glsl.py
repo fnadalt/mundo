@@ -41,6 +41,9 @@ VS_MAIN_POSITION="""
 VS_MAIN_VERTEX_PROJ="""
     PositionP=gl_Position; // agua
 """
+VS_MAIN_COLOR_VERTEX="""
+    vcolor=vec4(1.0,0.0,0.0,1.0);
+"""
 VS_MAIN_FIN="""
 }
 """
@@ -330,11 +333,7 @@ FS_MAIN_CLIP_INICIO="""
         //gl_FragColor=vec4(1,0,0,1);
     } else {
 """
-FS_MAIN_LUZ_SOMBRA="""
-        float factor_sombra=shadow2DProj(textura_sombra_0, sombra_0).r; // 120: shadow2DProj?
-        color*=factor_sombra>0.0?factor_sombra:1.0;
-"""
-FS_MAIN_LUZ_BLANCA="color+=vec4(1.0,1.0,1.0,1.0);"
+FS_MAIN_LUZ_BLANCA="               color+=vec4(1.0,1.0,1.0,1.0);"
 FS_MAIN_TEX_GENERICO="""
         // textura: generico
         vec4 color_tex=tex_generico(p3d_Texture0);
@@ -480,17 +479,31 @@ vec3 transform_luz_normal_map(vec3 vec_luz)
     return normalize(M*vec_luz);
 }
 """
-MAIN_LUZ="""
+MAIN_LUCES_GENERICAS_INICIO="""
         // luz: generico y terreno
         int cantidad_luces_genericas=p3d_LightSource.length();
+        float factor_sombra;
         vec3 _normal=%(FUNC_NORMAL_SOURCE)s;
+        vec4 _color;
         for(int i=0; i<cantidad_luces_genericas; ++i)
         {
             if(p3d_LightSource[i].color.a!=0.0)
-            {
-                color+=ds_generico(i,_normal);
+            {"""
+MAIN_LUCES_GENERICAS_FIN="""
+                color+=_color;
             }
-        }
+        }"""
+MAIN_LUCES_GENERICAS_LUCES_PHONG="""
+                _color=ds_generico(i,_normal);
+"""
+MAIN_LUCES_GENERICAS_LUCES_VERTEX="""
+                _color=vcolor;
+"""
+MAIN_LUCES_GENERICAS_SOMBRAS="""
+                factor_sombra=shadow2DProj(p3d_LightSource[i].shadowMap, sombra[i]).r; // 120: shadow2DProj?
+                _color*=factor_sombra;//>0.0?factor_sombra:1.0;
+"""
+MAIN_LUCES_OMNI_AMB="""
         int cantidad_luces_puntuales=luz_omni.length();
         for(int i=0; i<cantidad_luces_puntuales; ++i)
         {
