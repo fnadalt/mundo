@@ -65,9 +65,9 @@ out vec4 PositionV; // luz, fog
 out vec3 Normal;
 """
 VS_SOMBRA="""
-%(STRUCT_LUZ_P3D)s p3d_LightSource[4];
+/*%(STRUCT_LUZ_P3D)s p3d_LightSource[4];*/
 out vec4 sombra[4];
-"""%{"STRUCT_LUZ_P3D":STRUCT_LUZ_P3D}
+"""%{"STRUCT_LUZ_P3D":STRUCT_LUZ_P3D} # ELIMINAR p3d_LightSource
 VS_POS_PROJ="""
 out vec4 PositionP; // agua
 """
@@ -105,7 +105,6 @@ uniform vec4 color_cielo_base_final;
 uniform vec4 color_halo_sol_inicial;
 uniform vec4 color_halo_sol_final;
 """
-FS_COLOR_LUZ_AMBIENTAL="uniform vec4 color_luz_ambiental;"
 FS_COLOR_VERTEX="in vec4 vcolor;"
 FS_TEX_0="""
 uniform sampler2D p3d_Texture0; // !cielo
@@ -124,6 +123,9 @@ in vec4 PositionP; // agua
 """
 FS_TERRENO="""
 flat in vec3 info_tipo;
+"""
+FS_SOMBRA="""
+in vec4 sombra[4];
 """
 FS_NORMAL_MAP="""
 in vec4 tangent;
@@ -157,7 +159,6 @@ uniform struct {
 } p3d_Material;
 %(STRUCT_LUZ_P3D)s p3d_LightSource[4];
 %(STRUCT_LUZ_OMNI)s luz_omni[4];
-in vec4 sombra[4];
 """%{"STRUCT_LUZ_P3D":STRUCT_LUZ_P3D, "STRUCT_LUZ_OMNI":STRUCT_LUZ_OMNI}
 
 #
@@ -165,4 +166,5 @@ in vec4 sombra[4];
 # OTRO
 #
 #
+COLOR_LUZ_AMBIENTAL="uniform vec4 color_luz_ambiental;"
 FUNC_TEX_LOOK_UP="texture"

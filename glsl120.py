@@ -64,9 +64,9 @@ varying vec4 PositionV; // luz, fog
 varying vec3 Normal;
 """
 VS_SOMBRA="""
-%(STRUCT_LUZ_P3D)s p3d_LightSource[4];
+/*%(STRUCT_LUZ_P3D)s p3d_LightSource[4];*/
 varying vec4 sombra[4];
-"""%{"STRUCT_LUZ_P3D":STRUCT_LUZ_P3D}
+"""%{"STRUCT_LUZ_P3D":STRUCT_LUZ_P3D} # ELIMINAR p3d_LightSource
 VS_POS_PROJ="""
 varying vec4 PositionP; // agua
 """
@@ -103,7 +103,6 @@ uniform vec4 color_cielo_base_final;
 uniform vec4 color_halo_sol_inicial;
 uniform vec4 color_halo_sol_final;
 """
-FS_COLOR_LUZ_AMBIENTAL="uniform vec4 color_luz_ambiental;"
 FS_COLOR_VERTEX="varying vec4 vcolor;"
 FS_TEX_0="""
 uniform sampler2D p3d_Texture0; // !cielo
@@ -122,6 +121,9 @@ varying vec4 PositionP; // agua
 """
 FS_TERRENO="""
 varying vec3 info_tipo;
+"""
+FS_SOMBRA="""
+varying vec4 sombra[4];
 """
 FS_NORMAL_MAP="""
 varying vec4 tangent;
@@ -165,3 +167,4 @@ varying vec4 sombra[4];
 #
 #
 FUNC_TEX_LOOK_UP="texture2D"
+COLOR_LUZ_AMBIENTAL="uniform vec4 color_luz_ambiental;"
