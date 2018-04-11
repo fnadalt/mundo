@@ -18,7 +18,7 @@ VS_MAIN_VIEW="""
 """
 VS_MAIN_SOMBRA="""
     //for(int i=0;i<p3d_LightSource.length();++i){
-        sombra[i]=p3d_LightSource[i].shadowViewMatrix * PositionV;
+                sombra[i]=p3d_LightSource[i].shadowViewMatrix * PositionV;
     //}
 """
 VS_MAIN_TEX="""
@@ -47,6 +47,9 @@ VS_MAIN_VERTEX_PROJ="""
 VS_MAIN_COLOR_VERTEX="""
     vcolor=color;
 """
+VS_MAIN_LUZ_BASE="""
+    vcolor=color_luz_ambiental;
+""" # sirve?
 VS_MAIN_FIN="""
 }
 """
@@ -336,7 +339,7 @@ FS_MAIN_CLIP_INICIO="""
         //gl_FragColor=vec4(1,0,0,1);
     } else {
 """
-FS_MAIN_LUZ_BLANCA="               color+=vec4(1.0,1.0,1.0,1.0);"
+FS_MAIN_LUZ_BASE="               color+=2.75*amb();" # sirve?
 FS_MAIN_TEX_GENERICO="""
         // textura: generico
         vec4 color_tex=tex_generico(p3d_Texture0);
@@ -419,10 +422,6 @@ FS_MAIN_FIN="""
 #
 FUNC_LUZ="""
 // generico y terreno
-vec4 amb()
-{
-    return color_luz_ambiental*p3d_Material.ambient;
-}
 vec4 ds_generico(int iLightSource, vec4 PosV, vec3 normal)
 {
     vec4 color;
@@ -472,6 +471,24 @@ vec4 ds_puntual(int i_luz_omni, vec4 PosV, vec3 normal)
     return color;
 }
 """
+FUNC_LUZ_AMB="""
+uniform struct {
+    vec4 ambient;
+    vec4 diffuse;
+    vec4 emission;
+    vec3 specular;
+    float shininess;
+    vec4 baseColor;
+    float roughness;
+    float metallic;
+    float refractiveIndex;
+} p3d_Material;
+
+vec4 amb()
+{
+    return color_luz_ambiental*p3d_Material.ambient;
+}
+"""
 FUNC_TRANSFORM_LUZ_NORMAL_MAP="""
 vec3 transform_luz_normal_map(vec3 vec_luz)
 {
@@ -482,33 +499,40 @@ vec3 transform_luz_normal_map(vec3 vec_luz)
     return normalize(M*vec_luz);
 }
 """
-MAIN_LUCES_GENERICAS_INICIO="""
+MAIN_LUCES_GENERICAS_LOCALES="""
         // luz: generico y terreno
-        int cantidad_luces_genericas=p3d_LightSource.length();
         float factor_sombra;
+        float factor_sombra_total=0; // para per vertex
+        int cantidad_luces_efectivas=0;
         vec3 _normal=%(FUNC_NORMAL_SOURCE)s;
-        vec4 _color;
-        for(int i=0; i<cantidad_luces_genericas; ++i)
+        vec4 _color%(ASIGNAR_VCOLOR)s;
+"""
+MAIN_LUCES_GENERICAS_INICIO="""
+        for(int i=0; i<p3d_LightSource.length(); ++i)
         {
             if(p3d_LightSource[i].color.a!=0.0)
             {"""
+MAIN_LUCES_GENERICAS_LUCES_PHONG="""
+                _color=ds_generico(i,PositionV,_normal);
+"""
+MAIN_LUCES_GENERICAS_SOMBRAS_PHONG="""
+                factor_sombra=shadow2DProj(p3d_LightSource[i].shadowMap, sombra[i]).r; // 120: shadow2DProj?
+                _color*=factor_sombra;//>0.0?factor_sombra:1.0;
+"""
+MAIN_LUCES_GENERICAS_SOMBRAS_PERVERTEX="""
+                factor_sombra_total+=shadow2DProj(p3d_LightSource[i].shadowMap, sombra[i]).r; // 120: shadow2DProj?
+                cantidad_luces_efectivas+=1;
+"""
 MAIN_LUCES_GENERICAS_SUMAR_COLOR="""
                 color+=_color;
 """
 MAIN_LUCES_GENERICAS_FIN="""
             }
         }"""
-MAIN_LUCES_GENERICAS_LUCES_PHONG="""
-                _color=ds_generico(i,PositionV,_normal);
-"""
 MAIN_LUCES_GENERICAS_LUCES_VERTEX="""
-        color+=vcolor;
+        color+=_color*(cantidad_luces_efectivas>0.0?(factor_sombra_total/cantidad_luces_efectivas):1.0);
 """
-MAIN_LUCES_GENERICAS_SOMBRAS="""
-                factor_sombra=shadow2DProj(p3d_LightSource[i].shadowMap, sombra[i]).r; // 120: shadow2DProj?
-                _color*=factor_sombra;//>0.0?factor_sombra:1.0;
-"""
-MAIN_LUCES_OMNI_AMB="""
+MAIN_LUCES_OMNI="""
         int cantidad_luces_puntuales=luz_omni.length();
         for(int i=0; i<cantidad_luces_puntuales; ++i)
         {
@@ -517,6 +541,8 @@ MAIN_LUCES_OMNI_AMB="""
                 color+=ds_puntual(i,PositionV,_normal);
             }
         }
+"""
+MAIN_LUCES_AMB="""
         color+=amb();
 """
 

@@ -145,17 +145,6 @@ LUZ="""
 /*uniform struct {
     vec4 ambient;
 } p3d_LightModel;*/
-uniform struct {
-    vec4 ambient;
-    vec4 diffuse;
-    vec4 emission;
-    vec3 specular;
-    float shininess;
-    vec4 baseColor;
-    float roughness;
-    float metallic;
-    float refractiveIndex;
-} p3d_Material;
 %(STRUCT_LUZ_P3D)s p3d_LightSource[4];
 %(STRUCT_LUZ_OMNI)s luz_omni[4];
 varying vec4 sombra[4];
