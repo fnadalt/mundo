@@ -158,7 +158,7 @@ vec4 tex_terreno(sampler2D textura, bool normal_map)
         distancia=abs(distancias.y);
     }
     //
-    float factor_ruido=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture1,vec2(texcoord.s,-texcoord.t)).r;
+    float factor_ruido=%(FS_FUNC_TEX_LOOK_UP)s(p3d_Texture2,vec2(texcoord.s,-texcoord.t)).r;
     //
     vec4 color0;
     //

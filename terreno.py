@@ -103,7 +103,7 @@ class Terreno:
         idx_pos=(idx[0], idx[1])
         datos_parcela=self.sistema.parcelas[idx_pos]
         # nodo
-        lod=2#idx[2] !!!
+        lod=1 #idx[2] !!!
         parcela_node_path=None
         ruta_archivo_cache=os.path.join(self.directorio_cache, "%s_lod%i.bam"%(nombre, lod))
         if not os.path.exists(ruta_archivo_cache):
@@ -312,11 +312,11 @@ class Terreno:
             imagen_ruido.write(ruta_tex_ruido)
         #
         ts0=TextureStage("ts_terreno_lod0")
-        textura_terreno_lod0=self.base.loader.loadTexture("texturas/terreno4.png")
+        textura_terreno_lod0=self.base.loader.loadTexture("texturas/terreno2.png")
         self.nodo_parcelas.setTexture(ts0, textura_terreno_lod0, priority=2)
         #
         ts1=TextureStage("ts_terreno_lod1")
-        textura_terreno_lod1=self.base.loader.loadTexture("texturas/terreno5.png")
+        textura_terreno_lod1=self.base.loader.loadTexture("texturas/terreno4.png")
         self.nodo_parcelas.setTexture(ts1, textura_terreno_lod1, priority=2)
         #
         ts2=TextureStage("ts_ruido")
