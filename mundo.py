@@ -368,9 +368,9 @@ class Mundo:
     def _update(self, task):
         if self._counter==50:
             info=""
-            #info+=self.sistema.obtener_info()+"\n"
+            info+=self.sistema.obtener_info()+"\n"
             #info+=self.terreno.obtener_info()+"\n"
-            info+=self.hombre.obtener_info()+"\n"
+            #info+=self.hombre.obtener_info()+"\n"
             #info+=self.agua.obtener_info()+"\n"
             #info+=self.objetos.obtener_info()+"\n"
             #info+=self.input_mapper.obtener_info()+"\n"

@@ -224,6 +224,7 @@ class Sistema:
         self.precipitacion_actual_t=0.0
         # variables internas:
         self._segundos_transcurridos_dia=0.0
+        self._stats_altitud=0
         #
         self.cargar_parametros_iniciales(defecto=True)
 
@@ -232,7 +233,8 @@ class Sistema:
         bioma=self.obtener_bioma_transicion(self.posicion_cursor)
         info="Sistema posicion_cursor=(%.3f,%.3f,%.3f) idx_pos=(%i,%i)\n"%(self.posicion_cursor[0], self.posicion_cursor[1], self.posicion_cursor[2], idx_pos[0], idx_pos[1])
         info+="era: año=%i estacion=%i dia=%i hora=%.2f(%.2f/%i) periodo_dia_actual=%i\n"%(self.ano, self.estacion, self.dia, self.hora_normalizada, self._segundos_transcurridos_dia, self.duracion_dia_segundos, self.periodo_dia_actual)
-        info+="temp=%.2f nubosidad=%.2f precipitacion=[tipo=%i intens=%i t=(%.2f/%2.f)] bioma=(%s) "%(self.temperatura_actual_norm, self.nubosidad, self.precipitacion_actual_tipo, self.precipitacion_actual_intensidad, self.precipitacion_actual_t, self.precipitacion_actual_duracion, str(bioma))
+        info+="temp=%.2f nubosidad=%.2f precipitacion=[tipo=%i intens=%i t=(%.2f/%2.f)] bioma=(%s)\n"%(self.temperatura_actual_norm, self.nubosidad, self.precipitacion_actual_tipo, self.precipitacion_actual_intensidad, self.precipitacion_actual_t, self.precipitacion_actual_duracion, str(bioma))
+        info+="_stats_altitud=%i "%(self._stats_altitud)
         if idx_pos in self.parcelas:
             x_parcela=int(self.posicion_cursor[0]%Sistema.TopoTamanoParcela)
             y_parcela=int(self.posicion_cursor[1]%Sistema.TopoTamanoParcela)
@@ -310,6 +312,7 @@ class Sistema:
         self._terminar_db()
     
     def update(self, dt, posicion_cursor):
+        self._stats_altitud=0
         #
         self.posicion_cursor=posicion_cursor
         self.posicion_cursor[2]=self.obtener_altitud_suelo_datos_parcela(posicion_cursor) # poco eficiente?
@@ -322,6 +325,7 @@ class Sistema:
         if _idx_pos_parcela_actual!=self.idx_pos_parcela_actual:
             self.idx_pos_parcela_actual=_idx_pos_parcela_actual
             self._establecer_datos_parcelas_rango(self.posicion_cursor, self.idx_pos_parcela_actual)
+        #
 
 ##    def obtener_descriptor_locacion(self, posicion): # ELIMINAR
 #        altitud_suelo=self.obtener_altitud_suelo(posicion)
@@ -337,6 +341,7 @@ class Sistema:
 #        return desc
     
     def obtener_altitud_suelo(self, posicion):
+        self._stats_altitud+=1
         #
         altitud=0
         # perlin noise object
