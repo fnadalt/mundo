@@ -1,7 +1,7 @@
 from panda3d.core import *
 import os, os.path
 
-import sistema, config
+from sistema import Sistema, config
 from shader import GestorShader
 
 import logging
@@ -37,7 +37,7 @@ class Objetos:
     def iniciar(self):
         log.info("iniciar")
         # sistema
-        self.sistema=sistema.obtener_instancia()
+        self.sistema=Sistema.obtener_instancia()
         #
         self.directorio_cache=os.path.join(self.sistema.directorio_general_cache, Objetos.DirectorioCache)
         if not os.path.exists(self.directorio_cache):
@@ -143,8 +143,8 @@ class Objetos:
             parcela_node_path=self.nodo.attachNewNode("%s"%nombre)
             parcela_node_path.setPos(pos[0], pos[1], 0.0)
             # lod
-            lod=LODNode("%s_lod"%nombre)
-            lod_np=NodePath(lod)
+            _lod=LODNode("%s_lod"%nombre)
+            lod_np=NodePath(_lod)
             lod_np.reparentTo(parcela_node_path)
             lod_np.setPos(0.0, 0.0, altitud_suelo)
             # colocar objetos
@@ -154,8 +154,8 @@ class Objetos:
             # nodos lod vegetacion
             concentradores_lod=list()
             for i_lod in range(len(self._lods)):
-                lod.addSwitch(self._lods[i_lod][0], self._lods[i_lod][1])
-                lod.setCenter(Vec3(sistema.Sistema.TopoTamanoParcela/2, sistema.Sistema.TopoTamanoParcela/2, 0.0))
+                _lod.addSwitch(self._lods[i_lod][0], self._lods[i_lod][1])
+                _lod.setCenter(Vec3(Sistema.TopoTamanoParcela/2, Sistema.TopoTamanoParcela/2, 0.0))
                 concentrador_lod=lod_np.attachNewNode("concentrador_lod%i"%i_lod)
                 concentradores_lod.append(concentrador_lod)
                 unificadores.append(Unificador(concentrador_lod))

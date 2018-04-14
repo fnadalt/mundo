@@ -10,26 +10,7 @@ import config
 import logging
 log=logging.getLogger(__name__)
 
-instancia=None
-def establecer_instancia(sistema):
-    global instancia
-    log.info("establecer_instancia")
-    if instancia:
-        raise Exception("instancia de sistema ya definida")
-    instancia=sistema
-
-def obtener_instancia():
-    if not instancia:
-        raise Exception("instancia de sistema no iniciada.")
-    return instancia
-
-def remover_instancia():
-    global instancia
-    log.info("remover_instancia")
-    if not instancia:
-        raise Exception("instancia de sistema no iniciada.")
-    instancia.terminar()
-    instancia=None
+_instancia=None
 
 #
 #
@@ -189,6 +170,29 @@ class Sistema:
                         BiomaSelva:Vec4(0, 255, 0, 255), # verde
                         BiomaDesierto:Vec4(128, 128, 128, 255) # gris
                         }
+    
+    @staticmethod
+    def establecer_instancia(sistema):
+        global _instancia
+        log.info("establecer_instancia")
+        if _instancia:
+            raise Exception("instancia de sistema ya definida")
+        _instancia=sistema
+
+    @staticmethod
+    def obtener_instancia():
+        if not _instancia:
+            raise Exception("instancia de sistema no iniciada.")
+        return _instancia
+
+    @staticmethod
+    def remover_instancia():
+        global _instancia
+        log.info("remover_instancia")
+        if not _instancia:
+            raise Exception("instancia de sistema no iniciada.")
+        _instancia.terminar()
+        _instancia=None
     
     def __init__(self):
         # componentes:

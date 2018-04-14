@@ -3,7 +3,7 @@ from direct.gui.DirectGui import *
 from panda3d.bullet import *
 from panda3d.core import *
 
-import sistema
+from sistema import Sistema
 #
 from cielo import Cielo
 from sol import Sol
@@ -47,11 +47,11 @@ class Mundo:
     def iniciar(self):
         log.info("iniciar")
         # sistema:
-        self.sistema=sistema.Sistema()
+        self.sistema=Sistema()
         self.sistema.iniciar()
         self.sistema.cargar_parametros_iniciales()
         self.sistema.update(0.0, self.sistema.posicion_cursor)
-        sistema.establecer_instancia(self.sistema)
+        Sistema.establecer_instancia(self.sistema)
         # fisica:
         self._configurar_fisica()
         # mundo:
@@ -103,7 +103,7 @@ class Mundo:
             self.terreno.terminar()
         #
         self.sistema=None
-        sistema.remover_instancia()
+        Sistema.remover_instancia()
 
     def _hacer(self, que):
         if que==0:
@@ -139,10 +139,10 @@ class Mundo:
 
     def _establecer_shader(self):
         log.info("_establecer_shader")
-        GestorShader.iniciar(self.base, sistema.Sistema.TopoAltitudOceano, Vec4(0, 0, 1, sistema.Sistema.TopoAltitudOceano))
+        GestorShader.iniciar(self.base, Sistema.TopoAltitudOceano, Vec4(0, 0, 1, Sistema.TopoAltitudOceano))
         #
         # ¿esto habra solucionado el problema del clipping caprichoso?
-        self.nodo.setShaderInput("altitud_agua", sistema.Sistema.TopoAltitudOceano, 0.0, 0.0, 0.0, priority=1)
+        self.nodo.setShaderInput("altitud_agua", Sistema.TopoAltitudOceano, 0.0, 0.0, 0.0, priority=1)
         #
         #GestorShader.aplicar(self.nodo, GestorShader.ClaseGenerico, 1) # quitarlo, optimizacion?
         #GestorShader.aplicar(self, GestorShader.ClaseDebug, 1000)
@@ -211,7 +211,7 @@ class Mundo:
         #
         for _personaje in self._personajes:
             _personaje.input_mapper=self.input_mapper
-            _personaje.altitud_agua=sistema.Sistema.TopoAltitudOceano
+            _personaje.altitud_agua=Sistema.TopoAltitudOceano
             _personaje.iniciar(self.nodo, self.bullet_world)
         # posicionar
         self.hombre.setPos(self.sistema.posicion_cursor)
@@ -338,10 +338,15 @@ class Mundo:
         self.terreno.nodo.reparentTo(self.nodo)
         self.terreno.update()
         # cielo
-        self.cielo=Cielo(self.base, sistema.Sistema.TopoAltitudOceano-20.0)
+        self.cielo=Cielo(self.base, Sistema.TopoAltitudOceano-20.0)
         self.cielo.nodo.reparentTo(self.nodo)
+        # agua
+        self.agua=Agua(self.base, Sistema.TopoAltitudOceano)
+        self.agua.nodo.reparentTo(self.nodo) # estaba self.base.render
+        self.agua.generar()
+#        self.agua.mostrar_camaras()
         # sol
-        self.sol=Sol(self.base, sistema.Sistema.TopoAltitudOceano-20.0)
+        self.sol=Sol(self.base, Sistema.TopoAltitudOceano-20.0)
         self.sol.pivot.reparentTo(self.nodo) # self.cielo.nodo
 #        self.sol.mostrar_camaras()
         self.nodo.setLight(self.sol.luz)
@@ -350,19 +355,14 @@ class Mundo:
         self.objetos.iniciar()
         self.objetos.nodo.reparentTo(self.nodo)
         self.objetos.update()
-        # agua
-        self.agua=Agua(self.base, sistema.Sistema.TopoAltitudOceano)
-        self.agua.nodo.reparentTo(self.nodo) # estaba self.base.render
-        self.agua.generar()
-#        self.agua.mostrar_camaras()
         #
-        #self.cielo.nodo.setBin("background", 0)
-        #self.sol.nodo.setBin("background", 1)
-        #self.agua.nodo.setBin("background", 2)
-        #self.terreno.nodo.setBin("opaque", 0)
-        #self.objetos.nodo.setBin("transparent", 0)
+#        self.cielo.nodo.setBin("background", 0)
+#        self.agua.nodo.setBin("background", 1)
+#        self.sol.nodo.setBin("background", 2)
+#        self.terreno.nodo.setBin("opaque", 0)
+#        self.objetos.nodo.setBin("transparent", 0)
         #
-        self.controlador_camara.altitud_agua=sistema.Sistema.TopoAltitudOceano
+        self.controlador_camara.altitud_agua=Sistema.TopoAltitudOceano
         #
 
     def _update(self, task):
@@ -376,7 +376,7 @@ class Mundo:
             #info+=self.input_mapper.obtener_info()+"\n"
             #info+=self.cielo.obtener_info()
             #info+=self.sol.obtener_info()+"\n"
-            self.texto1.setText(info)
+            #self.texto1.setText(info)
         # tiempo
         dt=self.base.taskMgr.globalClock.getDt()
         # input

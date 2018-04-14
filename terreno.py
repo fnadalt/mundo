@@ -2,7 +2,7 @@ from panda3d.bullet import *
 from panda3d.core import *
 
 from shader import GestorShader
-import sistema, config
+from sistema import Sistema, config
 
 import math
 
@@ -36,7 +36,7 @@ class Terreno:
     def iniciar(self):
         log.info("iniciar")
         #
-        self.sistema=sistema.obtener_instancia()
+        self.sistema=Sistema.obtener_instancia()
         #
         self.directorio_cache=os.path.join(self.sistema.directorio_general_cache, Terreno.DirectorioCache)
         if not os.path.exists(self.directorio_cache):
@@ -163,17 +163,17 @@ class Terreno:
 #        data=list() # x,y: [[n, ...], ...]
 #        _pos=(0, 0)
 #        tc_x, tc_y=0.0, 0.0
-#        for x in range(sistema.Sistema.TopoTamanoParcela+3):
+#        for x in range(Sistema.TopoTamanoParcela+3):
 #            if x==1: # 1, en vez de 0
 #                tc_x=0.0
 #            else:
-#                tc_x=x/(sistema.Sistema.TopoTamanoParcela+1)
+#                tc_x=x/(Sistema.TopoTamanoParcela+1)
 #            data.append(list())
-#            for y in range(sistema.Sistema.TopoTamanoParcela+3):
+#            for y in range(Sistema.TopoTamanoParcela+3):
 #                if y==1: # 1, en vez de 0
 #                    tc_y=0.0
 #                else:
-#                    tc_y=y/(sistema.Sistema.TopoTamanoParcela+1)
+#                    tc_y=y/(Sistema.TopoTamanoParcela+1)
 #                d=DatosLocalesTerreno()
 #                #data.index=None # no establecer en esta instancia
 #                _pos=(pos[0]+x-1, pos[1]+y-1)
@@ -184,8 +184,8 @@ class Terreno:
 #                d.precipitacion_frecuencia=precipitacion_frecuencia
 #                data[x].append(d)
 #        # calcular normales
-#        for x in range(sistema.Sistema.TopoTamanoParcela+1):
-#            for y in range(sistema.Sistema.TopoTamanoParcela+1):
+#        for x in range(Sistema.TopoTamanoParcela+1):
+#            for y in range(Sistema.TopoTamanoParcela+1):
 #                v0=data[x+1][y+1].pos
 #                v1=data[x+2][y+1].pos
 #                v2=data[x+1][y+2].pos
@@ -200,8 +200,8 @@ class Terreno:
 #                n_avg=(n0+n1+n2+n3)/4.0
 #                data[x+1][y+1].normal=n_avg
 #        # calcular tangent & binormal
-#        for x in range(sistema.Sistema.TopoTamanoParcela+1):
-#            for y in range(sistema.Sistema.TopoTamanoParcela+1):
+#        for x in range(Sistema.TopoTamanoParcela+1):
+#            for y in range(Sistema.TopoTamanoParcela+1):
 #                v0, tc0, n0=data[x+1][y+1].pos, data[x+1][y+1].tc, data[x+1][y+1].normal
 #                v1, tc1=data[x+2][y+1].pos, data[x+2][y+1].tc
 #                v2, tc2=data[x+1][y+2].pos, data[x+1][y+2].tc
@@ -233,7 +233,7 @@ class Terreno:
         formato.addArray(format_array)
         # iniciar vértices y primitivas
         vdata=GeomVertexData("vertex_data", GeomVertexFormat.registerFormat(formato), Geom.UHStatic)
-        vdata.setNumRows((sistema.Sistema.TopoTamanoParcela+1)*(sistema.Sistema.TopoTamanoParcela+1)) # +1 ?
+        vdata.setNumRows((Sistema.TopoTamanoParcela+1)*(Sistema.TopoTamanoParcela+1)) # +1 ?
         prim=GeomTriangles(Geom.UHStatic)
         # vertex writers
         wrt_v=GeomVertexWriter(vdata, InternalName.getVertex())
@@ -244,7 +244,7 @@ class Terreno:
         if con_color: wrt_c=GeomVertexWriter(vdata, co_color) # debug
         # llenar datos de vertices
         paso=2**lod
-        tamano=int(sistema.Sistema.TopoTamanoParcela/paso)
+        tamano=int(Sistema.TopoTamanoParcela/paso)
         #log.debug("_generar_geometria_parcela tamano=%i paso=%i"%(tamano, paso))
         i_vertice=0
         for x in range(tamano+1):
@@ -404,12 +404,12 @@ class Tester(ShowBase):
         self.escribir_archivo=False # cada update
         #
         config.iniciar()
-        self.sistema=sistema.Sistema()
+        self.sistema=Sistema()
         self.sistema.radio_expansion_parcelas=2
         self.sistema.iniciar()
-        sistema.establecer_instancia(self.sistema)
+        Sistema.establecer_instancia(self.sistema)
         #
-        GestorShader.iniciar(self, sistema.Sistema.TopoAltitudOceano, Vec4(0, 0, 1, sistema.Sistema.TopoAltitudOceano))
+        GestorShader.iniciar(self, Sistema.TopoAltitudOceano, Vec4(0, 0, 1, Sistema.TopoAltitudOceano))
         GestorShader.aplicar(self.render, GestorShader.ClaseGenerico, 1)
         self.render.setShaderInput("distancia_fog_maxima", 3000.0, 0, 0, 0, priority=3)
         #
@@ -418,7 +418,7 @@ class Tester(ShowBase):
         #self.terreno.nodo.setRenderModeWireframe()
         #
         plano=CardMaker("plano_agua")
-        r=sistema.Sistema.TopoTamanoParcela*6
+        r=Sistema.TopoTamanoParcela*6
         plano.setFrame(-r, r, -r, r)
         plano.setColor((0, 0, 1, 1))
         self.plano_agua=self.render.attachNewNode(plano.generate())
@@ -430,7 +430,7 @@ class Tester(ShowBase):
         #
         self.cam_driver=self.render.attachNewNode("cam_driver")
         self.camera.reparentTo(self.cam_driver)
-        self.camera.setPos(sistema.Sistema.TopoTamanoParcela/2, 500, 100)
+        self.camera.setPos(Sistema.TopoTamanoParcela/2, 500, 100)
         self.camera.lookAt(self.cam_driver)
         self.cam_driver.setP(self.cam_pitch)
         #
@@ -513,9 +513,9 @@ class Tester(ShowBase):
         if self.escribir_archivo:
             log.info("escribir_archivo")
             self.terreno.nodo.writeBamFile("terreno.bam")
-        self.plano_agua.setPos(Vec3(self.sistema.posicion_cursor[0], self.sistema.posicion_cursor[1], sistema.Sistema.TopoAltitudOceano))
+        self.plano_agua.setPos(Vec3(self.sistema.posicion_cursor[0], self.sistema.posicion_cursor[1], Sistema.TopoAltitudOceano))
         #
-        self.cam_driver.setPos(Vec3(self.sistema.posicion_cursor[0]+sistema.Sistema.TopoTamanoParcela/2, self.sistema.posicion_cursor[1]-sistema.Sistema.TopoTamanoParcela, sistema.Sistema.TopoAltitudOceano))
+        self.cam_driver.setPos(Vec3(self.sistema.posicion_cursor[0]+Sistema.TopoTamanoParcela/2, self.sistema.posicion_cursor[1]-Sistema.TopoTamanoParcela, Sistema.TopoAltitudOceano))
         #
         self.lblInfo["text"]=self.terreno.obtener_info()
         #
@@ -695,11 +695,11 @@ class Tester(ShowBase):
             for y in range(tamano+1):
                 _x=self.sistema.posicion_cursor[0]+zoom*(tamano/2.0)-zoom*x
                 _y=self.sistema.posicion_cursor[1]-zoom*(tamano/2.0)+zoom*y
-                a=self.terreno.sistema.obtener_altitud_suelo((_x, _y))/sistema.Sistema.TopoAltura
+                a=self.terreno.sistema.obtener_altitud_suelo((_x, _y))/Sistema.TopoAltura
                 if x==tamano/2 or y==tamano/2:
                     self.imagen.setXel(x, y, 1.0)
                 else:
-                    if a>(sistema.Sistema.TopoAltitudOceano/sistema.Sistema.TopoAltura):
+                    if a>(Sistema.TopoAltitudOceano/Sistema.TopoAltura):
                         self.imagen.setXel(x, y, a, a, 0.0)
                     else:
                         self.imagen.setXel(x, y, 0.0, 0.0, a)
