@@ -55,6 +55,26 @@ class InputMapper:
 
 #
 #
+# InputMapperNulo
+#
+#
+nulo=None
+class InputMapperNulo(InputMapper):
+
+    def obtener_instancia(self):
+        global nulo
+        if not nulo:
+            nulo=InputMapperNulo()
+        return nulo
+
+    def __init__(self, base):
+        InputMapper.__init__(self, base)
+
+    def update(self):
+        pass
+
+#
+#
 # InputMapperTecladoMouse
 #
 #

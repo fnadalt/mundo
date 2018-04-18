@@ -370,13 +370,13 @@ class Mundo:
             info=""
             info+=self.sistema.obtener_info()+"\n"
             #info+=self.terreno.obtener_info()+"\n"
-            #info+=self.hombre.obtener_info()+"\n"
+            info+=self.hombre.obtener_info()+"\n"
             #info+=self.agua.obtener_info()+"\n"
             #info+=self.objetos.obtener_info()+"\n"
             #info+=self.input_mapper.obtener_info()+"\n"
             #info+=self.cielo.obtener_info()
             #info+=self.sol.obtener_info()+"\n"
-            #self.texto1.setText(info)
+            self.texto1.setText(info)
         # tiempo
         dt=self.base.taskMgr.globalClock.getDt()
         # input
@@ -408,8 +408,6 @@ class Mundo:
             self.nodo.setShaderInput("posicion_sol", self.sol.nodo.getPos(self.nodo), priority=10)
         # personajes
         for _personaje in self._personajes:
-            _altitud_suelo=self.sistema.obtener_altitud_suelo(_personaje.cuerpo.getPos())
-            _personaje.altitud_suelo=_altitud_suelo
             _personaje.update(dt)
         # contador 1/50
         if self._counter==50:

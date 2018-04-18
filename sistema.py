@@ -319,7 +319,7 @@ class Sistema:
         self._stats_altitud=0
         #
         self.posicion_cursor=posicion_cursor
-        self.posicion_cursor[2]=self.obtener_altitud_suelo_datos_parcela(posicion_cursor) # poco eficiente?
+        self.posicion_cursor[2]=self.obtener_altitud_suelo(posicion_cursor) # poco eficiente?
         #
         self._establecer_fecha_hora_estacion(dt)
         self._establecer_temperatura_actual_norm(dt)
@@ -375,19 +375,6 @@ class Sistema:
     def obtener_altitud_suelo_cursor(self):
         return self.obtener_altitud_suelo(self.posicion_cursor)
 
-    def obtener_altitud_suelo_datos_parcela(self, posicion, idx_pos=None):
-        altitud=0.0
-        _idx_pos=idx_pos if idx_pos!=None else self.obtener_indice_parcela(posicion)
-        if _idx_pos in self.parcelas:
-            datos_parcela=self.parcelas[_idx_pos]
-            x=int(posicion[0]%Sistema.TopoTamanoParcela) # o %datos_parcela.tamano)?
-            y=int(posicion[1]%Sistema.TopoTamanoParcela)
-            loc=datos_parcela.loc[x][y]
-            altitud=loc.posicion[2]
-        else:
-            altitud=self.obtener_altitud_suelo(posicion)
-        return altitud
-        
     def obtener_altitud_tope(self, posicion):
         # a implementar para grillas 3D, con cuevas, etc...
         return 5.0*Sistema.TopoAltura
@@ -399,7 +386,7 @@ class Sistema:
         return altitud
 
     def obtener_posicion_3d(self, posicion2d):
-        return Vec3(posicion2d[0], posicion2d[1], self.obtener_altitud_suelo_datos_parcela(posicion2d))
+        return Vec3(posicion2d[0], posicion2d[1], self.obtener_altitud_suelo(posicion2d))
 
     def obtener_nivel_altitud(self, posicion):
         altitud=posicion[2]
@@ -990,12 +977,12 @@ class GeneradorDatosTerreno:
                 _x, _y=loc.posicion[0], loc.posicion[1]
                 # normal
                 v0=loc.posicion # [x][y]
-                v1=Vec3(_x+1, _y  , self.sistema.obtener_altitud_suelo_datos_parcela((_x+1, _y  )))
-                v2=Vec3(_x,   _y+1, self.sistema.obtener_altitud_suelo_datos_parcela((_x  , _y+1)))
-                v3=Vec3(_x+1, _y-1, self.sistema.obtener_altitud_suelo_datos_parcela((_x+1, _y-1)))
-                v4=Vec3(_x-1, _y+1, self.sistema.obtener_altitud_suelo_datos_parcela((_x-1, _y+1)))
-                v5=Vec3(_x-1, _y  , self.sistema.obtener_altitud_suelo_datos_parcela((_x-1, _y  )))
-                v6=Vec3(_x  , _y-1, self.sistema.obtener_altitud_suelo_datos_parcela((_x  , _y-1)))
+                v1=Vec3(_x+1, _y  , self.sistema.obtener_altitud_suelo((_x+1, _y  )))
+                v2=Vec3(_x,   _y+1, self.sistema.obtener_altitud_suelo((_x  , _y+1)))
+                v3=Vec3(_x+1, _y-1, self.sistema.obtener_altitud_suelo((_x+1, _y-1)))
+                v4=Vec3(_x-1, _y+1, self.sistema.obtener_altitud_suelo((_x-1, _y+1)))
+                v5=Vec3(_x-1, _y  , self.sistema.obtener_altitud_suelo((_x-1, _y  )))
+                v6=Vec3(_x  , _y-1, self.sistema.obtener_altitud_suelo((_x  , _y-1)))
                 tc0=Vec2(tc_x        , tc_y        )
                 tc1=Vec2(tc_x+frac_tc, tc_y        )
                 tc2=Vec2(tc_x        , tc_y+frac_tc)

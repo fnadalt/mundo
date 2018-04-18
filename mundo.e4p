@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-5.1.dtd">
 <!-- eric project file for project mundo -->
-<!-- Saved: 2018-04-11, 16:21:08 -->
+<!-- Saved: 2018-04-14, 16:26:22 -->
 <!-- Copyright (C) 2018 Fernando Nadal Testa, fnt2006@gmail.com -->
 <Project version="5.1">
   <Language>en_US</Language>
@@ -21,6 +21,7 @@
     <Source>cielo.py</Source>
     <Source>config.py</Source>
     <Source>corregir_egg.py</Source>
+    <Source>entidad.py</Source>
     <Source>glsl.py</Source>
     <Source>glsl120.py</Source>
     <Source>glsl130.py</Source>

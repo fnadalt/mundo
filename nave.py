@@ -43,4 +43,6 @@ class Nave(Personaje):
         pass
     
     def _procesar_contactos(self):
-        pass
+        #
+        if self.cuerpo.node().isStatic():
+            return

@@ -17,7 +17,6 @@ class Hombre(Personaje):
 
     # estados
     # capa 0; un solo estado
-    EstadoQuieto=1
     EstadoCaminando=2
     EstadoCorriendo=3
     EstadoSaltando=4
@@ -50,8 +49,8 @@ class Hombre(Personaje):
         # actor
         self.actor.setScale(0.06)
         # establecer estado inicial Quieto
-        self._estado_capa[0]=Hombre.EstadoQuieto
-        self._cambio_estado(0, Personaje.EstadoNulo, Hombre.EstadoQuieto)
+        self._estado_capa[0]=Personaje.EstadoQuieto
+        self._cambio_estado(0, Personaje.EstadoNulo, Personaje.EstadoQuieto)
 
     def _generar_cuerpo_fisica(self):
         shp=BulletCapsuleShape(0.25, 0.5, ZUp)
@@ -69,7 +68,7 @@ class Hombre(Personaje):
         # capa 0
         if idx_capa==0:
             # quieto
-            if estado_actual==Hombre.EstadoQuieto:
+            if estado_actual==Personaje.EstadoQuieto:
                 #->caminar
                 if self.input_mapper.accion==InputMapper.AccionAvanzar:
                     estado_nuevo=Hombre.EstadoCaminando
@@ -90,19 +89,19 @@ class Hombre(Personaje):
                 estado_nuevo=Hombre.EstadoCorriendo if self.input_mapper.parametro(InputMapper.ParametroRapido) else Hombre.EstadoCaminando
                 #->quieto
                 if self.input_mapper.accion!=InputMapper.AccionAvanzar:
-                    estado_nuevo=Hombre.EstadoQuieto
+                    estado_nuevo=Personaje.EstadoQuieto
                 #->saltar
                 if self.input_mapper.accion==InputMapper.AccionAscender:
                     estado_nuevo=Hombre.EstadoSaltando
             # cayendo
             elif estado_actual==Hombre.EstadoCayendo:
                 if self._suelo!=Personaje.SueloNulo:
-                    estado_nuevo=Hombre.EstadoQuieto
+                    estado_nuevo=Personaje.EstadoQuieto
             # conduciendo
             elif estado_actual==Hombre.EstadoConduciendo:
                 if not Hombre.EstadoAgarrando in self.objetos_estados:
                     #-> quieto
-                    estado_nuevo=Hombre.EstadoQuieto
+                    estado_nuevo=Personaje.EstadoQuieto
             #
             # sin suelo
             if self._suelo==Personaje.SueloNulo:
@@ -128,7 +127,7 @@ class Hombre(Personaje):
         self.actor.stop() # ???
         # capa 0
         if idx_capa==0:
-            if estado_nuevo==Hombre.EstadoQuieto:
+            if estado_nuevo==Personaje.EstadoQuieto:
                 self._velocidad_lineal=LVector3(0.0, 0.0, 0.0)
                 self._velocidad_angular=LVector3(0.0, 0.0, 0.0)
                 self.actor.loop("quieto", partName="brazo.R")
@@ -186,12 +185,15 @@ class Hombre(Personaje):
                 self._velocidad_lineal.setZ(0.0)            
         #
         # mover, si no está quieto
-        if self._estado_capa[0]!=Hombre.EstadoQuieto:
+        if self._estado_capa[0]!=Personaje.EstadoQuieto:
             self.cuerpo.setPos(self.cuerpo, self._velocidad_lineal * dt)
             self.cuerpo.setH(self.cuerpo, self._velocidad_angular.getZ() * dt)
         #
 
     def _procesar_contactos(self):
+        #
+        if not self.contactos and self.cuerpo.node().isStatic():
+            return
         # evaluar contactos actuales
         test_contactos=self.bullet_world.contactTest(self.cuerpo.node())
         # si no hay, vaciar lista y ejecutar eventos pertinentes
@@ -269,7 +271,7 @@ class Hombre(Personaje):
                 log.debug("_soltar %s"%(nodo_objeto.getName()))
                 del self.objetos_estados[Hombre.EstadoAgarrando]
                 self.cuerpo.reparentTo(nodo_objeto.getParent())
-                self.cuerpo.setPos(nodo_objeto.getX(), nodo_objeto.getY(), self.altitud_suelo)
+                self.cuerpo.setPos(nodo_objeto.getPos())
                 self.cuerpo.setHpr(nodo_objeto.getHpr())
                 return True
         return False
