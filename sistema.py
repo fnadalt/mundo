@@ -53,7 +53,7 @@ class Sistema:
     """
     
     # topografia
-    TopoTamanoParcela=32
+    TopoTamanoParcela=64
     TopoExtension=8*1024 # +/-TopoExtension; ecuador=0
     TopoExtensionTransicion=TopoExtension+1024
     TopoAltura=300.0

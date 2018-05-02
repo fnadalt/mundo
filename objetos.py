@@ -18,7 +18,7 @@ class Objetos:
     DirectorioCache="objetos"
     
     # lods por defecto
-    LODs=((75.0, 0.0), (150.0, 75.0), (1000.0, 150.0))
+    LODs=((75.0, 0.0), (150.0, 75.0), (1000.0, 150.0), (5000.0, 1000.0))
 
     def __init__(self, base):
         # referencias:
@@ -102,7 +102,7 @@ class Objetos:
             dy=abs(self.sistema.idx_pos_parcela_actual[1]-idx[1])
             dist=dx if dx>dy else dy
             lod=0
-            if dist>=2:
+            if lod>=2:
                 lod=dist-1
                 if lod>3:
                     lod=3
