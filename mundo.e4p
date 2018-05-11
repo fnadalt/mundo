@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-5.1.dtd">
 <!-- eric project file for project mundo -->
-<!-- Saved: 2018-05-02, 14:51:29 -->
+<!-- Saved: 2018-05-04, 11:52:35 -->
 <!-- Copyright (C) 2018 Fernando Nadal Testa, fnt2006@gmail.com -->
 <Project version="5.1">
   <Language>en_US</Language>
@@ -20,10 +20,7 @@
     <Source>camara.py</Source>
     <Source>cielo.py</Source>
     <Source>config.py</Source>
-    <Source>configuracion.py</Source>
     <Source>corregir_egg.py</Source>
-    <Source>datos.py</Source>
-    <Source>entidad.py</Source>
     <Source>glsl.py</Source>
     <Source>glsl120.py</Source>
     <Source>glsl130.py</Source>
@@ -57,7 +54,6 @@
     <Source>shaders/yuyo.f.glsl</Source>
     <Source>shaders/yuyo.v.glsl</Source>
     <Source>sistema.py</Source>
-    <Source>sistema0.py</Source>
     <Source>sol.py</Source>
     <Source>terreno.py</Source>
     <Source>test_setInitialState.py</Source>

@@ -127,7 +127,7 @@ class Objetos:
         idx_pos, lod=(idx[0], idx[1]), idx[2]
         pos=self.sistema.obtener_pos_parcela(idx_pos)
         altitud_suelo=self.sistema.obtener_altitud_suelo(pos)
-        nombre="parcela_objetos_%i_%i_lod%i"%(int(idx_pos[0]), int(idx_pos[1]), lod)
+        nombre="parcela_objetos_%i_%i"%(int(idx_pos[0]), int(idx_pos[1]))
         log.info("_generar_parcela idx=%s pos=%s lod=%i nombre=%s"%(str(idx), str(pos), lod,  nombre))
         # datos de parcela
         datos_parcela=self.sistema.parcelas[idx_pos]
@@ -183,9 +183,9 @@ class Objetos:
 #                            log.debug("billboardear "+str(i_lod)+">="+str(loc.tipo_objeto[13]))
                             instancia.setBillboardAxis()
                         elif i_lod>=loc.tipo_objeto[12]:
-#                                log.debug("se agregara %s lod %i %s"%(nombre_modelo, i_lod, str(loc.tipo_objeto)))
+#                            log.debug("se agregara %s lod %i %s"%(nombre_modelo, i_lod, str(loc.tipo_objeto)))
                             unificadores[i_lod].agregar_objeto(nombre_modelo, instancia, modelo) # no pasar: instancia
-                        #log.debug("se coloco un '%s' en posicion_rel_parcela=%s..."%(nombre_modelo, str(loc.posicion_rel_parcela)))
+#                        log.debug("se coloco un '%s' en posicion_rel_parcela=%s..."%(nombre_modelo, str(loc.posicion_rel_parcela)))
                         cntr_objs+=1
             #
             for u in unificadores:

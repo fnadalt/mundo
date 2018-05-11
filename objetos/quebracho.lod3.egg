@@ -1,77 +1,72 @@
-<CoordinateSystem> { Z-up } 
-<Material> lod1 {
-  <Scalar> diffr { 0.800000 }
-  <Scalar> diffg { 0.800000 }
-  <Scalar> diffb { 0.800000 }
-  <Scalar> diffa { 0.000000 }
-  <Scalar> specr { 0.000000 }
-  <Scalar> specg { 0.000000 }
-  <Scalar> specb { 0.000000 }
-  <Scalar> shininess { 12.5 }
-  <Scalar> ambr { 1.000000 }
-  <Scalar> ambg { 1.000000 }
-  <Scalar> ambb { 1.000000 }
-  <Scalar> emitr { 0.000000 }
-  <Scalar> emitg { 0.000000 }
-  <Scalar> emitb { 0.000000 }
-}
+<CoordinateSystem> { Z-Up }
 
+<Comment> {
+  "egg-trans -F -o /tmp/quebracho.lod3.egg.tmp /home/flaco/panda3d/mundo/objetos/quebracho.lod3.egg"
+}
 <Texture> lod1 {
-  "./texturas/quebracho.lod1.png"
-  <Scalar> envtype { MODULATE }
-  <Scalar> minfilter { LINEAR_MIPMAP_LINEAR }
-  <Scalar> magfilter { LINEAR_MIPMAP_LINEAR }
-  <Scalar> wrap { CLAMP }
-  <Scalar> alpha-file { "./texturas/quebracho.lod1.png" }
+  "/home/flaco/panda3d/mundo/objetos/texturas/quebracho.lod1.png"
+  <Scalar> alpha-file { "/home/flaco/panda3d/mundo/objetos/texturas/quebracho.lod1.png" }
   <Scalar> alpha-file-channel { 4 }
+  <Scalar> wrap { clamp }
+  <Scalar> minfilter { linear_mipmap_linear }
+  <Scalar> magfilter { linear_mipmap_linear }
+  <Scalar> envtype { modulate }
 }
-
-  <Group> Plane.001 {
-    <Transform> {
-      <Matrix4> {
-        1.0 0.0 0.0 0.0 
-        0.0 1.0 0.0 0.0 
-        0.0 0.0 1.0 0.0 
-        0.0 0.0 0.0 1.0 
+<Material> lod1 {
+  <Scalar> diffr { 0.800000011920929 }
+  <Scalar> diffg { 0.800000011920929 }
+  <Scalar> diffb { 0.800000011920929 }
+  <Scalar> diffa { 0 }
+  <Scalar> ambr { 1 }
+  <Scalar> ambg { 1 }
+  <Scalar> ambb { 1 }
+  <Scalar> emitr { 0 }
+  <Scalar> emitg { 0 }
+  <Scalar> emitb { 0 }
+  <Scalar> specr { 0 }
+  <Scalar> specg { 0 }
+  <Scalar> specb { 0 }
+  <Scalar> shininess { 12.5 }
+}
+<Group> Plane.001 {
+  <VertexPool> Plane.001 {
+    <Vertex> 0 {
+      -1.725051 0 0
+      <UV> {
+        0.092602 -0.002543
+        <Tangent> { 1 0 0 }
+        <Binormal> { 0 0 1 }
       }
     }
-    
-    <VertexPool> Plane.001 {
-    
-      <Vertex> 0 {-1.725051 0.000000 0.000000
-        <UV>  {
-          0.092602 -0.002543 
-          <Tangent> {1.000000 -0.000000 0.000000}
-          <Binormal> {-0.000000 -0.000000 1.000000}
-        }
+    <Vertex> 1 {
+      2.838525 0 0
+      <UV> {
+        1.022259 -0.002543
+        <Tangent> { 1 0 0 }
+        <Binormal> { 0 0 1 }
       }
-      <Vertex> 1 {2.838525 0.000000 0.000000
-        <UV>  {
-          1.022259 -0.002543 
-          <Tangent> {1.000000 -0.000000 0.000000}
-          <Binormal> {-0.000000 -0.000000 1.000000}
-        }
+    }
+    <Vertex> 2 {
+      2.838525 -0 5.338223
+      <UV> {
+        1.022259 1.017423
+        <Tangent> { 1 0 0 }
+        <Binormal> { 0 0 1 }
       }
-      <Vertex> 2 {2.838525 -0.000000 5.338223
-        <UV>  {
-          1.022259 1.017423 
-          <Tangent> {1.000000 -0.000000 0.000000}
-          <Binormal> {-0.000000 -0.000000 1.000000}
-        }
+    }
+    <Vertex> 3 {
+      -1.725051 -0 5.338223
+      <UV> {
+        0.092602 1.017423
+        <Tangent> { 1 0 0 }
+        <Binormal> { 0 0 1 }
       }
-      <Vertex> 3 {-1.725051 -0.000000 5.338223
-        <UV>  {
-          0.092602 1.017423 
-          <Tangent> {1.000000 0.000000 0.000000}
-          <Binormal> {0.000000 -0.000000 1.000000}
-        }
-      }}
-    
-    
-    <Polygon> {
-      <TRef> { lod1 }
-      <MRef> { lod1 }
-      <Normal> {0.000000 -1.000000 -0.000000}
-      <VertexRef> { 0 1 2 3 <Ref> { Plane.001 }} 
     }
   }
+  <Polygon> {
+    <Normal> { 0 -1 0 }
+    <TRef> { lod1 }
+    <MRef> { lod1 }
+    <VertexRef> { 0 1 2 3 <Ref> { Plane.001 } }
+  }
+}
