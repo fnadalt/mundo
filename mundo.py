@@ -351,10 +351,10 @@ class Mundo:
 #        self.sol.mostrar_camaras()
         self.nodo.setLight(self.sol.luz)
         # objetos
-        self.objetos=Objetos(self.base)
-        self.objetos.iniciar()
-        self.objetos.nodo.reparentTo(self.nodo)
-        self.objetos.update()
+#        self.objetos=Objetos(self.base)
+#        self.objetos.iniciar()
+#        self.objetos.nodo.reparentTo(self.nodo)
+#        self.objetos.update()
         #
 #        self.cielo.nodo.setBin("background", 0)
 #        self.agua.nodo.setBin("background", 1)

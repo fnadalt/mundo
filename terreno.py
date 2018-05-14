@@ -108,7 +108,7 @@ class Terreno:
         ruta_archivo_cache=os.path.join(self.directorio_cache, "%s_lod%i.bam"%(nombre, lod))
         if not os.path.exists(ruta_archivo_cache):
             log.info("generar por primera vez -> %s"%ruta_archivo_cache)
-            geom_node=self._generar_geometria_parcela(nombre, idx_pos, datos_parcela, lod, config.valbool("terreno.color_debug"))
+            geom_node=self._generar_geometria_parcela(nombre, datos_parcela, lod, config.valbool("terreno.color_debug"))
             parcela_node_path=self.nodo_parcelas.attachNewNode(nombre)
             parcela_node_path.attachNewNode(geom_node)
             parcela_node_path.writeBamFile(ruta_archivo_cache)
@@ -123,6 +123,37 @@ class Terreno:
         # agregar a parcelas
         self.parcelas[idx]=parcela_node_path
 
+    def _generar_parcela_gmt(self, idx):
+        # nombre
+        nombre="parcela_terreno_%i_%i"%(int(idx[0]), int(idx[1]))
+        log.info("_generar_parcela_gmt idx=%s nombre=%s"%(str(idx), nombre))
+        # idx_pos y posicion
+        idx_pos=(idx[0], idx[1])
+        posicion=self.sistema.obtener_pos_parcela(idx_pos)
+        # heightmap
+        ruta_archivo_heightmap=os.path.join(self.directorio_cache, "%s.png"%(nombre))
+        if not os.path.exists(ruta_archivo_heightmap):
+            log.info("generar por primera vez -> %s"%ruta_archivo_heightmap)
+            self._generar_heightmap(ruta_archivo_heightmap, posicion)
+        else:
+            log.info("cargar desde cache <- %s"%ruta_archivo_heightmap)
+        # GeoMipTerrain
+        geomipterrain=GeoMipTerrain(nombre)
+        geomipterrain.setHeightfield(ruta_archivo_heightmap)
+        geomipterrain.setBorderStitching(False)
+        geomipterrain.setBruteforce(True)
+        geomipterrain.generate()
+        parcela_node_path=geomipterrain.getRoot()
+        parcela_node_path.reparentTo(self.nodo_parcelas)
+        parcela_node_path.setPos(posicion)
+        parcela_node_path.setSz(Sistema.TopoAltura)
+        # debug: normales
+        if self.dibujar_normales:
+            geom_node_normales=self._generar_lineas_normales("normales_%i_%i"%(int(idx_pos[0]), int(idx_pos[1])), geom_node)
+            geom_node_normales.reparentTo(parcela_node_path)
+        # agregar a parcelas
+        self.parcelas[idx]=parcela_node_path
+
     def _descargar_parcela(self, idx):
         log.info("_descargar_parcela idx=%s"%str(idx))
         #
@@ -130,7 +161,32 @@ class Terreno:
         parcela.removeNode()
         del self.parcelas[idx]
 
-    def _generar_geometria_parcela(self, nombre, idx_pos, datos_parcela, lod, con_color=False):
+    def _generar_heightmap(self, ruta_archivo_heightmap, posicion):
+        # tamanos
+        radio=1
+        tamano_fuente=Sistema.TopoTamanoParcela*(1+2*radio)
+        tamano_destino=Sistema.TopoTamanoParcela+1
+        # imagen_fuente
+        imagen_fuente=PNMImage(tamano_fuente, tamano_fuente, 1)
+        for x in range(tamano_fuente):
+            for y in range(tamano_fuente):
+                _x, _y=posicion[0]+x-Sistema.TopoTamanoParcela*radio, posicion[1]+y-Sistema.TopoTamanoParcela*radio
+                altitud=self.sistema.obtener_altitud_suelo((_x, _y, 0)) # deberia usarse datos_parcela
+                valor=altitud/Sistema.TopoAltura
+                imagen_fuente.setXel(x, y, valor)
+        
+        # transformaciones y filtros
+        #imagen_fuente.gaussianFilter(1.0)
+        imagen_fuente.flip(False, True, False)
+        # imagen_destino
+        imagen_destino=PNMImage(tamano_destino, tamano_destino, 1)
+        imagen_destino.copySubImage(imagen_fuente, 0, 0, Sistema.TopoTamanoParcela, Sistema.TopoTamanoParcela, tamano_destino, tamano_destino)
+        imagen_destino.write(ruta_archivo_heightmap)
+        #
+        imagen_fuente.clear()
+        imagen_destino.clear()
+
+    def _generar_geometria_parcela(self, nombre, datos_parcela, lod, con_color=False):
         # formato
         co_info_tipo_terreno=InternalName.make("info_tipo_terreno")
         if con_color: co_color=InternalName.make("Color") # debug
@@ -293,7 +349,7 @@ class Tester(ShowBase):
         #
         config.iniciar()
         self.sistema=Sistema()
-        self.sistema.radio_expansion_parcelas=2
+        self.sistema.radio_expansion_parcelas=1
         self.sistema.iniciar()
         Sistema.establecer_instancia(self.sistema)
         #
@@ -352,13 +408,13 @@ class Tester(ShowBase):
         #
         mwn=self.mouseWatcherNode
         if mwn.isButtonDown(KeyboardButton.up()):
-            nueva_pos_foco[1]-=32
+            nueva_pos_foco[1]-=Sistema.TopoTamanoParcela
         elif mwn.isButtonDown(KeyboardButton.down()):
-            nueva_pos_foco[1]+=32
+            nueva_pos_foco[1]+=Sistema.TopoTamanoParcela
         elif mwn.isButtonDown(KeyboardButton.left()):
-            nueva_pos_foco[0]+=32
+            nueva_pos_foco[0]+=Sistema.TopoTamanoParcela
         elif mwn.isButtonDown(KeyboardButton.right()):
-            nueva_pos_foco[0]-=32
+            nueva_pos_foco[0]-=Sistema.TopoTamanoParcela
         #
         if nueva_pos_foco!=self.sistema.posicion_cursor:
             log.info("update pos_foco=%s"%str(nueva_pos_foco))

@@ -53,7 +53,7 @@ class Sistema:
     """
     
     # topografia
-    TopoTamanoParcela=64
+    TopoTamanoParcela=32
     TopoExtension=8*1024 # +/-TopoExtension; ecuador=0
     TopoExtensionTransicion=TopoExtension+1024
     TopoAltura=300.0
@@ -331,19 +331,6 @@ class Sistema:
             self._establecer_datos_parcelas_rango(self.posicion_cursor, self.idx_pos_parcela_actual)
         #
 
-##    def obtener_descriptor_locacion(self, posicion): # ELIMINAR
-#        altitud_suelo=self.obtener_altitud_suelo(posicion)
-#        desc=DescriptorLocacion((posicion[0], posicion[1], altitud_suelo))
-#        desc.altitud_tope=self.obtener_altitud_tope(posicion)
-#        desc.ambiente=self.obtener_ambiente(posicion)
-#        desc.latitud=self.obtener_latitud(posicion)
-#        desc.tipo_terreno=self.obtener_tipo_terreno(posicion)
-#        self.precipitacion_frecuencia=self.obtener_precipitacion_frecuencia_anual(posicion)
-#        self.inclinacion_solar_anual_media=None
-#        self.vegetacion=None
-#        self.roca=None
-#        return desc
-    
     def obtener_altitud_suelo(self, posicion):
         self._stats_altitud+=1
         #
@@ -1340,6 +1327,7 @@ class Tester(ShowBase):
         self.accept("arrow_left", self.mover, [(-1, 0)])
         self.accept("arrow_right", self.mover, [(1, 0)])
         #
+        config.iniciar()
         self.sistema=Sistema()
         self.sistema.iniciar()
         #
