@@ -58,9 +58,12 @@ class DataManager:
         #
         if self._cache:
             for idx_pos, chunk in self._cache.items():
-                chunk=self._cache[idx_pos]
+                log.info("terminate chunk %s"%(str(chunk.idx_pos)))
+                if chunk.dirty==True:
+                    log.info("rewriting dirty cache idx_pos %s"%(str(chunk.idx_pos)))
+                    self._write_chunk(chunk)
+                #
                 chunk.terminate()
-                self._cache[idx_pos]=None
             self._cache=None
 
     def get_descriptor(self, global_position):
@@ -76,6 +79,17 @@ class DataManager:
         # descriptor
         return chunk.get_descriptor(global_position)
 
+    def set_chunk_dirty(self, idx_pos):
+#        log.info("set_chunk_dirty idx_pos=%s"%str(idx_pos))
+        chunk=self._get_chunk(idx_pos)
+        if not chunk:
+            log.error("chunk data could not be loaded! idx_pos=%s"%str(idx_pos))
+            return False
+        #
+        chunk.dirty=True
+        #
+        return True
+
     def _ispow2(self, n):
         return (n & (n - 1)) == 0
     
@@ -87,37 +101,51 @@ class DataManager:
             if len(self._cache)>self._cache_max_size:
                 self._adjust_cache()
             # load chunk
-            if not self._load_chunk(idx_pos, self.size_chunk):
+            if not self._load_chunk(idx_pos):
                 return None
         #
         chunk=self._cache[idx_pos]
         #
         return chunk
     
-    def _load_chunk(self, idx_pos, size_chunk):
+    def _load_chunk(self, idx_pos):
         #log.info("_load_chunk %s"%str(idx_pos))
         chunk=None
         #
         file_name=self.chunk_prefix+"_%i_%i.dat"%(int(idx_pos[0]), int(idx_pos[1]))
         file_path=os.path.join(self.directory, file_name)
         #
-        if os.path.exists(file_name):
+        if os.path.exists(file_path):
             log.debug("_load_chunk <<-- '%s'"%file_name)
             with open(file_path, "rb") as file:
                 chunk=pickle.load(file)
                 self._cache[idx_pos]=chunk
         else:
             chunk=Chunk()
-            if not chunk.initialize(idx_pos, size_chunk):
+            if not chunk.initialize(idx_pos, self.size_chunk):
                 return False
-            log.debug("_load_chunk -->> '%s'"%file_name)
-            with open(file_path, "wb") as file:
-                pickle.dump(chunk, file)
             self._cache[idx_pos]=chunk
+            log.debug("_load_chunk -->> '%s'"%file_name)
+            self._write_chunk(chunk)
         #
         return True
     
+    def _write_chunk(self, chunk):
+        #log.info("_write_chunk idx_pos %s"%(str(chunk.idx_pos)))
+        #
+        file_name=self.chunk_prefix+"_%i_%i.dat"%(int(chunk.idx_pos[0]), int(chunk.idx_pos[1]))
+        file_path=os.path.join(self.directory, file_name)
+        #
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        # clear dirty
+        chunk.dirty=False
+        #
+        with open(file_path, "wb") as file:
+            pickle.dump(chunk, file)
+    
     def _adjust_cache(self):
+        log.info("_adjust_cache")
         # chunks sorted by access_cntr
         chunks=sorted(self._cache.values(), key=lambda x:x.access_cntr)
         # number of chunks to unload
@@ -125,11 +153,16 @@ class DataManager:
         # gather idx_pos of chunk to be unloaded
         idx_pos_unload=list()
         for i in range(num_unload):
-            idx_pos_unload.append(chunks.idx_pos)
+            idx_pos_unload.append(chunks[i].idx_pos)
         # unload
         for idx_pos in idx_pos_unload:
             chunk=self._cache[idx_pos]
-            chunk.termiante()
+            #
+            if chunk.dirty:
+                log.info("_adjust_cache rewriting dirty cache idx_pos %s"%(str(chunk.idx_pos)))
+                self._write_chunk(chunk)
+            #
+            chunk.terminate()
             self._cache[idx_pos]=None
             del self._cache[idx_pos]
 
@@ -147,8 +180,6 @@ class LocationDescriptor:
         # climate
         self.temperature=0.0
         self.humidity=0.0
-        # biome
-        self.biome=None
         # vegetation
         self.vegetation=None
     
@@ -174,6 +205,7 @@ class Chunk:
         self.idx_pos=Vec2.zero()
         self.size=1
         self.chunk_position=Vec2.zero()
+        self.dirty=False
         # components
         self._descriptors=None
     
@@ -260,3 +292,4 @@ class PerChunkIterator:
         changed=self._changed_chunk
         self._changed_chunk=False
         return changed
+

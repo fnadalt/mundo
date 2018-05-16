@@ -4,11 +4,10 @@ log=logging.getLogger(__name__)
 
 class Layer:
     
-    def __init__(self, type, index, data_mgr, size_total):
+    def __init__(self, type, index, data_mgr):
         # external variables
         self.type=type
         self.index=index
-        self.size_total=size_total # redundancy?
         self.requires_layers=list()
         # references
         self.data_mgr=data_mgr

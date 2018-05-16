@@ -4,24 +4,29 @@ from layer import Layer
 from data import PerChunkIterator
 
 import math
+import sys
 
 import logging
 log=logging.getLogger(__name__)
 
 class Topography(Layer):
     
-    def __init__(self, index, data_mgr, size_total, ocean_altitude):
-        Layer.__init__(self, "topography", index, data_mgr, size_total)
+    def __init__(self, index, data_mgr, config_topography, size_total, ocean_altitude_relative, border_start_relative):
+        Layer.__init__(self, "topography", index, data_mgr)
         self.requires_layers=[]
         # parameters:
-        self.height=500.0 # float
-        self.ocean_altitude=ocean_altitude # [0,1]
-        self.ocean_height=0.0
+        self.height=config_topography.getfloat("height")
+        self.scale=config_topography.getfloat("scale")
+        self.ocean_altitude=ocean_altitude_relative*self.height
+        self.border_start_relative=border_start_relative
         #
-        self.perlin_seed=1234
+        self.perlin_seed=9601
         self.perlin_levels=[] # [(scale,amplitude), ...]
         # components:
         self.perlin=None
+        # internal variables:
+        self._size_half=int(self.data_mgr.size_total/2.0)*self.scale
+        self._border_start=self.border_start_relative*self._size_half
     
     def _read_config_options(self, config):
         log.info("_read_config_options")
@@ -34,8 +39,6 @@ class Topography(Layer):
 
     def _setup_layer(self):
         log.info("_setup_layer")
-        # parameters
-        self.ocean_height=math.ceil(self.height*self.ocean_altitude)
         # perlin noise
         self.perlin_levels=[(256.0, 1.0), (64.0, 0.2), (32.0, 0.075), (16.0, 0.005), (8.0, 0.001)]
         self.perlin=StackedPerlinNoise2()
@@ -51,12 +54,20 @@ class Topography(Layer):
     def _process_data(self):
         log.info("_process_data")
         #
+        N, n=self.data_mgr.num_chunks_total, 0
+        #
         iter=PerChunkIterator(self.data_mgr)
         while iter.next():
             descriptor=iter.get_descriptor()
-            altitude=self._calculate_altitude(descriptor.global_position)
+            altitude=self._calculate_altitude(descriptor.global_position * self.scale)
             descriptor.global_position.setY(altitude)
             log.debug(str(descriptor))
+            if iter.pick_changed_chunk():
+                self.data_mgr.set_chunk_dirty(tuple(iter.cur_idx_pos))
+                n+=1
+                sys.stdout.write("\r%.2f%%"%(n*100/N))
+                sys.stdout.flush()
+        print("\n")
         #
         return True
 
@@ -65,20 +76,22 @@ class Topography(Layer):
         altitude=self.perlin(position[0], position[2])*0.5+0.5
         #
         altitude*=self.height
-#        if altitud>Sistema.TopoAltitudOceano+0.25:
-#            altura_sobre_agua=altitud-Sistema.TopoAltitudOceano
-#            altura_sobre_agua_n=altura_sobre_agua/(Sistema.TopoAlturaSobreOceano)
-#            altitud=Sistema.TopoAltitudOceano
-#            altitud+=0.25+altura_sobre_agua*altura_sobre_agua_n*altura_sobre_agua_n
-#            altitud+=75.0*altura_sobre_agua_n*altura_sobre_agua_n
-#            if altitud>Sistema.TopoAltura:
-#                log.warning("obtener_altitud_suelo altitud>Sistema.TopoAltura, recortando...")
-#                altitud=Sistema.TopoAltura
-#        #
-#        latitud=self.obtener_latitud(posicion)
-#        if latitud>Sistema.TopoExtension:
-#            factor_transicion=(latitud-Sistema.TopoExtension)/(Sistema.TopoExtensionTransicion-Sistema.TopoExtension)
-#            altitud=min(Sistema.TopoAltura, altitud+Sistema.TopoAltura*factor_transicion)
+        if altitude>self.ocean_altitude+0.25:
+            height_above_ocean=altitude-self.ocean_altitude
+            height_above_ocean_n=height_above_ocean/(self.height-self.ocean_altitude)
+            altitude=self.ocean_altitude
+            altitude+=0.25+height_above_ocean*height_above_ocean_n*height_above_ocean_n
+            altitude+=75.0*height_above_ocean_n*height_above_ocean_n
+            if altitude>self.height:
+                log.warning("_calculate_altitude altitude>self.height, truncating...")
+                altitude=self.height
+        #
+        dx, dy=abs(self._size_half-position[0]), abs(self._size_half-position[2])
+        #max_center_distance=(dx if dx>dy else dy)
+        max_center_distance=math.sqrt(dx**2+dy**2)
+        if max_center_distance>(self._border_start):
+            transition_factor=(max_center_distance-self._border_start)/(self._size_half-self._border_start)
+            altitude=min(self.height, altitude+self.height*transition_factor)
         #
         return altitude
 

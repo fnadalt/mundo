@@ -61,7 +61,7 @@ class Sistema:
     TopoAlturaSobreOceano=TopoAltura-TopoAltitudOceano
     TopoPerlinNoiseSeed=9601
     TopoPerlinNoiseParams=[(256.0, 1.0), (64.0, 0.2), (32.0, 0.075), (16.0, 0.005), (8.0, 0.001)] # [(escala, amplitud), ...]
-    TopoIslasPerlinNoiseParams=(8.0*1024.0, 1199) # (escala, semilla)
+    TopoIslasPerlinNoiseParams=(2.0*1024.0, 1199) # (escala, semilla)
     TopoPerlinNoiseEscalaGlobal=1.0
     # terrenos; alpha para splatting
     TerrenoPerlinNoiseParams=(64.0, 1069) # (escala, semilla)
@@ -338,7 +338,7 @@ class Sistema:
         # perlin noise object
         altitud=self.ruido_topo(posicion[0], posicion[1])*0.5+0.5
         #
-        #altitud+=-0.5*abs(self.ruido_islas.noise(posicion[0], posicion[1]))
+        #altitud+=-0.15+0.40*(self.ruido_islas.noise(posicion[0], posicion[1]))
         #
         altitud*=Sistema.TopoAltura
         if altitud>Sistema.TopoAltitudOceano+0.25:
@@ -357,7 +357,7 @@ class Sistema:
             altitud=min(Sistema.TopoAltura, altitud+Sistema.TopoAltura*factor_transicion)
         #
         #altitud=min(Sistema.TopoAltitudOceano+1, altitud) # !!! terreno plano sobre el oceano
-        return altitud #Sistema.TopoAltitudOceano+0.05
+        return altitud #max(0.0, altitud) #Sistema.TopoAltitudOceano+0.05
 
     def obtener_altitud_suelo_cursor(self):
         return self.obtener_altitud_suelo(self.posicion_cursor)

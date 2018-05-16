@@ -8,29 +8,29 @@ log=logging.getLogger(__name__)
 from data import DataManager
 from topography import Topography
 from images import ImagesGenerator
+from map import MapGenerator
 
 # default config dict
 _defaul_config={"global": {
                             "name":"land", 
-                            "seed":1234, 
                             "size_total":512, 
                             "size_chunk":512, 
-                            "border":"ice", # [ice|ocean]
-                            "ocean_altitude":0.15 # [0,1]
+                            "ocean_altitude_relative":0.15,  # [0,1]
+                            "border_start_relative":0.1
                             }, 
                 "layers": {
                             "topography":True, 
                             "rivers":True, 
                             "temperature":True, 
                             "humidity":True, 
-                            "biomes":True, 
                             "vegetation":True
                             }, 
                 "data":   {
                             "chunk_prefix":"chunk"
                             }, 
                 "topography":  {
-                                "height":300.0
+                                "height":300.0, 
+                                "scale":1.0
                                 }
                 }
 
@@ -45,9 +45,17 @@ class Land:
             "rivers", 
             "temperature", 
             "humidity", 
-            "biomes", 
             "vegetation"
             ]
+    
+    # file extensions
+    FilePrefixes=[
+                  "chunk", 
+                  "heightmap", 
+                  "topography", 
+                  "temperature", 
+                  "humidity"
+                  ]
     
     def __init__(self):
         self.config=None
@@ -56,44 +64,54 @@ class Land:
         self.name="land"
         self.size_total=1
         self.size_chunk=1
-        self.ocean_altitude=0.15
+        self.ocean_altitude_relative=0.15
+        self.border_start_relative=0.1
+        self.topography_height=300.0
+        self.topography_scale=1.0
         self.data_mgr=None # DataManager
         self.layers=None # dict()
         self.reset() # redundancy?
     
-    def create(self, land_file, remove_files, create_default, generate_images):
-        log.info("create, file=%s"%land_file)
-        #
-        self.generate_images=generate_images
+    def execute(self, args):
+        log.info("execute, file=%s"%args.land_file)
         # config
-        self.config=self._configure(land_file, create_default)
+        self.config=self._configure(args.land_file, args.create_default_land_file)
         if not self.config:
             return False
         # set up directory
-        self.directory=self._setup_directory(remove_files)
+        self.directory=self._setup_directory(args.remove_files, args.generate_data, args.generate_images, args.generate_map)
         if not self.directory:
             return False
         # set up data
-        self.data_mgr=self._setup_data_mgr(self.config, self.size_total, self.size_chunk)
+        self.data_mgr=self._setup_data_mgr()
         if not self.data_mgr:
             self.reset()
             return False
         # set up layers
-        self.layers=self._setup_layers(self.config, self.data_mgr, self.size_total)
+        self.layers=self._setup_layers()
         if not self.layers:
             return False
         # validate layers
-        if not self._validate_layers(self.layers):
+        if not self._validate_layers():
             self.reset()
             return False
-        # process layers
-        if not self._process_layers(self.layers, self.config):
-            self.reset()
-            return False
+        # generate data
+        if args.generate_data:
+            # process layers
+            if not self._generate_data():
+                self.reset()
+                return False
         # generate images
-        if generate_images and not self._generate_images(self.layers, self.data_mgr):
+        if args.generate_images and not self._generate_images():
             self.reset()
             return False
+        # generate map
+        if args.generate_map!="" and not self._generate_map(args.generate_map, args.map_size):
+            self.reset()
+            return False
+        # terminate
+        if self.data_mgr:
+            self.data_mgr.terminate()
         #
         return True
         
@@ -111,14 +129,14 @@ class Land:
         if self.data_mgr:
             self.data_mgr.terminate()
     
-    def _configure(self, file, create_default):
+    def _configure(self, file, create_default_land_file):
         log.info("_configure")
         # configparser
         config=configparser.ConfigParser()
         config.read_dict(_defaul_config)
         # file?
         if not os.path.exists(file):
-            if not create_default:
+            if not create_default_land_file:
                 log.error("file '%s' does not exist"%file)
                 return None
             else:
@@ -141,33 +159,50 @@ class Land:
             self.name=config["global"]["name"]
             self.size_total=int(config["global"]["size_total"])
             self.size_chunk=int(config["global"]["size_chunk"])
-            self.ocean_altitude=float(config["global"]["ocean_altitude"])
+            self.ocean_altitude_relative=float(config["global"]["ocean_altitude_relative"])
+            self.border_start_relative=float(config["global"]["border_start_relative"])
         except Exception as e:
             log.exception(str(e))
             return None
         #
         return config
 
-    def _setup_directory(self, remove_files):
+    def _setup_directory(self, remove_files, generate_data, generate_images, map):
         log.info("_setup_directory")
         #
         directory=self.name
         #
-        if os.path.exists(directory) and not remove_files:
-            log.error("directory '%s' exists and remove_files=False"%directory)
-            return None
-        elif os.path.exists(directory) and remove_files:
+        if os.path.exists(directory):
             if not os.path.isdir(directory):
                 log.error("'%s' is not a directory"%directory)
                 return None
             #
-            log.info("removing files inside directory '%s'"%directory)
+            log.info("gathering files to remove in '%s'"%directory)
+            paths_to_remove=list()
             for file in os.listdir(directory):
                 path=os.path.join(directory, file)
-                log.info("remove '%s'"%path)
                 if os.path.isdir(file):
                     log.warning("'%s' is a directory... skipping."%path)
                     continue
+                prefix=file.split(".")[0].split("_")[0].lower()
+                if prefix not in Land.FilePrefixes:
+                    log.warning("found not expected prefix '%s' in file '%s'... skipping"%(prefix, file))
+                    continue
+                if ((generate_data or generate_images) and prefix=="heightmap") or \
+                    (generate_data and prefix=="chunk") or \
+                    (map=="topography" and prefix=="topography") or \
+                    (map=="temperature" and prefix=="temperature") or \
+                    (map=="humidity" and prefix=="humidity"):
+                        paths_to_remove.append(path)
+            #
+            log.info("remove files inside directory '%s'?"%directory)
+            if len(paths_to_remove)>0 and not remove_files:
+                log.error("directory '%s' contains files to be removed and remove_files=False"%directory)
+                return None
+            else:
+                log.info("no files to be removed")
+            for path in paths_to_remove:
+                log.info("remove '%s'"%path)
                 os.remove(path)
         elif not os.path.exists(directory):
             log.info("create directory '%s'"%directory)
@@ -175,26 +210,26 @@ class Land:
         #
         return directory
     
-    def _setup_data_mgr(self, config, size_total, size_chunk):
+    def _setup_data_mgr(self):
         log.info("_setup_data_mgr")
         #
-        if not "data" in config:
+        if not "data" in self.config:
             log.error("no 'data' section in config")
             return None
-        config_data=config["data"]
+        config_data=self.config["data"]
         #
         data_mgr=DataManager()
-        if not data_mgr.initialize(self.directory, config_data, size_total, size_chunk):
+        if not data_mgr.initialize(self.directory, config_data, self.size_total, self.size_chunk):
             return None
         return data_mgr
     
-    def _setup_layers(self, config, data_mgr, size_total):
+    def _setup_layers(self):
         log.info("_setup_layers")
         #
-        if not "layers" in config:
+        if not "layers" in self.config:
             log.error("no 'layers' section in config")
             return None
-        config_layers=config["layers"]
+        config_layers=self.config["layers"]
         #
         layers=dict()
         index=0
@@ -211,7 +246,8 @@ class Land:
                 continue
             #
             if layer=="topography":
-                layers["topography"]=Topography(index, data_mgr, size_total, self.ocean_altitude)
+                config_topography=self.config["topography"]
+                layers["topography"]=Topography(index, self.data_mgr, config_topography, self.size_total, self.ocean_altitude_relative, self.border_start_relative)
                 log.info("created.")
             else:
                 log.warning("unknown layer '%s'"%layer)
@@ -221,14 +257,14 @@ class Land:
         #
         return layers
     
-    def _validate_layers(self, layers):
+    def _validate_layers(self):
         log.info("_validate_layers")
         #
         log.info("layers requirements...")
-        for type, layer in layers.items():
+        for type, layer in self.layers.items():
             for requirement in layer.requires_layers:
-                if requirement in layers:
-                    required_layer=layers[type]
+                if requirement in self.layers:
+                    required_layer=self.layers[type]
                     if required_layer.index>=layer.index:
                         log.error("required layer '%s' for layer '%s' needs to be created before")
                         return False
@@ -239,15 +275,15 @@ class Land:
         #
         return True
 
-    def _process_layers(self, layers, config):
-        log.info("_process_layers")
+    def _generate_data(self):
+        log.info("_generate_data")
         #
-        for type, layer in layers.items():
+        for type, layer in self.layers.items():
             log.info("process layer '%s'"%type)
             #
             config_type=dict()
-            if type in config:
-                config_type=config[type]
+            if type in self.config:
+                config_type=self.config[type]
             else:
                 log.warning("no configuration information for layer '%s'"%type)
             t1=time.time()
@@ -258,14 +294,28 @@ class Land:
         #
         return True
 
-    def _generate_images(self, layers, data_mgr):
+    def _generate_images(self):
         log.info("_generate_images")
         #
         images_generator=ImagesGenerator()
-        images_generator.initialize(layers, data_mgr)
+        images_generator.initialize(self.layers, self.data_mgr)
         #
         result=images_generator.execute()
         #
         images_generator.terminate()
+        #
+        return result
+
+    def _generate_map(self, map, map_size):
+        log.info("_generate_map '%s' size=%i"%(map, map_size))
+        #
+        config_topography=self.config["topography"]
+        #
+        map_generator=MapGenerator()
+        map_generator.initialize(self.data_mgr, config_topography, map, map_size, self.ocean_altitude_relative)
+        #
+        result=map_generator.execute()
+        #
+        map_generator.terminate()
         #
         return result
