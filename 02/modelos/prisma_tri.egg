@@ -1,0 +1,73 @@
+<CoordinateSystem> { Z-Up }
+
+<Comment> {
+  "egg-trans -F -o /tmp/prisma_tri.egg.tmp /home/flaco/panda3d/mundo/objetos/prisma_tri.egg"
+}
+<Material> Material {
+  <Scalar> diffr { 0.639999985694885 }
+  <Scalar> diffg { 0.639999985694885 }
+  <Scalar> diffb { 0.639999985694885 }
+  <Scalar> ambr { 1 }
+  <Scalar> ambg { 1 }
+  <Scalar> ambb { 1 }
+  <Scalar> emitr { 0 }
+  <Scalar> emitg { 0 }
+  <Scalar> emitb { 0 }
+  <Scalar> specr { 0.5 }
+  <Scalar> specg { 0.5 }
+  <Scalar> specb { 0.5 }
+  <Scalar> shininess { 12.5 }
+}
+<Group> Cube {
+  <VertexPool> Cube {
+    <Vertex> 0 {
+      1 1 -1
+      <UV> ORCO { 1 1 }
+    }
+    <Vertex> 1 {
+      -0 -1 -1
+      <UV> ORCO { 0.5 0 }
+    }
+    <Vertex> 2 {
+      -1 1 -1
+      <UV> ORCO { 0 1 }
+    }
+    <Vertex> 3 {
+      1 0.999999 1
+      <UV> ORCO { 1 1 }
+    }
+    <Vertex> 4 {
+      -1 1 1
+      <UV> ORCO { 0 1 }
+    }
+    <Vertex> 5 {
+      -1e-06 -1 1
+      <UV> ORCO { 0.5 0 }
+    }
+  }
+  <Polygon> {
+    <Normal> { 0 0 -1 }
+    <MRef> { Material }
+    <VertexRef> { 0 1 2 <Ref> { Cube } }
+  }
+  <Polygon> {
+    <Normal> { 0 0 1 }
+    <MRef> { Material }
+    <VertexRef> { 3 4 5 <Ref> { Cube } }
+  }
+  <Polygon> {
+    <Normal> { 0.894427 -0.447214 0 }
+    <MRef> { Material }
+    <VertexRef> { 0 3 5 1 <Ref> { Cube } }
+  }
+  <Polygon> {
+    <Normal> { -0.894427 -0.447213 0 }
+    <MRef> { Material }
+    <VertexRef> { 1 5 4 2 <Ref> { Cube } }
+  }
+  <Polygon> {
+    <Normal> { 0 1 0 }
+    <MRef> { Material }
+    <VertexRef> { 3 0 2 4 <Ref> { Cube } }
+  }
+}

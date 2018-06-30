@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-5.1.dtd">
 <!-- eric project file for project mundo -->
-<!-- Saved: 2018-05-16, 13:30:29 -->
+<!-- Saved: 2018-06-30, 10:41:33 -->
 <!-- Copyright (C) 2018 Fernando Nadal Testa, fnt2006@gmail.com -->
 <Project version="5.1">
   <Language>en_US</Language>
@@ -26,13 +26,6 @@
     <Source>glsl130.py</Source>
     <Source>hombre.py</Source>
     <Source>input.py</Source>
-    <Source>landcreator/data.py</Source>
-    <Source>landcreator/images.py</Source>
-    <Source>landcreator/land.py</Source>
-    <Source>landcreator/layer.py</Source>
-    <Source>landcreator/main.py</Source>
-    <Source>landcreator/map.py</Source>
-    <Source>landcreator/topography.py</Source>
     <Source>main.py</Source>
     <Source>mundo.ini</Source>
     <Source>mundo.py</Source>
@@ -66,6 +59,7 @@
     <Source>test_setInitialState.py</Source>
   </Sources>
   <Others>
+    <Other>.gitignore</Other>
     <Other>biomas.txt</Other>
     <Other>objetos.csv</Other>
     <Other>shaders/blur_x.f.glsl</Other>

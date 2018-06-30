@@ -1,0 +1,18 @@
+document.write('<style>.texthidden {display:none}</style>');
+function expandcollapse (postid) {
+whichpost = document.getElementById(postid);
+if 
+(whichpost.className=="shown") {
+whichpost.className="texthidden";
+}
+else {
+whichpost.className="shown";}
+}
+
+function remplaza_fecha(d){
+var da = d.split(' ');
+dia = "<div class='fecha_dia'>"+da[0]+"</div>";
+mes = "<div class='fecha_mes'>"+da[1].slice(0,3)+"</div>";
+anio = "<div class='fecha_anio'>"+da[2]+"</div>";
+  document.write(dia+mes+anio);
+}
