@@ -4,6 +4,7 @@ from direct.showbase.DirectObject import DirectObject
 from direct.gui.DirectGui import *
 from panda3d.core import *
 from panda3d.bullet import BulletWorld
+from input import Input
 
 # log
 import logging
@@ -18,21 +19,26 @@ class EscenaMundo(DirectObject):
     Nombre = "mundo"  # world
 
     def __init__(self, contexto):
+        DirectObject.__init__(self)
         # referencias
         self.contexto = contexto
         # componentes
-        self.mundo_fisico = BulletWorld()
+        self.mundo_fisica = BulletWorld()  # physics world
+        self.input = None
         self.atmosfera = None  # atmosphere
         self.terreno = None  # terrain
-        self.agua = None  # water
         self.estaticos = None  # static (model instances)
         self.animados = None  # animated (model instances)
         self.items = None
 
     def iniciar(self):
         log.info("iniciar")
-        # fisica
-        self.mundo_fisico.setGravity(Vec3(0, 0, -9.81))
+        # física
+        self.mundo_fisica.setGravity(Vec3(0, 0, -9.81))
+        # input
+        self.input = Input(self.contexto)
+        if not self.input.iniciar():
+            return False
         # eventos
         self.accept("escape-up", self._salir)
         #
@@ -40,6 +46,10 @@ class EscenaMundo(DirectObject):
 
     def terminar(self):
         log.info("terminar")
+        # input
+        if self.input:
+            self.input.terminar()
+            self.input = None
         # eventos
         self.ignoreAll()
         #
@@ -47,4 +57,3 @@ class EscenaMundo(DirectObject):
 
     def _salir(self):
         self.contexto.base.messenger.send("cambiar_escena", ["inicio"])
-

@@ -14,6 +14,7 @@ class Contexto:  # Context
     """
     * contiene referencia a ShowBase
     * contiene ConfigParser
+    * conecta a pstats
     """
 
     ConfigDefault = {
