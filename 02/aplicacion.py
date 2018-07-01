@@ -3,6 +3,7 @@
 from direct.showbase.DirectObject import DirectObject
 from contexto import Contexto
 from inicio import EscenaInicio  # start scene
+from mundo import EscenaMundo  # virtual world scene
 
 # Log
 import logging
@@ -47,8 +48,8 @@ class Aplicacion(DirectObject):
         nombre_escena = config_aplicacion["escena_primera"]
         self._cambiar_escena(nombre_escena)
         # eventos
-        self.accept("cambiar_escena", self._cambiar_escena)
-        self.accept("salir", self.terminar)
+        self.accept("cambiar_escena", self._cambiar_escena)  # change scene
+        self.accept("salir", self.terminar)  # exit
         # main loop
         self.contexto.base.run()
         #
@@ -68,6 +69,8 @@ class Aplicacion(DirectObject):
                 escena.terminar()
                 self.escenas[nombre] = None
         #
+        self.ignoreAll()
+        #
         base = self.contexto.base
         self.contexto.terminar()
         base.finalizeExit()
@@ -84,7 +87,7 @@ class Aplicacion(DirectObject):
             return
         if not escena.iniciar():
             return
-        # escena actual? terminar
+        # escena actual? terminar (current scene? terminate)
         if self.escena_actual:
             self.escena_actual.terminar()
             self.escena_actual = None
@@ -104,6 +107,8 @@ class Aplicacion(DirectObject):
         else:
             if nombre_escena == EscenaInicio.Nombre:
                 escena = EscenaInicio(self.contexto)
+            elif nombre_escena == EscenaMundo.Nombre:
+                escena = EscenaMundo(self.contexto)
             else:
                 log.error("__obtener_escena('%s')" % nombre_escena)
         return escena

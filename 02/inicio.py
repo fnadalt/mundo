@@ -25,43 +25,45 @@ class EscenaInicio(DirectObject):
         self.contexto = contexto
         # componentes
         self.marco = None  # frame
-        self.btn_config = None
-        self.btn_mundo = None
-        self.btn_salir = None  # exit
 
     def iniciar(self):
         log.info("iniciar")
         #
-        self.marco = DirectFrame(parent=self.contexto.base.render2d)
-        self.marco["frameSize"] = (-1, 1, -1, 1)
+        self.marco = DirectFrame(parent=self.contexto.base.aspect2d)
+        self.marco["frameSize"] = (-0.5, 0.5, -0.5, 0.5)
         #
-        self.btn_config = self._crear_boton()
-        self.btn_config["text"] = "configuración"
-        self.btn_config["command"] = self._abrir_configuracion
-        self.btn_config.setPos(Vec3(0, 0, 0.25))
+        btn_mundo = self._crear_boton()
+        btn_mundo["text"] = "mundo"
+        btn_mundo["command"] = self._abrir_mundo
+        btn_mundo.setPos(Vec3(0, 0, 0.25))
         #
-        self.btn_mundo = self._crear_boton()
-        self.btn_mundo["text"] = "mundo"
-        self.btn_mundo["command"] = self._abrir_mundo
-        self.btn_mundo.setPos(Vec3(0, 0, 0))
+        btn_config = self._crear_boton()
+        btn_config["text"] = "configuración"
+        btn_config["command"] = self._abrir_configuracion
+        btn_config.setPos(Vec3(0, 0, 0))
         #
-        self.btn_salir = self._crear_boton()
-        self.btn_salir["text"] = "salir"
-        self.btn_salir["command"] = self._salir
-        self.btn_salir.setPos(Vec3(0, 0, -0.25))
+        btn_salir = self._crear_boton()
+        btn_salir["text"] = "salir"
+        btn_salir["command"] = self._salir
+        btn_salir.setPos(Vec3(0, 0, -0.25))
         #
         return True
 
     def terminar(self):
         log.info("terminar")
+        if self.marco:
+            self.marco.destroy()
+            self.marco = None
+        #self.contexto = None  # el objeto es terminado, no destruido
 
     def _crear_boton(self):  # create button
-        boton = DirectButton(parent=self.marco)
-        boton["frameSize"] = (-0.35, 0.35, -0.1, 0.1)
-        boton["relief"] = "raised"
-        boton["borderWidth"] = (0.01, 0.01)
-        boton["text"] = "boton"
-        boton["text_scale"] = 0.1
+        boton = DirectButton(parent=self.marco,
+                             frameSize=(-0.35, 0.35, -0.1, 0.1),
+                             relief="raised",
+                             borderWidth=(0.01, 0.01),
+                             text="botón",
+                             text_scale=0.1
+                            )
         return boton
 
     def _abrir_configuracion(self):
@@ -70,9 +72,8 @@ class EscenaInicio(DirectObject):
 
     def _abrir_mundo(self):
         log.info("_abrir_mundo")
-        #mensajero = self.contexto.base.messenger
+        self.contexto.base.messenger.send("cambiar_escena", ["mundo"])
 
     def _salir(self):
         log.info("_salir")
-        mensajero = self.contexto.base.messenger
-        mensajero.send("salir")
+        self.contexto.base.messenger.send("salir")

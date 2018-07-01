@@ -3,6 +3,7 @@
 import os.path
 from configparser import ConfigParser
 from direct.showbase.ShowBase import ShowBase
+from panda3d.core import *
 
 # log
 import logging
@@ -37,6 +38,11 @@ class Contexto:  # Context
         self.config.read_dict(Contexto.ConfigDefault)
         if os.path.exists(Contexto.ConfigFileName):
             self.config.read(Contexto.ConfigFileName)
+        # base
+        self.base.disableMouse()
+        self.base.setFrameRateMeter(True)
+        # pstats
+        PStatClient.connect()
         #
         return True
 
