@@ -15,13 +15,10 @@ class ControladorCamara(DirectObject):  # CameraController
     TipoPrimeraPersona = 1  # first person
     TipoTerceraPersona = 2  # third person
 
-    # objectivo
-    ObjetivoDummy = NodePath()
-
     def __init__(self, contexto):
         # referencias
         self.contexto = contexto
-        self.objetivo = None
+        self.objetivo = contexto.base.render
         # componentes
         self.nodo = None
         # parámetros
@@ -52,6 +49,7 @@ class ControladorCamara(DirectObject):  # CameraController
             self.establecer_tipo, [ControladorCamara.TipoTerceraPersona])
         self.accept("wheel_up", self._ajustar_distancia, [1])
         self.accept("wheel_down", self._ajustar_distancia, [-1])
+        self.accept("establecer_objetivo", self.establecer_objetivo)
         #
         return True
 
@@ -91,10 +89,10 @@ class ControladorCamara(DirectObject):  # CameraController
             log.error("tipo no reconocido %i" % tipo)
 
     def establecer_objetivo(self, objetivo):
-        if not objetivo:
-            self.objetivo = ControladorCamara.ObjetivoDummy
-        else:
+        if objetivo:
             self.objetivo = objetivo
+        else:
+            self.objetivo = self.contexto.base.render
 
     def _ajustar_distancia(self, sentido):
         if self.tipo == ControladorCamara.TipoTerceraPersona:

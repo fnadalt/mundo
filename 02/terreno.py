@@ -2,6 +2,7 @@
 
 from direct.showbase.DirectObject import DirectObject
 from panda3d.core import *
+from panda3d.bullet import *
 
 # log
 import logging
@@ -10,9 +11,10 @@ log = logging.getLogger(__name__)
 
 class Terreno(DirectObject):
 
-    def __init__(self, contexto):
+    def __init__(self, contexto, mundo_fisica):
         # referencias
         self.contexto = contexto
+        self.mundo_fisica = mundo_fisica
         # componentes
         self.nodo = None  # node
         self.geom = None
@@ -26,11 +28,15 @@ class Terreno(DirectObject):
         self.geom.setNear(40)
         self.geom.setFar(100)
         self.geom.setFocalPoint(base.camera)
+        self.geom.setBruteforce(False)
         self.geom.generate()
         # nodo
-        self.nodo = self.geom.getRoot()
-        self.nodo.setSz(10)
-        self.nodo.reparentTo(self.contexto.base.render)
+        shape = BulletHeightfieldShape(self.geom.heightfield(), 10.0, ZUp)
+        rbody = BulletRigidBodyNode("Terreno_rbody")
+        rbody.addShape(shape)
+        self.mundo_fisica.attachRigidBody(rbody)
+        self.nodo = self.contexto.base.render.attachNewNode(rbody)
+        self.geom.getRoot().reparentTo(self.nodo)
         # tasks
         self.contexto.base.taskMgr.doMethodLater(
             0.500,
