@@ -42,6 +42,7 @@ class Contexto:  # Context
         # base
         self.base.disableMouse()
         self.base.setFrameRateMeter(True)
+        # engine config
         # pstats
         PStatClient.connect()
         #
