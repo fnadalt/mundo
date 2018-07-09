@@ -45,7 +45,7 @@ class EscenaMundo(DirectObject):
         df = BulletDebugNode("debug_fisica")
         self.mundo_fisica.setDebugNode(df)
         self.debug_fisica = b.render.attachNewNode(df)
-        self.debug_fisica.hide()
+        self.debug_fisica.show()
         # input
         self.input = Input(self.contexto)
         if not self.input.iniciar():
