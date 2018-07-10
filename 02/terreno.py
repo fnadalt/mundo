@@ -4,8 +4,9 @@ import math
 
 from direct.showbase.DirectObject import DirectObject
 from panda3d.core import *
+from panda3d.bullet import *
 
-from proveedores import Topografia
+#from proveedores import Topografia
 
 # log
 import logging
@@ -34,7 +35,7 @@ class Terreno(DirectObject):
         self.geom.setNear(40)
         self.geom.setFar(100)
         self.geom.setFocalPoint(base.camera)
-        self.geom.setBruteforce(False)
+        self.geom.setBruteforce(True)
         self.geom.generate()
         # nodo
         self.nodo = self.geom.getRoot()
@@ -43,6 +44,21 @@ class Terreno(DirectObject):
             self.factor_estiramiento,
             self.factor_estiramiento,
             self.altura)
+        # física
+        shp = BulletHeightfieldShape(
+            self.geom.heightfield(),
+            self.altura,
+            ZUp)
+        rbody = BulletRigidBodyNode("cuerpo_terreno")
+        rbody.addShape(shp)
+        self.mundo_fisica.attachRigidBody(rbody)
+        rbody_node = self.contexto.base.render.attachNewNode(rbody)
+        rbody_node.setSx(self.factor_estiramiento)
+        rbody_node.setSy(self.factor_estiramiento)
+        rbody_node.setPos(
+            256 * self.factor_estiramiento,
+            256 * self.factor_estiramiento,
+            5)
         # tasks
         self.contexto.base.taskMgr.doMethodLater(
             0.500,
@@ -50,14 +66,14 @@ class Terreno(DirectObject):
             "Terreno_update"
             )
         # proveedor de datos
-        self.contexto.registrar_proveedor(Topografia.Nombre, self)
+        #self.contexto.registrar_proveedor(Topografia.Nombre, self)
         #
         return True
 
     def terminar(self):
         log.info("terminar")
         # proveedor de datos
-        self.contexto.remover_proveedor(Topografia.Nombre)
+        #self.contexto.remover_proveedor(Topografia.Nombre)
         #
         self.geom = None
         if self.nodo:

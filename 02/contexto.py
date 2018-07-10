@@ -5,7 +5,7 @@ from configparser import ConfigParser
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import *
 
-from proveedores import Topografia
+#from proveedores import Topografia
 
 # log
 import logging
@@ -55,7 +55,7 @@ class Contexto:  # Context
         # pstats
         PStatClient.connect()
         # proveedores por defecto (default providers)
-        self._proveedores_defecto[Topografia.Nombre] = Topografia()
+        #self._proveedores_defecto[Topografia.Nombre] = Topografia()
         #
         return True
 
