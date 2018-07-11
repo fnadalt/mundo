@@ -23,6 +23,9 @@ class Aplicacion(DirectObject):
         # componentes
         self.escenas = dict()  # scenes
         self.escena_actual = None  # current scene
+        # parametros
+        self.escenas_basicas = ["inicio"]
+        self.escena_primera = "inicio"
 
     """
     iniciar(), patrón de diseño para objetos de esta aplicación.
@@ -35,17 +38,16 @@ class Aplicacion(DirectObject):
         if not self.contexto.iniciar():
             return False
         # configuración de aplicación (app config)
-        config_aplicacion = self.contexto.config["aplicacion"]
+        self._establecer_parametros()  # set parameters
         # escenas basicas (basic scenes)
-        escenas_basicas = config_aplicacion["escenas_basicas"].split(" ")
-        for nombre_escena in escenas_basicas:
+        for nombre_escena in self.escenas_basicas:
             log.debug("escena '%s'" % nombre_escena)
             escena = self.__obtener_escena(nombre_escena)
             if not escena:
                 return False
             self.escenas[nombre_escena] = escena
         #
-        nombre_escena = config_aplicacion["escena_primera"]
+        nombre_escena = self.escena_primera
         self._cambiar_escena(nombre_escena)
         # eventos
         self.accept("cambiar_escena", self._cambiar_escena)  # change scene
@@ -74,6 +76,20 @@ class Aplicacion(DirectObject):
         base = self.contexto.base
         self.contexto.terminar()
         base.finalizeExit()
+
+    """
+    _establecer_parametros() debe ser llamda desde inicio para establecer
+    parámetros de configuración
+    """
+    def _establecer_parametros(self):
+        log.info("_establecer_parametros")
+        try:
+            cfg = self.contexto.config["aplicacion"]
+            cfg_escenas_basicas = cfg["escenas_basicas"]
+            self.escenas_basicas = cfg_escenas_basicas.split(" ")
+            self.escena_primera = cfg["escena_primera"]
+        except ValueError as e:
+            log.exception("error en el análisis de la configuración: " + str(e))
 
     """
     _cambiar_escena() se llama en respuesta a un evento.

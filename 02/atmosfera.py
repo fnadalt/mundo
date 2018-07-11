@@ -56,7 +56,7 @@ class Atmosfera(DirectObject):
         b.render.setLight(self.sol_luz)
         # agua
         self.agua = b.loader.loadModel("modelos/atmosfera/agua.egg")
-        #self.agua.reparentTo(self.nodo)
+        self.agua.reparentTo(self.nodo)
         # eventos
         self.accept("establecer_objetivo", self.establecer_objetivo)
         # tasks
@@ -74,6 +74,7 @@ class Atmosfera(DirectObject):
         self.establecer_objetivo(None)
         # nodo
         if self.nodo:
+            self.contexto.base.render.clearLight(self.sol_luz)
             self.cielo = None
             self.sol_rig = None
             self.sol_nodo = None

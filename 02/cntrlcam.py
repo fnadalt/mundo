@@ -35,7 +35,6 @@ class ControladorCamara(DirectObject):  # CameraController
         # nodo
         render = self.contexto.base.render
         self.nodo = render.attachNewNode("ControladorCamara_nodo")
-        self.contexto.base.camera.reparentTo(self.nodo)
         # variables
         self.factores_rot = Vec2(2, -1)
         # tipo
@@ -57,6 +56,9 @@ class ControladorCamara(DirectObject):  # CameraController
         log.info("terminar")
         #
         self.establecer_objetivo(None)
+        # nodo
+        self.nodo.removeNode()
+        self.nodo = None
         # eventos
         self.ignoreAll()
         # tasks
@@ -64,22 +66,26 @@ class ControladorCamara(DirectObject):  # CameraController
         if taskMgr.hasTaskNamed("ControladorCamara_update"):
             taskMgr.remove("ControladorCamara_update")
 
-    def establecer_tipo(self, tipo):
+    def establecer_tipo(self, tipo):  # set type
         log.info("establecer_tipo %i" % tipo)
         taskMgr = self.contexto.base.taskMgr
         camara = self.contexto.base.camera
         if tipo == ControladorCamara.TipoLibre:
             if taskMgr.hasTaskNamed("ControladorCamara_update"):
+                log.debug("remover task ControladorCamara_update")
                 taskMgr.remove("ControladorCamara_update")
+            self.contexto.base.camera.reparentTo(self.contexto.base.render)
             self.contexto.base.enableMouse()
             self.tipo = tipo
         elif tipo == ControladorCamara.TipoPrimeraPersona or \
             tipo == ControladorCamara.TipoTerceraPersona:
+            self.contexto.base.camera.reparentTo(self.nodo)
             self.contexto.base.disableMouse()
             camara.setPos(0, 0, 0)
             camara.setHpr(0, 0, 0)
             self.nodo.setHpr(0, 0, 0)
             if not taskMgr.hasTaskNamed("ControladorCamara_update"):
+                log.debug("agregar task ControladorCamara_update")
                 taskMgr.add(self._update, "ControladorCamara_update")
             if tipo == ControladorCamara.TipoTerceraPersona:
                 camara.setY(-5)
@@ -88,13 +94,13 @@ class ControladorCamara(DirectObject):  # CameraController
         else:
             log.error("tipo no reconocido %i" % tipo)
 
-    def establecer_objetivo(self, objetivo):
+    def establecer_objetivo(self, objetivo):  # set target
         if objetivo:
             self.objetivo = objetivo
         else:
             self.objetivo = self.contexto.base.render
 
-    def _ajustar_distancia(self, sentido):
+    def _ajustar_distancia(self, sentido):  # adjust distance
         if self.tipo == ControladorCamara.TipoTerceraPersona:
             camara = self.contexto.base.camera
             y = camara.getY()

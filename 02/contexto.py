@@ -5,7 +5,7 @@ from configparser import ConfigParser
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import *
 
-#from proveedores import Topografia
+from proveedores import Topografia
 
 # log
 import logging
@@ -27,8 +27,26 @@ class Contexto:  # Context
             {
                 "escenas_basicas": "inicio",  # basic scenes: main, ...
                 "escena_primera": "inicio"  # first scene
+                },
+        "mundo":
+            {
+                "atmosfera": "true",
+                "terreno": "true"
+                },
+        "input":
+            {
+                "periodo_refresco": "30"  # 1/refresh_rate
+                },
+        "terreno":
+            {
+                "heightmap": "heightmap.png",
+                "altura": 100,  # height
+                "factor_estiramiento": 1,  # horizontal stretch factor
+                "wireframe": "false",
+                "brute_force": "false",
+                "fisica": "false"  # enable physics
                 }
-            }
+        }
 
     ConfigFileName = "mundo.ini"
 
@@ -55,7 +73,7 @@ class Contexto:  # Context
         # pstats
         PStatClient.connect()
         # proveedores por defecto (default providers)
-        #self._proveedores_defecto[Topografia.Nombre] = Topografia()
+        self._proveedores_defecto[Topografia.Nombre] = Topografia()
         #
         return True
 
@@ -65,7 +83,8 @@ class Contexto:  # Context
         self.base = None
         # proveedores
         log.info("quitar proveedores; "
-                 "al ser referencias, debe garantizarse su correctaterminación")
+                 "al ser referencias,"
+                 "debe garantizarse su correcta terminación")
         for nombre, proveedor in list(self._proveedores.items()):
             self._proveedores[nombre] = None
             del self._proveedores[nombre]
@@ -81,7 +100,13 @@ class Contexto:  # Context
         if nombre not in self._proveedores_defecto:
             log.error("no existe un proveedor por defecto con este nombre")
             return
-        self._proveedores[nombre] = self._proveedores_defecto[nombre]
+        if nombre in self._proveedores_defecto:
+            log.info("se establece provedor por defecto %s" % nombre)
+            self._proveedores[nombre] = self._proveedores_defecto[nombre]
+        else:
+            log.info("ya no existe proveedor %s" % nombre)
+            self._proveedores[nombre] = None
+            del self._proveedores[nombre]
 
     def obtener_proveedor(self, nombre):  # get provider
         log.debug("obtener_proveedor %s" % nombre)
