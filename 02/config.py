@@ -10,14 +10,12 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class EscenaInicio(DirectObject):
+class EscenaConfig(DirectObject):
     """
-    * configurar
-    * iniciar mundo
-    * salir
+    * configuración
     """
 
-    Nombre = "inicio"  # start
+    Nombre = "config"
 
     def __init__(self, contexto):
         DirectObject.__init__(self)
@@ -25,27 +23,25 @@ class EscenaInicio(DirectObject):
         self.contexto = contexto
         # componentes
         self.marco = None  # frame
+        self.secciones = None
+        self.paneles_config = dict()
 
     def iniciar(self):
         log.info("iniciar")
-        #
+        # marco
         self.marco = DirectFrame(parent=self.contexto.base.aspect2d)
-        self.marco["frameSize"] = (-0.5, 0.5, -0.5, 0.5)
+        self.marco["frameSize"] = (-1.0, 1.0, -1.0, 1.0)
+        # secciones
+        self.secciones = DirectFrame(parent=self.marco, pos=(-1, 0, 1))
+        self.secciones["frameSize"] = (0.0, 0.75, 0, -2.0)
+        self.secciones["frameColor"] = (0.35, 0.1, 0, 1)
         #
-        btn_mundo = self._crear_boton()
-        btn_mundo["text"] = "mundo"
-        btn_mundo["command"] = self._abrir_mundo
-        btn_mundo.setPos(Vec3(0, 0, 0.25))
-        #
-        btn_config = self._crear_boton()
-        btn_config["text"] = "configuración"
-        btn_config["command"] = self._abrir_configuracion
-        btn_config.setPos(Vec3(0, 0, 0))
-        #
-        btn_salir = self._crear_boton()
-        btn_salir["text"] = "salir"
-        btn_salir["command"] = self._salir
-        btn_salir.setPos(Vec3(0, 0, -0.25))
+        DirectLabel(
+            parent=self.secciones,
+            text="hola",
+            scale=0.1,
+            pos=(0.1, 0, -1),
+            frameColor=(0, 0, 0, 0))
         #
         return True
 
@@ -65,15 +61,3 @@ class EscenaInicio(DirectObject):
                              text_scale=0.1
                             )
         return boton
-
-    def _abrir_configuracion(self):
-        log.info("_abrir_configuracion")
-        self.contexto.base.messenger.send("cambiar_escena", ["config"])
-
-    def _abrir_mundo(self):
-        log.info("_abrir_mundo")
-        self.contexto.base.messenger.send("cambiar_escena", ["mundo"])
-
-    def _salir(self):
-        log.info("_salir")
-        self.contexto.base.messenger.send("salir")

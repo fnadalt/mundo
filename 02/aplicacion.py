@@ -3,6 +3,7 @@
 from direct.showbase.DirectObject import DirectObject
 from contexto import Contexto
 from inicio import EscenaInicio  # start scene
+from config import EscenaConfig  # config scene
 from mundo import EscenaMundo  # virtual world scene
 
 # Log
@@ -24,7 +25,7 @@ class Aplicacion(DirectObject):
         self.escenas = dict()  # scenes
         self.escena_actual = None  # current scene
         # parametros
-        self.escenas_basicas = ["inicio"]
+        self.escenas_basicas = ["inicio", "config", "mundo"]
         self.escena_primera = "inicio"
 
     """
@@ -123,6 +124,8 @@ class Aplicacion(DirectObject):
         else:
             if nombre_escena == EscenaInicio.Nombre:
                 escena = EscenaInicio(self.contexto)
+            elif nombre_escena == EscenaConfig.Nombre:
+                escena = EscenaConfig(self.contexto)
             elif nombre_escena == EscenaMundo.Nombre:
                 escena = EscenaMundo(self.contexto)
             else:

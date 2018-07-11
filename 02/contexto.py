@@ -25,7 +25,8 @@ class Contexto:  # Context
     ConfigDefault = {
         "aplicacion":
             {
-                "escenas_basicas": "inicio",  # basic scenes: main, ...
+                "escenas_basicas":
+                    "inicio config mundo",  # basic scenes: main, ...
                 "escena_primera": "inicio"  # first scene
                 },
         "mundo":
