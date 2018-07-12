@@ -70,6 +70,10 @@ class Atmosfera(DirectObject):
 
     def terminar(self):
         log.info("terminar")
+        # tasks
+        self.contexto.base.taskMgr.remove("Atmosfera_update")
+        # eventos
+        self.ignoreAll()
         #
         self.establecer_objetivo(None)
         # nodo
@@ -82,10 +86,6 @@ class Atmosfera(DirectObject):
             self.plano_agua = None
             self.nodo.removeNode()
             self.nodo = None
-        # eventos
-        self.ignoreAll()
-        # tasks
-        self.contexto.base.taskMgr.remove("Atmosfera_update")
 
     def establecer_objetivo(self, objetivo):
         if objetivo:

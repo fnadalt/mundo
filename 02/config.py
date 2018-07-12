@@ -25,39 +25,71 @@ class EscenaConfig(DirectObject):
         self.marco = None  # frame
         self.secciones = None
         self.paneles_config = dict()
+        # variables internas (internal variables)
+        self._rel_aspecto = 4 / 3  # screen aspect ratio
 
     def iniciar(self):
         log.info("iniciar")
+        # variables
+        self._rel_aspecto = self.contexto.base.getAspectRatio()
         # marco
-        self.marco = DirectFrame(parent=self.contexto.base.aspect2d)
-        self.marco["frameSize"] = (-1.0, 1.0, -1.0, 1.0)
+        self.marco = DirectFrame(
+            parent=self.contexto.base.aspect2d,
+            frameSize=(0, 2 * self._rel_aspecto, -1, 1),
+            frameColor=(0, 0.5, 0.5, 1),
+            pos=(-self._rel_aspecto, 0, 0)
+            )
         # secciones
-        self.secciones = DirectFrame(parent=self.marco, pos=(-1, 0, 1))
-        self.secciones["frameSize"] = (0.0, 0.75, 0, -2.0)
-        self.secciones["frameColor"] = (0.35, 0.1, 0, 1)
-        #
+        self.secciones = DirectFrame(
+            parent=self.marco,
+            pos=(0, 0, 0),
+            frameSize=(0, 1, -1, 1),
+            frameColor=(0.35, 0.1, 0, 1))
+        # título
         DirectLabel(
             parent=self.secciones,
-            text="hola",
-            scale=0.1,
-            pos=(0.1, 0, -1),
-            frameColor=(0, 0, 0, 0))
+            text="configuración",
+            scale=0.125,
+            pos=(0.5, 0, 0.9),
+            frameColor=(0, 0, 0, 0),
+            text_fg=(0.9, 0.7, 0.6, 1))
+        # botones
+        boton = self._crear_boton("aplicación")
+        boton.setPos(0.5, 0, 0.7)
+        boton = self._crear_boton("mundo")
+        boton.setPos(0.5, 0, 0.4)
+        boton = self._crear_boton("input")
+        boton.setPos(0.5, 0, 0.1)
+        boton = self._crear_boton("terreno")
+        boton.setPos(0.5, 0, -0.2)
+        # eventos
+        self.accept("aspectRatioChanged", self._ajustar_rel_aspecto)
         #
         return True
 
     def terminar(self):
         log.info("terminar")
+        # eventos
+        self.ignoreAll()
+        # marco
         if self.marco:
             self.marco.destroy()
             self.marco = None
-        #self.contexto = None  # el objeto es terminado, no destruido
 
-    def _crear_boton(self):  # create button
+    def _ajustar_rel_aspecto(self):
+        self._rel_aspecto = self.contexto.base.getAspectRatio()
+        log.debug("_ajustar_rel_aspecto -> %.3f" % self._rel_aspecto)
+        self.marco.setPos(-self._rel_aspecto, 0, 0)
+        self.marco["frameSize"] = (0, 2 * self._rel_aspecto, -1, 1)
+
+    def _crear_boton(self, texto):  # create button
         boton = DirectButton(parent=self.marco,
                              frameSize=(-0.35, 0.35, -0.1, 0.1),
+                             frameColor=(0.35, 0.35, 0.1, 1),
                              relief="raised",
                              borderWidth=(0.01, 0.01),
-                             text="botón",
-                             text_scale=0.1
+                             text=texto,
+                             text_scale=0.1,
+                             text_fg=(0.5, 0.5, 0.3, 1)
                             )
         return boton

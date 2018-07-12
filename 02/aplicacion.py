@@ -64,6 +64,8 @@ class Aplicacion(DirectObject):
     def terminar(self):  # terminate
         log.info("terminar")
         #
+        self.ignoreAll()
+        #
         if self.escena_actual:
             self.escena_actual.terminar()
             self.escena_actual = None
@@ -71,8 +73,6 @@ class Aplicacion(DirectObject):
             if escena:
                 escena.terminar()
                 self.escenas[nombre] = None
-        #
-        self.ignoreAll()
         #
         base = self.contexto.base
         self.contexto.terminar()

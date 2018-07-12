@@ -54,17 +54,17 @@ class ControladorCamara(DirectObject):  # CameraController
 
     def terminar(self):
         log.info("terminar")
+        # tasks
+        taskMgr = self.contexto.base.taskMgr
+        if taskMgr.hasTaskNamed("ControladorCamara_update"):
+            taskMgr.remove("ControladorCamara_update")
+        # eventos
+        self.ignoreAll()
         #
         self.establecer_objetivo(None)
         # nodo
         self.nodo.removeNode()
         self.nodo = None
-        # eventos
-        self.ignoreAll()
-        # tasks
-        taskMgr = self.contexto.base.taskMgr
-        if taskMgr.hasTaskNamed("ControladorCamara_update"):
-            taskMgr.remove("ControladorCamara_update")
 
     def establecer_tipo(self, tipo):  # set type
         log.info("establecer_tipo %i" % tipo)

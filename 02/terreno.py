@@ -103,6 +103,8 @@ class Terreno(DirectObject):
 
     def terminar(self):
         log.info("terminar")
+        # tasks
+        self.contexto.base.taskMgr.remove("Terreno_update")
         # proveedor de datos
         self.contexto.remover_proveedor(Topografia.Nombre)
         # física
@@ -115,8 +117,6 @@ class Terreno(DirectObject):
         if self.nodo:
             self.nodo.removeNode()
             self.nodo = None
-        # tasks
-        self.contexto.base.taskMgr.remove("Terreno_update")
 
     def _establecer_parametros(self):
         log.info("_establecer_parametros")

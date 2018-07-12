@@ -103,6 +103,11 @@ class EscenaMundo(DirectObject):
 
     def terminar(self):
         log.info("terminar")
+        # tasks
+        self.contexto.base.taskMgr.remove("Mundo_update_debug_hud")
+        self.contexto.base.taskMgr.remove("Mundo_update")
+        # eventos
+        self.ignoreAll()
         # camara
         if self.cntrlcam:
             self.cntrlcam.terminar()
@@ -130,11 +135,6 @@ class EscenaMundo(DirectObject):
         # física
         self.mundo_fisica.clearDebugNode()
         self.debug_fisica.removeNode()
-        # eventos
-        self.ignoreAll()
-        # tasks
-        self.contexto.base.taskMgr.remove("Mundo_update_debug_hud")
-        self.contexto.base.taskMgr.remove("Mundo_update")
 
     def _establecer_parametros(self):
         log.info("_establecer_parametros")
