@@ -54,13 +54,13 @@ class EscenaConfig(DirectObject):
             frameColor=(0, 0, 0, 0),
             text_fg=(0.9, 0.7, 0.6, 1))
         # botones
-        boton = self._crear_boton("aplicación")
+        boton = self._crear_boton_seccion("aplicación")
         boton.setPos(0.5, 0, 0.7)
-        boton = self._crear_boton("mundo")
+        boton = self._crear_boton_seccion("mundo")
         boton.setPos(0.5, 0, 0.4)
-        boton = self._crear_boton("input")
+        boton = self._crear_boton_seccion("input")
         boton.setPos(0.5, 0, 0.1)
-        boton = self._crear_boton("terreno")
+        boton = self._crear_boton_seccion("terreno")
         boton.setPos(0.5, 0, -0.2)
         # eventos
         self.accept("aspectRatioChanged", self._ajustar_rel_aspecto)
@@ -82,7 +82,7 @@ class EscenaConfig(DirectObject):
         self.marco.setPos(-self._rel_aspecto, 0, 0)
         self.marco["frameSize"] = (0, 2 * self._rel_aspecto, -1, 1)
 
-    def _crear_boton(self, texto):  # create button
+    def _crear_boton_seccion(self, texto):  # create section button
         boton = DirectButton(parent=self.marco,
                              frameSize=(-0.35, 0.35, -0.1, 0.1),
                              frameColor=(0.35, 0.35, 0.1, 1),

@@ -98,9 +98,6 @@ class Contexto:  # Context
 
     def remover_proveedor(self, nombre):  # remove
         log.info("remover_proveedor %s" % nombre)
-        if nombre not in self._proveedores_defecto:
-            log.error("no existe un proveedor por defecto con este nombre")
-            return
         if nombre in self._proveedores_defecto:
             log.info("se establece provedor por defecto %s" % nombre)
             self._proveedores[nombre] = self._proveedores_defecto[nombre]
