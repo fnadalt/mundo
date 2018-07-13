@@ -35,40 +35,51 @@ class EscenaConfig(DirectObject):
         # marco
         self.marco = DirectFrame(
             parent=self.contexto.base.aspect2d,
-            frameSize=(0, 2 * self._rel_aspecto, -1, 1),
             frameColor=(0, 0.5, 0.5, 1),
-            pos=(-self._rel_aspecto, 0, 0)
+            pos=(0, 0, 0)
             )
         # secciones
         self.secciones = DirectFrame(
             parent=self.marco,
-            pos=(0, 0, 0),
-            frameSize=(0, 1, -1, 1),
+            frameSize=(-0.5, 0.5, -1, 1),
             frameColor=(0.35, 0.1, 0, 1))
         # título
         DirectLabel(
             parent=self.secciones,
             text="configuración",
             scale=0.125,
-            pos=(0.5, 0, 0.9),
+            pos=(0, 0, 0.9),
             frameColor=(0, 0, 0, 0),
             text_fg=(0.9, 0.7, 0.6, 1))
         # botones
-        boton = self._crear_boton_seccion("aplicación")
-        boton.setPos(0.5, 0, 0.7)
-        boton = self._crear_boton_seccion("mundo")
-        boton.setPos(0.5, 0, 0.4)
-        boton = self._crear_boton_seccion("input")
-        boton.setPos(0.5, 0, 0.1)
-        boton = self._crear_boton_seccion("terreno")
-        boton.setPos(0.5, 0, -0.2)
+        boton = self.__crear_boton_seccion("aplicación")
+        boton.setPos(0, 0, 0.7)
+        boton = self.__crear_boton_seccion("mundo")
+        boton.setPos(0, 0, 0.4)
+        boton = self.__crear_boton_seccion("input")
+        boton.setPos(0, 0, 0.1)
+        boton = self.__crear_boton_seccion("terreno")
+        boton.setPos(0, 0, -0.2)
+        # paneles
+        self._crear_panel_aplic()
+        self._crear_panel_mundo()
+        self._crear_panel_input()
+        self._crear_panel_terreno()
         # eventos
         self.accept("aspectRatioChanged", self._ajustar_rel_aspecto)
+        #
+        self._ajustar_rel_aspecto()
+        self._mostrar_panel("aplicación")
         #
         return True
 
     def terminar(self):
         log.info("terminar")
+        # paneles
+        for nombre, panel in list(self.paneles_config):
+            log.info("terminar panel %s" % nombre)
+            panel.destroy()
+        self.paneles_config = dict()
         # eventos
         self.ignoreAll()
         # marco
@@ -79,17 +90,172 @@ class EscenaConfig(DirectObject):
     def _ajustar_rel_aspecto(self):
         self._rel_aspecto = self.contexto.base.getAspectRatio()
         log.debug("_ajustar_rel_aspecto -> %.3f" % self._rel_aspecto)
-        self.marco.setPos(-self._rel_aspecto, 0, 0)
-        self.marco["frameSize"] = (0, 2 * self._rel_aspecto, -1, 1)
+        # marco
+        self.marco["frameSize"] = (-self._rel_aspecto, self._rel_aspecto, -1, 1)
+        # secciones
+        self.secciones.setPos(-self._rel_aspecto + 0.5, 0, 0)
+        # paneles
+        for nombre, panel in list(self.paneles_config.items()):
+            panel["frameSize"] = (
+                -0.6 * self._rel_aspecto,
+                0.6 * self._rel_aspecto,
+                -0.9, 0.9)
 
-    def _crear_boton_seccion(self, texto):  # create section button
-        boton = DirectButton(parent=self.marco,
+    def _mostrar_panel(self, nombre):
+        log.info("_mostrar_panel %s" % nombre)
+        for _nombre, panel in list(self.paneles_config.items()):
+            log.debug(_nombre)
+            if _nombre == nombre:
+                log.info("se encontró panel %s" % _nombre)
+                panel.show()
+            else:
+                panel.hide()
+
+    def _crear_panel_aplic(self):  # create aplication (config) panel
+        panel = self.__crear_panel_config("aplicación")
+        #
+        try:
+            cfg = self.contexto.config["aplicacion"]
+            escenas_basicas = cfg.get("escenas_basicas")
+            escena_primera = cfg.get("escena_primera")
+        except ValueError as e:
+            log.exception("configuración de aplicación: %s" % str(e))
+            return
+        # escenas básicas
+        self.__crear_label_panel(panel, 0.6, "escenas básicas")
+        _input = self.__crear_input_panel(panel, 0.6, escenas_basicas)
+        _input["width"] = 30
+        # escena primera
+        self.__crear_label_panel(panel, 0.4, "escena primera")
+        self.__crear_input_panel(panel, 0.4, escena_primera)
+
+    def _crear_panel_mundo(self):  # create world (config) panel
+        panel = self.__crear_panel_config("mundo")
+        #
+        try:
+            cfg = self.contexto.config["mundo"]
+            atmosfera = cfg.getboolean("atmosfera")
+            terreno = cfg.getboolean("terreno")
+        except ValueError as e:
+            log.exception("configuración de mundo: %s" % str(e))
+            return
+        # terreno
+        self.__crear_label_panel(panel, 0.6, "terreno")
+        self.__crear_check_panel(panel, 0.6, terreno)
+        # atmosfera
+        self.__crear_label_panel(panel, 0.4, "atmosfera")
+        self.__crear_check_panel(panel, 0.4, atmosfera)
+
+    def _crear_panel_input(self):  # create input (config) panel
+        panel = self.__crear_panel_config("input")
+        #
+        try:
+            cfg = self.contexto.config["input"]
+            periodo_refresco = cfg.getfloat("periodo_refresco")
+        except ValueError as e:
+            log.exception("configuración de input: %s" % str(e))
+            return
+        #
+        self.__crear_label_panel(panel, 0.6, "periodo refresco")
+        self.__crear_input_panel(panel, 0.6, str(periodo_refresco))
+
+    def _crear_panel_terreno(self):  # create terrain (config) panel
+        panel = self.__crear_panel_config("terreno")
+        #
+        try:
+            cfg = self.contexto.config["terreno"]
+            heightmap = cfg.get("heightmap")
+            altura = cfg.getfloat("altura")
+            factor_estiramiento = cfg.getfloat("factor_estiramiento")
+            wireframe = cfg.getboolean("wireframe")
+            brute_force = cfg.getboolean("brute_force")
+            fisica = cfg.getboolean("fisica")
+        except ValueError as e:
+            log.exception("configuración de terreno: %s" % str(e))
+            return
+        # heightmap
+        self.__crear_label_panel(panel, 0.6, "heightmap")
+        self.__crear_input_panel(panel, 0.6, heightmap)
+        # altura
+        self.__crear_label_panel(panel, 0.4, "altura")
+        self.__crear_input_panel(panel, 0.4, str(altura))
+        # factor de estiramiento
+        self.__crear_label_panel(panel, 0.2, "factor estiramiento")
+        self.__crear_input_panel(panel, 0.2, str(factor_estiramiento))
+        # wireframe
+        self.__crear_label_panel(panel, 0.0, "wireframe")
+        self.__crear_check_panel(panel, 0.0, wireframe)
+        # brute force en GeoMipTerrain
+        self.__crear_label_panel(panel, -0.2, "brute force (GeoMip)")
+        self.__crear_check_panel(panel, -0.2, brute_force)
+        # fisica
+        self.__crear_label_panel(panel, -0.4, "habilitar física")
+        self.__crear_check_panel(panel, -0.4, fisica)
+
+    def __crear_boton_seccion(self, texto):  # create section button
+        boton = DirectButton(parent=self.secciones,
                              frameSize=(-0.35, 0.35, -0.1, 0.1),
                              frameColor=(0.35, 0.35, 0.1, 1),
                              relief="raised",
                              borderWidth=(0.01, 0.01),
                              text=texto,
                              text_scale=0.1,
-                             text_fg=(0.5, 0.5, 0.3, 1)
+                             text_fg=(0.5, 0.5, 0.3, 1),
+                             command=self._mostrar_panel,
+                             extraArgs=[texto]
                             )
         return boton
+
+    def __crear_panel_config(self, titulo):
+        # panel
+        panel = DirectFrame(
+            parent=self.marco,
+            pos=(0.5, 0, 0),
+            frameColor=(0.9, 0.7, 0.6, 1)
+            )
+        # título
+        DirectLabel(
+            parent=panel,
+            pos=(0, 0, 0.8),
+            text=titulo,
+            frameColor=(0, 0, 0, 0),
+            scale=0.1)
+        #
+        self.paneles_config[titulo] = panel
+        return panel
+
+    def __crear_label_panel(self, _parent, pos_y, texto):
+        _label = DirectLabel(
+            parent=_parent,
+            pos=(-0.5, 0, pos_y),
+            frameSize=(0, 7, -0.5, 0.9),
+            frameColor=(0, 0, 0, 0),
+            scale=0.1,
+            text=texto,
+            text_pos=(3.25, 0, 0),
+            text_scale=0.5,
+            text_align=TextNode.ARight
+            )
+        return _label
+
+    def __crear_input_panel(self, _parent, pos_y, texto_inicial):
+        _input = DirectEntry(
+            parent=_parent,
+            pos=(0.2, 0, pos_y),
+            frameSize=(-3.5, 3.5, -0.5, 0.5),
+            scale=0.1,
+            initialText=texto_inicial,
+            text_pos=(-3.2, 0, 0),
+            text_scale=0.5
+            )
+        return _input
+
+    def __crear_check_panel(self, _parent, pos_y, valor_inicial):
+        _check = DirectCheckButton(
+            parent=_parent,
+            frameSize=(-0.5, 0.5, -0.5, 0.5),
+            pos=(-0.075, 0, pos_y),
+            scale=0.1,
+            indicatorValue=valor_inicial
+            )
+        return _check
