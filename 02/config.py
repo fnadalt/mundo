@@ -17,6 +17,12 @@ class EscenaConfig(DirectObject):
 
     Nombre = "config"
 
+    # tipo entrada (input type)
+    EntradaTexto = 0
+    EntradaInt = 1
+    EntradaFloat = 2
+    EntradaDate = 3
+
     def __init__(self, contexto):
         DirectObject.__init__(self)
         # referencias
@@ -25,6 +31,7 @@ class EscenaConfig(DirectObject):
         self.marco = None  # frame
         self.secciones = None
         self.paneles_config = dict()
+        self.lbl_msj = None
         # variables internas (internal variables)
         self._rel_aspecto = 4 / 3  # screen aspect ratio
 
@@ -60,11 +67,29 @@ class EscenaConfig(DirectObject):
         boton.setPos(0, 0, 0.1)
         boton = self.__crear_boton_seccion("terreno")
         boton.setPos(0, 0, -0.2)
+        #
+        boton = self.__crear_boton_seccion("guardar")  # save
+        boton.setPos(0, 0, -0.6)
+        boton["command"] = self._guardar
+        boton["extraArgs"] = []
+        boton = self.__crear_boton_seccion("cancelar")  # cancel
+        boton.setPos(0, 0, -0.825)
+        boton["command"] = self._cancelar
+        boton["extraArgs"] = []
         # paneles
         self._crear_panel_aplic()
         self._crear_panel_mundo()
         self._crear_panel_input()
         self._crear_panel_terreno()
+        # mensaje (message)
+        self.lbl_msj = DirectLabel(
+            parent=self.marco,
+            pos=(0, 0, -0.95),
+            text="mensaje mensaje mensaje mensaje mensaje mensaje",
+            frameColor=(1, 1, 1, 1),
+            scale=0.075,
+            text_fg=(0.8, 0.1, 0.1, 1))
+        self.lbl_msj.hide()
         # eventos
         self.accept("aspectRatioChanged", self._ajustar_rel_aspecto)
         #
@@ -75,6 +100,9 @@ class EscenaConfig(DirectObject):
 
     def terminar(self):
         log.info("terminar")
+        #
+        self.secciones = None
+        self.lbl_msj = None
         # paneles
         for nombre, panel in list(self.paneles_config):
             log.info("terminar panel %s" % nombre)
@@ -101,6 +129,12 @@ class EscenaConfig(DirectObject):
                 0.6 * self._rel_aspecto,
                 -0.9, 0.9)
 
+    def _guardar(self):
+        log.info("_guardar")
+
+    def _cancelar(self):
+        log.info("_cancelar")
+
     def _mostrar_panel(self, nombre):
         log.info("_mostrar_panel %s" % nombre)
         for _nombre, panel in list(self.paneles_config.items()):
@@ -123,11 +157,13 @@ class EscenaConfig(DirectObject):
             return
         # escenas básicas
         self.__crear_label_panel(panel, 0.6, "escenas básicas")
-        _input = self.__crear_input_panel(panel, 0.6, escenas_basicas)
-        _input["width"] = 30
+        _input = self.__crear_input_panel(panel, 0.6, escenas_basicas,
+            "aplicación.escenas_basicas", EscenaConfig.EntradaTexto)
+        _input["width"] = 15
         # escena primera
         self.__crear_label_panel(panel, 0.4, "escena primera")
-        self.__crear_input_panel(panel, 0.4, escena_primera)
+        self.__crear_input_panel(panel, 0.4, escena_primera,
+            "aplicación.escena_primera", EscenaConfig.EntradaTexto)
 
     def _crear_panel_mundo(self):  # create world (config) panel
         panel = self.__crear_panel_config("mundo")
@@ -141,10 +177,10 @@ class EscenaConfig(DirectObject):
             return
         # terreno
         self.__crear_label_panel(panel, 0.6, "terreno")
-        self.__crear_check_panel(panel, 0.6, terreno)
+        self.__crear_check_panel(panel, 0.6, terreno, "mundo.terreno")
         # atmosfera
         self.__crear_label_panel(panel, 0.4, "atmosfera")
-        self.__crear_check_panel(panel, 0.4, atmosfera)
+        self.__crear_check_panel(panel, 0.4, atmosfera, "mundo.atmosfera")
 
     def _crear_panel_input(self):  # create input (config) panel
         panel = self.__crear_panel_config("input")
@@ -157,7 +193,8 @@ class EscenaConfig(DirectObject):
             return
         #
         self.__crear_label_panel(panel, 0.6, "periodo refresco")
-        self.__crear_input_panel(panel, 0.6, str(periodo_refresco))
+        self.__crear_input_panel(panel, 0.6, str(periodo_refresco),
+            "input.periodo_refresco", EscenaConfig.EntradaFloat)
 
     def _crear_panel_terreno(self):  # create terrain (config) panel
         panel = self.__crear_panel_config("terreno")
@@ -175,22 +212,28 @@ class EscenaConfig(DirectObject):
             return
         # heightmap
         self.__crear_label_panel(panel, 0.6, "heightmap")
-        self.__crear_input_panel(panel, 0.6, heightmap)
+        self.__crear_input_panel(panel, 0.6, heightmap,
+                "terreno.heightmap", EscenaConfig.EntradaTexto)
         # altura
         self.__crear_label_panel(panel, 0.4, "altura")
-        self.__crear_input_panel(panel, 0.4, str(altura))
+        self.__crear_input_panel(panel, 0.4, str(altura),
+                "terreno.altura", EscenaConfig.EntradaFloat)
         # factor de estiramiento
         self.__crear_label_panel(panel, 0.2, "factor estiramiento")
-        self.__crear_input_panel(panel, 0.2, str(factor_estiramiento))
+        self.__crear_input_panel(panel, 0.2, str(factor_estiramiento),
+                "terreno.factor_estiramiento", EscenaConfig.EntradaFloat)
         # wireframe
         self.__crear_label_panel(panel, 0.0, "wireframe")
-        self.__crear_check_panel(panel, 0.0, wireframe)
+        self.__crear_check_panel(panel, 0.0, wireframe,
+            "terreno.wireframe")
         # brute force en GeoMipTerrain
         self.__crear_label_panel(panel, -0.2, "brute force (GeoMip)")
-        self.__crear_check_panel(panel, -0.2, brute_force)
+        self.__crear_check_panel(panel, -0.2, brute_force,
+            "terreno.brute_force")
         # fisica
         self.__crear_label_panel(panel, -0.4, "habilitar física")
-        self.__crear_check_panel(panel, -0.4, fisica)
+        self.__crear_check_panel(panel, -0.4, fisica,
+            "terreno.fisica")
 
     def __crear_boton_seccion(self, texto):  # create section button
         boton = DirectButton(parent=self.secciones,
@@ -200,7 +243,7 @@ class EscenaConfig(DirectObject):
                              borderWidth=(0.01, 0.01),
                              text=texto,
                              text_scale=0.1,
-                             text_fg=(0.5, 0.5, 0.3, 1),
+                             text_fg=(0.9, 0.9, 0.9, 1),
                              command=self._mostrar_panel,
                              extraArgs=[texto]
                             )
@@ -213,7 +256,7 @@ class EscenaConfig(DirectObject):
             pos=(0.5, 0, 0),
             frameColor=(0.9, 0.7, 0.6, 1)
             )
-        # título
+        # título (title)
         DirectLabel(
             parent=panel,
             pos=(0, 0, 0.8),
@@ -238,7 +281,8 @@ class EscenaConfig(DirectObject):
             )
         return _label
 
-    def __crear_input_panel(self, _parent, pos_y, texto_inicial):
+    def __crear_input_panel(self, _parent, pos_y, texto_inicial,
+        variable, tipo_entrada):
         _input = DirectEntry(
             parent=_parent,
             pos=(0.2, 0, pos_y),
@@ -248,14 +292,25 @@ class EscenaConfig(DirectObject):
             text_pos=(-3.2, 0, 0),
             text_scale=0.5
             )
+        _input["focusOutCommand"] = self.__validar_entrada_texto
+        _input["focusOutExtraArgs"] = [_input, tipo_entrada, variable]
         return _input
 
-    def __crear_check_panel(self, _parent, pos_y, valor_inicial):
+    def __crear_check_panel(self, _parent, pos_y, valor_inicial, variable):
         _check = DirectCheckButton(
             parent=_parent,
             frameSize=(-0.5, 0.5, -0.5, 0.5),
             pos=(-0.075, 0, pos_y),
             scale=0.1,
-            indicatorValue=valor_inicial
+            indicatorValue=valor_inicial,
+            command=self.__validar_check,
+            extraArgs=[variable]
             )
         return _check
+
+    def __validar_entrada_texto(self, entrada, tipo_entrada, variable):
+        log.debug("__validar variable=%s, tipo=%i" %
+                    (variable, tipo_entrada))
+
+    def __validar_check(self, status, variable):
+        log.debug("__validar variable=%s, status=%s" % (variable, str(status)))
