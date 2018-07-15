@@ -356,7 +356,7 @@ class EscenaConfig(DirectObject):
         # variable
         seccion, opcion = variable.split(".")
         cfg = self.contexto.config[seccion]
-        cfg[opcion] = status
+        cfg[opcion] = str(status)
 
     def __show_msj(self, texto):
         taskMgr = self.contexto.base.taskMgr
