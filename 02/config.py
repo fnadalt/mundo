@@ -5,6 +5,7 @@ from direct.gui.DirectGuiGlobals import *
 from direct.gui.DirectGui import *
 from panda3d.core import *
 
+from datetime import datetime as dt
 import re
 
 # log
@@ -74,9 +75,9 @@ class EscenaConfig(DirectObject):
         boton.setPos(0, 0, -0.6)
         boton["command"] = self._guardar
         boton["extraArgs"] = []
-        boton = self.__crear_boton_seccion("cancelar")  # cancel
+        boton = self.__crear_boton_seccion("salir")  # exit
         boton.setPos(0, 0, -0.825)
-        boton["command"] = self._cancelar
+        boton["command"] = self._salir
         boton["extraArgs"] = []
         # paneles
         self._crear_panel_aplic()
@@ -102,16 +103,20 @@ class EscenaConfig(DirectObject):
 
     def terminar(self):
         log.info("terminar")
+        b = self.contexto.base
+        # eventos
+        self.ignoreAll()
+        # task
+        if b.taskMgr.hasTaskNamed("EscenaConfig.__hide_msj"):
+            b.taskMgr.remove("EscenaConfig.__hide_msj")
         #
         self.secciones = None
         self.lbl_msj = None
         # paneles
-        for nombre, panel in list(self.paneles_config):
+        for nombre, panel in list(self.paneles_config.items()):
             log.info("terminar panel %s" % nombre)
             panel.destroy()
         self.paneles_config = dict()
-        # eventos
-        self.ignoreAll()
         # marco
         if self.marco:
             self.marco.destroy()
@@ -133,9 +138,14 @@ class EscenaConfig(DirectObject):
 
     def _guardar(self):
         log.info("_guardar")
+        archivo_cfg = self.contexto.ConfigFileName
+        with open(archivo_cfg, "w+") as arch:
+            self.contexto.config.write(arch)
+        self.__show_msj("se ecribió archivo %s" % archivo_cfg)
 
-    def _cancelar(self):
-        log.info("_cancelar")
+    def _salir(self):
+        log.info("_salir")
+        self.contexto.base.messenger.send("cambiar_escena", ["inicio"])
 
     def _mostrar_panel(self, nombre):
         log.info("_mostrar_panel %s" % nombre)
@@ -326,28 +336,38 @@ class EscenaConfig(DirectObject):
         elif tipo_entrada == EscenaConfig.EntradaFloat:
             if not re.match("^\d*\.?\d+$", texto_entrada):
                 texto_error = "debe ingresarse un número decimal"
-        elif tipo_entrada == EscenaConfig.EntradaEntero:
+        elif tipo_entrada == EscenaConfig.EntradaInt:
             if not re.match("^\d+$", texto_entrada):
                 texto_error = "debe ingresarse un número entero"
-        elif tipo_entrada == EscenaConfig.EntradaFecha:
-            if not True:  # ???
-                texto_error = "debe ingresarse una fecha válida"
+        elif tipo_entrada == EscenaConfig.EntradaDate:
+            try:
+                dt.strptime(texto_entrada, "%d/%m/%Y")
+            except ValueError:
+                texto_error = "ingresá una fecha válida (dd/mm/yyyy)"
         # mensaje?
         if texto_error:
             entrada.enterText(valor_cfg)  # restore previous
-            self.lbl_msj["text"] = "%s" % texto_error
-            if self.lbl_msj.isHidden():
-                self.lbl_msj.show()
-                self.contexto.base.taskMgr.doMethodLater(
-                    3,
-                    self.__hide_msj,
-                    "EscenaConfig.__hide_msj"
-                    )
+            self._show_msj(texto_error)
         else:
             cfg[opcion] = texto_entrada  # set in config
 
     def __validar_check(self, status, variable):
         log.debug("__validar variable=%s, status=%s" % (variable, str(status)))
+        # variable
+        seccion, opcion = variable.split(".")
+        cfg = self.contexto.config[seccion]
+        cfg[opcion] = status
+
+    def __show_msj(self, texto):
+        taskMgr = self.contexto.base.taskMgr
+        #
+        if taskMgr.hasTaskNamed("EscenaConfig.__hide_msj"):
+            taskMgr.remove("EscenaConfig.__hide_msj")  # correcto? (right?)
+        #
+        self.lbl_msj["text"] = "%s" % texto
+        if self.lbl_msj.isHidden():
+            self.lbl_msj.show()
+            taskMgr.doMethodLater(3, self.__hide_msj, "EscenaConfig.__hide_msj")
 
     def __hide_msj(self, task):
         self.lbl_msj.hide()
