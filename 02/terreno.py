@@ -31,8 +31,8 @@ class Terreno(DirectObject):
         self.cuerpo = None  # physic body
         # parametros
         self.heightmap = "heightmap.png"
-        self.altura = 100.0  # height
-        self.factor_estiramiento = 1  # 0.05  # stretch factor, xy
+        self.altura = 10.0  # height
+        self.factor_estiramiento = 1  # stretch factor, xy
         self.wireframe = False
         self.brute_force = False
         self.fisica = True  # enable physics
