@@ -10,6 +10,7 @@ from cntrlcam import ControladorCamara
 from input import Input
 from atmosfera import Atmosfera
 from terreno import Terreno
+from persona import Persona
 
 # log
 import logging
@@ -33,7 +34,7 @@ class EscenaMundo(DirectObject):
         self.input = None
         self.terreno = None  # terrain
         self.estaticos = None  # static (model instances)
-        self.animados = None  # animated (model instances, actors)
+        self.animados = list()  # animated (model instances, actors)
         self.items = None
         self.atmosfera = None  # atmosphere
         self.cntrlcam = None  # camera controller
@@ -64,6 +65,8 @@ class EscenaMundo(DirectObject):
             self.terreno = Terreno(self.contexto, self.mundo_fisica)
             if not self.terreno.iniciar():
                 return False
+        # animados (actors)
+        self._iniciar_animados()
         # atmosfera
         if self.cargar_atmosfera:
             self.atmosfera = Atmosfera(self.contexto)
@@ -83,7 +86,8 @@ class EscenaMundo(DirectObject):
             text="Debug?",
             pos=(0, -0.1),
             scale=0.05,
-            align=TextNode.ALeft
+            align=TextNode.ALeft,
+            bg=(1, 1, 1, 0.3)
             )
         # pelota (ball)
         pelota = b.loader.loadModel("modelos/items/pelota.egg")
@@ -124,6 +128,10 @@ class EscenaMundo(DirectObject):
         if self.atmosfera:
             self.atmosfera.terminar()
             self.atmosfera = None
+        # animados
+        for animado in self.animados:
+            animado.terminar()
+        self.animados = list()
         # terreno
         if self.terreno:
             self.terreno.terminar()
@@ -140,10 +148,16 @@ class EscenaMundo(DirectObject):
         log.info("_establecer_parametros")
         try:
             cfg = self.contexto.config["mundo"]
-            self.cargar_terreno = cfg["terreno"]
-            self.cargar_atmosfera = cfg["atmosfera"]
+            self.cargar_terreno = cfg.getboolean("terreno")
+            self.cargar_atmosfera = cfg.getboolean("atmosfera")
         except ValueError as e:
             log.exception("error en el análisis de la configuración: " + str(e))
+
+    def _iniciar_animados(self):  # init animated (actors)
+        log.info("_iniciar_animados")
+        actor = Persona(self.contexto, self.input)
+        if actor.iniciar():
+            self.animados.append(actor)
 
     def _toggle_texto_info(self):
         pass
@@ -159,7 +173,11 @@ class EscenaMundo(DirectObject):
 
     def _update_debug_hud(self, task):
         info = "Debug\n"
-        info += self.input.obtener_info()
+        #
+        info += self.input.obtener_info() + "\n"
+        if self.atmosfera:
+            info += self.atmosfera.obtener_info() + "\n"
+        #
         self.debug_hud["text"] = info
         return task.again
 
