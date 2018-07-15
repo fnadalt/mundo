@@ -5,6 +5,8 @@ from direct.gui.DirectGuiGlobals import *
 from direct.gui.DirectGui import *
 from panda3d.core import *
 
+import re
+
 # log
 import logging
 log = logging.getLogger(__name__)
@@ -158,12 +160,12 @@ class EscenaConfig(DirectObject):
         # escenas básicas
         self.__crear_label_panel(panel, 0.6, "escenas básicas")
         _input = self.__crear_input_panel(panel, 0.6, escenas_basicas,
-            "aplicación.escenas_basicas", EscenaConfig.EntradaTexto)
+            "aplicacion.escenas_basicas", EscenaConfig.EntradaTexto)
         _input["width"] = 15
         # escena primera
         self.__crear_label_panel(panel, 0.4, "escena primera")
         self.__crear_input_panel(panel, 0.4, escena_primera,
-            "aplicación.escena_primera", EscenaConfig.EntradaTexto)
+            "aplicacion.escena_primera", EscenaConfig.EntradaTexto)
 
     def _crear_panel_mundo(self):  # create world (config) panel
         panel = self.__crear_panel_config("mundo")
@@ -311,6 +313,42 @@ class EscenaConfig(DirectObject):
     def __validar_entrada_texto(self, entrada, tipo_entrada, variable):
         log.debug("__validar variable=%s, tipo=%i" %
                     (variable, tipo_entrada))
+        # variable
+        seccion, opcion = variable.split(".")
+        cfg = self.contexto.config[seccion]
+        valor_cfg = cfg.get(opcion)  # previous, to restore in case of error
+        # contenido de la entrada (input content)
+        texto_entrada = entrada.get()
+        # validar
+        texto_error = ""
+        if texto_entrada == "":
+            texto_error = "no se admiten valores vacíos"
+        elif tipo_entrada == EscenaConfig.EntradaFloat:
+            if not re.match("^\d*\.?\d+$", texto_entrada):
+                texto_error = "debe ingresarse un número decimal"
+        elif tipo_entrada == EscenaConfig.EntradaEntero:
+            if not re.match("^\d+$", texto_entrada):
+                texto_error = "debe ingresarse un número entero"
+        elif tipo_entrada == EscenaConfig.EntradaFecha:
+            if not True:  # ???
+                texto_error = "debe ingresarse una fecha válida"
+        # mensaje?
+        if texto_error:
+            entrada.enterText(valor_cfg)  # restore previous
+            self.lbl_msj["text"] = "%s" % texto_error
+            if self.lbl_msj.isHidden():
+                self.lbl_msj.show()
+                self.contexto.base.taskMgr.doMethodLater(
+                    3,
+                    self.__hide_msj,
+                    "EscenaConfig.__hide_msj"
+                    )
+        else:
+            cfg[opcion] = texto_entrada  # set in config
 
     def __validar_check(self, status, variable):
         log.debug("__validar variable=%s, status=%s" % (variable, str(status)))
+
+    def __hide_msj(self, task):
+        self.lbl_msj.hide()
+        return task.done
